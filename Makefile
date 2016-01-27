@@ -21,7 +21,7 @@ ifeq ($(OS),Windows_NT)
 						-Isrc/viewer \
 						-Isrc/gKit
 else
-	LIBS = -lSDL2 -lSDL2_ttf -lSDL2_image
+	LIBS = -lSDL2 -lSDL2_ttf -lSDL2_image -lglew
 	INCLUDELIBS_DIR = -I/usr/include/SDL2
 endif
 
