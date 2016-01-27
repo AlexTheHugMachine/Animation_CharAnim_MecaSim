@@ -36,8 +36,13 @@ BIN_DIR 			= bin
 
 
 
-default: $(BIN_DIR)/$(FINAL_TARGET)
+default: $(BIN_DIR)/viewer $(BIN_DIR)/gKit $(BIN_DIR)/$(FINAL_TARGET)
 
+$(BIN_DIR)/viewer:
+	mkdir -p $(BIN_DIR)/viewer
+
+$(BIN_DIR)/gKit:
+	mkdir -p $(BIN_DIR)/gKit
 
 $(BIN_DIR)/$(FINAL_TARGET): $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 	$(LD) $+ -o $@ $(LDFLAGS) $(LIB_DIR) $(LIBS)
