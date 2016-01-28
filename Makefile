@@ -1,5 +1,5 @@
 
-SRCS =	 	viewer/mini_gl3core.cpp \
+SRCS =	 	viewer/viewer.cpp viewer/viewer.h \
 			gKit/window.cpp     gKit/vec.cpp      gKit/program.cpp  gKit/mesh.cpp  gKit/image.cpp \
 			gKit/wavefront.cpp  gKit/texture.cpp  gKit/orbiter.cpp  gKit/mat.cpp   gKit/buffer.cpp \
 
@@ -22,7 +22,7 @@ ifeq ($(OS),Windows_NT)
 						-Isrc/gKit
 else
 	LIBS = -lSDL2 -lSDL2_ttf -lSDL2_image -lGLEW -lGL
-	INCLUDELIBS_DIR = -I/usr/include/SDL2 -Isrc/gKit -I/src/viewer
+	INCLUDELIBS_DIR = -I/usr/include/SDL2 -Isrc/gKit -Isrc/viewer
 endif
 
 CC					= g++
