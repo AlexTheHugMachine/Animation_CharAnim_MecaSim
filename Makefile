@@ -21,8 +21,8 @@ ifeq ($(OS),Windows_NT)
 						-Isrc/viewer \
 						-Isrc/gKit
 else
-	LIBS = -lSDL2 -lSDL2_ttf -lSDL2_image -lglew
-	INCLUDELIBS_DIR = -I/usr/include/SDL2
+	LIBS = -lSDL2 -lSDL2_ttf -lSDL2_image -lGLEW -lGL
+	INCLUDELIBS_DIR = -I/usr/include/SDL2 -Isrc/gKit -I/src/viewer
 endif
 
 CC					= g++
