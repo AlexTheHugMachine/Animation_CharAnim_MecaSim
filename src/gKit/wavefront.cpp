@@ -1,22 +1,22 @@
 
 #include <ctype.h>
-#include <stdio.h>
+#include <cstdio>
 
 #include "wavefront.h"
 
 
-mesh read_obj( const char *filename )
+mesh read_mesh( const char *filename )
 {
     mesh data= make_mesh(GL_TRIANGLES);
     
     FILE *in= fopen(filename, "rt");
     if(in == NULL)
     {
-        printf("loading obj '%s'... failed.\n", filename);
+        printf("loading mesh '%s'... failed.\n", filename);
         return data;
     }
     
-    printf("loading obj '%s'...\n", filename);
+    printf("loading mesh '%s'...\n", filename);
     
     std::vector<vec3> positions;
     std::vector<vec2> texcoords;
@@ -146,7 +146,7 @@ mesh read_obj( const char *filename )
     fclose(in);
     
     if(error)
-        printf("loading obj '%s'...\n[error]\n%s\n\n", filename, line_buffer);
+        printf("loading mesh '%s'...\n[error]\n%s\n\n", filename, line_buffer);
     
     return data;
 }

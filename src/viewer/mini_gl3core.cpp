@@ -50,7 +50,7 @@ int init( )
 
 #if 1
     // charge un fichier obj
-    cube= read_obj("data/bigguy.obj");
+    cube= read_mesh("data/bigguy.obj");
     vao= make_mesh_vertex_format(cube);
 
     // genere le shader permettant d'afficher le mesh
