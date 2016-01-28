@@ -1,4 +1,5 @@
 
+#include <cstdio>
 #include <set>
 #include <string>
 
@@ -12,10 +13,6 @@
 #else
   #define GK_CALLBACK __stdcall
 #endif
-
-#include <cstdio>
-
-using namespace std;
 
 
 static int width;
@@ -118,7 +115,7 @@ void release_window( window window )
 //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
 static
 void GK_CALLBACK debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
-    const char *message, const void *userParam )
+    const char *message, void *userParam )
 {
     static std::set<std::string> log;
     if(log.insert(message).second == false)
