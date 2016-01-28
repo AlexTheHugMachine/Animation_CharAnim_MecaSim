@@ -3,7 +3,7 @@
 #define VIEWER_H
 
 #define GLEW_NO_GLU
-#include "GL/glew.h"
+#include <GL/glew.h>
 
 #include "window.h"
 #include "program.h"
@@ -17,7 +17,6 @@
 #include "mat.h"
 #include "orbiter.h"
 
-#include <cstdio>
 
 
 struct Viewer
@@ -31,13 +30,14 @@ struct Viewer
 };
 
 
-//! compile les shaders et construit le programme + les buffers + le vertex array.
+//! Initialise tout : compile les shaders et construit le programme + les buffers + le vertex array.
 //! renvoie -1 en cas d'erreur.
 int init(Viewer& v);
 
-int quit(Viewer& v);
-
+//! La fonction d'affichage
 int draw(Viewer& v);
 
+//! Libere tout
+int quit(Viewer& v);
 
 #endif

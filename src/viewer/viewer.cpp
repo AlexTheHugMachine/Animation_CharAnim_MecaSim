@@ -34,7 +34,7 @@ int init(Viewer& v)
     v.cube_vao= make_mesh_vertex_format(v.cube);
 
     // genere le shader permettant d'afficher le mesh
-    v.program= make_mesh_program(v.cube);
+    v.program = make_mesh_program(v.cube);
     if(v.program == 0) return -1;
 
 #else
