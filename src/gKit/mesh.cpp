@@ -12,9 +12,19 @@ mesh make_mesh( const GLenum primitives )
     mesh m;
     m.primitives= primitives;
     m.count= 0;
+    m.vao= 0;
+    m.program= 0;
     return m;
 }
 
+void release_mesh( mesh& m )
+{
+    if(m.vao)
+        glDeleteVertexArrays(1, &m.vao);
+    if(m.program)
+        glDeleteProgram(m.program);
+    return;
+}
 
 void mesh_texcoord( mesh& m, const vec2& texcoord )
 {
@@ -96,6 +106,21 @@ void mesh_restart( mesh& m )
 #endif
 }
 
+void mesh_bounds( const mesh& m, vec3& pmin, vec3& pmax )
+{
+    if(m.positions.size() == 0)
+        return;
+    
+    pmin= m.positions[0];
+    pmax= m.positions[0]; 
+    
+    for(unsigned int i= 1; i < m.positions.size(); i++)
+    {
+        vec3 p= m.positions[i];
+        pmin= make_vec3( std::min(pmin.x, p.x), std::min(pmin.y,  p.y), std::min(pmin.z, p.z) );
+        pmax= make_vec3( std::max(pmax.x, p.x), std::max(pmax.y,  p.y), std::max(pmax.z, p.z) );
+    }
+}
 
 
 GLuint make_mesh_vertex_format( mesh& m )
@@ -150,3 +175,35 @@ GLuint make_mesh_program( mesh& m )
 }
 
 
+void draw_mesh_texture( mesh& m, const mat4& model, const mat4& view, const mat4& projection, GLuint texture )
+{
+    if(m.vao == 0)
+        m.vao= make_mesh_vertex_format(m);
+    if(m.program == 0)
+        m.program= make_mesh_program(m);
+    
+    glBindVertexArray(m.vao);
+    glUseProgram(m.program);
+    
+    mat4 mv= view * model;
+    mat4 normal= make_normal_matrix(mv);
+    mat4 mvp= projection * view * model;
+    
+    program_set_mat4(m.program, "mvpMatrix", mvp);
+    program_set_mat4(m.program, "mvMatrix", mv);
+    program_set_mat4(m.program, "normalMatrix", normal);
+
+    // utiliser une texture, elle ne sera visible que si le mesh a des texcoords...
+    if(texture > 0)
+        program_use_texture(m.program, "diffuse_color", 0, texture); 
+
+    if(m.indices.size() > 0)
+        glDrawElements(m.primitives, m.count, GL_UNSIGNED_INT, 0);
+    else
+        glDrawArrays(m.primitives, 0, m.count);
+}
+
+void draw_mesh( mesh& m, const mat4& model, const mat4& view, const mat4& projection )
+{
+    draw_mesh_texture(m, model, view, projection, 0);
+}

@@ -8,6 +8,7 @@
 #include "GL/glew.h"
 
 #include "vec.h"
+#include "mat.h"
 
 
 struct mesh
@@ -21,9 +22,12 @@ struct mesh
     
     GLenum primitives;
     int count;
+    GLuint vao;
+    GLuint program;
 };
 
 mesh make_mesh( const GLenum primitives );
+void release_mesh( mesh& m );
 
 void mesh_texcoord( mesh& m, const vec2& texcoord );
 void mesh_normal( mesh& m, const vec3& normal );
@@ -40,7 +44,12 @@ void mesh_push_triangle_last( mesh& m, const int a, const int b, const int c );
 
 void mesh_restart( mesh& m );
 
+void mesh_bounds( const mesh& m, vec3& pmin, vec3& pmax );
+
 GLuint make_mesh_vertex_format( mesh& m );
 GLuint make_mesh_program( mesh& m );
+
+void draw_mesh( mesh& m, const mat4& model, const mat4& view, const mat4& projection );
+void draw_mesh_texture( mesh& m, const mat4& model, const mat4& view, const mat4& projection, GLuint texture );
 
 #endif
