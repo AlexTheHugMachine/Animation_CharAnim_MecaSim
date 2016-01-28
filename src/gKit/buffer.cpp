@@ -58,19 +58,19 @@ GLuint make_vertex_buffer( const GLuint cube_vao, const GLint attribute, const i
     if(attribute < 0)
         return 0;
 
+#ifndef GK_RELEASE
+    GLuint current; 
+    glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint *) &current);
+    if(current != cube_vao)
+    {
+        printf("invalid vertex array %u...\n", current);
+        glBindVertexArray(cube_vao);
+    }
+#endif
+    
     GLuint buffer= make_buffer(GL_ARRAY_BUFFER, data_size, data);
     if(buffer > 0)
     {
-    #ifndef GK_RELEASE
-        GLuint current;
-        glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint *) &current);
-        if(current != cube_vao)
-        {
-            printf("invalid vertex array %u...\n", current);
-            glBindVertexArray(cube_vao);
-        }
-    #endif
-
         glVertexAttribPointer(attribute, size, type, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(attribute);
     }

@@ -1,11 +1,9 @@
 
-#include "SDL2/SDL_image.h"
-
-#include "image.h"
-
 #include <cstdio>
 
-using namespace std;
+#include "SDL2/SDL_image.h"
+#include "image.h"
+
 
 
 image create_image( const int w, const int h, const int c, const vec4& color )
@@ -108,13 +106,13 @@ void image_set_pixel( image& im, const int x, const int y, const vec4& color )
 
 image read_image( const char *filename )
 {
-    printf("loading color image '%s'...\n", filename);
+    printf("loading image '%s'...\n", filename);
 
     // importer le fichier en utilisant SDL_image
     SDL_Surface *surface= IMG_Load(filename);
     if(surface == NULL)
     {
-        printf("loading color image '%s'... sdl_image failed.\n", filename);
+        printf("loading image '%s'... sdl_image failed.\n", filename);
         return create_image(2, 2, 4, make_vec4(1, 0, 0, 1));
     }
 
@@ -122,7 +120,7 @@ image read_image( const char *filename )
     const SDL_PixelFormat format= *surface->format;
     if(format.BitsPerPixel != 24 && format.BitsPerPixel != 32)
     {
-        printf("loading color image '%s'... format failed. (bpp %d)\n", filename, format.BitsPerPixel);
+        printf("loading image '%s'... format failed. (bpp %d)\n", filename, format.BitsPerPixel);
         SDL_FreeSurface(surface);
         return create_image(2, 2, 4, make_vec4(1, 0, 0, 1));
     }
