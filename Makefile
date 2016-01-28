@@ -30,13 +30,17 @@ LD 					= g++
 LDFLAGS  			=
 CPPFLAGS 			= -D_USE_MATH_DEFINES  -Wall -pedantic -ansi -ggdb   -fpermissive #-O2   # pour optimiser
 INCLUDE_DIR	 		= -Isrc $(INCLUDELIBS_DIR)
-OBJ_DIR 			= bin
 SRC_DIR 			= src
 BIN_DIR 			= bin
+OBJ_DIR 			= bin
+OBJ_DIRS 			= $(OBJ_DIR)/viewer $(OBJ_DIR)/gKit
 
 
 
-default: $(BIN_DIR)/viewer $(BIN_DIR)/gKit $(BIN_DIR)/$(FINAL_TARGET)
+default: make_dir $(BIN_DIR)/$(FINAL_TARGET)
+
+make_dir:
+	mkdir -p $(OBJ_DIRS)
 
 $(BIN_DIR)/viewer:
 	mkdir -p $(BIN_DIR)/viewer
@@ -50,6 +54,5 @@ $(BIN_DIR)/$(FINAL_TARGET): $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CC) -c $(CPPFLAGS) $(DEFINE) $(INCLUDE_DIR) $< -o $@
 
-
 clean:
-	find $(OBJ_DIR) -name "*.o" -exec rm {} \;  ; rm $(BIN_DIR)/$(FINAL_TARGET)*
+	rm -rf $(OBJ_DIRS) $(BIN_DIR)/$(FINAL_TARGET)*
