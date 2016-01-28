@@ -4,7 +4,8 @@
 #include <string>
 #include <set>
 
-#include <stdio.h>
+#include <cstdio>
+
 #include "program.h"
 
 
@@ -15,7 +16,9 @@ std::string read( const char *filename )
     std::stringbuf source;
     std::ifstream in(filename);
     if(in.good() == false)
-        printf("[error] reading '%s'...\n", filename);
+        printf("[error] loading shader '%s'...\n", filename);
+    else
+        printf("loading shader '%s'...\n", filename);
     
     in.get(source, 0);        // lire tout le fichier, le caractere '\0' ne peut pas se trouver dans le source de shader
     return source.str();
@@ -39,7 +42,7 @@ bool shader_errors( const GLuint shader )
     return true;
 }
 
-//! affiche les erreurs du programme.
+//! affiche les erreurs de link du programme.
 static
 bool program_errors( const GLuint program )
 {
@@ -58,9 +61,9 @@ bool program_errors( const GLuint program )
 }
 
 
-//! cree un shader.
+//! cree et compile un shader.
 static
-GLuint compile_shader( const GLenum shader_type, const char *filename, const char *definitions )
+GLuint compile_shader( const GLenum shader_type, const char *filename, const std::string& definitions )
 {
     std::string file= read(filename);
     if(file.empty()) 
@@ -89,7 +92,7 @@ GLuint compile_shader( const GLenum shader_type, const char *filename, const cha
         errors.append("no #version directive found. failed.\n");
     
     // reconstruit le source complet
-    if(definitions != NULL)
+    if(definitions.empty() == false)
     {
         // insere la version
         source.append(version);
@@ -105,6 +108,8 @@ GLuint compile_shader( const GLenum shader_type, const char *filename, const cha
         // insere le source
         source.assign(file);
     }
+    
+    //~ printf("[compile shader]\n%s\n\n", source.c_str());
     
     // compile 
     const char *sources= source.c_str();
@@ -131,10 +136,10 @@ GLuint compile_shader( const GLenum shader_type, const char *filename, const cha
 GLuint read_program_definitions( const char *vertex, const char *fragment, const char *definitions )
 {
     // creer et compiler un vertex shader et un fragment shader
-    GLuint vertex_shader= compile_shader(GL_VERTEX_SHADER, vertex, definitions);
+    GLuint vertex_shader= compile_shader(GL_VERTEX_SHADER, vertex, std::string(definitions) + std::string("#define VERTEX_SHADER"));
     if(vertex_shader == 0)
         return 0;
-    GLuint fragment_shader= compile_shader(GL_FRAGMENT_SHADER, fragment, definitions);
+    GLuint fragment_shader= compile_shader(GL_FRAGMENT_SHADER, fragment, std::string(definitions) + std::string("#define FRAGMENT_SHADER"));
     if(fragment_shader == 0)
         return 0;
     
@@ -165,7 +170,17 @@ GLuint read_program_definitions( const char *vertex, const char *fragment, const
 
 GLuint read_program( const char *vertex, const char *fragment )
 {
-    return read_program_definitions(vertex, fragment, NULL);
+    return read_program_definitions(vertex, fragment, "");
+}
+
+GLuint read_program( const char *shaders )
+{
+    return read_program_definitions(shaders, shaders, "");
+}
+
+GLuint read_program_definitions( const char *shaders, const char *definitions )
+{
+    return read_program_definitions(shaders, shaders, definitions);
 }
 
 
@@ -215,7 +230,13 @@ int location( const GLuint program, const char *uniform )
     
 #ifndef GK_RELEASE
     // verifier que le program est bien en cours d'utilisation, ou utiliser glProgramUniform, mais c'est gl 4
-    glUseProgram(program);
+    GLuint current;
+    glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *) &current);
+    if(current != program)
+    {
+        printf("invalid shader program %u...\n", current);
+        glUseProgram(program);
+    }
 #endif
     
     return location;
