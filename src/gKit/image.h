@@ -9,11 +9,7 @@
 
 struct image
 {
-#if 0
-    unsigned char *data;
-#else
     std::vector<unsigned char> data;
-#endif
     int width;
     int height;
     int channels;

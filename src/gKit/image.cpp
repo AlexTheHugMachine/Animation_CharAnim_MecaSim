@@ -13,13 +13,8 @@ image create_image( const int w, const int h, const int c, const vec4& color )
     im.height= h;
     im.channels= c;
 
-#if 0
-    unsigned char *data= new unsigned char[w*h*c];
-    im.data= data;
-#else
     im.data.resize(w*h*c);
     unsigned char *data= &im.data.front();
-#endif
 
     unsigned char r= color.x * 255.f;
     unsigned char g= color.y * 255.f;
@@ -55,24 +50,14 @@ image create_image( const int w, const int h, const int c, const vec4& color )
 
 void release_image( image& im )
 {
-#if 0
-    delete im.data;
-    im.data= NULL;
-#else
     im.data.clear();
-#endif
 }
 
 
 vec4 image_pixel( image& im, const int x, const int y )
 {
-#if 0
-    if(im.data == NULL)
-        return make_vec4(0, 0, 0, 1);
-#else
     if(im.data.size() == 0)
         return make_vec4(0, 0, 0, 1);
-#endif
 
     int offset= im.width * y * im.channels + x * im.channels;
     unsigned char *data= &im.data.front() + offset;
@@ -85,13 +70,8 @@ vec4 image_pixel( image& im, const int x, const int y )
 
 void image_set_pixel( image& im, const int x, const int y, const vec4& color )
 {
-#if 0
-    if(im.data == NULL)
-        return;
-#else
     if(im.data.size() == 0)
         return;
-#endif
 
     int offset= im.width * y * im.channels + x * im.channels;
     unsigned char *data= &im.data.front() + offset;
@@ -130,12 +110,7 @@ image read_image( const char *filename )
     int channels= (format.BitsPerPixel == 32) ? 4 : 3;
 
     image im;
-#if 0
-    unsigned char *data= new unsigned char[width*height*channels];
-    im.data= data;
-#else
     im.data.resize(width*height*channels);
-#endif
     im.width= width;
     im.height= height;
     im.channels= channels;
@@ -146,11 +121,7 @@ image read_image( const char *filename )
         int py= 0;
         for(int y= height -1; y >= 0; y--, py++)
         {
-        #if 0
-            unsigned char *data= im.data + im.width * y * im.channels;
-        #else
             unsigned char *data= &im.data.front() + im.width * y * im.channels;
-        #endif
             Uint8 *pixel= (Uint8 *) surface->pixels + py * surface->pitch;
 
             for(int x= 0; x < width; x++, pixel+= format.BytesPerPixel, data+= 4)
@@ -173,11 +144,7 @@ image read_image( const char *filename )
         int py= 0;
         for(int y= height -1; y >= 0; y--, py++)
         {
-        #if 0
-            unsigned char *data= im.data + im.width * y * im.channels;
-        #else
             unsigned char *data= &im.data.front() + im.width * y * im.channels;
-        #endif
             Uint8 *pixel= (Uint8 *) surface->pixels + py * surface->pitch;
 
             for(int x= 0; x < width; x++, pixel+= format.BytesPerPixel, data+= 3)

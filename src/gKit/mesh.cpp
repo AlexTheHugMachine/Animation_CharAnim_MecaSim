@@ -141,23 +141,23 @@ GLuint make_mesh_vertex_format( mesh& m )
     m.count = (int) m.positions.size();
 
     // ne creer que les buffers necessaires
-    GLuint cube_vao= make_vertex_format();
-    make_vertex_buffer(cube_vao, 0, 3, GL_FLOAT, m.positions.size() * sizeof(vec3), &m.positions.front());
+    GLuint vao= make_vertex_format();
+    make_vertex_buffer(vao, 0, 3, GL_FLOAT, m.positions.size() * sizeof(vec3), &m.positions.front());
     if(m.texcoords.size() == m.positions.size())
-        make_vertex_buffer(cube_vao, 1, 2, GL_FLOAT, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());
+        make_vertex_buffer(vao, 1, 2, GL_FLOAT, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());
     if(m.normals.size() == m.positions.size())
-        make_vertex_buffer(cube_vao, 2, 3, GL_FLOAT, m.normals.size() * sizeof(vec3), &m.normals.front());
+        make_vertex_buffer(vao, 2, 3, GL_FLOAT, m.normals.size() * sizeof(vec3), &m.normals.front());
     if(m.colors.size() == m.positions.size())
-        make_vertex_buffer(cube_vao, 3, 3, GL_FLOAT, m.colors.size() * sizeof(vec3), &m.colors.front());
+        make_vertex_buffer(vao, 3, 3, GL_FLOAT, m.colors.size() * sizeof(vec3), &m.colors.front());
 
     if(m.indices.size() > 0)
     {
         // conserver le nombre d'indices de sommets pour glDrawElements( )
         m.count= m.indices.size();
-        make_index_buffer(cube_vao, m.indices.size() * sizeof(unsigned int), &m.indices.front());
+        make_index_buffer(vao, m.indices.size() * sizeof(unsigned int), &m.indices.front());
     }
 
-    return cube_vao;
+    return vao;
 }
 
 GLuint make_mesh_program( mesh& m )
@@ -171,7 +171,7 @@ GLuint make_mesh_program( mesh& m )
     if(m.colors.size() > 0)
         definitions.append("#define USE_COLOR\n");
 
-    return read_program_definitions("src/shader/vertex.glsl", "src/shader/fragment.glsl", definitions.c_str());
+    return read_program_definitions("data/shaders/mesh.glsl", definitions.c_str());
 }
 
 

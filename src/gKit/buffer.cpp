@@ -19,18 +19,18 @@ GLuint make_buffer( const GLenum target, const int data_size, const void *data )
 
 GLuint make_vertex_format( )
 {
-    GLuint cube_vao;
-    glGenVertexArrays(1, &cube_vao);
-    glBindVertexArray(cube_vao);
-    return cube_vao;
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    return vao;
 }
 
-void release_vertex_format( const GLuint cube_vao )
+void release_vertex_format( const GLuint vao )
 {
-    if(cube_vao == 0)
+    if(vao == 0)
         return;
 
-    glBindVertexArray(cube_vao);
+    glBindVertexArray(vao);
 
     GLint n= 0;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n);
@@ -49,11 +49,11 @@ void release_vertex_format( const GLuint cube_vao )
     if(buffer > 0)
         glDeleteBuffers(1, &buffer);
 
-    glDeleteVertexArrays(1, &cube_vao);
+    glDeleteVertexArrays(1, &vao);
 }
 
 
-GLuint make_vertex_buffer( const GLuint cube_vao, const GLint attribute, const int size, const GLenum type, const int data_size, const void *data )
+GLuint make_vertex_buffer( const GLuint vao, const GLint attribute, const int size, const GLenum type, const int data_size, const void *data )
 {
     if(attribute < 0)
         return 0;
@@ -61,10 +61,10 @@ GLuint make_vertex_buffer( const GLuint cube_vao, const GLint attribute, const i
 #ifndef GK_RELEASE
     GLuint current; 
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint *) &current);
-    if(current != cube_vao)
+    if(current != vao)
     {
         printf("invalid vertex array %u...\n", current);
-        glBindVertexArray(cube_vao);
+        glBindVertexArray(vao);
     }
 #endif
     
@@ -77,15 +77,15 @@ GLuint make_vertex_buffer( const GLuint cube_vao, const GLint attribute, const i
     return buffer;
 }
 
-GLuint make_index_buffer( const GLuint cube_vao, const int data_size, const void *data )
+GLuint make_index_buffer( const GLuint vao, const int data_size, const void *data )
 {
 #ifndef GK_RELEASE
     GLuint current;
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint *) &current);
-    if(current != cube_vao)
+    if(current != vao)
     {
         printf("invalid vertex array %u...\n", current);
-        glBindVertexArray(cube_vao);
+        glBindVertexArray(vao);
     }
 #endif
 
