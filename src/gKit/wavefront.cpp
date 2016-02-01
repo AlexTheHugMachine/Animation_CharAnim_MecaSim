@@ -71,75 +71,130 @@ mesh read_mesh( const char *filename )
             int ia, ita, ina;
             int ib, itb, inb;
             int ic, itc, inc;
+            int id, itd, ind;
+            int code;
             
             // chaque sommet est decrit par un triplet d'indices, position texcoord et normal
             // v/t/n format
-            if(sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", &ia, &ita, &ina, &ib, &itb, &inb, &ic, &itc, &inc) == 9)
+            code= sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d", &ia, &ita, &ina, &ib, &itb, &inb, &ic, &itc, &inc, &id, &itd, &ind);
+            if(code >= 9)
             {
-                if(ia < 0) ia= positions.size() + ia; else ia= ia -1;
-                if(ita < 0) ita= texcoords.size() + ita; else ita= ita -1;
-                if(ina < 0) ina= normals.size() + ina; else ina= ina -1;
-                mesh_push_ptn_vertex(data, positions[ia], texcoords[ita], normals[ina]);
+                if(ia < 0) ia= (int) positions.size() + ia; else ia= ia -1;
+                if(ita < 0) ita= (int) texcoords.size() + ita; else ita= ita -1;
+                if(ina < 0) ina= (int) normals.size() + ina; else ina= ina -1;
+                push_vertex(data, positions[ia], texcoords[ita].x, texcoords[ita].y , normals[ina]);
                 
-                if(ib < 0) ib= positions.size() + ib; else ib= ib -1;
-                if(itb < 0) itb= texcoords.size() + itb; else itb= itb -1;
-                if(inb < 0) inb= normals.size() + inb; else inb= inb -1;
-                mesh_push_ptn_vertex(data, positions[ib], texcoords[itb], normals[inb]);
+                if(ib < 0) ib= (int) positions.size() + ib; else ib= ib -1;
+                if(itb < 0) itb= (int) texcoords.size() + itb; else itb= itb -1;
+                if(inb < 0) inb= (int) normals.size() + inb; else inb= inb -1;
+                push_vertex(data, positions[ib], texcoords[itb].x, texcoords[itb].y, normals[inb]);
 
-                if(ic < 0) ic= positions.size() + ic; else ic= ic -1;
-                if(itc < 0) itc= texcoords.size() + itc; else itc= itc -1;
-                if(inc < 0) inc= normals.size() + inc; else inc= inc -1;
-                mesh_push_ptn_vertex(data, positions[ic], texcoords[itc], normals[inc]);
+                if(ic < 0) ic= (int) positions.size() + ic; else ic= ic -1;
+                if(itc < 0) itc= (int) texcoords.size() + itc; else itc= itc -1;
+                if(inc < 0) inc= (int) normals.size() + inc; else inc= inc -1;
+                push_vertex(data, positions[ic], texcoords[itc].x, texcoords[itc].y, normals[inc]);
+
+                if(code == 12)
+                {
+                    push_vertex(data, positions[ia], texcoords[ita].x, texcoords[ita].y , normals[ina]);
+                    push_vertex(data, positions[ic], texcoords[itc].x, texcoords[itc].y, normals[inc]);
+                    
+                    if(id < 0) id= (int) positions.size() + id; else id= id -1;
+                    if(itd < 0) itd= (int) texcoords.size() + itd; else itd= itd -1;
+                    if(ind < 0) ind= (int) normals.size() + ind; else ind= ind -1;
+                    push_vertex(data, positions[id], texcoords[itd].x, texcoords[itd].y , normals[ind]);
             }
             
+            }
+            else
+            {
             // v//n format
-            else if(sscanf(line, "f %d//%d %d//%d %d//%d", &ia, &ina, &ib, &inb, &ic, &inc) == 6)
+                code= sscanf(line, "f %d//%d %d//%d %d//%d %d//%d", &ia, &ina, &ib, &inb, &ic, &inc, &id, &ind);
+                if(code >= 6)
             {
-                if(ia < 0) ia= positions.size() + ia; else ia= ia -1;
-                if(ina < 0) ina= normals.size() + ina; else ina= ina -1;
-                mesh_push_pn_vertex(data, positions[ia], normals[ina]);
+                    if(ia < 0) ia= (int) positions.size() + ia; else ia= ia -1;
+                    if(ina < 0) ina= (int) normals.size() + ina; else ina= ina -1;
+                    push_vertex(data, positions[ia], normals[ina]);
                 
-                if(ib < 0) ib= positions.size() + ib; else ib= ib -1;
-                if(inb < 0) inb= normals.size() + inb; else inb= inb -1;
-                mesh_push_pn_vertex(data, positions[ib], normals[inb]);
+                    if(ib < 0) ib= (int) positions.size() + ib; else ib= ib -1;
+                    if(inb < 0) inb= (int) normals.size() + inb; else inb= inb -1;
+                    push_vertex(data, positions[ib], normals[inb]);
 
-                if(ic < 0) ic= positions.size() + ic; else ic= ic -1;
-                if(inc < 0) inc= normals.size() + inc; else inc= inc -1;
-                mesh_push_pn_vertex(data, positions[ic], normals[inc]);
+                    if(ic < 0) ic= (int) positions.size() + ic; else ic= ic -1;
+                    if(inc < 0) inc= (int) normals.size() + inc; else inc= inc -1;
+                    push_vertex(data, positions[ic], normals[inc]);
+                    
+                    if(code == 8)
+                    {
+                        push_vertex(data, positions[ia], normals[ina]);
+                        push_vertex(data, positions[ic], normals[inc]);
+                        
+                        if(id < 0) id= (int) positions.size() + id; else id= id -1;
+                        if(ind < 0) ind= (int) normals.size() + ind; else ind= ind -1;
+                        push_vertex(data, positions[id], normals[ind]);
             }
             
+                }
+                else
+                {
             // v/t  format
-            else if(sscanf(line, "f %d/%d %d/%d %d/%d ", &ia, &ita, &ib, &itb, &ic, &itc) == 6)
+                    code= sscanf(line, "f %d/%d %d/%d %d/%d %d/%d", &ia, &ita, &ib, &itb, &ic, &itc, &id, &itd);
+                    if(code >= 6)
             {
-                if(ia < 0) ia= positions.size() + ia; else ia= ia -1;
-                if(ita < 0) ita= texcoords.size() + ita; else ita= ita -1;
-                mesh_push_pt_vertex(data, positions[ia], texcoords[ita]);
+                        if(ia < 0) ia= (int) positions.size() + ia; else ia= ia -1;
+                        if(ita < 0) ita= (int) texcoords.size() + ita; else ita= ita -1;
+                        push_vertex(data, positions[ia], texcoords[ita].x, texcoords[ita].y);
                 
-                if(ib < 0) ib= positions.size() + ib; else ib= ib -1;
-                if(itb < 0) itb= texcoords.size() + itb; else itb= itb -1;
-                mesh_push_pt_vertex(data, positions[ib], texcoords[itb]);
+                        if(ib < 0) ib= (int) positions.size() + ib; else ib= ib -1;
+                        if(itb < 0) itb= (int) texcoords.size() + itb; else itb= itb -1;
+                        push_vertex(data, positions[ib], texcoords[itb].x, texcoords[itb].y);
 
-                if(ic < 0) ic= positions.size() + ic; else ic= ic -1;
-                if(itc < 0) itc= texcoords.size() + itc; else itc= itc -1;
-                mesh_push_pt_vertex(data, positions[ic], texcoords[itc]);
+                        if(ic < 0) ic= (int) positions.size() + ic; else ic= ic -1;
+                        if(itc < 0) itc= (int) texcoords.size() + itc; else itc= itc -1;
+                        push_vertex(data, positions[ic], texcoords[itc].x, texcoords[itc].y);
+                        
+                        if(code == 8)
+                        {
+                            push_vertex(data, positions[ia], texcoords[ita].x, texcoords[ita].y);
+                            push_vertex(data, positions[ic], texcoords[itc].x, texcoords[itc].y);
+                            
+                            if(id < 0) id= (int) positions.size() + id; else id= id -1;
+                            if(itd < 0) itd= (int) texcoords.size() + itd; else itd= itd -1;
+                            push_vertex(data, positions[id], texcoords[itd].x, texcoords[itd].y);
             }
             
+                    }
+                    else
+                    {
             // v format
-            else if(sscanf(line, "f %d %d %d ", &ia, &ib, &ic) == 3)
+                        code= sscanf(line, "f %d %d %d %d", &ia, &ib, &ic, &id);
+                        if(code >= 3)
             {
-                if(ia < 0) ia= positions.size() + ia; else ia= ia -1;
-                mesh_push_vertex(data, positions[ia]);
+                            if(ia < 0) ia= (int) positions.size() + ia; else ia= ia -1;
+                            push_vertex(data, positions[ia]);
                 
-                if(ib < 0) ib= positions.size() + ib; else ib= ib -1;
-                mesh_push_vertex(data, positions[ib]);
+                            if(ib < 0) ib= (int) positions.size() + ib; else ib= ib -1;
+                            push_vertex(data, positions[ib]);
 
-                if(ic < 0) ic= positions.size() + ic; else ic= ic -1;
-                mesh_push_vertex(data, positions[ic]);
+                            if(ic < 0) ic= (int) positions.size() + ic; else ic= ic -1;
+                            push_vertex(data, positions[ic]);
+                            
+                            if(code == 4)
+                            {
+                                push_vertex(data, positions[ia]);
+                                push_vertex(data, positions[ic]);
+                                
+                                if(id < 0) id= (int) positions.size() + id; else id= id -1;
+                                push_vertex(data, positions[id]);
+                            }
             }
             
             else
                 // erreur de structure dans le fichier...
                 break;
+                    }
+                }
+            }
         }
     }
     
