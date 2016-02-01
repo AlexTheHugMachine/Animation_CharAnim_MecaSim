@@ -8,15 +8,16 @@
 
 struct orbiter
 {
-    vec3 position;
+    vec3 center;
+    vec2 position;
     vec2 rotation;
     float size;
 };
 
 orbiter make_orbiter( );
-orbiter make_orbiter_lookat( const vec3 position, const float size );
+orbiter make_orbiter_lookat( const vec3& center, const float size );
 
-void orbiter_lookat( orbiter&o, const vec3 position, const float size );
+void orbiter_lookat( orbiter&o, const vec3& center, const float size );
 
 void orbiter_rotation( orbiter&o, const float x, const float y );
 void orbiter_translation( orbiter&o, const float x, const float y );
