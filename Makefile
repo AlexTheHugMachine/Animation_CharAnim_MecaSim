@@ -2,6 +2,7 @@
 SRCS = main.cpp \
 	gKit/window.cpp     gKit/vec.cpp      gKit/program.cpp  gKit/mesh.cpp  gKit/image.cpp \
 	gKit/wavefront.cpp  gKit/texture.cpp  gKit/orbiter.cpp  gKit/mat.cpp   gKit/buffer.cpp \
+	gKit/text.cpp
 
 FINAL_TARGET = gKit2light
 
@@ -24,9 +25,9 @@ endif
 
 CC				= g++
 LD 				= g++
-LDFLAGS  			=
-CPPFLAGS 			= -D_USE_MATH_DEFINES  -Wall -g #-O2   # pour optimiser
-INCLUDE_DIR	 		= -I src $(INCLUDELIBS_DIR)
+LDFLAGS  		=
+CPPFLAGS 		= -D_USE_MATH_DEFINES  -Wall -g #-O2   # pour optimiser
+INCLUDE_DIR	 	= -I src $(INCLUDELIBS_DIR)
 SRC_DIR 			= src
 BIN_DIR 			= bin
 OBJ_DIR 			= bin
