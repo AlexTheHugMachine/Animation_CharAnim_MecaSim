@@ -136,10 +136,10 @@ GLuint compile_shader( const GLenum shader_type, const char *filename, const std
 GLuint read_program_definitions( const char *vertex, const char *fragment, const char *definitions )
 {
     // creer et compiler un vertex shader et un fragment shader
-    GLuint vertex_shader= compile_shader(GL_VERTEX_SHADER, vertex, std::string(definitions) + std::string("#define VERTEX_SHADER"));
+    GLuint vertex_shader= compile_shader(GL_VERTEX_SHADER, vertex, std::string(definitions).append("#define VERTEX_SHADER"));
     if(vertex_shader == 0)
         return 0;
-    GLuint fragment_shader= compile_shader(GL_FRAGMENT_SHADER, fragment, std::string(definitions) + std::string("#define FRAGMENT_SHADER"));
+    GLuint fragment_shader= compile_shader(GL_FRAGMENT_SHADER, fragment, std::string(definitions).append("#define FRAGMENT_SHADER"));
     if(fragment_shader == 0)
         return 0;
     
