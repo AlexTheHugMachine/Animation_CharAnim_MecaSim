@@ -13,10 +13,10 @@
 
 struct mesh
 {
-    std::vector<vec3> positions;
-    std::vector<vec2> texcoords;
-    std::vector<vec3> normals;
-    std::vector<vec3> colors;
+    std::vector<float> positions;       // vec3
+    std::vector<float> texcoords;       // vec2
+    std::vector<float> normals;         // vec3
+    std::vector<float> colors;          // vec3
     
     std::vector<unsigned int> indices;
     
@@ -29,27 +29,27 @@ struct mesh
 mesh make_mesh( const GLenum primitives );
 void release_mesh( mesh& m );
 
-void mesh_texcoord( mesh& m, const vec2& texcoord );
-void mesh_normal( mesh& m, const vec3& normal );
-void mesh_color( mesh& m, const vec3& color );
+void vertex_texcoord( mesh& m, const float u, const float v );
+void vertex_normal( mesh& m, const vec3& normal );
+void vertex_color( mesh& m, const vec3& color );
 
-unsigned int mesh_push_vertex( mesh& m, const vec3& position );
+unsigned int push_vertex( mesh& m, const vec3& position );
 
-unsigned int mesh_push_ptn_vertex( mesh& m, const vec3& position, const vec2& texcoord, const vec3& normal );
-unsigned int mesh_push_pt_vertex( mesh& m, const vec3& position, const vec2& texcoord );
-unsigned int mesh_push_pn_vertex( mesh& m, const vec3& position, const vec3& normal );
+unsigned int push_vertex( mesh& m, const vec3& position, const float u, const float v, const vec3& normal );
+unsigned int push_vertex( mesh& m, const vec3& position, const float u, const float v );
+unsigned int push_vertex( mesh& m, const vec3& position, const vec3& normal );
 
-void mesh_push_triangle( mesh& m, const unsigned int a, const unsigned int b, const unsigned int c );
-void mesh_push_triangle_last( mesh& m, const int a, const int b, const int c );
+void push_triangle( mesh& m, const unsigned int a, const unsigned int b, const unsigned int c );
+void push_triangle_last( mesh& m, const int a, const int b, const int c );
 
-void mesh_restart( mesh& m );
+void restart_strip( mesh& m );
 
-void mesh_bounds( const mesh& m, vec3& pmin, vec3& pmax );
+void bounds( const mesh& m, vec3& pmin, vec3& pmax );
 
 GLuint make_mesh_vertex_format( mesh& m );
 GLuint make_mesh_program( mesh& m );
 
-void draw_mesh( mesh& m, const mat4& model, const mat4& view, const mat4& projection );
-void draw_mesh_texture( mesh& m, const mat4& model, const mat4& view, const mat4& projection, GLuint texture );
+void draw( mesh& m, const mat4& model, const mat4& view, const mat4& projection );
+void draw( mesh& m, const mat4& model, const mat4& view, const mat4& projection, GLuint texture );
 
 #endif
