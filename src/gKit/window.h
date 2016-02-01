@@ -19,6 +19,9 @@ void release_context( context context );
 int window_width( );
 int window_height( );
 
+int key_state( const SDL_Keycode key );
+void clear_key_state( const SDL_Keycode key );
+
 //! fonction principale.
 int run( window w );
 

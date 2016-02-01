@@ -1,5 +1,7 @@
 
+#include <cassert>
 #include <cstdio>
+#include <vector>
 #include <set>
 #include <string>
 
@@ -26,6 +28,25 @@ int window_width( )
 int window_height( )
 {
     return height;
+}
+
+
+static std::vector<unsigned char> key_states;
+
+int key_state( const SDL_Keycode key )
+{
+    SDL_Scancode code= SDL_GetScancodeFromKey(key);
+    assert((size_t) code < key_states.size());
+    
+    return (int)  key_states[code];
+}
+
+void clear_key_state( const SDL_Keycode key )
+{
+    SDL_Scancode code= SDL_GetScancodeFromKey(key);
+    assert((size_t) code < key_states.size());
+    
+    key_states[code]= 0;
 }
 
 
@@ -57,8 +78,17 @@ int run( window window )
                     break;
 
                 case SDL_KEYDOWN:
+                    // modifier l'etat du clavier
+                    assert((size_t) event.key.keysym.scancode < key_states.size());
+                    key_states[event.key.keysym.scancode]= 1;
                     if(event.key.keysym.sym == SDLK_ESCAPE)
                         stop= 1;        // fermer l'application
+                    break;
+                
+                case SDL_KEYUP:
+                    // modifier l'etat du clavier
+                    assert((size_t) event.key.keysym.scancode < key_states.size());
+                    key_states[event.key.keysym.scancode]= 0;
                     break;
 
                 case SDL_QUIT:
@@ -68,7 +98,8 @@ int run( window window )
         }
 
         // dessiner
-        draw();
+        if(draw() < 1)
+            stop= 0;    // fermer l'application si draw() renvoie 0 ou -1...
         SDL_GL_SwapWindow(window);
     }
 
@@ -98,7 +129,12 @@ window create_window( const int w, const int h )
         return NULL;
     }
 
-    // conserve les diensoins de la fenetre
+    // recupere l'etat du clavier
+    int keys;
+    const unsigned char *state= SDL_GetKeyboardState(&keys);
+    key_states.assign(state, state + keys);
+    
+    // conserve les dimensions de la fenetre
     width= w;
     height= h;
 
