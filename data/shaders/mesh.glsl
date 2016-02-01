@@ -65,7 +65,7 @@ out vec4 fragment_color;
 
 void main( )
 {
-    vec3 color= vec3(1, 1, 1);
+    vec3 color= vec3(1, 1, 1);  // prevoir un uniform ?
 #ifdef USE_COLOR
     color= vertex_color;
 #endif
@@ -84,6 +84,15 @@ void main( )
 #endif
     
     color= color * normal.z;
+    // hachure les triangles mal orientes
+    if(!gl_FrontFacing)
+    {
+        ivec2 pixel= ivec2(gl_FragCoord.xy) % ivec2(4, 4);
+        if((pixel.x ^ pixel.y) == 0)
+            color= vec3(0.8, 0.4, 0);
+        //~ else
+            //~ color= vec3(0, 0, 0);
+    }
     
     fragment_color= vec4(color, 1);
 }
