@@ -8,9 +8,9 @@
 #include "text.h"
 
 
-text_t create_text( )
+Text create_text( )
 {
-    text_t text;
+    Text text;
     text.font= read_texture(0, "data/font.png");
     text.program= read_program("data/shaders/text.glsl");
     text.vao= make_vertex_format();
@@ -19,7 +19,7 @@ text_t create_text( )
     return text;
 }
 
-void release_text( text_t& text )
+void release_text( Text& text )
 {
     glDeleteTextures(1, &text.font);
     glDeleteProgram(text.program);
@@ -27,14 +27,14 @@ void release_text( text_t& text )
     glDeleteBuffers(1, &text.ubo);
 }
 
-void text_clear( text_t& text )
+void text_clear( Text& text )
 {
     for(int y= 0; y < 24; y++)
     for(int x= 0; x < 128; x++)
         text.buffer[y][x]= ' ';
 }
 
-void text_print( text_t& text, const int px, const int py, const char *message )
+void text_print( Text& text, const int px, const int py, const char *message )
 {
     int x= px;
     int y= 23 - py;     // premiere ligne en haut... 
@@ -46,20 +46,21 @@ void text_print( text_t& text, const int px, const int py, const char *message )
         {
             y--;
             x= px;
-            if(y < 0)
-                break;
         }
         if(c == '\n')
             // ne pas afficher le \n
             continue;
         
-        if(!isprint(c)) c= ' ';
+        //~ if(!isprint(c)) c= ' ';
+        
+        if(x < 0 || y < 0) break;
+        if(x >= 128 || y >= 24) break;
         text.buffer[y][x]= (int) c;
         x++;
     }
 }
 
-void draw_text( const text_t& text, const int width, const int height )
+void draw_text( const Text& text, const int width, const int height )
 {
     glBindVertexArray(text.vao);
     glUseProgram(text.program);

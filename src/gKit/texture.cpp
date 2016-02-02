@@ -4,15 +4,10 @@
 #include "texture.h"
 
 
-GLuint make_texture( const int unit, const image& im )
+GLuint make_texture( const int unit, const Image& im )
 {
-#if 0
-    if(im.data == NULL)
-        return 0;
-#else
     if(im.data.size() == 0)
         return 0;
-#endif
     
     GLuint texture;
     glGenTextures(1, &texture);
@@ -34,15 +29,9 @@ GLuint make_texture( const int unit, const image& im )
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-#if 0
-    glTexImage2D(GL_TEXTURE_2D, 0, 
-        GL_RGBA, im.width, im.height, 0,
-        data_format, GL_UNSIGNED_BYTE, im.data);
-#else
     glTexImage2D(GL_TEXTURE_2D, 0, 
         GL_RGBA, im.width, im.height, 0,
         data_format, GL_UNSIGNED_BYTE, &im.data.front());
-#endif
     
     glGenerateMipmap(GL_TEXTURE_2D);
     return texture;
@@ -50,7 +39,7 @@ GLuint make_texture( const int unit, const image& im )
 
 GLuint read_texture( const int unit, const char *filename )
 {
-    image im= read_image(filename);
+    Image im= read_image(filename);
     GLuint texture= make_texture(unit, im);
     
     release_image(im);

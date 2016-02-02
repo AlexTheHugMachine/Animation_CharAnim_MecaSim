@@ -7,9 +7,9 @@
 #include "mesh.h"
 
 
-mesh make_mesh( const GLenum primitives )
+Mesh make_mesh( const GLenum primitives )
 {
-    mesh m;
+    Mesh m;
     m.primitives= primitives;
     m.count= 0;
     m.vao= 0;
@@ -17,7 +17,7 @@ mesh make_mesh( const GLenum primitives )
     return m;
 }
 
-void release_mesh( mesh& m )
+void release_mesh( Mesh& m )
 {
     if(m.vao)
         glDeleteVertexArrays(1, &m.vao);
@@ -26,27 +26,27 @@ void release_mesh( mesh& m )
     return;
 }
 
-void vertex_texcoord( mesh& m, const float u, const float v )
+void vertex_texcoord( Mesh& m, const float u, const float v )
 {
     m.texcoords.push_back(u);
     m.texcoords.push_back(v);
 }
 
-void vertex_normal( mesh& m, const vec3& normal )
+void vertex_normal( Mesh& m, const vec3& normal )
 {
     m.normals.push_back(normal.x);
     m.normals.push_back(normal.y);
     m.normals.push_back(normal.z);
 }
 
-void vertex_color( mesh& m, const vec3& color )
+void vertex_color( Mesh& m, const vec3& color )
 {
     m.colors.push_back(color.x);
     m.colors.push_back(color.y);
     m.colors.push_back(color.z);
 }
 
-unsigned int push_vertex( mesh& m, const vec3& position )
+unsigned int push_vertex( Mesh& m, const vec3& position )
 {
     m.positions.push_back(position.x);
     m.positions.push_back(position.y);
@@ -101,33 +101,33 @@ unsigned int push_vertex( mesh& m, const vec3& position )
 }
 
 
-unsigned int push_vertex( mesh& m, const vec3& position, const float u, const float v, const vec3& normal )
+unsigned int push_vertex( Mesh& m, const vec3& position, const float u, const float v, const vec3& normal )
 {
     vertex_texcoord(m, u, v);
     vertex_normal(m, normal);
     return push_vertex(m, position);
 }
 
-unsigned int push_vertex( mesh& m, const vec3& position, const float u, const float v )
+unsigned int push_vertex( Mesh& m, const vec3& position, const float u, const float v )
 {
     vertex_texcoord(m, u ,v);
     return push_vertex(m, position);
 }
 
-unsigned int push_vertex( mesh& m, const vec3& position, const vec3& normal )
+unsigned int push_vertex( Mesh& m, const vec3& position, const vec3& normal )
 {
     vertex_normal(m, normal);
     return push_vertex(m, position);
 }
 
-void push_triangle( mesh& m, const unsigned int a, const unsigned int b, const unsigned int c )
+void push_triangle( Mesh& m, const unsigned int a, const unsigned int b, const unsigned int c )
 {
     m.indices.push_back(a);
     m.indices.push_back(b);
     m.indices.push_back(c);
 }
 
-void push_triangle_last( mesh& m, const int a, const int b, const int c )
+void push_triangle_last( Mesh& m, const int a, const int b, const int c )
 {
     // a, b, et c doivent etre negatifs...
     if(a >= 0) return;
@@ -139,7 +139,7 @@ void push_triangle_last( mesh& m, const int a, const int b, const int c )
     m.indices.push_back((int) m.positions.size() + c);
 }
 
-void restart_strip( mesh& m )
+void restart_strip( Mesh& m )
 {
     m.indices.push_back(~0u);   // ~0u plus grand entier non signe representable.
 #if 0
@@ -150,7 +150,7 @@ void restart_strip( mesh& m )
 #endif
 }
 
-void bounds( const mesh& m, vec3& pmin, vec3& pmax )
+void bounds( const Mesh& m, vec3& pmin, vec3& pmax )
 {
     if(m.positions.size() < 3)
         return;
@@ -169,7 +169,7 @@ void bounds( const mesh& m, vec3& pmin, vec3& pmax )
 }
 
 
-GLuint make_mesh_vertex_format( mesh& m )
+GLuint make_mesh_vertex_format( Mesh& m )
 {
     if(m.positions.size() == 0)
         return 0;
@@ -206,7 +206,7 @@ GLuint make_mesh_vertex_format( mesh& m )
     return vao;
 }
 
-GLuint make_mesh_program( mesh& m )
+GLuint make_mesh_program( Mesh& m )
 {
     std::string definitions;
 
@@ -221,7 +221,7 @@ GLuint make_mesh_program( mesh& m )
 }
 
 
-void draw( mesh& m, const mat4& model, const mat4& view, const mat4& projection, GLuint texture )
+void draw( Mesh& m, const mat4& model, const mat4& view, const mat4& projection, GLuint texture )
 {
     if(m.vao == 0)
         m.vao= make_mesh_vertex_format(m);
@@ -249,7 +249,7 @@ void draw( mesh& m, const mat4& model, const mat4& view, const mat4& projection,
         glDrawArrays(m.primitives, 0, m.count);
 }
 
-void draw( mesh& m, const mat4& model, const mat4& view, const mat4& projection )
+void draw( Mesh& m, const mat4& model, const mat4& view, const mat4& projection )
 {
     draw(m, model, view, projection, 0);
 }

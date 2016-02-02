@@ -8,7 +8,7 @@
 #include "image.h"
 
 
-GLuint make_texture( const int unit, const image& im );
+GLuint make_texture( const int unit, const Image& im );
 GLuint read_texture( const int unit, const char *filename );
 
 #endif

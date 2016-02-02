@@ -11,7 +11,7 @@
 #include "mat.h"
 
 
-struct mesh
+struct Mesh
 {
     std::vector<float> positions;       // vec3
     std::vector<float> texcoords;       // vec2
@@ -26,30 +26,30 @@ struct mesh
     GLuint program;
 };
 
-mesh make_mesh( const GLenum primitives );
-void release_mesh( mesh& m );
+Mesh make_mesh( const GLenum primitives );
+void release_mesh( Mesh& m );
 
-void vertex_texcoord( mesh& m, const float u, const float v );
-void vertex_normal( mesh& m, const vec3& normal );
-void vertex_color( mesh& m, const vec3& color );
+void vertex_texcoord( Mesh& m, const float u, const float v );
+void vertex_normal( Mesh& m, const vec3& normal );
+void vertex_color( Mesh& m, const vec3& color );
 
-unsigned int push_vertex( mesh& m, const vec3& position );
+unsigned int push_vertex( Mesh& m, const vec3& position );
 
-unsigned int push_vertex( mesh& m, const vec3& position, const float u, const float v, const vec3& normal );
-unsigned int push_vertex( mesh& m, const vec3& position, const float u, const float v );
-unsigned int push_vertex( mesh& m, const vec3& position, const vec3& normal );
+unsigned int push_vertex( Mesh& m, const vec3& position, const float u, const float v, const vec3& normal );
+unsigned int push_vertex( Mesh& m, const vec3& position, const float u, const float v );
+unsigned int push_vertex( Mesh& m, const vec3& position, const vec3& normal );
 
-void push_triangle( mesh& m, const unsigned int a, const unsigned int b, const unsigned int c );
-void push_triangle_last( mesh& m, const int a, const int b, const int c );
+void push_triangle( Mesh& m, const unsigned int a, const unsigned int b, const unsigned int c );
+void push_triangle_last( Mesh& m, const int a, const int b, const int c );
 
-void restart_strip( mesh& m );
+void restart_strip( Mesh& m );
 
-void bounds( const mesh& m, vec3& pmin, vec3& pmax );
+void bounds( const Mesh& m, vec3& pmin, vec3& pmax );
 
-GLuint make_mesh_vertex_format( mesh& m );
-GLuint make_mesh_program( mesh& m );
+GLuint make_mesh_vertex_format( Mesh& m );
+GLuint make_mesh_program( Mesh& m );
 
-void draw( mesh& m, const mat4& model, const mat4& view, const mat4& projection );
-void draw( mesh& m, const mat4& model, const mat4& view, const mat4& projection, GLuint texture );
+void draw( Mesh& m, const mat4& model, const mat4& view, const mat4& projection );
+void draw( Mesh& m, const mat4& model, const mat4& view, const mat4& projection, GLuint texture );
 
 #endif

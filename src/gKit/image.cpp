@@ -6,9 +6,9 @@
 
 
 
-image create_image( const int w, const int h, const int c, const vec4& color )
+Image create_image( const int w, const int h, const int c, const vec4& color )
 {
-    image im;
+    Image im;
     im.width= w;
     im.height= h;
     im.channels= c;
@@ -48,13 +48,13 @@ image create_image( const int w, const int h, const int c, const vec4& color )
     return im;
 }
 
-void release_image( image& im )
+void release_image( Image& im )
 {
     im.data.clear();
 }
 
 
-vec4 image_pixel( image& im, const int x, const int y )
+vec4 image_pixel( Image& im, const int x, const int y )
 {
     if(im.data.size() == 0)
         return make_vec4(0, 0, 0, 1);
@@ -68,7 +68,7 @@ vec4 image_pixel( image& im, const int x, const int y )
         return make_vec4(data[0] / 255.f, data[1] / 255.f, data[2] / 255.f, 1);
 }
 
-void image_set_pixel( image& im, const int x, const int y, const vec4& color )
+void image_set_pixel( Image& im, const int x, const int y, const vec4& color )
 {
     if(im.data.size() == 0)
         return;
@@ -84,7 +84,7 @@ void image_set_pixel( image& im, const int x, const int y, const vec4& color )
 }
 
 
-image read_image( const char *filename )
+Image read_image( const char *filename )
 {
     printf("loading image '%s'...\n", filename);
 
@@ -109,7 +109,7 @@ image read_image( const char *filename )
     int width= surface->w;
     int channels= (format.BitsPerPixel == 32) ? 4 : 3;
 
-    image im;
+    Image im;
     im.data.resize(width*height*channels);
     im.width= width;
     im.height= height;

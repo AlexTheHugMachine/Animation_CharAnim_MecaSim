@@ -6,7 +6,7 @@
 #include "mat.h"
 
 
-struct orbiter
+struct Orbiter
 {
     vec3 center;
     vec2 position;
@@ -14,16 +14,16 @@ struct orbiter
     float size;
 };
 
-orbiter make_orbiter( );
-orbiter make_orbiter_lookat( const vec3& center, const float size );
+Orbiter make_orbiter( );
+Orbiter make_orbiter_lookat( const vec3& center, const float size );
 
-void orbiter_lookat( orbiter&o, const vec3& center, const float size );
+void orbiter_lookat( Orbiter&o, const vec3& center, const float size );
 
-void orbiter_rotation( orbiter&o, const float x, const float y );
-void orbiter_translation( orbiter&o, const float x, const float y );
-void orbiter_move( orbiter&o, const float z );
+void orbiter_rotation( Orbiter&o, const float x, const float y );
+void orbiter_translation( Orbiter&o, const float x, const float y );
+void orbiter_move( Orbiter&o, const float z );
 
-mat4 orbiter_view_matrix( const orbiter&o );
-mat4 orbiter_projection_matrix( const orbiter&o, const float width, const float height, const float fov );
+mat4 orbiter_view_matrix( const Orbiter&o );
+mat4 orbiter_projection_matrix( const Orbiter&o, const float width, const float height, const float fov );
 
 #endif

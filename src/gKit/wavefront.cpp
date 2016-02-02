@@ -5,9 +5,9 @@
 #include "wavefront.h"
 
 
-mesh read_mesh( const char *filename )
+Mesh read_mesh( const char *filename )
 {
-    mesh data= make_mesh(GL_TRIANGLES);
+    Mesh data= make_mesh(GL_TRIANGLES);
     
     FILE *in= fopen(filename, "rt");
     if(in == NULL)

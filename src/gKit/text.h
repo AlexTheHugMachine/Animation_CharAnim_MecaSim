@@ -6,7 +6,7 @@
 #include "GL/glew.h"
 
 
-struct text_t
+struct Text
 {
     int buffer[24][128];
     GLuint font;
@@ -15,13 +15,13 @@ struct text_t
     GLuint ubo;
 };
 
-text_t create_text( );
-void release_text( text_t& text );
+Text create_text( );
+void release_text( Text& text );
 
-void text_clear( text_t& text );
-void text_print( text_t& text, const int x, const int y, const char *message );
+void text_clear( Text& text );
+void text_print( Text& text, const int x, const int y, const char *message );
 
-void draw_text( const text_t& text, const int width, const int height );
+void draw_text( const Text& text, const int width, const int height );
 
 
 #endif

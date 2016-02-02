@@ -7,7 +7,7 @@
 #include "vec.h"
 
 
-struct image
+struct Image
 {
     std::vector<unsigned char> data;
     int width;
@@ -15,12 +15,12 @@ struct image
     int channels;
 };
 
-image create_image( const int w, const int h, const int c, const vec4& color );
-void release_image( image& im );        // plus necessaire en utilisant un vector au lieu d'un new pour reserver data
+Image create_image( const int w, const int h, const int c, const vec4& color );
+void release_image( Image& im );        // plus necessaire en utilisant un vector au lieu d'un new pour reserver data
 
-image read_image( const char *filename );
+Image read_image( const char *filename );
 
-vec4 image_pixel( image& im, const int x, const int y );
-void image_set_pixel( image& im, const int x, const int y, const vec4& color );
+vec4 image_pixel( Image& im, const int x, const int y );
+void image_set_pixel( Image& im, const int x, const int y, const vec4& color );
 
 #endif

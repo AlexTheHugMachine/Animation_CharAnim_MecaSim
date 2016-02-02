@@ -18,10 +18,10 @@
 
 GLuint texture;
 
-orbiter camera;
-mesh cube;
+Orbiter camera;
+Mesh cube;
 
-text_t console;
+Text console;
 
 //! compile les shaders et construit le programme + les buffers + le vertex array.
 //! renvoie -1 en cas d'erreur.
@@ -32,7 +32,7 @@ int init( )
     if(texture == 0) 
         return -1;
     
-#if 0
+#if 1
     // charge un fichier obj
     cube= read_mesh("data/bigguy.obj");
     //~ cube= read_mesh("data/triangle_bigguy.obj");
@@ -44,14 +44,14 @@ int init( )
     vertex_texcoord(cube, 0, 0);
     push_vertex(cube, make_vec3(0, 0, 0));
 
-    vertex_texcoord(cube, 0, 1);
-    push_vertex(cube, make_vec3(0, 1, 0));
+    //~ vertex_texcoord(cube, 0, 1);
+    //~ push_vertex(cube, make_vec3(0, 1, 0));
 
     vertex_texcoord(cube, 1, 0);
     push_vertex(cube, make_vec3(1, 0, 0));
     
-    //~ vertex_texcoord(cube, 0, 1);
-    //~ push_vertex(cube, make_vec3(0, 1, 0));
+    vertex_texcoord(cube, 0, 1);
+    push_vertex(cube, make_vec3(0, 1, 0));
 
     vertex_texcoord(cube, 1, 1);
     push_vertex(cube, make_vec3(1, 1, 0));
@@ -78,7 +78,7 @@ int init( )
 #if 1
     vec3 pmin, pmax;
     bounds(cube, pmin, pmax);
-    camera= make_orbiter_lookat( (pmin + pmax) / 2, length(pmax - pmin) );
+    camera= make_orbiter_lookat( (pmin + pmax) / 2, distance(pmin, pmax) );
 #else    
     camera= make_orbiter_lookat( make_vec3(0.5, 0.5, 0.5), 5 );
 #endif
@@ -101,6 +101,9 @@ int init( )
     
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
+    
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
     
     return 0;
 }
@@ -144,7 +147,8 @@ int draw( )
     draw(cube, model, view, projection, texture);
 
     text_clear(console);
-    text_print(console, 0, 1, "shader print\nsur plusieurs lignes\nhop\n\net hop\n");
+    text_print(console, 0, 1, "print");
+    //~ text_print(console, 0, 2, "\2\2\2\2\2\2\2\2");
     draw_text(console, window_width(), window_height());
     
     return 1;
@@ -153,11 +157,11 @@ int draw( )
 
 int main( int argc, char **argv )
 {
-    window w= create_window(1024, 768);
+    Window w= create_window(1024, 768);
     if(w == NULL) 
         return 1;
     
-    context c= create_context(w);        // cree un contexte opengl 3.3, par defaut
+    Context c= create_context(w);        // cree un contexte opengl 3.3, par defaut
     if(c == NULL) 
         return 1;
     

@@ -52,7 +52,7 @@ void clear_key_state( const SDL_Keycode key )
 
 //! boucle de gestion des evenements de l'application.
 int draw( );    //!< declaration anticipee.
-int run( window window )
+int run( Window window )
 {
     int stop= 0;
     while(stop == 0)
@@ -107,7 +107,7 @@ int run( window window )
 }
 
 //! creation d'une fenetre pour l'application.
-window create_window( const int w, const int h )
+Window create_window( const int w, const int h )
 {
     // init sdl
     if(SDL_Init(SDL_INIT_EVERYTHING | SDL_INIT_NOPARACHUTE ) < 0)
@@ -120,7 +120,7 @@ window create_window( const int w, const int h )
     atexit(SDL_Quit);
 
     // creer la fenetre et le contexte openGL
-     window window= SDL_CreateWindow("gKit",
+    Window window= SDL_CreateWindow("gKit",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if(window == NULL)
@@ -142,7 +142,7 @@ window create_window( const int w, const int h )
     return window;
 }
 
-void release_window( window window )
+void release_window( Window window )
 {
     SDL_DestroyWindow(window);
 }
@@ -167,7 +167,7 @@ void GK_CALLBACK debug( GLenum source, GLenum type, unsigned int id, GLenum seve
 }
 
 //! cree et configure un contexte opengl
-context create_context( window window, const int major, const int minor )
+Context create_context( Window window, const int major, const int minor )
 {
     if(window == NULL)
         return NULL;
@@ -181,7 +181,7 @@ context create_context( window window, const int major, const int minor )
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 15);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    context context= SDL_GL_CreateContext(window);
+    Context context= SDL_GL_CreateContext(window);
     if(context == NULL)
     {
         printf("[error] creating openGL context.\n");
@@ -214,7 +214,7 @@ context create_context( window window, const int major, const int minor )
     return context;
 }
 
-void release_context( context context )
+void release_context( Context context )
 {
     SDL_GL_DeleteContext(context);
 }
