@@ -132,13 +132,6 @@ int draw( )
     else if(button & SDL_BUTTON(3))
         orbiter_move(camera, x);           // dolly
     
-    if(key_state(' '))
-    {
-        clear_key_state(' ');
-        printf("boom\n");
-    }
-    
-    
     // initialiser les transformations
     mat4 model= make_identity();
     mat4 view= orbiter_view_matrix(camera);
@@ -147,6 +140,13 @@ int draw( )
     draw(cube, model, view, projection, texture);
 
     clear(console);
+    
+    if(key_state(' '))
+    {
+        //~ clear_key_state(' ');
+        printf(console, 0, 3, "boom");
+    }
+    
     print(console, 0, 1, "print");
     printf(console, 0, 2, "printf %d %d", x, y);
     draw(console, window_width(), window_height());
