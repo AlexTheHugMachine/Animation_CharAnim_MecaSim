@@ -146,10 +146,10 @@ int draw( )
     
     draw(cube, model, view, projection, texture);
 
-    text_clear(console);
-    text_print(console, 0, 1, "print");
-    //~ text_print(console, 0, 2, "\2\2\2\2\2\2\2\2");
-    draw_text(console, window_width(), window_height());
+    clear(console);
+    print(console, 0, 1, "print");
+    printf(console, 0, 2, "printf %d %d", x, y);
+    draw(console, window_width(), window_height());
     
     return 1;
 }

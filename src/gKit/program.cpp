@@ -243,37 +243,37 @@ int location( const GLuint program, const char *uniform )
 }
 
 
-void program_set_uint( const GLuint program, const char *uniform, const unsigned int v )
+void program_uniform( const GLuint program, const char *uniform, const unsigned int v )
 {
     glUniform1ui( location(program, uniform), v );
 }
 
-void program_set_int( const GLuint program, const char *uniform, const int v )
+void program_uniform( const GLuint program, const char *uniform, const int v )
 {
     glUniform1i( location(program, uniform), v );
 }
 
-void program_set_float( const GLuint program, const char *uniform, const float v )
+void program_uniform( const GLuint program, const char *uniform, const float v )
 {
     glUniform1f( location(program, uniform), v );
 }
 
-void program_set_vec2( const GLuint program, const char *uniform, const vec2& v )
+void program_uniform( const GLuint program, const char *uniform, const vec2& v )
 {
     glUniform2fv( location(program, uniform), 1, &v.x );
 }
 
-void program_set_vec3( const GLuint program, const char *uniform, const vec3& v )
+void program_uniform( const GLuint program, const char *uniform, const vec3& v )
 {
     glUniform3fv( location(program, uniform), 1, &v.x );
 }
 
-void program_set_vec4( const GLuint program, const char *uniform, const vec4& v )
+void program_uniform( const GLuint program, const char *uniform, const vec4& v )
 {
     glUniform4fv( location(program, uniform), 1, &v.x );
 }
 
-void program_set_mat4( const GLuint program, const char *uniform, const mat4& v )
+void program_uniform( const GLuint program, const char *uniform, const mat4& v )
 {
     glUniformMatrix4fv( location(program, uniform), 1, GL_TRUE, &v.m[0][0] );
 }
@@ -282,5 +282,5 @@ void program_use_texture( const GLuint program, const char *sampler, const int u
 {
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, texture);
-    program_set_int(program, sampler, unit);
+    program_uniform(program, sampler, unit);
 }

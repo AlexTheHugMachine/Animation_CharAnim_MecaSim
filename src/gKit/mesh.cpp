@@ -235,9 +235,9 @@ void draw( Mesh& m, const mat4& model, const mat4& view, const mat4& projection,
     mat4 normal= make_normal_matrix(mv);
     mat4 mvp= projection * view * model;
     
-    program_set_mat4(m.program, "mvpMatrix", mvp);
-    program_set_mat4(m.program, "mvMatrix", mv);
-    program_set_mat4(m.program, "normalMatrix", normal);
+    program_uniform(m.program, "mvpMatrix", mvp);
+    program_uniform(m.program, "mvMatrix", mv);
+    program_uniform(m.program, "normalMatrix", normal);
 
     // utiliser une texture, elle ne sera visible que si le mesh a des texcoords...
     if(texture > 0)

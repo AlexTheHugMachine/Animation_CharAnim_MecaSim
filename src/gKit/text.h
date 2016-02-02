@@ -18,10 +18,11 @@ struct Text
 Text create_text( );
 void release_text( Text& text );
 
-void text_clear( Text& text );
-void text_print( Text& text, const int x, const int y, const char *message );
+void clear( Text& text );
+void print( Text& text, const int x, const int y, const char *message );
+void printf( Text& text, const int x, const int y, const char *format, ... );
 
-void draw_text( const Text& text, const int width, const int height );
+void draw( const Text& text, const int width, const int height );
 
 
 #endif
