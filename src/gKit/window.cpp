@@ -50,10 +50,51 @@ void clear_key_state( const SDL_Keycode key )
 }
 
 
+static SDL_KeyboardEvent last_key;
+
+SDL_KeyboardEvent key_event( )
+{
+    return last_key;
+}
+
+void clear_key_event( )
+{
+    last_key.type= 0;
+}
+
+
+static SDL_TextInputEvent last_text;
+
+SDL_TextInputEvent text_event( )
+{
+    return last_text;
+}
+
+void clear_text_event( )
+{
+    last_text.text[0]= 0;
+}
+
+
+static SDL_MouseButtonEvent last_button;
+
+SDL_MouseButtonEvent button_event( )
+{
+    return last_button;
+}
+
+void clear_button_event( )
+{
+    last_button.state= 0;
+}
+
+
 //! boucle de gestion des evenements de l'application.
 int draw( );    //!< declaration anticipee.
 int run( Window window )
 {
+    SDL_StartTextInput();
+    
     int stop= 0;
     while(stop == 0)
     {
@@ -77,20 +118,37 @@ int run( Window window )
                     }
                     break;
 
+                case SDL_TEXTINPUT:
+                    // conserver le dernier caractere
+                    last_text= event.text;
+                
                 case SDL_KEYDOWN:
                     // modifier l'etat du clavier
-                    assert((size_t) event.key.keysym.scancode < key_states.size());
-                    key_states[event.key.keysym.scancode]= 1;
+                    if((size_t) event.key.keysym.scancode < key_states.size())
+                    {
+                        key_states[event.key.keysym.scancode]= 1;
+                        last_key= event.key;    // conserver le dernier evenement
+                    }
+                    
+                    // fermer l'application
                     if(event.key.keysym.sym == SDLK_ESCAPE)
-                        stop= 1;        // fermer l'application
+                        stop= 1;
                     break;
                 
                 case SDL_KEYUP:
                     // modifier l'etat du clavier
-                    assert((size_t) event.key.keysym.scancode < key_states.size());
-                    key_states[event.key.keysym.scancode]= 0;
+                    if((size_t) event.key.keysym.scancode < key_states.size())
+                    {
+                        key_states[event.key.keysym.scancode]= 0;
+                        last_key= event.key;    // conserver le dernier evenement
+                    }
                     break;
 
+                case SDL_MOUSEBUTTONDOWN:
+                case SDL_MOUSEBUTTONUP:
+                    last_button= event.button;
+                    break;
+                
                 case SDL_QUIT:
                     stop= 1;            // fermer l'application
                     break;
@@ -103,6 +161,7 @@ int run( Window window )
         SDL_GL_SwapWindow(window);
     }
 
+    SDL_StopTextInput();
     return 0;
 }
 
@@ -160,10 +219,12 @@ void GK_CALLBACK debug( GLenum source, GLenum type, unsigned int id, GLenum seve
 
     if(severity == GL_DEBUG_SEVERITY_HIGH)
         printf("[openGL error]\n%s\n", message);
+#ifndef GK_RELEASE
     else if(severity == GL_DEBUG_SEVERITY_MEDIUM)
         printf("[openGL warning]\n%s\n", message);
     else
         printf("[openGL message]\n%s\n", message);
+#endif
 }
 
 //! cree et configure un contexte opengl
@@ -175,7 +236,9 @@ Context create_context( Window window, const int major, const int minor )
     // configure la creation du contexte opengl core profile, debug profile
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
+#ifndef GK_RELEASE    
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 15);
@@ -203,6 +266,7 @@ Context create_context( Window window, const int major, const int minor )
     // purge les erreurs opengl generees par glew !
     while(glGetError() != GL_NO_ERROR) {;}
 
+#ifndef GK_RELEASE        
     // configure l'affichage des messages d'erreurs opengl, si l'extension est disponible
     if(GLEW_ARB_debug_output)
     {
@@ -210,7 +274,8 @@ Context create_context( Window window, const int major, const int minor )
         glDebugMessageCallbackARB(debug, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
-
+#endif
+    
     return context;
 }
 

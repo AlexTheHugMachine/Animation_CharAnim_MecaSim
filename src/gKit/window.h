@@ -22,6 +22,13 @@ int window_height( );
 int key_state( const SDL_Keycode key );
 void clear_key_state( const SDL_Keycode key );
 
+SDL_KeyboardEvent key_event( );
+void clear_key_event( );
+SDL_MouseButtonEvent button_event( );
+void clear_button_event( );
+SDL_TextInputEvent text_event( );
+void clear_text_event( );
+
 //! fonction principale.
 int run( Window w );
 

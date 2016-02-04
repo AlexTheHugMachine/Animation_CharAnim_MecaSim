@@ -13,7 +13,9 @@
 #include "vec.h"
 #include "mat.h"
 #include "orbiter.h"
+
 #include "text.h"
+#include "widgets.h"
 
 
 GLuint texture;
@@ -22,6 +24,7 @@ Orbiter camera;
 Mesh cube;
 
 Text console;
+Widgets widgets;
 
 //! compile les shaders et construit le programme + les buffers + le vertex array.
 //! renvoie -1 en cas d'erreur.
@@ -74,6 +77,7 @@ int init( )
     
     // 
     console= create_text();
+    widgets= create_widgets();
     
 #if 1
     vec3 pmin, pmax;
@@ -122,15 +126,15 @@ int draw( )
     // effacer l'image
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    int x, y;
-    unsigned int button= SDL_GetRelativeMouseState(&x, &y);
+    int mx, my;
+    unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
     
-    if(button & SDL_BUTTON(1))
-        orbiter_rotation(camera, x, y);      // orbit
-    else if(button & SDL_BUTTON(2))
-        orbiter_translation(camera, (float) x / (float) window_width(), (float) y / (float) window_height()); // pan
-    else if(button & SDL_BUTTON(3))
-        orbiter_move(camera, x);           // dolly
+    if(mb & SDL_BUTTON(1))
+        orbiter_rotation(camera, mx, my);      // orbit
+    else if(mb & SDL_BUTTON(2))
+        orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height()); // pan
+    else if(mb & SDL_BUTTON(3))
+        orbiter_move(camera, mx);           // dolly
     
     // initialiser les transformations
     mat4 model= make_identity();
@@ -144,12 +148,34 @@ int draw( )
     if(key_state(' '))
     {
         //~ clear_key_state(' ');
-        printf(console, 0, 3, "boom");
+        printf_background(console, 0, 3, "  boom  ");
     }
     
     print(console, 0, 1, "print");
-    printf(console, 0, 2, "printf %d %d", x, y);
-    draw(console, window_width(), window_height());
+    printf(console, 0, 2, "printf %d %d", mx, my);
+    //~ draw(console, window_width(), window_height());
+    
+    static int button1= 0;
+    static char edit1[32]= { 0 };
+    
+    begin(widgets);
+        label(widgets, 0, 1, "line1");
+            label(widgets, 1, 0, "label1");
+            label(widgets, 1, 0, "label2");
+
+        label(widgets, 0, 1, "line2");
+            label(widgets, 1, 0, "label1");
+            label(widgets, 1, 0, "label2");
+            if(edit(widgets, 1, 0, sizeof(edit1), edit1))
+            {
+                printf("edit: '%s'\n", edit1);
+            }
+    
+        //~ label(widgets, 0, 1, "line3");
+            button(widgets, 1, 0, "button1", button1);
+    
+    end(widgets);
+    draw(widgets, window_width(), window_height());
     
     return 1;
 }
