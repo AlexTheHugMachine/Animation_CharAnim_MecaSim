@@ -150,12 +150,12 @@ void restart_strip( Mesh& m )
 #endif
 }
 
-void bounds( const Mesh& m, vec3& pmin, vec3& pmax )
+void bounds( const Mesh& m, Point& pmin, Point& pmax )
 {
     if(m.positions.size() < 3)
         return;
     
-    pmin= make_vec3(m.positions[0], m.positions[1], m.positions[2]);
+    pmin= make_point(m.positions[0], m.positions[1], m.positions[2]);
     pmax= pmin; 
     
     for(unsigned int i= 3; i < (unsigned int) m.positions.size(); i+= 3)
@@ -163,8 +163,8 @@ void bounds( const Mesh& m, vec3& pmin, vec3& pmax )
         float x= m.positions[i];
         float y= m.positions[i +1];
         float z= m.positions[i +2];
-        pmin= make_vec3( std::min(pmin.x, x), std::min(pmin.y,  y), std::min(pmin.z, z) );
-        pmax= make_vec3( std::max(pmax.x, x), std::max(pmax.y,  y), std::max(pmax.z, z) );
+        pmin= make_point( std::min(pmin.x, x), std::min(pmin.y,  y), std::min(pmin.z, z) );
+        pmax= make_point( std::max(pmax.x, x), std::max(pmax.y,  y), std::max(pmax.z, z) );
     }
 }
 
@@ -221,7 +221,7 @@ GLuint make_mesh_program( Mesh& m )
 }
 
 
-void draw( Mesh& m, const mat4& model, const mat4& view, const mat4& projection, GLuint texture )
+void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, GLuint texture )
 {
     if(m.vao == 0)
         m.vao= make_mesh_vertex_format(m);
@@ -231,9 +231,9 @@ void draw( Mesh& m, const mat4& model, const mat4& view, const mat4& projection,
     glBindVertexArray(m.vao);
     glUseProgram(m.program);
     
-    mat4 mv= view * model;
-    mat4 normal= make_normal_matrix(mv);
-    mat4 mvp= projection * view * model;
+    Transform mv= view * model;
+    Transform normal= make_normal_transform(mv);
+    Transform mvp= projection * view * model;
     
     program_uniform(m.program, "mvpMatrix", mvp);
     program_uniform(m.program, "mvMatrix", mv);
@@ -249,7 +249,7 @@ void draw( Mesh& m, const mat4& model, const mat4& view, const mat4& projection,
         glDrawArrays(m.primitives, 0, m.count);
 }
 
-void draw( Mesh& m, const mat4& model, const mat4& view, const mat4& projection )
+void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection )
 {
     draw(m, model, view, projection, 0);
 }

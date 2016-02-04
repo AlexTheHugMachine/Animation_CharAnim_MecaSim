@@ -44,12 +44,12 @@ void push_triangle_last( Mesh& m, const int a, const int b, const int c );
 
 void restart_strip( Mesh& m );
 
-void bounds( const Mesh& m, vec3& pmin, vec3& pmax );
+void bounds( const Mesh& m, Point& pmin, Point& pmax );
 
 GLuint make_mesh_vertex_format( Mesh& m );
 GLuint make_mesh_program( Mesh& m );
 
-void draw( Mesh& m, const mat4& model, const mat4& view, const mat4& projection );
-void draw( Mesh& m, const mat4& model, const mat4& view, const mat4& projection, GLuint texture );
+void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection );
+void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, GLuint texture );
 
 #endif

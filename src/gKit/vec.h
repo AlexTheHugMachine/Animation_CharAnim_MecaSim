@@ -2,7 +2,64 @@
 #ifndef _VEC_H
 #define _VEC_H
 
+struct Point
+{
+    float x, y, z;
+};
 
+//! cree un point de composantes x, y, z.
+Point make_point( const float x, const float y, const float z );
+
+//! renvoie la distance etre 2 points.
+float distance( const Point& a, const Point& b );
+
+
+struct Vector
+{
+    float x, y, z;
+};
+
+//! cree un vecteur de composantes x, y, z.
+Vector make_vector( const float x, const float y, const float z );
+
+//! renvoie le vecteur ab.
+Vector make_vector( const Point& a, const Point& b );
+//! renvoie le vecteur 0a.
+Vector make_vector( const Point& a );
+//! renvoie le vecteur a-b, ba
+Vector operator- ( const Point& a, const Point& b );
+
+//! renvoie le vecteur -v.
+Vector operator- ( const Vector& v );
+
+//! renvoie le point a+v.
+Point operator+ ( const Point& a, const Vector& v );
+//! renvoie le point a+v.
+Point operator+ ( const Vector& v, const Point& a );
+//! renvoie le point a-v.
+Point operator- ( const Vector& v, const Point& a );
+//! renvoie le point a-v.
+Point operator- ( const Point& a, const Vector& v );
+//! renvoie le vecteur u+v.
+Vector operator+ ( const Vector& u, const Vector& v );
+//! renvoie le vecteur k*u;
+Vector operator* ( const float k, const Vector& v );
+//! renvoie le vecteur k*u;
+Vector operator* ( const Vector& v, const float k );
+//! renvoie le vecteur u/k;
+Vector operator/ ( const Vector& v, const float k );
+
+//! renvoie un vecteur unitaire / longueur == 1.
+Vector normalize( const Vector& v );
+//! renvoie le produit vectoriel de 2 vecteurs.
+Vector cross( const Vector& u, const Vector& v );
+//! renvoie le produit scalaire de 2 vecteurs.
+float dot( const Vector& u, const Vector& v );
+//! renvoie la longueur d'un vecteur.
+float length( const Vector& v );
+
+
+//! vecteur generique, utilitaire.
 struct vec2
 {
     float x, y;
@@ -10,11 +67,7 @@ struct vec2
 
 vec2 make_vec2( const float x, const float y );
 
-vec2 operator+( const vec2& a, const vec2& b );
-vec2 operator-( const vec2& a );
-vec2 operator-( const vec2& a, const vec2& b );
-
-
+//! vecteur generique, utilitaire.
 struct vec3
 {
     float x, y, z;
@@ -23,47 +76,7 @@ struct vec3
 vec3 make_vec3( const float x, const float y, const float z );
 vec3 make_vec3( const vec2& v, const float z );
 
-vec3 operator+( const vec3& a, const vec3& b );
-vec3 operator+( const vec3& a, const float b );
-vec3 operator+( const float& a, const vec3& b );
-
-vec3 operator-( const vec3& a );
-vec3 operator-( const vec3& a, const vec3& b );
-vec3 operator-( const vec3& a, const float& b );
-vec3 operator-( const float& a, const vec3& b );
-
-vec3 operator*( const vec3& a, const vec3& b );
-vec3 operator*( const vec3& a, const float b );
-vec3 operator*( const float a, const vec3& b );
-
-vec3 operator/( const vec3& a, const vec3& b );
-vec3 operator/( const vec3& a, const float b );
-vec3 operator/( const float a, const vec3& b );
-
-vec3 normalize( const vec3& a );
-vec3 cross( const vec3& a, const vec3& b );
-float dot( const vec3& a, const vec3& b );
-float distance( const vec3& a, const vec3& b );
-float length( const vec3& a );
-
-// classes derivees... pas typedef !
-//~ typedef vec3 point;
-//~ typedef vec3 vector;
-//~ typedef vec3 normal;
-
-//~ point make_point( const float x, const float y, const float z );
-//~ vector make_vector( const float x, const float y, const float z );
-//~ vector make_vector( const point& a, const point& b );   // vecteur ab
-//~ normal make_normal( const float x, const float y, const float z );
-
-//~ point operator+( const point& p, const vector& v );
-//~ point operator+( const vector& v, const point& p );
-
-//~ vector operator-( const point& p, const vector& v );
-//~ vector operator-( const vector& v, const point& p );
-//~ vector operator-( const point& a, const point& b );     // vecteur ab
-
-
+//! vecteur generique, utilitaire.
 struct vec4
 {
     float x, y, z, w;
@@ -72,9 +85,5 @@ struct vec4
 vec4 make_vec4( const float x, const float y, const float z, const float w );
 vec4 make_vec4( const vec2& v, const float z, const float w );
 vec4 make_vec4( const vec3& v, const float w );
-
-vec4 make_point4( const vec3& p );
-vec4 make_vector4( const vec3& v );
-
 
 #endif

@@ -4,224 +4,150 @@
 #include "vec.h"
 
 
-vec2 make_vec2( const float x, const float y )
+Point make_point( const float x, const float y, const float z )
 {
-    vec2 v;
-    v.x= x;
-    v.y= y;
+    Point p;
+    p.x= x; p.y= y; p.z= z;
+    return p;
+}
+
+float distance( const Point& a, const Point& b )
+{
+    return length(a - b);
+}
+
+
+Vector make_vector( const float x, const float y, const float z )
+{
+    Vector v;
+    v.x= x; v.y= y; v.z= z;
     return v;
 }
 
-
-vec2 operator+( const vec2& a, const vec2& b )
+Vector make_vector( const Point& a, const Point& b )
 {
-    return make_vec2(a.x+b.x, a.y+b.y);
+    return b - a;
 }
 
-vec2 operator-( const vec2& a )
+Vector make_vector( const Point& a )
 {
-    return make_vec2(-a.x, -a.y);
+    return make_vector(a.x, a.y, a.z);
 }
 
-vec2 operator-( const vec2& a, const vec2& b )
+Vector operator- ( const Point& a, const Point& b )
 {
-    return make_vec2(a.x-b.x, a.y-b.y);
+    return make_vector(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+Vector operator- ( const Vector& v )
+{
+    return make_vector(-v.x, -v.y, -v.z);
+}
+
+Point operator+ ( const Point& a, const Vector& v )
+{
+    return make_point(a.x + v.x, a.y + v.y, a.z + v.z);
+}
+
+Point operator+ ( const Vector& v, const Point& a )
+{
+    return a + v;
+}
+
+Point operator- ( const Vector& v, const Point& a )
+{
+    return a + (-v);
+}
+
+Point operator- ( const Point& a, const Vector& v )
+{
+    return a + (-v);
+}
+
+Vector operator+ ( const Vector& u, const Vector& v )
+{
+    return make_vector(u.x + v.x, u.y + v.y, u.z + v.z);
+}
+
+Vector operator* ( const float k, const Vector& v )
+{
+    return make_vector(k * v.x, k * v.y, k * v.z);
+}
+
+Vector operator* ( const Vector& v, const float k )
+{
+    return k * v;
+}
+
+Vector operator/ ( const Vector& v, const float k )
+{
+    float kk= 1 / k;
+    return kk * v;
+}
+
+Vector normalize( const Vector& v )
+{
+    float kk= 1 / length(v);
+    return kk * v;
+}
+
+Vector cross( const Vector& u, const Vector& v )
+{
+    return make_vector(
+        (u.y * v.z) - (u.z * v.y),
+        (u.z * v.x) - (u.x * v.z),
+        (u.x * v.y) - (u.y * v.x));
+}
+
+float dot( const Vector& u, const Vector& v )
+{
+    return u.x * v.x + u.y * v.y + u.z * v.z;
+}
+
+float length( const Vector& v )
+{
+    return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 
+vec2 make_vec2( const float x, const float y )
+{
+    vec2 v;
+    v.x= x; v.y= y;
+    return v;
+}
 
 vec3 make_vec3( const float x, const float y, const float z )
 {
     vec3 v;
-    v.x= x;
-    v.y= y;
-    v.z= z;
+    v.x= x; v.y= y; v.z= z;
     return v;
 }
 
 vec3 make_vec3( const vec2& u, const float z )
 {
     vec3 v;
-    v.x= u.x;
-    v.y= u.y;
-    v.z= z;
+    v.x= u.x; v.y= u.y; v.z= z;
     return v;
 }
-
-
-vec3 normalize( const vec3& a )
-{
-    float w= 1 / length(a);
-    return make_vec3(a.x*w, a.y*w, a.z*w); 
-}
-    
-vec3 cross( const vec3& a, const vec3& b )
-{
-    return make_vec3(
-        ( a.y*b.z ) - ( a.z*b.y ),
-        ( a.z*b.x ) - ( a.x*b.z ),
-        ( a.x*b.y ) - ( a.y*b.x ));
-}
-
-
-float dot( const vec3& a, const vec3& b )
-{
-    return a.x*b.x + a.y*b.y + a.z*b.z;
-}
-
-float distance( const vec3& a, const vec3& b )
-{
-    return length( a - b );
-}
-
-float length( const vec3& a )
-{
-    return sqrtf( a.x*a.x + a.y*a.y + a.z*a.z );
-}
-
-
-vec3 operator+( const vec3& a, const vec3& b )
-{
-    return make_vec3( a.x+b.x, a.y+b.y, a.z+b.z );
-}
-
-vec3 operator+( const vec3& a, const float b )
-{
-    return make_vec3( a.x+b, a.y+b, a.z+b );
-}
-
-vec3 operator+( const float& a, const vec3& b )
-{
-    return make_vec3( a+b.x, a+b.y, a+b.z );
-}
-
-vec3 operator-( const vec3& a )
-{
-    return make_vec3( -a.x, -a.y, -a.z );
-}
-
-vec3 operator-( const vec3& a, const vec3& b )
-{
-    return make_vec3( a.x-b.x, a.y-b.y, a.z-b.z );
-}
-
-vec3 operator-( const vec3& a, const float& b )
-{
-    return make_vec3( a.x-b, a.y-b, a.z-b );
-}
-
-vec3 operator-( const float& a, const vec3& b )
-{
-    return make_vec3( a-b.x, a-b.y, a-b.z );
-}
-
-
-vec3 operator*( const vec3& a, const vec3& b )
-{
-    return make_vec3( a.x*b.x, a.y*b.y, a.z*b.z );
-}
-
-vec3 operator*( const vec3& a, const float b )
-{
-    return make_vec3( a.x*b, a.y*b, a.z*b );
-}
-
-vec3 operator*( const float a, const vec3& b )
-{
-    return make_vec3( a*b.x, a*b.y, a*b.z );
-}
-
-
-vec3 operator/( const vec3& a, const vec3& b )
-{
-    return make_vec3( a.x/b.x, a.y/b.y, a.z/b.z );
-}
-
-vec3 operator/( const vec3& a, const float b )
-{
-    return make_vec3( a.x/b, a.y/b, a.z/b );
-}
-
-vec3 operator/( const float a, const vec3& b )
-{
-    return make_vec3( a/b.x, a/b.y, a/b.z );
-}
-
 
 vec4 make_vec4( const float x, const float y, const float z, const float w )
 {
     vec4 v;
-    v.x= x;
-    v.y= y;
-    v.z= z;
-    v.w= w;
+    v.x= x; v.y= y; v.z= z; v.w= w;
     return v;
 }
 
 vec4 make_vec4( const vec2& u, const float z, const float w )
 {
     vec4 v;
-    v.x= u.x;
-    v.y= u.y;
-    v.z= z;
-    v.w= w;
+    v.x= u.x; v.y= u.y; v.z= z; v.w= w;
     return v;
 }
 
 vec4 make_vec4( const vec3& u, const float w )
 {
     vec4 v;
-    v.x= u.x;
-    v.y= u.y;
-    v.z= u.z;
-    v.w= w;
+    v.x= u.x; v.y= u.y; v.z= u.z; v.w= w;
     return v;
 }
-
-vec4 make_point4( const vec3& p )
-{
-    return make_vec4(p, 1);
-}
-
-vec4 make_vector4( const vec3& v )
-{
-    return make_vec4(v, 0);
-}
-
-
-//~ point make_point( const float x, const float y, const float z )
-//~ {
-    //~ return make_vec3(x, y, z);
-//~ }
-
-//~ vector make_vector( const float x, const float y, const float z )
-//~ {
-    //~ return make_vec3(x, y, z);
-//~ }
-
-
-//~ point operator+( const point& p, const vector& v )
-//~ {
-    //~ return make_point( p.x+v.x, p.y+v.y, p.z+v.z );
-//~ }
-
-//~ point operator+( const vector& v, const point& p )
-//~ {
-    //~ return make_point( p.x+v.x, p.y+v.y, p.z+v.z );
-//~ }
-
-//~ vector operator-( const point& p, const vector& v )
-//~ {
-    //~ return make_vector( p.x-v.x, p.y-v.y, p.z-v.z );
-//~ }
-
-//~ vector operator-( const vector& v, const point& p )
-//~ {
-    //~ return make_vector( p.x-v.x, p.y-v.y, p.z-v.z );
-//~ }
-
-//~ vector operator-( const point& a, const point& b )
-//~ {
-    //~ return make_vector( b.x-a.x, b.y-a.y, b.z-a.z );
-//~ }
-

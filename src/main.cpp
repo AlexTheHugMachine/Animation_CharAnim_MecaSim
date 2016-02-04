@@ -35,7 +35,7 @@ int init( )
     if(texture == 0) 
         return -1;
     
-#if 0
+#if 1
     // charge un fichier obj
     cube= read_mesh("data/bigguy.obj");
 
@@ -71,9 +71,9 @@ int init( )
 #endif
     
     // 
-    vec3 pmin, pmax;
+    Point pmin, pmax;
     bounds(cube, pmin, pmax);
-    camera= make_orbiter_lookat( (pmin + pmax) / 2, distance(pmin, pmax) );
+    camera= make_orbiter_lookat( pmin + make_vector(pmin, pmax) / 2, distance(pmin, pmax) );
     
     //
     console= create_text();
@@ -105,6 +105,7 @@ int quit( )
 {
     release_mesh(cube);
     release_text(console);
+    release_widgets(widgets);
     // detruit les objets openGL
     glDeleteTextures(1, &texture);
     return 0;
@@ -128,9 +129,9 @@ int draw( )
         orbiter_move(camera, mx);           // approche / eloigne l'objet
     
     // recupere les transformations
-    mat4 model= make_identity();
-    mat4 view= orbiter_view_matrix(camera);
-    mat4 projection= orbiter_projection_matrix(camera, window_width(), window_height(), 45);
+    Transform model= make_identity();
+    Transform view= orbiter_view_transform(camera);
+    Transform projection= orbiter_projection_transform(camera, window_width(), window_height(), 45);
     
     // affiche l'objet
     draw(cube, model, view, projection, texture);
@@ -185,11 +186,11 @@ int draw( )
 
 int main( int argc, char **argv )
 {
-    Window w= create_window(1024, 768);
+    Window w= create_window(1024, 640);
     if(w == NULL) 
         return 1;
     
-    Context c= create_context(w);        // cree un contexte opengl 3.3, par defaut
+    Context c= create_context(w);
     if(c == NULL) 
         return 1;
     

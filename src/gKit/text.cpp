@@ -36,6 +36,7 @@ void clear( Text& text )
         text.buffer[y][x]= ' ';
 }
 
+
 static
 void print( Text& text, const int px, const int py, const int background, const char *message )
 {

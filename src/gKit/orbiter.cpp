@@ -5,14 +5,14 @@
 Orbiter make_orbiter( )
 {
     Orbiter o;
-    o.center= make_vec3(0, 0, 0);
+    o.center= make_point(0, 0, 0);
     o.position= make_vec2(0, 0);
     o.rotation= make_vec2(0, 0);
     o.size= 5;
     return o;
 }
 
-Orbiter make_orbiter_lookat( const vec3& center, const float size )
+Orbiter make_orbiter_lookat( const Point& center, const float size )
 {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
     Orbiter o;
     o.center= center;
@@ -24,12 +24,14 @@ Orbiter make_orbiter_lookat( const vec3& center, const float size )
 
 void orbiter_rotation( Orbiter&o, const float x, const float y )
 {
-    o.rotation= o.rotation + make_vec2(y, x);
+    o.rotation.x= o.rotation.x + y;
+    o.rotation.y= o.rotation.y + x;
 }
 
 void orbiter_translation( Orbiter&o, const float x, const float y )
 {
-    o.position= o.position + make_vec2(-o.size * x, o.size * y);
+    o.position.x= o.position.x - o.size * x;
+    o.position.y= o.position.y + o.size * y;
 }
 
 void orbiter_move( Orbiter&o, const float z )
@@ -39,17 +41,19 @@ void orbiter_move( Orbiter&o, const float z )
         o.size= 0.001f;
 }
 
-void orbiter_lookat( Orbiter&o, const vec3& center, const float size )
+void orbiter_lookat( Orbiter&o, const Point& center, const float size )
 {
     o= make_orbiter_lookat(center, size);
 }
 
-mat4 orbiter_view_matrix( const Orbiter&o )
+Transform orbiter_view_transform( const Orbiter&o )
 {
-    return make_translation(-make_vec3(o.position, o.size)) * make_rotationX(o.rotation.x) * make_rotationY(o.rotation.y) * make_translation(-o.center); 
+    return make_translation( - make_vector(o.position.x, o.position.y, o.size) ) 
+        * make_rotationX(o.rotation.x) * make_rotationY(o.rotation.y) 
+        * make_translation( - make_vector(o.center) ); 
 }
 
-mat4 orbiter_projection_matrix( const Orbiter&o, const float width, const float height, const float fov )
+Transform orbiter_projection_transform( const Orbiter&o, const float width, const float height, const float fov )
 {
     return make_perspective(fov, width / height, o.size*0.01f, o.size*2.f + o.center.z);
 }

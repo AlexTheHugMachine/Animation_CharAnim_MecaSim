@@ -103,15 +103,14 @@ Mesh read_mesh( const char *filename )
                     if(itd < 0) itd= (int) texcoords.size() + itd; else itd= itd -1;
                     if(ind < 0) ind= (int) normals.size() + ind; else ind= ind -1;
                     push_vertex(data, positions[id], texcoords[itd].x, texcoords[itd].y , normals[ind]);
-            }
-            
+                }
             }
             else
             {
             // v//n format
                 code= sscanf(line, "f %d//%d %d//%d %d//%d %d//%d", &ia, &ina, &ib, &inb, &ic, &inc, &id, &ind);
                 if(code >= 6)
-            {
+                {
                     if(ia < 0) ia= (int) positions.size() + ia; else ia= ia -1;
                     if(ina < 0) ina= (int) normals.size() + ina; else ina= ina -1;
                     push_vertex(data, positions[ia], normals[ina]);
@@ -132,15 +131,14 @@ Mesh read_mesh( const char *filename )
                         if(id < 0) id= (int) positions.size() + id; else id= id -1;
                         if(ind < 0) ind= (int) normals.size() + ind; else ind= ind -1;
                         push_vertex(data, positions[id], normals[ind]);
-            }
-            
+                    }
                 }
                 else
                 {
-            // v/t  format
+                    // v/t  format
                     code= sscanf(line, "f %d/%d %d/%d %d/%d %d/%d", &ia, &ita, &ib, &itb, &ic, &itc, &id, &itd);
                     if(code >= 6)
-            {
+                    {
                         if(ia < 0) ia= (int) positions.size() + ia; else ia= ia -1;
                         if(ita < 0) ita= (int) texcoords.size() + ita; else ita= ita -1;
                         push_vertex(data, positions[ia], texcoords[ita].x, texcoords[ita].y);
@@ -161,15 +159,14 @@ Mesh read_mesh( const char *filename )
                             if(id < 0) id= (int) positions.size() + id; else id= id -1;
                             if(itd < 0) itd= (int) texcoords.size() + itd; else itd= itd -1;
                             push_vertex(data, positions[id], texcoords[itd].x, texcoords[itd].y);
-            }
-            
+                        }
                     }
                     else
                     {
-            // v format
+                        // v format
                         code= sscanf(line, "f %d %d %d %d", &ia, &ib, &ic, &id);
                         if(code >= 3)
-            {
+                        {
                             if(ia < 0) ia= (int) positions.size() + ia; else ia= ia -1;
                             push_vertex(data, positions[ia]);
                 
@@ -187,11 +184,10 @@ Mesh read_mesh( const char *filename )
                                 if(id < 0) id= (int) positions.size() + id; else id= id -1;
                                 push_vertex(data, positions[id]);
                             }
-            }
-            
-            else
-                // erreur de structure dans le fichier...
-                break;
+                        }
+                        else
+                            // erreur de structure dans le fichier...
+                            break;
                     }
                 }
             }

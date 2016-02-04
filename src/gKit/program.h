@@ -29,7 +29,7 @@ void program_uniform( const GLuint program, const char *uniform, const float v )
 void program_uniform( const GLuint program, const char *uniform, const vec2& v );
 void program_uniform( const GLuint program, const char *uniform, const vec3& v );
 void program_uniform( const GLuint program, const char *uniform, const vec4& v );
-void program_uniform( const GLuint program, const char *uniform, const mat4& v );
+void program_uniform( const GLuint program, const char *uniform, const Transform& v );
 
 //! configure le pipeline et le shader program pour utiliser une texture.
 void program_use_texture( const GLuint program, const char *sampler, const int unit, const GLuint texture );

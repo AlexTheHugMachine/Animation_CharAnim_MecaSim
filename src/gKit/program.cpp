@@ -273,7 +273,7 @@ void program_uniform( const GLuint program, const char *uniform, const vec4& v )
     glUniform4fv( location(program, uniform), 1, &v.x );
 }
 
-void program_uniform( const GLuint program, const char *uniform, const mat4& v )
+void program_uniform( const GLuint program, const char *uniform, const Transform& v )
 {
     glUniformMatrix4fv( location(program, uniform), 1, GL_TRUE, &v.m[0][0] );
 }
