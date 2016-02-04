@@ -13,7 +13,7 @@ Widgets create_widgets( )
     w.console= create_text();
     w.px= 0; w.py= 0;
     w.focus= 0; w.fx= 0; w.fy= 0;
-    w.px= 0; w.py= 0;
+    w.mb= 0; w.mx= 0; w.my= 0;
     return w;
 }
 
@@ -70,6 +70,7 @@ void begin( Widgets& w )
     }
 }
 
+
 struct Rect
 {
     int x, y;
@@ -83,7 +84,7 @@ bool overlap( const Rect r, const int x, const int y )
 }
 
 static
-Rect place( Widgets& w, const int px, const int py, const int width )
+Rect place( Widgets& w, const int width )
 {
     Rect r;
     r.x= w.px;
@@ -91,36 +92,51 @@ Rect place( Widgets& w, const int px, const int py, const int width )
     r.w= width;
     r.h= 1;
     
+    // place le prochain widget a droite 
     w.px= r.x + r.w +2; // +2 marge
-    if(py > 0)
-    {
-        // placement du widget sur une nouvelle ligne
-        r.x= 0;
-        r.y= r.y + 1;
-        // placement du prochain widget a droite
-        w.px= r.w +2;   // +2 marge
-        w.py= r.y;
-    }
-    
     return r;
 }
 
 static
-Rect place( Widgets& w, const int px, const int py, const char *text )
+Rect place( Widgets& w, const char *text )
 {
-    return place(w, px, py, strlen(text));
+    return place(w, strlen(text));
+}
+
+void begin_line( Widgets& w )
+{
+    // place le prochain widget sur une nouvelle ligne
+    w.px= 0;
+    w.py= w.py +1;
+}
+
+void end_line( Widgets& widgets )
+{
+    return;
 }
 
 
-void label( Widgets& w, const int px, const int py, const char *text )
+void label( Widgets& w, const char *text )
 {
-    Rect r= place(w, px, py, text);
+    Rect r= place(w, text);
     print(w.console, r.x, r.y, text);
 }
 
-bool button( Widgets& w, const int px, const int py, const char *text, int& status )
+void labelf( Widgets& w, const char *format, ... )
 {
-    Rect r= place(w, px, py, strlen(text) +2);
+    char tmp[128] = { 0 };
+    
+    va_list args;
+    va_start(args, format);
+    vsnprintf(tmp, sizeof(tmp), format, args);
+    va_end(args);
+    
+    label(w, tmp);
+}
+
+bool button( Widgets& w, const char *text, int& status )
+{
+    Rect r= place(w, strlen(text) +2);
     
     bool change= false;
     if(w.mb > 0 && overlap(r, w.mx, w.my))
@@ -139,11 +155,11 @@ bool button( Widgets& w, const int px, const int py, const char *text, int& stat
     return change;
 }
 
-bool edit( Widgets& w, const int px, const int py, int text_size, char *text )
+bool edit( Widgets& w, int text_size, char *text )
 {
     assert(text_size > 1);
     int size= std::min((int) strlen(text), text_size -2);
-    Rect r= place(w, px, py, text_size -1);
+    Rect r= place(w, text_size -1);
     
     // focus
     bool change= false;
@@ -231,7 +247,14 @@ void end( Widgets& w )
 
 void draw( Widgets& w, const int width, const int height )
 {
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    
     draw(w.console, width, height);
+    
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 }
 
 

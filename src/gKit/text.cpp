@@ -55,7 +55,7 @@ void print( Text& text, const int px, const int py, const int background, const 
         if(x < 0 || y < 0) break;
         if(x >= 128 || y >= 24) break;
         
-        if(!isprint(c)) c= ' ';
+        //~ if(!isprint(c)) c= ' ';
         text.buffer[y][x]= (int) c | (background << 8);
         x++;
     }

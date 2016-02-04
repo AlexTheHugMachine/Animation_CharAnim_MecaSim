@@ -35,20 +35,16 @@ int init( )
     if(texture == 0) 
         return -1;
     
-#if 1
+#if 0
     // charge un fichier obj
     cube= read_mesh("data/bigguy.obj");
-    //~ cube= read_mesh("data/triangle_bigguy.obj");
+
 #else
     // construit un mesh
-    
     cube= make_mesh(GL_TRIANGLE_STRIP);
 
     vertex_texcoord(cube, 0, 0);
     push_vertex(cube, make_vec3(0, 0, 0));
-
-    //~ vertex_texcoord(cube, 0, 1);
-    //~ push_vertex(cube, make_vec3(0, 1, 0));
 
     vertex_texcoord(cube, 1, 0);
     push_vertex(cube, make_vec3(1, 0, 0));
@@ -72,20 +68,16 @@ int init( )
 
     vertex_texcoord(cube, 1, 1);
     push_vertex(cube, make_vec3(1, 1, 1));
-
 #endif
     
     // 
-    console= create_text();
-    widgets= create_widgets();
-    
-#if 1
     vec3 pmin, pmax;
     bounds(cube, pmin, pmax);
     camera= make_orbiter_lookat( (pmin + pmax) / 2, distance(pmin, pmax) );
-#else    
-    camera= make_orbiter_lookat( make_vec3(0.5, 0.5, 0.5), 5 );
-#endif
+    
+    //
+    console= create_text();
+    widgets= create_widgets();
     
     // nettoyage
     glUseProgram(0);
@@ -100,14 +92,11 @@ int init( )
     
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    //~ glEnable(GL_CULL_FACE);
-    glDisable(GL_CULL_FACE);
+    //~ glEnable(GL_CULL_FACE); // n'affiche que les faces correctement orientees...
+    glDisable(GL_CULL_FACE);    // les faces mal orientiees sont affichees avec des hachures oranges...
     
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
-    
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
     
     return 0;
 }
@@ -126,56 +115,69 @@ int draw( )
     // effacer l'image
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
+    // recupere les mouvements de la souris
     int mx, my;
     unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
     
+    // deplace la camera
     if(mb & SDL_BUTTON(1))
-        orbiter_rotation(camera, mx, my);      // orbit
+        orbiter_rotation(camera, mx, my);      // tourne autour de l'objet
     else if(mb & SDL_BUTTON(2))
-        orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height()); // pan
+        orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height()); // deplace le point de rotation
     else if(mb & SDL_BUTTON(3))
-        orbiter_move(camera, mx);           // dolly
+        orbiter_move(camera, mx);           // approche / eloigne l'objet
     
-    // initialiser les transformations
+    // recupere les transformations
     mat4 model= make_identity();
     mat4 view= orbiter_view_matrix(camera);
     mat4 projection= orbiter_projection_matrix(camera, window_width(), window_height(), 45);
     
+    // affiche l'objet
     draw(cube, model, view, projection, texture);
 
+#if 0
     clear(console);
-    
-    if(key_state(' '))
-    {
-        //~ clear_key_state(' ');
-        printf_background(console, 0, 3, "  boom  ");
-    }
-    
     print(console, 0, 1, "print");
     printf(console, 0, 2, "printf %d %d", mx, my);
-    //~ draw(console, window_width(), window_height());
     
+    if(key_state(' '))
+        printf_background(console, 0, 3, "  boom  ");
+    
+    draw(console, window_width(), window_height());
+
+#else    
     static int button1= 0;
     static char edit1[32]= { 0 };
     
     begin(widgets);
-        label(widgets, 0, 1, "line1");
-            label(widgets, 1, 0, "label1");
-            label(widgets, 1, 0, "label2");
-
-        label(widgets, 0, 1, "line2");
-            label(widgets, 1, 0, "label1");
-            label(widgets, 1, 0, "label2");
-            if(edit(widgets, 1, 0, sizeof(edit1), edit1))
+        begin_line(widgets);
+            label(widgets, "line1");
+            label(widgets, "label1");
+            label(widgets, "label2");
+        end_line(widgets);
+        
+        begin_line(widgets);
+            label(widgets, "line2");
+            label(widgets, "label1");
+            label(widgets, "label2");
+            if(edit(widgets, sizeof(edit1), edit1))
             {
                 printf("edit: '%s'\n", edit1);
             }
-    
-        //~ label(widgets, 0, 1, "line3");
-            button(widgets, 1, 0, "button1", button1);
-    
+        end_line(widgets);
+        
+        begin_line(widgets);
+            label(widgets, "line3");
+            labelf(widgets, "format %-3d %-3d", mx, my);        // printf formate
+            if(button(widgets, "button1", button1))
+            {
+                printf("button: %d\n", button1);
+            }
+        end_line(widgets);
     end(widgets);
+    
     draw(widgets, window_width(), window_height());
+#endif
     
     return 1;
 }

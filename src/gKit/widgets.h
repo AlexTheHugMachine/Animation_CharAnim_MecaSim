@@ -8,25 +8,32 @@
 struct Widgets
 {
     Text console;
-    int px, py;
+    int px, py;         // placement des widgets
     
-    int focus;
-    int fx, fy;
-    int mx, my;
-    int mb;
+    int focus;          // focus
+    int fx, fy;         // position du focus
     
-    int key;
-    unsigned int mod;
+    int mb;             // click
+    int mx, my;         // position du click
+    
+    int key;            // touche
+    unsigned int mod;   // touches supplementaires, alt, ctrl, etc.
 };
+
 
 Widgets create_widgets( );
 void release_widgets( Widgets& widgets );
 
 void begin( Widgets& widgets );
 
-void label( Widgets& widgets, const int px, const int py, const char *text );
-bool button( Widgets& widgets, const int px, const int py, const char *text, int& status );
-bool edit( Widgets& widgets, const int px, const int py, const int text_size, char *text );
+void begin_line( Widgets& widgets );
+
+void label( Widgets& widgets, const char *text );
+void labelf( Widgets& widgets, const char *format, ... );
+bool button( Widgets& widgets, const char *text, int& status );
+bool edit( Widgets& widgets, const int text_size, char *text );
+
+void end_line( Widgets& widgets );
 
 void end( Widgets& widgets );
 
