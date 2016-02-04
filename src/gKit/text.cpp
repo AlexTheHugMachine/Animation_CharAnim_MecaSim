@@ -36,7 +36,8 @@ void clear( Text& text )
         text.buffer[y][x]= ' ';
 }
 
-void print( Text& text, const int px, const int py, const char *message )
+static
+void print( Text& text, const int px, const int py, const int background, const char *message )
 {
     int x= px;
     int y= 23 - py;     // premiere ligne en haut... 
@@ -49,17 +50,49 @@ void print( Text& text, const int px, const int py, const char *message )
             y--;
             x= px;
         }
-        if(c == '\n')
-            // ne pas afficher le \n
-            continue;
-        
-        //~ if(!isprint(c)) c= ' ';
+        if(c == '\n') continue;  // ne pas afficher le \n
         
         if(x < 0 || y < 0) break;
         if(x >= 128 || y >= 24) break;
-        text.buffer[y][x]= (int) c;
+        
+        if(!isprint(c)) c= ' ';
+        text.buffer[y][x]= (int) c | (background << 8);
         x++;
     }
+}
+
+
+void print_background( Text& text, const int px, const int py, const int background, const char c )
+{
+    int x= px;
+    int y= 23 - py;     // premiere ligne en haut... 
+    if(x < 0 || y < 0) return;
+    if(x >= 128 || y >= 24) return;
+    if(!isprint(c)) return;
+    
+    text.buffer[y][x]= (int) c | (background << 8);
+}
+
+void print_background( Text& text, const int px, const int py, const char *message )
+{
+    print(text, px, py, 2, message);
+}
+
+void print( Text& text, const int px, const int py, const char *message )
+{
+    print(text, px, py, 0, message);
+}
+
+void printf_background( Text& text, const int px, const int py, const char *format, ... )
+{
+    char tmp[24*128] = { 0 };
+    
+    va_list args;
+    va_start(args, format);
+    vsnprintf(tmp, sizeof(tmp), format, args);
+    va_end(args);
+    
+    print(text, px, py, 2, tmp);
 }
 
 void printf( Text& text, const int px, const int py, const char *format, ... )
@@ -71,7 +104,7 @@ void printf( Text& text, const int px, const int py, const char *format, ... )
     vsnprintf(tmp, sizeof(tmp), format, args);
     va_end(args);
     
-    print(text, px, py, tmp);
+    print(text, px, py, 0, tmp);
 }
 
 

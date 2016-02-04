@@ -35,10 +35,18 @@ void main( )
     
     ivec4 codes= text[cell.y * 128/4 + cell.x/4];
     int code= codes[cell.x%4];
-    ivec2 glyph= ivec2(code % 16, 7 - code / 16);
+    int front= code & 255;
+    int back= (code >> 8) & 255;
+    ivec2 front_glyph= ivec2(front % 16, 7 - front / 16);
+    ivec2 back_glyph= ivec2(back % 16, 7 - back / 16);
     
-    ivec2 uv= pixel % ivec2(8, 16) + glyph * ivec2(8, 16);
-    vec4 color= texelFetch(font, uv, 0);
+    ivec2 front_uv= pixel % ivec2(8, 16) + front_glyph * ivec2(8, 16);
+    ivec2 back_uv= pixel % ivec2(8, 16) + back_glyph * ivec2(8, 16);
+    vec4 front_color= texelFetch(font, front_uv, 0);
+    vec4 back_color= texelFetch(font, back_uv, 0) * 0.6;
+    
+    // composition du caractere sur le fond
+    vec4 color= vec4(front_color.rgb * front_color.a + back_color.rgb * (1.0 - front_color.a), front_color.a + back_color.a * (1.0 - front_color.a));
     if(color.a < 0.5)
         discard;
     
