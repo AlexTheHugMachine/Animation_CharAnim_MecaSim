@@ -7,7 +7,7 @@
 
 Mesh read_mesh( const char *filename )
 {
-    Mesh data= make_mesh(GL_TRIANGLES);
+    Mesh data= create_mesh(GL_TRIANGLES);
     
     FILE *in= fopen(filename, "rt");
     if(in == NULL)
@@ -107,7 +107,7 @@ Mesh read_mesh( const char *filename )
             }
             else
             {
-            // v//n format
+                // v//n format
                 code= sscanf(line, "f %d//%d %d//%d %d//%d %d//%d", &ia, &ina, &ib, &inb, &ic, &inc, &id, &ind);
                 if(code >= 6)
                 {

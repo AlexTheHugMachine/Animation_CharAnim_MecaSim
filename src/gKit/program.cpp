@@ -268,6 +268,16 @@ void program_uniform( const GLuint program, const char *uniform, const vec3& v )
     glUniform3fv( location(program, uniform), 1, &v.x );
 }
 
+void program_uniform( const GLuint program, const char *uniform, const Point& a )
+{
+    glUniform3fv( location(program, uniform), 1, &a.x );
+}
+
+void program_uniform( const GLuint program, const char *uniform, const Vector& v )
+{
+    glUniform3fv( location(program, uniform), 1, &v.x );
+}
+
 void program_uniform( const GLuint program, const char *uniform, const vec4& v )
 {
     glUniform4fv( location(program, uniform), 1, &v.x );

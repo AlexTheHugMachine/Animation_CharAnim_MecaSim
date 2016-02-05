@@ -274,22 +274,22 @@ Transform make_inverse( const Transform& m )
 }
 
 
-//~ vec4 transform( const mat4& m, const vec4& v )
-//~ {
-    //~ float x= v.x;
-    //~ float y= v.y;
-    //~ float z= v.z;
-    //~ float w= v.w;
+vec4 transform( const Transform& m, const vec4& v )
+{
+    float x= v.x;
+    float y= v.y;
+    float z= v.z;
+    float w= v.w;
     
-    //~ float xt= m.m[0][0] * x + m.m[0][1] * y + m.m[0][2] * z + m.m[0][3] * w;    // dot(vec4(m[0]), v)
-    //~ float yt= m.m[1][0] * x + m.m[1][1] * y + m.m[1][2] * z + m.m[1][3] * w;    // dot(vec4(m[1]), v)
-    //~ float zt= m.m[2][0] * x + m.m[2][1] * y + m.m[2][2] * z + m.m[2][3] * w;    // dot(vec4(m[2]), v)
-    //~ float wt= m.m[3][0] * x + m.m[3][1] * y + m.m[3][2] * z + m.m[3][3] * w;    // dot(vec4(m[3]), v)
+    float xt= m.m[0][0] * x + m.m[0][1] * y + m.m[0][2] * z + m.m[0][3] * w;    // dot(vec4(m[0]), v)
+    float yt= m.m[1][0] * x + m.m[1][1] * y + m.m[1][2] * z + m.m[1][3] * w;    // dot(vec4(m[1]), v)
+    float zt= m.m[2][0] * x + m.m[2][1] * y + m.m[2][2] * z + m.m[2][3] * w;    // dot(vec4(m[2]), v)
+    float wt= m.m[3][0] * x + m.m[3][1] * y + m.m[3][2] * z + m.m[3][3] * w;    // dot(vec4(m[3]), v)
     
-    //~ return make_vec4(xt, yt, zt, wt);
-//~ }
+    return make_vec4(xt, yt, zt, wt);
+}
 
-Point transform_point( const Transform& m, const Point& p )
+Point transform( const Transform& m, const Point& p )
 {
     float x= p.x;
     float y= p.y;
@@ -308,7 +308,7 @@ Point transform_point( const Transform& m, const Point& p )
         return make_point(xt*w, yt*w, zt*w);
 }
 
-Vector transform_vector( const Transform& m, const Vector& v )
+Vector transform( const Transform& m, const Vector& v )
 {
     float x= v.x;
     float y= v.y;

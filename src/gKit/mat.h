@@ -40,10 +40,11 @@ Transform make_perspective( const float fov, const float aspect, const float zne
 Transform make_lookat( const Point& from, const Point& to, const Vector& up );
 
 Transform compose_transform( const Transform& a, const Transform& b );
-
 Transform operator* ( const Transform& a, const Transform& b );
 
-Point transform_point( const Transform& m, const Point& p );
-Vector transform_vector( const Transform& m, const Vector& v );
+Point transform( const Transform& m, const Point& p );
+Vector transform( const Transform& m, const Vector& v );
+
+vec4 transform( const Transform& m, const vec4& v );
 
 #endif

@@ -7,7 +7,7 @@
 #include "mesh.h"
 
 
-Mesh make_mesh( const GLenum primitives )
+Mesh create_mesh( const GLenum primitives )
 {
     Mesh m;
     m.primitives= primitives;
@@ -26,62 +26,56 @@ void release_mesh( Mesh& m )
     return;
 }
 
+void vertex_texcoord( Mesh& m, const vec2& uv )
+{
+    m.texcoords.push_back(uv);
+}
+
 void vertex_texcoord( Mesh& m, const float u, const float v )
 {
-    m.texcoords.push_back(u);
-    m.texcoords.push_back(v);
+    vertex_texcoord(m, make_vec2(u, v));
 }
 
 void vertex_normal( Mesh& m, const vec3& normal )
 {
-    m.normals.push_back(normal.x);
-    m.normals.push_back(normal.y);
-    m.normals.push_back(normal.z);
+    m.normals.push_back(normal);
+}
+
+void vertex_normal( Mesh& m, const Vector& n )
+{
+    vertex_normal(m, make_vec3(n.x, n.y, n.z));
 }
 
 void vertex_color( Mesh& m, const vec3& color )
 {
-    m.colors.push_back(color.x);
-    m.colors.push_back(color.y);
-    m.colors.push_back(color.z);
+    m.colors.push_back(color);
+}
+
+void vertex_color( Mesh& m, const Color& color )
+{
+    vertex_color(m, make_vec3(color.r, color.g, color.b));
+}
+
+unsigned int push_vertex( Mesh& m, const Point& p )
+{
+    return push_vertex(m, make_vec3(p.x, p.y, p.z));
 }
 
 unsigned int push_vertex( Mesh& m, const vec3& position )
 {
-    m.positions.push_back(position.x);
-    m.positions.push_back(position.y);
-    m.positions.push_back(position.z);
+    m.positions.push_back(position);
 
-    if(m.texcoords.size() > 0 && m.texcoords.size() / 2 != m.positions.size() / 3)
-    {
-        size_t attrib= m.texcoords.size();
-        float u= m.texcoords[attrib -2];
-        float v= m.texcoords[attrib -1];
-        vertex_texcoord(m, u, v);
-    }
-
-    if(m.normals.size() > 0 && m.normals.size() / 3 != m.positions.size() / 3)
-    {
-        size_t attrib= m.normals.size();
-        float x= m.normals[attrib -3];
-        float y= m.normals[attrib -2];
-        float z= m.normals[attrib -1];
-        vertex_normal(m, make_vec3(x, y, z));
-}
-
-    if(m.colors.size() > 0 && m.colors.size() / 3 != m.positions.size() / 3)
-    {
-        size_t attrib= m.colors.size();
-        float r= m.colors[attrib -3];
-        float g= m.colors[attrib -2];
-        float b= m.colors[attrib -1];
-        vertex_color(m, make_vec3(r, g, b));
-    }
-
+    if(m.texcoords.size() > 0 && m.texcoords.size() != m.positions.size())
+        m.texcoords.push_back(m.texcoords.back());
+    if(m.normals.size() > 0 && m.normals.size() != m.positions.size())
+        m.normals.push_back(m.normals.back());
+    if(m.colors.size() > 0 && m.colors.size() != m.positions.size())
+        m.colors.push_back(m.colors.back());
+    
     // construction de l'index buffer pour les strip
     bool strip= false;
     switch(m.primitives)
-{
+    {
         case GL_LINE_STRIP:
         case GL_LINE_LOOP:
         case GL_TRIANGLE_STRIP:
@@ -90,9 +84,9 @@ unsigned int push_vertex( Mesh& m, const vec3& position )
             break;
         default:
             strip= false;
-}
-
-    unsigned int index= ((unsigned int) m.positions.size() - 3) / 3;
+    }
+    
+    unsigned int index= (unsigned int) m.positions.size() -1;
     if(strip)
         m.indices.push_back(index);
     
@@ -108,13 +102,32 @@ unsigned int push_vertex( Mesh& m, const vec3& position, const float u, const fl
     return push_vertex(m, position);
 }
 
+unsigned int push_vertex( Mesh& m, const Point& position, const float u, const float v, const Vector& normal )
+{
+    vertex_texcoord(m, u, v);
+    vertex_normal(m, normal);
+    return push_vertex(m, position);
+}
+
 unsigned int push_vertex( Mesh& m, const vec3& position, const float u, const float v )
 {
     vertex_texcoord(m, u ,v);
     return push_vertex(m, position);
 }
 
+unsigned int push_vertex( Mesh& m, const Point& position, const float u, const float v )
+{
+    vertex_texcoord(m, u ,v);
+    return push_vertex(m, position);
+}
+
 unsigned int push_vertex( Mesh& m, const vec3& position, const vec3& normal )
+{
+    vertex_normal(m, normal);
+    return push_vertex(m, position);
+}
+
+unsigned int push_vertex( Mesh& m, const Point& position, const Vector& normal )
 {
     vertex_normal(m, normal);
     return push_vertex(m, position);
@@ -152,19 +165,17 @@ void restart_strip( Mesh& m )
 
 void bounds( const Mesh& m, Point& pmin, Point& pmax )
 {
-    if(m.positions.size() < 3)
+    if(m.positions.size() < 1)
         return;
     
-    pmin= make_point(m.positions[0], m.positions[1], m.positions[2]);
+    pmin= make_point(m.positions[0].x, m.positions[0].y, m.positions[0].z);
     pmax= pmin; 
     
-    for(unsigned int i= 3; i < (unsigned int) m.positions.size(); i+= 3)
+    for(unsigned int i= 1; i < (unsigned int) m.positions.size(); i++)
     {
-        float x= m.positions[i];
-        float y= m.positions[i +1];
-        float z= m.positions[i +2];
-        pmin= make_point( std::min(pmin.x, x), std::min(pmin.y,  y), std::min(pmin.z, z) );
-        pmax= make_point( std::max(pmax.x, x), std::max(pmax.y,  y), std::max(pmax.z, z) );
+        vec3 p= m.positions[i];
+        pmin= make_point( std::min(pmin.x, p.x), std::min(pmin.y, p.y), std::min(pmin.z, p.z) );
+        pmax= make_point( std::max(pmax.x, p.x), std::max(pmax.y, p.y), std::max(pmax.z, p.z) );
     }
 }
 
@@ -175,31 +186,31 @@ GLuint make_mesh_vertex_format( Mesh& m )
         return 0;
 
 #if 1
-    if(m.texcoords.size() > 0 && m.texcoords.size() / 2 < m.positions.size() / 3)
+    if(m.texcoords.size() > 0 && m.texcoords.size() < m.positions.size())
         printf("[error] invalid texcoords array...\n");
-    if(m.normals.size() > 0 && m.normals.size() / 3 < m.positions.size() / 3)
+    if(m.normals.size() > 0 && m.normals.size() < m.positions.size())
         printf("[error] invalid normals array...\n");
-    if(m.colors.size() > 0 && m.colors.size() / 3 < m.positions.size() / 3)
+    if(m.colors.size() > 0 && m.colors.size() < m.positions.size())
         printf("[error] invalid colors array...\n");
 #endif
 
     // conserver le nombre de sommets pour glDrawArrays( )
-    m.count = (int) m.positions.size() / 3;
+    m.count = (int) m.positions.size();
 
     // ne creer que les buffers necessaires
     GLuint vao= make_vertex_format();
-    make_vertex_buffer(vao, 0,  3, GL_FLOAT, m.positions.size() * sizeof(float), &m.positions.front());
-    if(m.texcoords.size() / 2 == m.positions.size() / 3)
-        make_vertex_buffer(vao, 1,  2, GL_FLOAT, m.texcoords.size() * sizeof(float), &m.texcoords.front());
-    if(m.normals.size() / 3 == m.positions.size() /3)
-        make_vertex_buffer(vao, 2,  3, GL_FLOAT, m.normals.size() * sizeof(float), &m.normals.front());
-    if(m.colors.size() / 3 == m.positions.size() / 3)
-        make_vertex_buffer(vao, 3,  3, GL_FLOAT, m.colors.size() * sizeof(float), &m.colors.front());
+    make_vertex_buffer(vao, 0,  3, GL_FLOAT, m.positions.size() * sizeof(vec3), &m.positions.front());
+    if(m.texcoords.size()== m.positions.size())
+        make_vertex_buffer(vao, 1,  2, GL_FLOAT, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());
+    if(m.normals.size() == m.positions.size())
+        make_vertex_buffer(vao, 2,  3, GL_FLOAT, m.normals.size() * sizeof(vec3), &m.normals.front());
+    if(m.colors.size() == m.positions.size())
+        make_vertex_buffer(vao, 3,  3, GL_FLOAT, m.colors.size() * sizeof(vec3), &m.colors.front());
 
     if(m.indices.size() > 0)
     {
         // conserver le nombre d'indices de sommets pour glDrawElements( )
-        m.count= m.indices.size();
+        m.count= (int) m.indices.size();
         make_index_buffer(vao, m.indices.size() * sizeof(unsigned int), &m.indices.front());
     }
 

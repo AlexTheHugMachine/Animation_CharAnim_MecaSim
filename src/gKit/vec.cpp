@@ -16,6 +16,11 @@ float distance( const Point& a, const Point& b )
     return length(a - b);
 }
 
+Point center( const Point& a, const Point& b )
+{
+    return make_point((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f, (a.z + b.z) * 0.5f);
+}
+
 
 Vector make_vector( const float x, const float y, const float z )
 {
@@ -151,3 +156,14 @@ vec4 make_vec4( const vec3& u, const float w )
     v.x= u.x; v.y= u.y; v.z= u.z; v.w= w;
     return v;
 }
+
+vec4 make_vec4( const Point& a )
+{
+    return make_vec4(a.x, a.y, a.z, 1);
+}
+
+vec4 make_vec4( const Vector& v )
+{
+    return make_vec4(v.x, v.y, v.z, 0);
+}
+

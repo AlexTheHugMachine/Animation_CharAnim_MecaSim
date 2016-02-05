@@ -2,6 +2,7 @@
 #ifndef _VEC_H
 #define _VEC_H
 
+//! representation d'un point 3d.
 struct Point
 {
     float x, y, z;
@@ -13,7 +14,10 @@ Point make_point( const float x, const float y, const float z );
 //! renvoie la distance etre 2 points.
 float distance( const Point& a, const Point& b );
 
+//! renvoie le milieu du segment ab.
+Point center( const Point& a, const Point& b );
 
+//! representation d'un vecteur 3d.
 struct Vector
 {
     float x, y, z;
@@ -76,7 +80,7 @@ struct vec3
 vec3 make_vec3( const float x, const float y, const float z );
 vec3 make_vec3( const vec2& v, const float z );
 
-//! vecteur generique, utilitaire.
+//! vecteur generique 4d, ou 3d homogene, utilitaire.
 struct vec4
 {
     float x, y, z, w;
@@ -85,5 +89,10 @@ struct vec4
 vec4 make_vec4( const float x, const float y, const float z, const float w );
 vec4 make_vec4( const vec2& v, const float z, const float w );
 vec4 make_vec4( const vec3& v, const float w );
+
+//! construit un point 3d homogene (x, y, z, 1).
+vec4 make_vec4( const Point& a );
+//! construit un vecteur 3d homogene (x, y, z, 0).
+vec4 make_vec4( const Vector& v );
 
 #endif

@@ -35,13 +35,13 @@ int init( )
     if(texture == 0) 
         return -1;
     
-#if 1
+#if 0
     // charge un fichier obj
     cube= read_mesh("data/bigguy.obj");
 
 #else
     // construit un mesh
-    cube= make_mesh(GL_TRIANGLE_STRIP);
+    cube= create_mesh(GL_TRIANGLE_STRIP);
 
     vertex_texcoord(cube, 0, 0);
     push_vertex(cube, make_vec3(0, 0, 0));
@@ -54,7 +54,7 @@ int init( )
 
     vertex_texcoord(cube, 1, 1);
     push_vertex(cube, make_vec3(1, 1, 0));
-
+    
     restart_strip(cube);
     
     vertex_texcoord(cube, 0, 0);
@@ -70,12 +70,14 @@ int init( )
     push_vertex(cube, make_vec3(1, 1, 1));
 #endif
     
-    // 
+    // construit l'englobant de l'objet
     Point pmin, pmax;
     bounds(cube, pmin, pmax);
-    camera= make_orbiter_lookat( pmin + make_vector(pmin, pmax) / 2, distance(pmin, pmax) );
     
-    //
+    // regle la cmaera pour observer l'objet
+    camera= make_orbiter_lookat( center(pmin, pmax), distance(pmin, pmax) );
+    
+    // 
     console= create_text();
     widgets= create_widgets();
     
@@ -93,7 +95,7 @@ int init( )
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     //~ glEnable(GL_CULL_FACE); // n'affiche que les faces correctement orientees...
-    glDisable(GL_CULL_FACE);    // les faces mal orientiees sont affichees avec des hachures oranges...
+    glDisable(GL_CULL_FACE);    // les faces mal orientees sont affichees avec des hachures oranges...
     
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);

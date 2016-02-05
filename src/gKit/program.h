@@ -28,6 +28,8 @@ void program_uniform( const GLuint program, const char *uniform, const int v );
 void program_uniform( const GLuint program, const char *uniform, const float v );
 void program_uniform( const GLuint program, const char *uniform, const vec2& v );
 void program_uniform( const GLuint program, const char *uniform, const vec3& v );
+void program_uniform( const GLuint program, const char *uniform, const Point& v );
+void program_uniform( const GLuint program, const char *uniform, const Vector& v );
 void program_uniform( const GLuint program, const char *uniform, const vec4& v );
 void program_uniform( const GLuint program, const char *uniform, const Transform& v );
 
