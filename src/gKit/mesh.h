@@ -11,7 +11,7 @@
 #include "mat.h"
 #include "color.h"
 
-//! represenation d'un objet / maillage.
+//! representation d'un objet / maillage.
 struct Mesh
 {
     std::vector<vec3> positions;
@@ -45,7 +45,7 @@ void vertex_color( Mesh& m, const vec3& color );
 //! definit la couleur du prochain sommet.
 void vertex_color( Mesh& m, const Color& color );
 
-//! insere un sommet et ses attirbuts dans l'objet. renvoie l'indice du sommet.
+//! insere un sommet et ses attributs dans l'objet. renvoie l'indice du sommet.
 unsigned int push_vertex( Mesh& m, const vec3& position );
 //! insere un sommet et ses attirbuts dans l'objet. renvoie l'indice du sommet.
 unsigned int push_vertex( Mesh& m, const Point& position );
@@ -91,9 +91,19 @@ push_triangle(m, a, b, c);
 \endcode
 */
 void push_triangle( Mesh& m, const unsigned int a, const unsigned int b, const unsigned int c );
+
+/*! insere un triangle dans l'objet, a, b, c sont les indices des sommets deja inseres dans l'objet, en comptant en partant du dernier. ne fonctionne pas avec les strips et les fans.
+\code
+Mesh m= create_mesh(GL_TRIANGLES);
+push_vertex(m, Point(ax, ay, az));
+push_vertex(m, Point(bx, by, bz));
+push_vertex(m, Point(cx, cy, cz));
+push_triangle(m, -3, -2, -1);
+\endcode
+*/
 void push_triangle_last( Mesh& m, const int a, const int b, const int c );
 
-//! 
+//! demarrage un nouveau strip. a utiliser avec un objet composes de GL_TRIANGLE_STRIP, doit aussi fonctionner avec GL_TRIANGLE_FAN, GL_LINE_STRIP, GL_LINE_LOOP, etc.
 void restart_strip( Mesh& m );
 
 //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet.

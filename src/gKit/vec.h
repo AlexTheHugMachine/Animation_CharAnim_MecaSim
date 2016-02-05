@@ -48,9 +48,9 @@ Point operator- ( const Point& a, const Vector& v );
 Vector operator+ ( const Vector& u, const Vector& v );
 //! renvoie le vecteur k*u;
 Vector operator* ( const float k, const Vector& v );
-//! renvoie le vecteur k*u;
+//! renvoie le vecteur k*v;
 Vector operator* ( const Vector& v, const float k );
-//! renvoie le vecteur u/k;
+//! renvoie le vecteur v/k;
 Vector operator/ ( const Vector& v, const float k );
 
 //! renvoie un vecteur unitaire / longueur == 1.
