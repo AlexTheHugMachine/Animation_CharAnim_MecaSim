@@ -14,7 +14,7 @@ Text create_text( )
     Text text;
     text.font= read_texture(0, "data/font.png");
     text.program= read_program("data/shaders/text.glsl");
-    text.vao= make_vertex_format();
+    text.vao= create_vertex_format();
     text.ubo= make_buffer(GL_UNIFORM_BUFFER, sizeof(text.buffer), NULL);
     
     clear(text);

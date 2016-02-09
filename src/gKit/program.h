@@ -14,9 +14,9 @@ GLuint read_program( const char *vertex, const char *fragment );
 //! cree un shader program, charge un seul fichier, les shaders sont separes par #ifdef VERTEX_SHADER / #endif et #ifdef FRAGMENT_SHADER / #endif.
 GLuint read_program( const char *shaders );
 
-//! cree un shader program, et insere les definitions, #define what 
+//! cree un shader program, et insere les definitions, #define what.
 GLuint read_program_definitions( const char *vertex, const char *fragment, const char *definitions );
-//! cree un shader program, charge un seul fichier. et insere les definitions.
+//! cree un shader program, charge un seul fichier. et insere les definitions, #define what.
 GLuint read_program_definitions( const char *shaders, const char *definitions );
 
 //! renvoie l'indice d'un attribut declare dans le vertex shader.

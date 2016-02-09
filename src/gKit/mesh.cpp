@@ -20,7 +20,7 @@ Mesh create_mesh( const GLenum primitives )
 void release_mesh( Mesh& m )
 {
     if(m.vao)
-        glDeleteVertexArrays(1, &m.vao);
+        release_vertex_format(m.vao);
     if(m.program)
         glDeleteProgram(m.program);
     return;
@@ -198,7 +198,7 @@ GLuint make_mesh_vertex_format( Mesh& m )
     m.count = (int) m.positions.size();
 
     // ne creer que les buffers necessaires
-    GLuint vao= make_vertex_format();
+    GLuint vao= create_vertex_format();
     make_vertex_buffer(vao, 0,  3, GL_FLOAT, m.positions.size() * sizeof(vec3), &m.positions.front());
     if(m.texcoords.size()== m.positions.size())
         make_vertex_buffer(vao, 1,  2, GL_FLOAT, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());

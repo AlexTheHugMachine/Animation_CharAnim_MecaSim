@@ -37,8 +37,8 @@ void orbiter_translation( Orbiter&o, const float x, const float y )
 void orbiter_move( Orbiter&o, const float z )
 {
     o.size= o.size - o.size * 0.01f * z;
-    if(o.size < 0.001f)
-        o.size= 0.001f;
+    if(o.size < 0.01f)
+        o.size= 0.01f;
 }
 
 void orbiter_lookat( Orbiter&o, const Point& center, const float size )

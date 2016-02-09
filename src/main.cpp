@@ -35,6 +35,24 @@ int init( )
     if(texture == 0) 
         return -1;
     
+    #if 0
+    {
+        // cree une image 
+        Image image= create_image(512, 512, 3, make_color(0, 0, 0));
+        for(int y= 0; y < image.height; y++)
+        for(int x= 0; x < image.width; x++)
+        {
+            int mx= x % 4;
+            int my= y % 4;
+            if((mx ^my) == 0)
+                image_set_pixel(image, x, y, make_color(0.8, 0.4, 0));
+        }
+        
+        write_image(image, "hachure.png");
+        release_image(image);
+    }
+    #endif
+    
 #if 0
     // charge un fichier obj
     cube= read_mesh("data/bigguy.obj");

@@ -13,7 +13,7 @@ void release_window( Window w );
 //! cree et configure un contexte opengl
 typedef SDL_GLContext Context;
 
-Context create_context( Window window, const int major= 3, const int minor= 3 );
+Context create_context( Window window, const int major= 3, const int minor= 2 );
 void release_context( Context context );
 
 int window_width( );

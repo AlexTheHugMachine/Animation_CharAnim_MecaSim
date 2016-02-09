@@ -17,7 +17,7 @@ GLuint make_buffer( const GLenum target, const int data_size, const void *data )
 }
 
 
-GLuint make_vertex_format( )
+GLuint create_vertex_format( )
 {
     GLuint vao;
     glGenVertexArrays(1, &vao);

@@ -51,12 +51,12 @@ Transform make_rotation( const Vector& axis, const float angle );
 Transform make_viewport( const float width, const float height );
 //! renvoie la matrice representant une transformation projection perspective.
 Transform make_perspective( const float fov, const float aspect, const float znear, const float zfar );
-//! renvoie la matrice representant le placement et l'orientation d'une cmaera pour observer le point \param to.
+//! renvoie la matrice representant le placement et l'orientation d'une camera pour observer le point \param to.
 Transform make_lookat( const Point& from, const Point& to, const Vector& up );
 
-//! renvoie la composition des transformations a et b.
+//! renvoie la composition des transformations a et b, t= a * b.
 Transform compose_transform( const Transform& a, const Transform& b );
-//! renvoie la composition des transformations a et b.
+//! renvoie la composition des transformations a et b, t = a * b.
 Transform operator* ( const Transform& a, const Transform& b );
 
 //! renvoie le point transforme.
