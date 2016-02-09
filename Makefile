@@ -1,6 +1,6 @@
 
 SRCS = main.cpp \
-	gKit/window.cpp     gKit/vec.cpp      gKit/program.cpp  gKit/mesh.cpp  gKit/image.cpp \
+	gKit/window.cpp     gKit/vec.cpp      gKit/program.cpp  gKit/mesh.cpp  gKit/image.cpp	gKit/color.cpp \
 	gKit/wavefront.cpp  gKit/texture.cpp  gKit/orbiter.cpp  gKit/mat.cpp   gKit/buffer.cpp \
 	gKit/text.cpp gKit/widgets.cpp
 
