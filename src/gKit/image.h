@@ -4,9 +4,10 @@
 
 #include <vector>
 
-#include "vec.h"
+#include "color.h"
 
 
+//! representation d'une image.
 struct Image
 {
     std::vector<unsigned char> data;
@@ -15,12 +16,20 @@ struct Image
     int channels;
 };
 
-Image create_image( const int w, const int h, const int c, const vec4& color );
-void release_image( Image& im );        // plus necessaire en utilisant un vector au lieu d'un new pour reserver data
+//! cree une image de dimensions largeur \param width, hauteur \param height. les pixels sont representes par \param channels valeurs. l'image est initialisee avec la couler \param color.
+Image create_image( const int width, const int height, const int channels, const Color& color );
+//! detruit l'image.
+void release_image( Image& im );
 
+//! cree une image initialisee avec le contenu d'un fichier \param filemane. renvoie une image rouge en cas d'echec.
 Image read_image( const char *filename );
 
-vec4 image_pixel( Image& im, const int x, const int y );
-void image_set_pixel( Image& im, const int x, const int y, const vec4& color );
+//! enregistre une image dans un fichier png.
+int write_image( const Image& image, const char *filename );
+
+//! renvoie la couleur d'un pixel de l'image.
+Color image_pixel( const Image& im, const int x, const int y );
+//! modife la couleur d'un pixel de l'image.
+void image_set_pixel( Image& im, const int x, const int y, const Color& color );
 
 #endif

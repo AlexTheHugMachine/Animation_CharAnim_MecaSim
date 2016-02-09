@@ -1,12 +1,13 @@
 
 #include <cstdio>
+#include <string>
 
 #include "SDL2/SDL_image.h"
 #include "image.h"
 
 
 
-Image create_image( const int w, const int h, const int c, const vec4& color )
+Image create_image( const int w, const int h, const int c, const Color& color )
 {
     Image im;
     im.width= w;
@@ -16,10 +17,10 @@ Image create_image( const int w, const int h, const int c, const vec4& color )
     im.data.resize(w*h*c);
     unsigned char *data= &im.data.front();
 
-    unsigned char r= color.x * 255.f;
-    unsigned char g= color.y * 255.f;
-    unsigned char b= color.z * 255.f;
-    unsigned char a= color.w * 255.f;
+    unsigned char r= color.r * 255.f;
+    unsigned char g= color.g * 255.f;
+    unsigned char b= color.b * 255.f;
+    unsigned char a= color.a * 255.f;
 
     if(c > 3)
     {
@@ -54,21 +55,21 @@ void release_image( Image& im )
 }
 
 
-vec4 image_pixel( Image& im, const int x, const int y )
+Color image_pixel( const Image& im, const int x, const int y )
 {
     if(im.data.size() == 0)
-        return make_vec4(0, 0, 0, 1);
+        return make_color(0, 0, 0);
 
     int offset= im.width * y * im.channels + x * im.channels;
-    unsigned char *data= &im.data.front() + offset;
+    const unsigned char *data= &im.data.front() + offset;
 
     if(im.channels > 3)
-        return make_vec4(data[0] / 255.f, data[1] / 255.f, data[2] / 255.f, data[3] / 255.f);
+        return make_alpha_color(data[0] / 255.f, data[1] / 255.f, data[2] / 255.f, data[3] / 255.f);
     else
-        return make_vec4(data[0] / 255.f, data[1] / 255.f, data[2] / 255.f, 1);
+        return make_color(data[0] / 255.f, data[1] / 255.f, data[2] / 255.f);
 }
 
-void image_set_pixel( Image& im, const int x, const int y, const vec4& color )
+void image_set_pixel( Image& im, const int x, const int y, const Color& color )
 {
     if(im.data.size() == 0)
         return;
@@ -76,11 +77,11 @@ void image_set_pixel( Image& im, const int x, const int y, const vec4& color )
     int offset= im.width * y * im.channels + x * im.channels;
     unsigned char *data= &im.data.front() + offset;
 
-    data[0]= color.x * 255.f;
-    data[1]= color.y * 255.f;
-    data[2]= color.z * 255.f;
+    data[0]= color.r * 255.f;
+    data[1]= color.g * 255.f;
+    data[2]= color.b * 255.f;
     if(im.channels > 3)
-        data[3]= color.w * 255.f;
+        data[3]= color.a * 255.f;
 }
 
 
@@ -93,7 +94,7 @@ Image read_image( const char *filename )
     if(surface == NULL)
     {
         printf("loading image '%s'... sdl_image failed.\n", filename);
-        return create_image(2, 2, 4, make_vec4(1, 0, 0, 1));
+        return create_image(2, 2, 4, make_color(1, 0, 0));
     }
 
     // verifier le format, rgb ou rgba
@@ -102,7 +103,7 @@ Image read_image( const char *filename )
     {
         printf("loading image '%s'... format failed. (bpp %d)\n", filename, format.BitsPerPixel);
         SDL_FreeSurface(surface);
-        return create_image(2, 2, 4, make_vec4(1, 0, 0, 1));
+        return create_image(2, 2, 4, make_color(1, 0, 0));
     }
 
     int height= surface->h;
@@ -165,3 +166,44 @@ Image read_image( const char *filename )
     return im;
 }
 
+
+int write_image( const Image& image, const char *filename )
+{
+    if(std::string(filename).rfind(".png") == std::string::npos && std::string(filename).rfind(".PNG") == std::string::npos )
+    {
+        printf("writing color image '%s'... failed, not a PNG image.\n", filename);
+        return -1;
+    }
+    
+    // flip de l'image : Y inverse entre GL et BMP
+    Image flip= create_image(image.width, image.height, 4, make_color(0, 0, 0));
+    for(int y= 0; y < image.height; y++)
+    for(int x= 0; x < image.width; x++)
+        image_set_pixel(flip, x, image.height - y -1, image_pixel(image, x, y));
+
+    SDL_Surface *bmp= SDL_CreateRGBSurfaceFrom((void *) &flip.data.front(),
+        image.width, image.height,
+        32, image.width * 4,
+#if 0
+        0xFF000000,
+        0x00FF0000,
+        0x0000FF00,
+        0x000000FF
+#else
+        0x000000FF,
+        0x0000FF00,
+        0x00FF0000,
+        0xFF000000
+#endif
+    );
+
+    int code= IMG_SavePNG(bmp, filename);
+    SDL_FreeSurface(bmp);
+    release_image(flip);
+    
+    if(code < 0)
+        printf("writing color image '%s'... failed\n%s\n", filename, SDL_GetError());
+    else
+        printf("writing color image '%s'...\n", filename);
+    return code;
+}
