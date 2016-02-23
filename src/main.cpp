@@ -1,5 +1,5 @@
 
-//! tutorial : exemple minimaliste opengl 3 core profile
+//! tutorial : exemple opengl 3 core profile
 
 #define GLEW_NO_GLU
 #include "GL/glew.h"
@@ -13,6 +13,7 @@
 #include "vec.h"
 #include "mat.h"
 #include "orbiter.h"
+#include "draw.h"
 
 #include "text.h"
 #include "widgets.h"
@@ -53,7 +54,7 @@ int init( )
     }
     #endif
     
-#if 0
+#if 1
     // charge un fichier obj
     cube= read_mesh("data/bigguy.obj");
 
@@ -62,30 +63,30 @@ int init( )
     cube= create_mesh(GL_TRIANGLE_STRIP);
 
     vertex_texcoord(cube, 0, 0);
-    push_vertex(cube, make_vec3(0, 0, 0));
+    push_vertex(cube, make_point(0, 0, 0));
 
     vertex_texcoord(cube, 1, 0);
-    push_vertex(cube, make_vec3(1, 0, 0));
+    push_vertex(cube, make_point(1, 0, 0));
     
     vertex_texcoord(cube, 0, 1);
-    push_vertex(cube, make_vec3(0, 1, 0));
+    push_vertex(cube, make_point(0, 1, 0));
 
     vertex_texcoord(cube, 1, 1);
-    push_vertex(cube, make_vec3(1, 1, 0));
+    push_vertex(cube, make_point(1, 1, 0));
     
     restart_strip(cube);
     
     vertex_texcoord(cube, 0, 0);
-    push_vertex(cube, make_vec3(0, 0, 1));
+    push_vertex(cube, make_point(0, 0, 1));
 
     vertex_texcoord(cube, 1, 0);
-    push_vertex(cube, make_vec3(1, 0, 1));
+    push_vertex(cube, make_point(1, 0, 1));
     
     vertex_texcoord(cube, 0, 1);
-    push_vertex(cube, make_vec3(0, 1, 1));
+    push_vertex(cube, make_point(0, 1, 1));
 
     vertex_texcoord(cube, 1, 1);
-    push_vertex(cube, make_vec3(1, 1, 1));
+    push_vertex(cube, make_point(1, 1, 1));
 #endif
     
     // construit l'englobant de l'objet
@@ -148,6 +149,7 @@ int draw( )
     else if(mb & SDL_BUTTON(3))
         orbiter_move(camera, mx);           // approche / eloigne l'objet
     
+#if 0
     // recupere les transformations
     Transform model= make_identity();
     Transform view= orbiter_view_transform(camera);
@@ -155,7 +157,13 @@ int draw( )
     
     // affiche l'objet
     draw(cube, model, view, projection, texture);
-
+#else
+    
+    // affiche l'objet depuis le point de vue de la camera
+    draw(cube, camera, texture);
+#endif
+    
+    
 #if 0
     clear(console);
     print(console, 0, 1, "print");

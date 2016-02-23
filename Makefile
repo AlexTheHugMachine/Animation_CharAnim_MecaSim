@@ -1,23 +1,23 @@
 
 SRCS = main.cpp \
-	gKit/window.cpp     gKit/vec.cpp      gKit/program.cpp  gKit/mesh.cpp  gKit/image.cpp	gKit/color.cpp \
-	gKit/wavefront.cpp  gKit/texture.cpp  gKit/orbiter.cpp  gKit/mat.cpp   gKit/buffer.cpp \
+	gKit/window.cpp gKit/vec.cpp gKit/program.cpp gKit/mesh.cpp gKit/image.cpp gKit/color.cpp \
+	gKit/wavefront.cpp gKit/texture.cpp gKit/orbiter.cpp gKit/mat.cpp gKit/buffer.cpp gKit/draw.cpp \
 	gKit/text.cpp gKit/widgets.cpp
 
 FINAL_TARGET = gKit2light
 
 ifeq ($(OS),Windows_NT)
 	LIBS = 	-Lextern \
-			-Lextern/SDL2_mingw/SDL2-2.0.3/i686-w64-mingw32/lib \
-			-Lextern/SDL2_mingw/SDL2_image-2.0.0/i686-w64-mingw32/lib \
-			-Lextern/glew-1.10.0_mingw/lib \
-			-lmingw32 -lSDL2main -lSDL2.dll -lSDL2_image.dll -lglew32 -lopengl32
-	INCLUDELIBS_DIR = 	-Iextern/SDL2_mingw/SDL2-2.0.3/include \
-						-Iextern/SDL2_mingw/SDL2-2.0.3/include/SDL2 \
-						-Iextern/SDL2_mingw/SDL2_image-2.0.0/i686-w64-mingw32/include \
-						-Iextern/glew-1.10.0_mingw/include \
-						-Isrc/viewer \
-						-Isrc/gKit
+		-Lextern/SDL2_mingw/SDL2-2.0.3/i686-w64-mingw32/lib \
+		-Lextern/SDL2_mingw/SDL2_image-2.0.0/i686-w64-mingw32/lib \
+		-Lextern/glew-1.10.0_mingw/lib \
+		-lmingw32 -lSDL2main -lSDL2.dll -lSDL2_image.dll -lglew32 -lopengl32
+	INCLUDELIBS_DIR = -Iextern/SDL2_mingw/SDL2-2.0.3/include \
+		-Iextern/SDL2_mingw/SDL2-2.0.3/include/SDL2 \
+		-Iextern/SDL2_mingw/SDL2_image-2.0.0/i686-w64-mingw32/include \
+		-Iextern/glew-1.10.0_mingw/include \
+		-Isrc/viewer \
+		-Isrc/gKit
 else
 	LIBS = -lSDL2 -lSDL2_image -lGLEW -lGL
 	INCLUDELIBS_DIR = -I /usr/include/SDL2 -I src/gKit -I src/viewer
