@@ -11,6 +11,7 @@
 #include "mat.h"
 #include "color.h"
 
+
 //! representation d'un objet / maillage.
 struct Mesh
 {
@@ -98,7 +99,7 @@ Mesh m= create_mesh(GL_TRIANGLES);
 push_vertex(m, Point(ax, ay, az));
 push_vertex(m, Point(bx, by, bz));
 push_vertex(m, Point(cx, cy, cz));
-push_triangle(m, -3, -2, -1);
+push_triangle_last(m, -3, -2, -1);
 \endcode
 */
 void push_triangle_last( Mesh& m, const int a, const int b, const int c );

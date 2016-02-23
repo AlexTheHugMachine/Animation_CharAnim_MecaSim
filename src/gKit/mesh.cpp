@@ -72,6 +72,7 @@ unsigned int push_vertex( Mesh& m, const vec3& position )
     if(m.colors.size() > 0 && m.colors.size() != m.positions.size())
         m.colors.push_back(m.colors.back());
     
+    unsigned int index= (unsigned int) m.positions.size() -1;
     // construction de l'index buffer pour les strip
     bool strip= false;
     switch(m.primitives)
@@ -80,15 +81,11 @@ unsigned int push_vertex( Mesh& m, const vec3& position )
         case GL_LINE_LOOP:
         case GL_TRIANGLE_STRIP:
         case GL_TRIANGLE_FAN:
-            strip= true;
+            m.indices.push_back(index);
             break;
         default:
-            strip= false;
+            break;
     }
-    
-    unsigned int index= (unsigned int) m.positions.size() -1;
-    if(strip)
-        m.indices.push_back(index);
     
     // renvoie l'indice du sommet
     return index;
@@ -155,11 +152,11 @@ void push_triangle_last( Mesh& m, const int a, const int b, const int c )
 void restart_strip( Mesh& m )
 {
     m.indices.push_back(~0u);   // ~0u plus grand entier non signe representable.
-#if 0
+#if 1
     glPrimitiveRestartIndex(~0u);
     glEnable(GL_PRIMITIVE_RESTART);
 #else
-    glEnable(GL_PRIMITIVE_RESTART_FIXED_INDEX);
+    glEnable(GL_PRIMITIVE_RESTART_FIXED_INDEX); // n'existe pas sur mac ?!
 #endif
 }
 

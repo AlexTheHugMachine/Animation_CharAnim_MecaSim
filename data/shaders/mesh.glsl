@@ -85,7 +85,7 @@ void main( )
     
     color= color * normal.z;
     // hachure les triangles mal orientes
-    if(!gl_FrontFacing)
+    if(gl_FrontFacing == false) // if(!gl_FrontFacing) bug sur mac ?!
     {
         ivec2 pixel= ivec2(gl_FragCoord.xy) % ivec2(4, 4);
         if((pixel.x ^ pixel.y) == 0)
