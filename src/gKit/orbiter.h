@@ -34,4 +34,6 @@ Transform orbiter_view_transform( const Orbiter&o );
 //! renvoie la projection reglee pour une image d'aspect \param width / \param height, et une ouverture de \param fov degres.
 Transform orbiter_projection_transform( const Orbiter&o, const float width, const float height, const float fov );
 
+//! renvoie l'extremite du rayon pour le pixel x, y. l'origine du rayon est la position de la camera.
+Point orbiter_pixel( const Orbiter& o, const float x, const float y, const float z, const float width, const float height, const float fov );
 #endif
