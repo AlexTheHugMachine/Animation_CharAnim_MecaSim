@@ -28,8 +28,7 @@ void begin( Widgets& widgets );
 
 void begin_line( Widgets& widgets );
 
-void label( Widgets& widgets, const char *text );
-void labelf( Widgets& widgets, const char *format, ... );
+void label( Widgets& widgets, const char *format, ... );
 bool button( Widgets& widgets, const char *text, int& status );
 bool edit( Widgets& widgets, const int text_size, char *text );
 

@@ -116,13 +116,7 @@ void end_line( Widgets& widgets )
 }
 
 
-void label( Widgets& w, const char *text )
-{
-    Rect r= place(w, text);
-    print(w.console, r.x, r.y, text);
-}
-
-void labelf( Widgets& w, const char *format, ... )
+void label( Widgets& w, const char *format, ... )
 {
     char tmp[128] = { 0 };
     
@@ -131,7 +125,8 @@ void labelf( Widgets& w, const char *format, ... )
     vsnprintf(tmp, sizeof(tmp), format, args);
     va_end(args);
     
-    label(w, tmp);
+    Rect r= place(w, tmp);
+    print(w.console, r.x, r.y, tmp);
 }
 
 bool button( Widgets& w, const char *text, int& status )
