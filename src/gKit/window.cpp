@@ -158,6 +158,8 @@ int run( Window window )
         // dessiner
         if(draw() < 1)
             stop= 0;    // fermer l'application si draw() renvoie 0 ou -1...
+        
+        // presenter le resultat
         SDL_GL_SwapWindow(window);
     }
 
