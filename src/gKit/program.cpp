@@ -60,18 +60,14 @@ bool program_errors( const GLuint program )
     return true;
 }
 
-
-//! cree et compile un shader.
-static
-GLuint compile_shader( const GLenum shader_type, const char *filename, const std::string& definitions )
+static 
+std::string prepare_source( std::string file, const std::string& definitions )
 {
-    std::string file= read(filename);
     if(file.empty()) 
-        return 0;
+        return std::string();
     
     // un peu de gymnastique, #version doit rester sur la premiere ligne, meme si on insere des #define dans le source
     std::string source;
-    std::string errors;
     
     // recupere la ligne #version
     std::string version;
@@ -85,46 +81,49 @@ GLuint compile_shader( const GLenum shader_type, const char *filename, const std
             file.erase(0, e +1);
             
             if(file.find("#version") != std::string::npos)
-                errors.append("found several #version directives. failed.\n");
+            {
+                printf("[error] found several #version directives. failed.\n");
+                return std::string();
+            }
         }
     }
     else
-        errors.append("no #version directive found. failed.\n");
+    {
+        printf("[error] no #version directive found. failed.\n");
+        return std::string();
+    }
     
     // reconstruit le source complet
     if(definitions.empty() == false)
     {
-        // insere la version
-        source.append(version);
-        // insere les definitions
-        source.append(definitions).append("\n");
-        // insere le source
-        source.append(file);
+        source.append(version);                         // insere la version
+        source.append(definitions).append("\n");        // insere les definitions
+        source.append(file);                            // insere le source
     }
     else
     {
-        // re-insere la version (supprimee de file)
-        source.append(version);
-        // insere le source
-        source.assign(file);
+        source.append(version);                         // re-insere la version (supprimee de file)
+        source.assign(file);                            // insere le source
     }
     
-    //~ printf("[compile shader]\n%s\n\n", source.c_str());
+    return source;
+}
+
+static
+GLuint compile_shader( const GLenum shader_type, const std::string& source )
+{
+    if(source.empty()) 
+        return 0;
     
-    // compile 
-    const char *sources= source.c_str();
     GLuint shader= glCreateShader(shader_type);
+    if(shader == 0) 
+        return 0;
+    
+    const char *sources= source.c_str();
     glShaderSource(shader, 1, &sources, NULL);
     glCompileShader(shader);
-    
     if(shader_errors(shader))
     {
-        // affiche les erreurs
-        if(shader_type == GL_VERTEX_SHADER) printf("[vertex ");
-        else if(shader_type == GL_FRAGMENT_SHADER) printf("[fragment ");
-        
-        printf("shader '%s']\n%s\n%s\n\n", filename, errors.c_str(), source.c_str());
-        
         glDeleteShader(shader);
         shader= 0;
     }
@@ -132,55 +131,115 @@ GLuint compile_shader( const GLenum shader_type, const char *filename, const std
     return shader;
 }
 
-
-GLuint read_program_definitions( const char *vertex, const char *fragment, const char *definitions )
+#if 0
+std::string program_definition( const char *what, const char *value )
 {
+    return std::string("#define ").append(what).append(" ").append(value).append("\n");
+}
+
+std::string program_definition( const char *what)
+{
+    return std::string("#define ").append(what).append("\n");
+}
+#endif
+
+static
+int reload_program_sources( GLuint program, const std::string& vertex_source, const std::string& fragment_source )
+{
+    if(program == 0) 
+        return -1;
+
     // creer et compiler un vertex shader et un fragment shader
-    GLuint vertex_shader= compile_shader(GL_VERTEX_SHADER, vertex, std::string(definitions).append("#define VERTEX_SHADER\n"));
-    if(vertex_shader == 0)
-        return 0;
-    GLuint fragment_shader= compile_shader(GL_FRAGMENT_SHADER, fragment, std::string(definitions).append("#define FRAGMENT_SHADER\n"));
-    if(fragment_shader == 0)
-        return 0;
+    GLuint vertex_shader= compile_shader(GL_VERTEX_SHADER, vertex_source);
+    GLuint fragment_shader= compile_shader(GL_FRAGMENT_SHADER, fragment_source);
+    if(vertex_shader == 0 || fragment_shader == 0)
+    {
+        if(vertex_shader > 0)
+            glDeleteShader(vertex_shader);
+        if(fragment_shader > 0)
+            glDeleteShader(fragment_shader);
+        return -1;
+    }
     
-    // creer un shader program
-    GLuint program= glCreateProgram();
     // associer les shaders au program
     glAttachShader(program, vertex_shader);
     glAttachShader(program, fragment_shader);
+    
     // linker les shaders pour obtenir un program utilisable
     glLinkProgram(program);
     
+    // plus besoin des shaders
+    glDetachShader(program, vertex_shader);
+    glDeleteShader(vertex_shader);
+    glDetachShader(program, fragment_shader);
+    glDeleteShader(fragment_shader);
+  
     // verifier les erreurs
     if(program_errors(program)) 
+        return -1;
+    
+    // pour etre coherent avec les autres fonctions de creation, active l'objet gl qui vient d'etre cree.
+    glUseProgram(program);
+    return 0;
+}
+
+int reload_program_definitions( const GLuint program, const char *filename, const char *definitions )
+{
+    std::string common_source= read(filename);
+    std::string vertex_source= prepare_source(common_source, std::string(definitions).append("#define VERTEX_SHADER\n"));
+    std::string fragment_source= prepare_source(common_source, std::string(definitions).append("#define FRAGMENT_SHADER\n"));
+    
+    return reload_program_sources(program, vertex_source, fragment_source);
+}
+
+int reload_program( const GLuint program, const char *filename )
+{
+    return reload_program_definitions(program, filename, "");
+}
+
+GLuint read_program_definitions( const char *filename, const char *definitions )
+{
+    GLuint program= glCreateProgram();
+    if(reload_program_definitions(program, filename, definitions) < 0)
     {
         glDeleteProgram(program);
         program= 0;
     }
     
-    // plus besoin des shaders
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
-  
-    // pour etre coherent avec les autres fonctions de creation, active l'objet gl qui vient d'etre cree.
-    if(program > 0) 
-        glUseProgram(program);
     return program;
 }
 
-GLuint read_program( const char *vertex, const char *fragment )
+GLuint read_program( const char *filename )
 {
-    return read_program_definitions(vertex, fragment, "");
+    return read_program_definitions(filename, "");
 }
 
-GLuint read_program( const char *shaders )
+
+int reload_program_definitions( const GLuint program, const char *vertex_filename, const char *fragment_filename, const char *definitions )
 {
-    return read_program_definitions(shaders, shaders, "");
+    if(program == 0)
+        return -1;
+    
+    std::string vertex_source= prepare_source(read(vertex_filename), definitions);
+    std::string fragment_source= prepare_source(read(fragment_filename), definitions);
+    return reload_program_sources(program, vertex_source, fragment_source);
 }
 
-GLuint read_program_definitions( const char *shaders, const char *definitions )
+GLuint read_program_definitions( const char *vertex_filename, const char *fragment_filename, const char *definitions )
 {
-    return read_program_definitions(shaders, shaders, definitions);
+    GLuint program= glCreateProgram();
+    if(reload_program_definitions(program, vertex_filename, fragment_filename, "") < 0)
+    {
+        glDeleteProgram(program);
+        program= 0;
+    }
+    
+    return program;
+}
+
+GLuint read_program( const char *vertex_filename, const char *fragment_filename )
+{
+    return read_program_definitions(vertex_filename, fragment_filename, "");
 }
 
 

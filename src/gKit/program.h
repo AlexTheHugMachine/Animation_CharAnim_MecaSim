@@ -8,16 +8,25 @@
 #include "vec.h"
 #include "mat.h"
 
-
-//! cree un shader program. charge les sources d'un vertex shader et d'un fragment shader.
-GLuint read_program( const char *vertex, const char *fragment );
+//! recompile un shader program.
+int reload_program( const GLuint program, const char *filename );
 //! cree un shader program, charge un seul fichier, les shaders sont separes par #ifdef VERTEX_SHADER / #endif et #ifdef FRAGMENT_SHADER / #endif.
-GLuint read_program( const char *shaders );
+GLuint read_program( const char *filename );
 
-//! cree un shader program, et insere les definitions, #define what.
-GLuint read_program_definitions( const char *vertex, const char *fragment, const char *definitions );
-//! cree un shader program, charge un seul fichier. et insere les definitions, #define what.
-GLuint read_program_definitions( const char *shaders, const char *definitions );
+//! recompile un shader program + definitions #define what value\n.
+int reload_program_definitions( const GLuint program, const char *filename, const char *definitions );
+//! cree un shader program, charge un seul fichier, les shaders sont separes par #ifdef VERTEX_SHADER / #endif et #ifdef FRAGMENT_SHADER / #endif + definitions #define what value\n.
+GLuint read_program_definitions( const char *filename, const char *definitions );
+
+//! recompile un shader program.
+int reload_program_definitions( const GLuint program, const char *vertex_filename, const char *fragment_filename, const char *definitions );
+//! cree un shader program, a partir des sources vertex et fragment et des definitions #define what value\n.
+GLuint read_program_definitions( const char *vertex_filename, const char *fragment_filename, const char *definitions );
+
+//! recompile un shader program.
+int reload_program( const GLuint program, const char *vertex, const char *fragment );
+//! cree un shader program, a partir des sources vertex et fragment 
+GLuint read_program( const char *vertex, const char *fragment );
 
 //! renvoie l'indice d'un attribut declare dans le vertex shader.
 GLint program_attribute( const GLuint program, const char *attribute );
