@@ -17,9 +17,19 @@ void main( )
 
 #ifdef FRAGMENT_SHADER
 
+/*
+catalogue de fonctions :
+http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm
+*/
+
 float sphere( const vec3 p, const float radius )
 {
     return length(p) - radius;
+}
+
+float box( vec3 p, vec3 b, float r )
+{
+  return length(max(abs(p) - b, 0.0)) - r;
 }
 
 float displace( const vec3 p )
@@ -29,7 +39,8 @@ float displace( const vec3 p )
 
 float object( const vec3 p )
 {
-    float d1= sphere(p, 0.75);
+    //~ float d1= sphere(p, 0.75);
+    float d1= box(p, vec3(0.5, 0.5, 0.5), 0.1);
     float d2= displace(p);
     //~ float d2= 0;
     

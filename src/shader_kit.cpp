@@ -25,9 +25,9 @@ bool program_errors;
 
 GLuint vao;
 
-GLuint texture;
+//~ GLuint texture;
 
-Mesh cube;
+//~ Mesh cube;
 
 Orbiter camera;
 Widgets widgets;
@@ -89,6 +89,7 @@ int quit( )
     // detruit les objets openGL
     //~ glDeleteTextures(1, &texture);
     glDeleteVertexArrays(1, &vao);
+    glDeleteProgram(program);
     return 0;
 }
 
@@ -134,6 +135,12 @@ int draw( )
         program_uniform(program, "mvMatrix", mv);
         
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    }
+    
+    if(key_state('s'))
+    {
+        clear_key_state('s');
+        screenshot("shader_kit.png");
     }
     
     // affiche les infos
