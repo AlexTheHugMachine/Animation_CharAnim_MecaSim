@@ -54,7 +54,7 @@ int init( )
     }
     #endif
     
-#if 1
+#if 0
     // charge un fichier obj
     cube= read_mesh("data/bigguy.obj");
 
@@ -197,7 +197,7 @@ int draw( )
         
         begin_line(widgets);
             label(widgets, "line3");
-            labelf(widgets, "format %-3d %-3d", mx, my);        // printf formate
+            label(widgets, "format %-3d %-3d", mx, my);        // printf formate
             if(button(widgets, "button1", button1))
             {
                 printf("button: %d\n", button1);
