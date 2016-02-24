@@ -58,8 +58,3 @@ Transform orbiter_projection_transform( const Orbiter&o, const float width, cons
     return make_perspective(fov, width / height, o.size*0.01f, o.size*2.f + o.center.z);
 }
 
-Transform orbiter_projection_transform( const Orbiter&o )
-{
-    return orbiter_projection_transform(o, 1.f, 1.f, 45.f);
-}
-

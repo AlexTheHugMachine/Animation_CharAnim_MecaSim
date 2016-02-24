@@ -178,7 +178,7 @@ Window create_window( const int w, const int h )
     // enregistre le destructeur de sdl
     atexit(SDL_Quit);
 
-    // creer la fenetre et le contexte openGL
+    // creer la fenetre 
     Window window= SDL_CreateWindow("gKit",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);

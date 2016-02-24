@@ -11,7 +11,6 @@ Mesh create_mesh( const GLenum primitives )
 {
     Mesh m;
     m.primitives= primitives;
-    m.count= 0;
     m.vao= 0;
     m.program= 0;
     return m;
@@ -65,6 +64,7 @@ unsigned int push_vertex( Mesh& m, const vec3& position )
 {
     m.positions.push_back(position);
 
+    // copie les autres attributs du sommet, uniquement s'ils sont definis
     if(m.texcoords.size() > 0 && m.texcoords.size() != m.positions.size())
         m.texcoords.push_back(m.texcoords.back());
     if(m.normals.size() > 0 && m.normals.size() != m.positions.size())
@@ -74,7 +74,6 @@ unsigned int push_vertex( Mesh& m, const vec3& position )
     
     unsigned int index= (unsigned int) m.positions.size() -1;
     // construction de l'index buffer pour les strip
-    bool strip= false;
     switch(m.primitives)
     {
         case GL_LINE_STRIP:
@@ -151,7 +150,7 @@ void push_triangle_last( Mesh& m, const int a, const int b, const int c )
 
 void restart_strip( Mesh& m )
 {
-    m.indices.push_back(~0u);   // ~0u plus grand entier non signe representable.
+    m.indices.push_back(~0u);   // ~0u plus grand entier non signe representable
 #if 1
     glPrimitiveRestartIndex(~0u);
     glEnable(GL_PRIMITIVE_RESTART);
@@ -190,10 +189,7 @@ GLuint make_mesh_vertex_format( Mesh& m )
     if(m.colors.size() > 0 && m.colors.size() < m.positions.size())
         printf("[error] invalid colors array...\n");
 #endif
-
-    // conserver le nombre de sommets pour glDrawArrays( )
-    m.count = (int) m.positions.size();
-
+    
     // ne creer que les buffers necessaires
     GLuint vao= create_vertex_format();
     make_vertex_buffer(vao, 0,  3, GL_FLOAT, m.positions.size() * sizeof(vec3), &m.positions.front());
@@ -205,11 +201,7 @@ GLuint make_mesh_vertex_format( Mesh& m )
         make_vertex_buffer(vao, 3,  3, GL_FLOAT, m.colors.size() * sizeof(vec3), &m.colors.front());
 
     if(m.indices.size() > 0)
-    {
-        // conserver le nombre d'indices de sommets pour glDrawElements( )
-        m.count= (int) m.indices.size();
         make_index_buffer(vao, m.indices.size() * sizeof(unsigned int), &m.indices.front());
-    }
 
     return vao;
 }
@@ -252,9 +244,9 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
         program_use_texture(m.program, "diffuse_color", 0, texture); 
 
     if(m.indices.size() > 0)
-        glDrawElements(m.primitives, m.count, GL_UNSIGNED_INT, 0);
+        glDrawElements(m.primitives, m.indices.size(), GL_UNSIGNED_INT, 0);
     else
-        glDrawArrays(m.primitives, 0, m.count);
+        glDrawArrays(m.primitives, 0, m.positions.size());
 }
 
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection )

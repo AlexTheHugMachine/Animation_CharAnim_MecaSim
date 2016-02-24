@@ -14,6 +14,7 @@ struct Image
     int width;
     int height;
     int channels;
+    // levels
 };
 
 //! cree une image de dimensions largeur \param width, hauteur \param height. les pixels sont representes par \param channels valeurs. l'image est initialisee avec la couler \param color.

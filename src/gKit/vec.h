@@ -80,6 +80,11 @@ struct vec3
 vec3 make_vec3( const float x, const float y, const float z );
 vec3 make_vec3( const vec2& v, const float z );
 
+Point make_point( const vec3& p );
+vec3 make_vec3( const Point& p );
+Vector make_vector( const vec3& v );
+vec3 make_vec3( const Vector& v );
+
 //! vecteur generique 4d, ou 3d homogene, utilitaire.
 struct vec4
 {

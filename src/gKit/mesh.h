@@ -23,7 +23,6 @@ struct Mesh
     std::vector<unsigned int> indices;
     
     GLenum primitives;
-    int count;
     GLuint vao;
     GLuint program;
 };

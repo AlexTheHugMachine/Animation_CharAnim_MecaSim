@@ -157,6 +157,28 @@ vec4 make_vec4( const vec3& u, const float w )
     return v;
 }
 
+
+Point make_point( const vec3& p )
+{
+    return make_point(p.x, p.y, p.z);
+}
+
+vec3 make_vec3( const Point& p )
+{
+    return make_vec3(p.x, p.y, p.z);
+}
+
+Vector make_vector( const vec3& v )
+{
+    return make_vector(v.x, v.y, v.z);
+}
+
+vec3 make_vec3( const Vector& v )
+{
+    return make_vec3(v.x, v.y, v.z);
+}
+
+
 vec4 make_vec4( const Point& a )
 {
     return make_vec4(a.x, a.y, a.z, 1);
