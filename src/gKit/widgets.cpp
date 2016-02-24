@@ -118,7 +118,7 @@ void end_line( Widgets& widgets )
 
 void label( Widgets& w, const char *format, ... )
 {
-    char tmp[128] = { 0 };
+    char tmp[4096] = { 0 };
     
     va_list args;
     va_start(args, format);
@@ -141,10 +141,7 @@ bool button( Widgets& w, const char *text, int& status )
     }
 
     char tmp[128];
-    if(status)
-        snprintf(tmp, sizeof(tmp), "%c %s", 22, text);  // strlen(text) + 2
-    else
-        snprintf(tmp, sizeof(tmp), "%c %s", 20, text);  // strlen(text) + 2
+    snprintf(tmp, sizeof(tmp), "%c %s", (status != 0) ? 22 : 20, text);  // strlen(text) + 2
 
     print(w.console, r.x, r.y, tmp);
     return change;
