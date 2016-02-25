@@ -217,7 +217,7 @@ GLuint make_mesh_program( Mesh& m )
     if(m.colors.size() > 0)
         definitions.append("#define USE_COLOR\n");
 
-    return read_program_definitions("data/shaders/mesh.glsl", definitions.c_str());
+    return read_program("data/shaders/mesh.glsl", definitions.c_str());
 }
 
 

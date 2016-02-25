@@ -3,8 +3,10 @@
 #include <sstream>
 #include <string>
 #include <set>
+#include <vector>
 
 #include <cstdio>
+#include <cassert>
 
 #include "program.h"
 
@@ -16,48 +18,12 @@ std::string read( const char *filename )
     std::stringbuf source;
     std::ifstream in(filename);
     if(in.good() == false)
-        printf("[error] loading shader '%s'...\n", filename);
+        printf("[error] loading program '%s'...\n", filename);
     else
-        printf("loading shader '%s'...\n", filename);
+        printf("loading program '%s'...\n", filename);
     
     in.get(source, 0);        // lire tout le fichier, le caractere '\0' ne peut pas se trouver dans le source de shader
     return source.str();
-}
-
-//! affiche les erreurs de compilation de shader.
-static
-bool shader_errors( const GLuint shader )
-{
-    if(shader == 0) 
-        return true;
-    
-    GLint status;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-    if(status == GL_TRUE) 
-        return false;
-    
-    char errors[4096];
-    glGetShaderInfoLog(shader, sizeof(errors) -1, NULL, errors);
-    printf("[shader errors]\n%s\n", errors);
-    return true;
-}
-
-//! affiche les erreurs de link du programme.
-static
-bool program_errors( const GLuint program )
-{
-    if(program == 0) 
-        return true;
-    
-    GLint status;
-    glGetProgramiv(program, GL_LINK_STATUS, &status);
-    if(status == GL_TRUE) 
-        return false;
-    
-    char errors[4096];
-    glGetProgramInfoLog(program, sizeof(errors) -1, NULL, errors);
-    printf("[program errors]\n%s\n", errors);
-    return true;
 }
 
 static 
@@ -110,136 +76,178 @@ std::string prepare_source( std::string file, const std::string& definitions )
 }
 
 static
-GLuint compile_shader( const GLenum shader_type, const std::string& source )
+GLuint compile_shader( const GLuint program, const GLenum shader_type, const std::string& source )
 {
-    if(source.empty()) 
+    if(source.size() == 0) 
         return 0;
     
     GLuint shader= glCreateShader(shader_type);
-    if(shader == 0) 
-        return 0;
+    glAttachShader(program, shader);
     
     const char *sources= source.c_str();
     glShaderSource(shader, 1, &sources, NULL);
     glCompileShader(shader);
-    if(shader_errors(shader))
-    {
-        glDeleteShader(shader);
-        shader= 0;
-    }
-    
-    return shader;
+
+    GLint status;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    return (status == GL_TRUE) ? shader : 0;
 }
 
-#if 0
-std::string program_definition( const char *what, const char *value )
-{
-    return std::string("#define ").append(what).append(" ").append(value).append("\n");
-}
 
-std::string program_definition( const char *what)
-{
-    return std::string("#define ").append(what).append("\n");
-}
-#endif
-
-static
-int reload_program_sources( GLuint program, const std::string& vertex_source, const std::string& fragment_source )
+int reload_program( GLuint program, const char *filename, const char *definitions )
 {
     if(program == 0) 
         return -1;
 
-    // creer et compiler un vertex shader et un fragment shader
-    GLuint vertex_shader= compile_shader(GL_VERTEX_SHADER, vertex_source);
-    GLuint fragment_shader= compile_shader(GL_FRAGMENT_SHADER, fragment_source);
-    if(vertex_shader == 0 || fragment_shader == 0)
+    // supprime les shaders attaches au program
+    int shaders_max= 0;
+    glGetProgramiv(program, GL_ATTACHED_SHADERS, &shaders_max);
+    
+    std::vector<GLuint> shaders(shaders_max, 0);
+    glGetAttachedShaders(program, shaders_max, NULL, &shaders.front());
+    for(int i= 0; i < shaders_max; i++)
     {
-        if(vertex_shader > 0)
-            glDeleteShader(vertex_shader);
-        if(fragment_shader > 0)
-            glDeleteShader(fragment_shader);
-        return -1;
+        glDetachShader(program, shaders[i]);
+        glDeleteShader(shaders[i]);
     }
     
-    // associer les shaders au program
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    
-    // linker les shaders pour obtenir un program utilisable
+    // prepare les sources
+    std::string common_source= read(filename);
+    std::string vertex_source= prepare_source(common_source, std::string(definitions).append("#define VERTEX_SHADER\n"));
+    std::string fragment_source= prepare_source(common_source, std::string(definitions).append("#define FRAGMENT_SHADER\n"));
+
+    // cree et compile un vertex shader et un fragment shader
+    GLuint vertex_shader= compile_shader(program, GL_VERTEX_SHADER, vertex_source);
+    GLuint fragment_shader= compile_shader(program, GL_FRAGMENT_SHADER, fragment_source);
+    // linke les shaders
     glLinkProgram(program);
     
-    // plus besoin des shaders
-    glDetachShader(program, vertex_shader);
-    glDeleteShader(vertex_shader);
-    glDetachShader(program, fragment_shader);
-    glDeleteShader(fragment_shader);
-  
-    // verifier les erreurs
-    if(program_errors(program)) 
+    // verifie les erreurs
+    GLint status;
+    glGetProgramiv(program, GL_LINK_STATUS, &status);
+    if(status == GL_FALSE) 
+    {
+        if(vertex_shader == 0)
+            printf("[error] compiling vertex shader...\n%s\n", definitions);
+        if(fragment_shader == 0)
+            printf("[error] compiling fragment shader...\n%s\n", definitions);
+        printf("[error] linking program %u '%s'...\n", program, filename);
         return -1;
+    }
     
     // pour etre coherent avec les autres fonctions de creation, active l'objet gl qui vient d'etre cree.
     glUseProgram(program);
     return 0;
 }
 
-int reload_program_definitions( const GLuint program, const char *filename, const char *definitions )
-{
-    std::string common_source= read(filename);
-    std::string vertex_source= prepare_source(common_source, std::string(definitions).append("#define VERTEX_SHADER\n"));
-    std::string fragment_source= prepare_source(common_source, std::string(definitions).append("#define FRAGMENT_SHADER\n"));
-    
-    return reload_program_sources(program, vertex_source, fragment_source);
-}
-
-int reload_program( const GLuint program, const char *filename )
-{
-    return reload_program_definitions(program, filename, "");
-}
-
-GLuint read_program_definitions( const char *filename, const char *definitions )
+GLuint read_program( const char *filename, const char *definitions )
 {
     GLuint program= glCreateProgram();
-    if(reload_program_definitions(program, filename, definitions) < 0)
-    {
-        glDeleteProgram(program);
-        program= 0;
-    }
-    
+    reload_program(program, filename, definitions);
     return program;
 }
 
-GLuint read_program( const char *filename )
+
+static
+void print_line( std::string& errors, const char *source, const int line_id )
 {
-    return read_program_definitions(filename, "");
+    int line= 1;
+    for(unsigned int i= 0; source[i] != 0; i++)
+    {
+        if(line > line_id)
+            break;
+        if(line == line_id)
+            errors.push_back(source[i]);
+        
+        if(source[i] == '\n')
+            line++;
+    }
 }
 
-
-int reload_program_definitions( const GLuint program, const char *vertex_filename, const char *fragment_filename, const char *definitions )
+static
+void print_errors( std::string& errors, const char *log, const char *source )
 {
+    int last_string= -1;
+    int last_line= -1;
+    for(int i= 0; log[i] != 0; i++)
+    {
+        // recupere la ligne assiciee a l'erreur
+        int string_id= 0, line_id= 0, position= 0;
+        if(sscanf(&log[i], "%d ( %d ) : %n", &string_id, &line_id, &position) == 2        // nvidia syntax
+        || sscanf(&log[i], "%d : %d (%*d) : %n", &string_id, &line_id, &position) == 2  // mesa syntax
+        || sscanf(&log[i], "ERROR : %d : %d : %n", &string_id, &line_id, &position) == 2  // ati syntax
+        || sscanf(&log[i], "WARNING : %d : %d : %n", &string_id, &line_id, &position) == 2)  // ati syntax
+        {
+            if(string_id != last_string || line_id != last_line)
+            {
+                // extrait la ligne du source...
+                errors.append("\n");
+                print_line(errors, source, line_id);
+                errors.append("\n");
+            }
+        }
+        // et affiche l'erreur associee...
+        for(i+= position; log[i] != 0; i++)
+        {
+            errors.push_back(log[i]);
+            if(log[i] == '\n')
+                break;
+        }
+        
+        last_string= string_id;
+        last_line= line_id;
+    }
+}
+
+int program_format_errors( const GLuint program, std::string& errors )
+{
+    errors.clear();
+    
     if(program == 0)
         return -1;
     
-    std::string vertex_source= prepare_source(read(vertex_filename), definitions);
-    std::string fragment_source= prepare_source(read(fragment_filename), definitions);
-    return reload_program_sources(program, vertex_source, fragment_source);
-}
-
-GLuint read_program_definitions( const char *vertex_filename, const char *fragment_filename, const char *definitions )
-{
-    GLuint program= glCreateProgram();
-    if(reload_program_definitions(program, vertex_filename, fragment_filename, "") < 0)
+    GLint status;
+    glGetProgramiv(program, GL_LINK_STATUS, &status);
+    if(status == GL_TRUE) 
+        return 0;
+    
+    // recupere les shaders
+    int shaders_max= 0;
+    glGetProgramiv(program, GL_ATTACHED_SHADERS, &shaders_max);
+    
+    std::vector<GLuint> shaders(shaders_max, 0);
+    glGetAttachedShaders(program, shaders_max, NULL, &shaders.front());
+    for(int i= 0; i < shaders_max; i++)
     {
-        glDeleteProgram(program);
-        program= 0;
+        GLint value;
+        glGetShaderiv(shaders[i], GL_COMPILE_STATUS, &value);
+        if(value == GL_FALSE)
+        {
+            // recupere les erreurs
+            glGetShaderiv(shaders[i], GL_INFO_LOG_LENGTH, &value);
+            std::vector<char>log(value+1, 0);
+            glGetShaderInfoLog(shaders[i], log.size(), NULL, &log.front());
+            
+            // recupere le source
+            glGetShaderiv(shaders[i], GL_SHADER_SOURCE_LENGTH, &value);
+            std::vector<char> source(value+1, 0);
+            glGetShaderSource(shaders[i], source.size(), NULL, &source.front());
+            
+            glGetShaderiv(shaders[i], GL_SHADER_TYPE, &value);
+            errors.append("[error] compiling ");
+            if(value == GL_VERTEX_SHADER)
+                errors.append("vertex shader...\n");
+            else if(value == GL_FRAGMENT_SHADER)
+                errors.append("fragment shader...\n");
+            else
+                errors.append("shader...\n");
+            
+            // formatte les erreurs
+            print_errors(errors, &log.front(), &source.front());
+        }
     }
     
-    return program;
-}
-
-GLuint read_program( const char *vertex_filename, const char *fragment_filename )
-{
-    return read_program_definitions(vertex_filename, fragment_filename, "");
+    return 0;
 }
 
 
@@ -300,7 +308,6 @@ int location( const GLuint program, const char *uniform )
     
     return location;
 }
-
 
 void program_uniform( const GLuint program, const char *uniform, const unsigned int v )
 {

@@ -8,25 +8,15 @@
 #include "vec.h"
 #include "mat.h"
 
-//! recompile un shader program.
-int reload_program( const GLuint program, const char *filename );
-//! cree un shader program, charge un seul fichier, les shaders sont separes par #ifdef VERTEX_SHADER / #endif et #ifdef FRAGMENT_SHADER / #endif.
-GLuint read_program( const char *filename );
+//! cree un shader program, charge un seul fichier, les shaders sont separes par #ifdef VERTEX_SHADER / #endif et #ifdef FRAGMENT_SHADER / #endif 
+//! \param definitions est une chaine de caracteres pouvant comporter plusieurs lignes #define what value\n.
+GLuint read_program( const char *filename, const char *definitions= "" );
 
-//! recompile un shader program + definitions #define what value\n.
-int reload_program_definitions( const GLuint program, const char *filename, const char *definitions );
-//! cree un shader program, charge un seul fichier, les shaders sont separes par #ifdef VERTEX_SHADER / #endif et #ifdef FRAGMENT_SHADER / #endif + definitions #define what value\n.
-GLuint read_program_definitions( const char *filename, const char *definitions );
+//! recharge les sources et recompile un shader program.
+int reload_program( const GLuint program, const char *filename, const char *definitions= "" );
 
-//! recompile un shader program.
-int reload_program_definitions( const GLuint program, const char *vertex_filename, const char *fragment_filename, const char *definitions );
-//! cree un shader program, a partir des sources vertex et fragment et des definitions #define what value\n.
-GLuint read_program_definitions( const char *vertex_filename, const char *fragment_filename, const char *definitions );
-
-//! recompile un shader program.
-int reload_program( const GLuint program, const char *vertex, const char *fragment );
-//! cree un shader program, a partir des sources vertex et fragment 
-GLuint read_program( const char *vertex, const char *fragment );
+//! renvoie les erreurs de compilation.
+int program_format_errors( const GLuint program, std::string& errors );
 
 //! renvoie l'indice d'un attribut declare dans le vertex shader.
 GLint program_attribute( const GLuint program, const char *attribute );
