@@ -14,6 +14,7 @@ Widgets create_widgets( )
     w.px= 0; w.py= 0;
     w.focus= 0; w.fx= 0; w.fy= 0;
     w.mb= 0; w.mx= 0; w.my= 0;
+    w.wx= 0; w.wy= 0;
     return w;
 }
 
@@ -38,7 +39,17 @@ void begin( Widgets& w )
         clear_button_event();
         w.mb= 1;
     }
-
+    
+    SDL_MouseWheelEvent wheel= wheel_event();
+    w.wx= 0;
+    w.wy= 0;
+    if(wheel.x != 0 || wheel.y != 0)
+    {
+        clear_wheel_event();
+        w.wx= wheel.x;
+        w.wy= wheel.y;
+    }
+    
     SDL_KeyboardEvent key= key_event( );
     w.key= 0;
     w.mod= 0;
@@ -51,8 +62,13 @@ void begin( Widgets& w )
         // filtre les touches speciales
         switch(w.key)
         {
+            case SDLK_SPACE:
             case SDLK_BACKSPACE:
             case SDLK_DELETE:
+            case SDLK_UP:
+            case SDLK_DOWN:
+            case SDLK_PAGEUP:
+            case SDLK_PAGEDOWN:
             case SDLK_LEFT:
             case SDLK_RIGHT:
             case SDLK_RETURN:
@@ -84,16 +100,21 @@ bool overlap( const Rect r, const int x, const int y )
 }
 
 static
-Rect place( Widgets& w, const int width )
+Rect place( Widgets& w, const int width, const int height= 1 )
 {
     Rect r;
     r.x= w.px;
     r.y= w.py;
     r.w= width;
-    r.h= 1;
+    r.h= height;
     
-    // place le prochain widget a droite 
-    w.px= r.x + r.w +2; // +2 marge
+    if(height == 1)
+        // place le prochain widget a droite 
+        w.px= r.x + r.w +2; // +2 marge
+    else
+        // place le prochain widget sur la ligne suivante
+        w.py= w.py + height;
+
     return r;
 }
 
@@ -145,6 +166,54 @@ bool button( Widgets& w, const char *text, int& status )
 
     print(w.console, r.x, r.y, tmp);
     return change;
+}
+
+void text_area( Widgets& w, const int height, const char *text, int& begin_line )
+{
+    Rect r= place(w, 128, height);
+    
+    if(overlap(r, w.mx, w.my))
+    {
+        if(w.wy != 0)
+            begin_line= begin_line - w.wy;
+        if(w.key == SDLK_PAGEUP)
+            begin_line= begin_line - height;
+        if(w.key == SDLK_PAGEDOWN)
+            begin_line= begin_line + height;
+        if(w.key == SDLK_SPACE)
+            begin_line= begin_line + height / 2;
+        if(w.key == SDLK_UP)
+            begin_line= begin_line - 1;
+        if(w.key == SDLK_DOWN)
+            begin_line= begin_line + 1;
+    }
+    //~ printf("  tmp begin %d\n", begin_line);
+    
+    // compter les lignes
+    int n= 1;
+    for(int i= 0; text[i] != 0; i++)
+        if(text[i] == '\n')
+            n++;
+
+    if(begin_line + height > n)
+        begin_line= n - height;
+    if(begin_line < 1)
+        begin_line= 1;
+    
+    int line= 1;
+    int offset= 0;
+    for(int i= 0; text[i] != 0; i++)
+    {
+        if(text[i] == '\n')
+        {
+            line++;
+            if(line == begin_line)
+                offset= i;
+        }
+    }
+    //~ printf("begin %d\n", begin_line);
+    
+    print(w.console, r.x, r.y, text + offset);
 }
 
 bool edit( Widgets& w, int text_size, char *text )
@@ -203,8 +272,7 @@ bool edit( Widgets& w, int text_size, char *text )
         else
         {
             w.fx++;     // curseur a droite
-            for(int i= text_size -1; i > c; i--)
-                text[i]= text[i -1];
+            for(int i= text_size -1; i > c; i--) text[i]= text[i -1];
             text[c]= w.key;
 
             if(size < text_size -2)
@@ -239,14 +307,7 @@ void end( Widgets& w )
 
 void draw( Widgets& w, const int width, const int height )
 {
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-    
     draw(w.console, width, height);
-    
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
 }
 
 

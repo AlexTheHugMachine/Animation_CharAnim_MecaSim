@@ -26,6 +26,8 @@ SDL_KeyboardEvent key_event( );
 void clear_key_event( );
 SDL_MouseButtonEvent button_event( );
 void clear_button_event( );
+SDL_MouseWheelEvent wheel_event( );
+void clear_wheel_event( );
 SDL_TextInputEvent text_event( );
 void clear_text_event( );
 

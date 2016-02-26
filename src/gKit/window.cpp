@@ -60,6 +60,7 @@ SDL_KeyboardEvent key_event( )
 void clear_key_event( )
 {
     last_key.type= 0;
+    last_key.keysym.sym= 0;
 }
 
 
@@ -86,6 +87,20 @@ SDL_MouseButtonEvent button_event( )
 void clear_button_event( )
 {
     last_button.state= 0;
+}
+
+
+static SDL_MouseWheelEvent last_wheel;
+
+SDL_MouseWheelEvent wheel_event( )
+{
+    return last_wheel;
+}
+
+void clear_wheel_event( )
+{
+    last_wheel.x= 0;
+    last_wheel.y= 0;
 }
 
 
@@ -147,6 +162,10 @@ int run( Window window )
                 case SDL_MOUSEBUTTONDOWN:
                 case SDL_MOUSEBUTTONUP:
                     last_button= event.button;
+                    break;
+                
+                case SDL_MOUSEWHEEL:
+                    last_wheel= event.wheel;
                     break;
                 
                 case SDL_QUIT:

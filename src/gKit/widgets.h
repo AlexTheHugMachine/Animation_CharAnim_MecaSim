@@ -15,6 +15,7 @@ struct Widgets
     
     int mb;             // click
     int mx, my;         // position du click
+    int wx, wy;         // scroll
     
     int key;            // touche
     unsigned int mod;   // touches supplementaires, alt, ctrl, etc.
@@ -30,6 +31,7 @@ void begin_line( Widgets& widgets );
 
 void label( Widgets& widgets, const char *format, ... );
 bool button( Widgets& widgets, const char *text, int& status );
+void text_area( Widgets& w, const int height, const char *text, int& begin_line );
 bool edit( Widgets& widgets, const int text_size, char *text );
 
 void end_line( Widgets& widgets );
