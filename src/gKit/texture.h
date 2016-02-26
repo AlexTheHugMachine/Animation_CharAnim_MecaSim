@@ -7,13 +7,20 @@
 
 #include "image.h"
 
+//! \addtogroup openGL
+///@{
 
-//! cree une texture a partir d'une image \param im.
+//! \file 
+//! texture2D openGL.
+
+
+//! cree une texture a partir d'une image im.
 GLuint make_texture( const int unit, const Image& im );
-//! cree une texture a partir d'un fichier \param filename.
+//! cree une texture a partir d'un fichier filename.
 GLuint read_texture( const int unit, const char *filename );
 
-//! enregistre le contenu de la fenetre dans un fichier. 
+//! enregistre le contenu de la fenetre dans un fichier filename nom de l'image a ecrire. doit etre de type .png.
 int screenshot( const char *filename );
 
+///@}
 #endif

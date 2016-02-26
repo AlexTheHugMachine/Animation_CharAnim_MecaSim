@@ -5,6 +5,12 @@
 #include "vec.h"
 #include "mat.h"
 
+//! \addtogroup objet3D
+///@{
+
+//! \file 
+//! camera pour observer un objet.
+
 //! representation de la camera, type orbiter, placee sur une sphere autour du centre de l'objet.
 struct Orbiter
 {
@@ -16,10 +22,10 @@ struct Orbiter
 
 //! cree une camera par defaut. observe le centre (0, 0, 0) a une distance 5.
 Orbiter make_orbiter( );
-//! cree une camera. observe le point \param center a une distance \param size.
+//! cree une camera. observe le point center a une distance size.
 Orbiter make_orbiter_lookat( const Point& center, const float size );
 
-//! modifie une camera. observe le point \param center a une distance \param size.
+//! modifie une camera. observe le point center a une distance size.
 void orbiter_lookat( Orbiter&o, const Point& center, const float size );
 
 //! change le point de vue / la direction d'observation.
@@ -31,9 +37,11 @@ void orbiter_move( Orbiter&o, const float z );
 
 //! renvoie la transformation vue.
 Transform orbiter_view_transform( const Orbiter&o );
-//! renvoie la projection reglee pour une image d'aspect \param width / \param height, et une ouverture de \param fov degres.
+//! renvoie la projection reglee pour une image d'aspect width / height, et une ouverture de fov degres.
 Transform orbiter_projection_transform( const Orbiter&o, const float width, const float height, const float fov );
 
 //! renvoie l'extremite du rayon pour le pixel x, y. l'origine du rayon est la position de la camera.
 Point orbiter_pixel( const Orbiter& o, const float x, const float y, const float z, const float width, const float height, const float fov );
+
+///@}
 #endif

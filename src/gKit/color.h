@@ -2,7 +2,13 @@
 #ifndef _COLOR_H
 #define _COLOR_H
 
-//! representation d'une couleur (
+//! \addtogroup image
+///@{
+
+//! \file 
+//! manipulation de couleurs
+
+//! representation d'une couleur (rgba) transparente ou opaque.
 struct Color
 {
     float r, g, b, a;
@@ -25,4 +31,5 @@ Color operator/ ( const Color& a, const Color& b );
 Color operator/ ( const float k, const Color& c );
 Color operator/ ( const Color& c, const float k );
 
+///@}
 #endif

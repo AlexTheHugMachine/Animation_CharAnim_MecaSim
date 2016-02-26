@@ -2,6 +2,12 @@
 #ifndef _VEC_H
 #define _VEC_H
 
+//! \addtogroup math
+///@{
+
+//! \file 
+//! operations sur points et vecteurs
+
 //! representation d'un point 3d.
 struct Point
 {

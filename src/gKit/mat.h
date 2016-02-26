@@ -4,6 +4,12 @@
 
 #include "vec.h"
 
+//! \addtogroup math manipulations de points, vecteur, matrices, transformations
+///@{
+
+//! \file 
+//! transformation de points et vecteurs
+
 //! conversion en radians.
 float radians( const float deg );
 //! conversion en degres.

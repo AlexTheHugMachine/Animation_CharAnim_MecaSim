@@ -6,6 +6,11 @@
 
 #include "color.h"
 
+//! \addtogroup image utilitaires pour manipuler des images
+///@{
+
+//! \file 
+//! manipulation d'images
 
 //! representation d'une image.
 struct Image
@@ -17,12 +22,17 @@ struct Image
     // levels
 };
 
-//! cree une image de dimensions largeur \param width, hauteur \param height. les pixels sont representes par \param channels valeurs. l'image est initialisee avec la couler \param color.
+//! cree une image de couleur uniforme. les pixels sont representes par 3 ou 4 valeurs. 
+//! \param width largeur 
+//! \param height  hauteur  
+//! \param channels 3 ou 4 nombre de canaux couleur, 3 pour des pixels opaques, 4 pour des pixels semi transparents
+//! \param color couleur initiale des pixels.
 Image create_image( const int width, const int height, const int channels, const Color& color );
 //! detruit l'image.
 void release_image( Image& im );
 
-//! cree une image initialisee avec le contenu d'un fichier \param filemane. renvoie une image rouge en cas d'echec.
+//! charge une image a partir d'un fichier. renvoie une image rouge en cas d'echec.
+//! \param filemane nom de l'image a charger 
 Image read_image( const char *filename );
 
 //! enregistre une image dans un fichier png.
@@ -33,4 +43,5 @@ Color image_pixel( const Image& im, const int x, const int y );
 //! modife la couleur d'un pixel de l'image.
 void image_set_pixel( Image& im, const int x, const int y, const Color& color );
 
+///@}
 #endif

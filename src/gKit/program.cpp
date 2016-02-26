@@ -157,7 +157,7 @@ void print_line( std::string& errors, const char *source, const int begin_id, co
     {
         if(line > line_id)
             break;
-        
+
         if(last == '\n')
         {
             line++;
@@ -172,7 +172,7 @@ void print_line( std::string& errors, const char *source, const int begin_id, co
             }
         }
         
-        if(line >= begin_id)
+        if(line >= begin_id && line <= line_id)
             errors.push_back(source[i]);
         last= source[i];
     }
@@ -182,7 +182,6 @@ static
 void print_errors( std::string& errors, const char *log, const char *source )
 {
     printf("[error log]\n%s\n", log);
-    
     int last_string= -1;
     int last_line= -1;
     for(int i= 0; log[i] != 0; i++)
@@ -213,7 +212,6 @@ void print_errors( std::string& errors, const char *log, const char *source )
         last_string= string_id;
         last_line= line_id;
     }
-    
     errors.append("\n");
     print_line(errors, source, last_line +1, 1000);
     errors.append("\n");

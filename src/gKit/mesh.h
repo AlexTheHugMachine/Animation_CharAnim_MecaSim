@@ -11,6 +11,11 @@
 #include "mat.h"
 #include "color.h"
 
+//! \addtogroup objet3D utilitaires pour manipuler des objets 3d
+///@{
+
+//! \file 
+//! representation d'un objet
 
 //! representation d'un objet / maillage.
 struct Mesh
@@ -49,6 +54,8 @@ void vertex_color( Mesh& m, const Color& color );
 unsigned int push_vertex( Mesh& m, const vec3& position );
 //! insere un sommet et ses attirbuts dans l'objet. renvoie l'indice du sommet.
 unsigned int push_vertex( Mesh& m, const Point& position );
+//! insere un sommet et ses attirbuts dans l'objet. renvoie l'indice du sommet.
+unsigned int push_vertex( Mesh& m, const float x, const float y, const float z );
 
 /*! insere un sommet et ses attributs dans l'objet. utilitaire, equivalent a:
 \code
@@ -119,4 +126,5 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
 //! dessine l'objet avec les transformations model, vue et projection. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet. 
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, GLuint texture );
 
+///@}
 #endif

@@ -60,6 +60,11 @@ unsigned int push_vertex( Mesh& m, const Point& p )
     return push_vertex(m, make_vec3(p.x, p.y, p.z));
 }
 
+unsigned int push_vertex( Mesh& m, const float x, const float y, const float z )
+{
+    return push_vertex(m, make_vec3(x, y, z));
+}
+
 unsigned int push_vertex( Mesh& m, const vec3& position )
 {
     m.positions.push_back(position);
