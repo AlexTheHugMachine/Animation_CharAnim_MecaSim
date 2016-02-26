@@ -35,7 +35,7 @@ Transform make_transform(
 Transform make_transpose( const Transform & m );
 //! renvoie l'inverse de la matrice.
 Transform make_inverse( const Transform& m );
-//! renvoie la transformation a appliquer aux normales d'un objet transforme par \param m.
+//! renvoie la transformation a appliquer aux normales d'un objet transforme par la matrice m.
 Transform make_normal_transform( const Transform& m );
 
 //! renvoie la matrice representant une mise a l'echelle / etirement.
@@ -44,20 +44,20 @@ Transform make_scale( const float x, const float y, const float z );
 //! renvoie la matrice representant une translation par un vecteur.
 Transform make_translation( const Vector& v );
 
-//! renvoie la matrice representation une rotation de \param a degree autour de l'axe X.
-Transform make_rotationX( const float a );
-//! renvoie la matrice representation une rotation de \param a degree autour de l'axe Y.
-Transform make_rotationY( const float a );
-//! renvoie la matrice representation une rotation de \param a degree autour de l'axe Z.
-Transform make_rotationZ( const float a );
-//! renvoie la matrice representation une rotation de \param angle degree autour de l'axe \param axis.
+//! renvoie la matrice representation une rotation de angle degree autour de l'axe X.
+Transform make_rotationX( const float angle );
+//! renvoie la matrice representation une rotation de a degree autour de l'axe Y.
+Transform make_rotationY( const float angle );
+//! renvoie la matrice representation une rotation de angle degree autour de l'axe Z.
+Transform make_rotationZ( const float angle );
+//! renvoie la matrice representation une rotation de angle degree autour de l'axe axis.
 Transform make_rotation( const Vector& axis, const float angle );
 
 //! renvoie la matrice representant une transformation viewport.
 Transform make_viewport( const float width, const float height );
 //! renvoie la matrice representant une transformation projection perspective.
 Transform make_perspective( const float fov, const float aspect, const float znear, const float zfar );
-//! renvoie la matrice representant le placement et l'orientation d'une camera pour observer le point \param to.
+//! renvoie la matrice representant le placement et l'orientation d'une camera pour observer le point to.
 Transform make_lookat( const Point& from, const Point& to, const Vector& up );
 
 //! renvoie la composition des transformations a et b, t= a * b.

@@ -187,7 +187,6 @@ void text_area( Widgets& w, const int height, const char *text, int& begin_line 
         if(w.key == SDLK_DOWN)
             begin_line= begin_line + 1;
     }
-    //~ printf("  tmp begin %d\n", begin_line);
     
     // compter les lignes
     int n= 1;
@@ -211,7 +210,6 @@ void text_area( Widgets& w, const int height, const char *text, int& begin_line 
                 offset= i;
         }
     }
-    //~ printf("begin %d\n", begin_line);
     
     print(w.console, r.x, r.y, text + offset);
 }

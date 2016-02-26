@@ -59,6 +59,7 @@ GLuint make_vertex_buffer( const GLuint vao, const GLint attribute, const int si
         return 0;
 
 #ifndef GK_RELEASE
+    // verifie que le vertex array est selectionne
     GLuint current; 
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint *) &current);
     if(current != vao)
@@ -71,6 +72,7 @@ GLuint make_vertex_buffer( const GLuint vao, const GLint attribute, const int si
     GLuint buffer= make_buffer(GL_ARRAY_BUFFER, data_size, data);
     if(buffer > 0)
     {
+        // configure l'utilisation du buffer 
         glVertexAttribPointer(attribute, size, type, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(attribute);
     }
@@ -80,6 +82,7 @@ GLuint make_vertex_buffer( const GLuint vao, const GLint attribute, const int si
 GLuint make_index_buffer( const GLuint vao, const int data_size, const void *data )
 {
 #ifndef GK_RELEASE
+    // verifie que le vertex array est selectionne
     GLuint current;
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint *) &current);
     if(current != vao)

@@ -7,8 +7,58 @@
 //! \addtogroup application 
 ///@{
 
-//! \file
-//! interface graphique minimaliste.
+/*! \file
+interface graphique minimaliste.
+les elements sont disposes sur une grille de la droite vers la gauche.
+pour changer de ligne, utiliser begin_line( ) / end_line( ).
+
+les elements interactifs renvoient vrai lorsqu'ils changent d'etat. 
+par exemple, un bouton renvoie vrai lorsque l'on clique dessus. son etat (selectionne ou pas) est stocke dans une variable passee en parametre.
+
+dans l'exemple suivant, des widgets differents sont affiches selon qu'un bouton est selectionne ou pas.
+\code
+Widgets widgets;
+int click;
+
+int init( )
+{
+    widgets= create_widgets();
+    click= 0;
+    ...
+}
+
+int quit( )
+{
+    release_widgets(widgets);
+    ...
+}
+
+int draw( )
+{
+    // description des elements de l'interface, a chaque fois qu'il faut l'afficher.
+    // pas de stockage, pas de callbacks...
+    
+    begin(widgets);
+        begin_line(widgets);
+            label(widgets, "texte");
+            label(widgets, "texte formate %d", 10);
+            
+            button(widgets, "cliquez ici", click);
+            if(click)
+            {
+                begin_line(widgets);
+                    label(widgets, "ahah tu as clique...");
+                end_line(widgets);
+            }
+        end_line(widgets);
+    end(widgets);
+    
+    // afficher l'interface
+    draw(widgets, window_width(), window_height());
+    ...
+}
+\endcode
+*/
 
 //! representation d'une interface graphique minimaliste.
 struct Widgets
@@ -30,13 +80,13 @@ struct Widgets
 
 //! cree une interface graphique.
 Widgets create_widgets( );
-//! detuit l'interface graphique.
+//! detruit l'interface graphique.
 void release_widgets( Widgets& widgets );
 
 //! debut de la description des elements de l'interface graphique.
 void begin( Widgets& widgets );
 
-//! place les prochain elements sur une nouvelle ligne.
+//! place les prochains elements sur une nouvelle ligne.
 void begin_line( Widgets& widgets );
 
 //! cree un texte. meme fonctionnement que printf().
