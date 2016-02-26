@@ -181,28 +181,28 @@ void bounds( const Mesh& m, Point& pmin, Point& pmax )
 }
 
 
-GLuint make_mesh_vertex_format( Mesh& m )
+GLuint make_mesh_vertex_format( Mesh& m, const bool use_texcoord, const bool use_normal, const bool use_color )
 {
     if(m.positions.size() == 0)
         return 0;
 
 #if 1
-    if(m.texcoords.size() > 0 && m.texcoords.size() < m.positions.size())
+    if(m.texcoords.size() > 0 && m.texcoords.size() < m.positions.size() && use_texcoord)
         printf("[error] invalid texcoords array...\n");
-    if(m.normals.size() > 0 && m.normals.size() < m.positions.size())
+    if(m.normals.size() > 0 && m.normals.size() < m.positions.size() && use_normal)
         printf("[error] invalid normals array...\n");
-    if(m.colors.size() > 0 && m.colors.size() < m.positions.size())
+    if(m.colors.size() > 0 && m.colors.size() < m.positions.size() && use_color)
         printf("[error] invalid colors array...\n");
 #endif
     
     // ne creer que les buffers necessaires
     GLuint vao= create_vertex_format();
     make_vertex_buffer(vao, 0,  3, GL_FLOAT, m.positions.size() * sizeof(vec3), &m.positions.front());
-    if(m.texcoords.size()== m.positions.size())
+    if(m.texcoords.size()== m.positions.size() && use_texcoord)
         make_vertex_buffer(vao, 1,  2, GL_FLOAT, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());
-    if(m.normals.size() == m.positions.size())
+    if(m.normals.size() == m.positions.size() && use_normal)
         make_vertex_buffer(vao, 2,  3, GL_FLOAT, m.normals.size() * sizeof(vec3), &m.normals.front());
-    if(m.colors.size() == m.positions.size())
+    if(m.colors.size() == m.positions.size() && use_color)
         make_vertex_buffer(vao, 3,  3, GL_FLOAT, m.colors.size() * sizeof(vec3), &m.colors.front());
 
     if(m.indices.size() > 0)
@@ -211,27 +211,42 @@ GLuint make_mesh_vertex_format( Mesh& m )
     return vao;
 }
 
-GLuint make_mesh_program( Mesh& m )
+GLuint make_mesh_program( Mesh& m, const bool use_texcoord, const bool use_normal, const bool use_color )
 {
     std::string definitions;
 
-    if(m.texcoords.size() > 0)
+    if(m.texcoords.size() > 0 && use_texcoord)
         definitions.append("#define USE_TEXCOORD\n");
-    if(m.normals.size() > 0)
+    if(m.normals.size() > 0 && use_normal)
         definitions.append("#define USE_NORMAL\n");
-    if(m.colors.size() > 0)
+    if(m.colors.size() > 0 && use_color)
         definitions.append("#define USE_COLOR\n");
 
+    if(definitions.size() > 0)
+        printf("[mesh program definitions]:\n%s", definitions.c_str());
     return read_program("data/shaders/mesh.glsl", definitions.c_str());
 }
 
 
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, GLuint texture )
 {
+    bool use_texcoord= (m.texcoords.size() == m.positions.size() && texture > 0);
+    bool use_normal= m.normals.size()== m.positions.size();
+    bool use_color= m.colors.size()== m.positions.size();
+    
     if(m.vao == 0)
-        m.vao= make_mesh_vertex_format(m);
+        m.vao= make_mesh_vertex_format(m, use_texcoord, use_normal, use_color);
+    
     if(m.program == 0)
-        m.program= make_mesh_program(m);
+    {
+        if(m.texcoords.size() > 0 && texture == 0)
+            printf("[mesh draw]: need a texture... use_texcoord= %s\n", use_texcoord ? "true" : "false");
+        if(m.texcoords.size() == 0 && texture > 0)
+            printf("[mesh draw]: need texcoords... use_texcoord= %s\n", use_texcoord ? "true" : "false");
+        
+        m.program= make_mesh_program(m, use_texcoord, use_normal, use_color);
+        program_print_errors(m.program);
+    }
     
     glBindVertexArray(m.vao);
     glUseProgram(m.program);
@@ -243,10 +258,8 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
     program_uniform(m.program, "mvpMatrix", mvp);
     program_uniform(m.program, "mvMatrix", mv);
     program_uniform(m.program, "normalMatrix", normal);
-
     // utiliser une texture, elle ne sera visible que si le mesh a des texcoords...
-    if(texture > 0)
-        program_use_texture(m.program, "diffuse_color", 0, texture); 
+    program_use_texture(m.program, "diffuse_color", 0, texture); 
 
     if(m.indices.size() > 0)
         glDrawElements(m.primitives, m.indices.size(), GL_UNSIGNED_INT, 0);

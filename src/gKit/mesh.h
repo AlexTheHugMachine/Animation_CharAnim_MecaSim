@@ -117,9 +117,28 @@ void restart_strip( Mesh& m );
 void bounds( const Mesh& m, Point& pmin, Point& pmax );
 
 //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire.
-GLuint make_mesh_vertex_format( Mesh& m );
+//! exemple, cf make_mesh_program( )
+GLuint make_mesh_vertex_format( Mesh& m, const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
+
 //! construit le shader program configure pour dessiner l'objet avec openGL. utilitaire.
-GLuint make_mesh_program( Mesh& m );
+/*! exemple :
+\code
+Mesh mesh= { ... };
+Orbiter camera= { ... };
+
+mesh.vao= make_mesh_vertex_format(mesh, false, false, false);
+mesh.program= make_mesh_program(mesh, false, false, false);
+
+// dessine uniquement la geometrie... sans couleurs, sans normales, sans textures
+draw(mesh, camera);
+\endcode
+ */
+
+//! \param use_texcoord force l'utilisation des coordonnees de texture
+//! \param use_normal force l'utilisation des normales
+//! \param use_color force l'utilisation des couleurs 
+GLuint make_mesh_program( Mesh& m, const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
+
 
 //! dessine l'objet avec les transformations model, vue et projection.
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection );

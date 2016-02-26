@@ -65,13 +65,22 @@ out vec4 fragment_color;
 
 void main( )
 {
-    vec3 color= vec3(1, 1, 1);  // prevoir un uniform ?
+    vec4 color= vec4(1, 1, 1, 1);  // prevoir un uniform ?
 #ifdef USE_COLOR
-    color= vertex_color;
+    color= vec4(vertex_color, 1);
 #endif
 
 #ifdef USE_TEXCOORD
-    color= color * texture(diffuse_color, vertex_texcoord).rgb;
+    color= color * texture(diffuse_color, vertex_texcoord);
+    
+    if(color.r + color.g + color.b == 0)    // noir 
+    {
+        // fixer une couleur debug pour indiquer qu'il faut utiliser une texture avec cet objet
+        vec3 p= vertex_position * 8;
+	float d= length( p - (floor(p) + 0.5));
+	if(d > 1) d= 0;
+        color=  vec4(d*0.8*2, d*0.4*2, 0, 1);
+    }
 #endif
     
     vec3 normal;
@@ -83,15 +92,15 @@ void main( )
     normal= normalize(cross(t, b));
 #endif
     
-    color= color * normal.z;
+    color.rgb= color.rgb * normal.z;
     // hachure les triangles mal orientes
     if(gl_FrontFacing == false) // if(!gl_FrontFacing) bug sur mac ?!
     {
         ivec2 pixel= ivec2(gl_FragCoord.xy) % ivec2(4, 4);
         if((pixel.x ^ pixel.y) == 0)
-            color= vec3(0.8, 0.4, 0);
+            color= vec4(0.8, 0.4, 0, 1);
     }
     
-    fragment_color= vec4(color, 1);
+    fragment_color= color;
 }
 #endif
