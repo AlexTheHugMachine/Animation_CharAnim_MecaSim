@@ -149,24 +149,40 @@ GLuint read_program( const char *filename, const char *definitions )
 
 
 static
-void print_line( std::string& errors, const char *source, const int line_id )
+void print_line( std::string& errors, const char *source, const int begin_id, const int line_id )
 {
-    int line= 1;
+    int line= 0;
+    char last= '\n';
     for(unsigned int i= 0; source[i] != 0; i++)
     {
         if(line > line_id)
             break;
-        if(line == line_id)
-            errors.push_back(source[i]);
         
-        if(source[i] == '\n')
+        if(last == '\n')
+        {
             line++;
+            if(line >= begin_id && line <= line_id)
+            {
+                errors.append("  ");
+                errors.push_back('0' + (line / 1000) % 10);
+                errors.push_back('0' + (line / 100) % 10);
+                errors.push_back('0' + (line / 10) % 10);
+                errors.push_back('0' + (line / 1) % 10);
+                errors.append("  ");
+            }
+        }
+        
+        if(line >= begin_id)
+            errors.push_back(source[i]);
+        last= source[i];
     }
 }
 
 static
 void print_errors( std::string& errors, const char *log, const char *source )
 {
+    printf("[error log]\n%s\n", log);
+    
     int last_string= -1;
     int last_line= -1;
     for(int i= 0; log[i] != 0; i++)
@@ -182,7 +198,7 @@ void print_errors( std::string& errors, const char *log, const char *source )
             {
                 // extrait la ligne du source...
                 errors.append("\n");
-                print_line(errors, source, line_id);
+                print_line(errors, source, last_line +1, line_id);
                 errors.append("\n");
             }
         }
@@ -197,6 +213,10 @@ void print_errors( std::string& errors, const char *log, const char *source )
         last_string= string_id;
         last_line= line_id;
     }
+    
+    errors.append("\n");
+    print_line(errors, source, last_line +1, 1000);
+    errors.append("\n");
 }
 
 int program_format_errors( const GLuint program, std::string& errors )
@@ -248,6 +268,15 @@ int program_format_errors( const GLuint program, std::string& errors )
     }
     
     return 0;
+}
+
+int program_print_errors( const GLuint program )
+{
+    std::string errors;
+    int code= program_format_errors(program, errors);
+    
+    printf("%s\n", errors.c_str());
+    return code;
 }
 
 

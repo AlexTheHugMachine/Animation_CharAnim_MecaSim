@@ -2,6 +2,8 @@
 #ifndef _PROGRAM_H
 #define _PROGRAM_H
 
+#include <string>
+
 #define GLEW_NO_GLU
 #include "GL/glew.h"
 
@@ -17,6 +19,9 @@ int reload_program( const GLuint program, const char *filename, const char *defi
 
 //! renvoie les erreurs de compilation.
 int program_format_errors( const GLuint program, std::string& errors );
+
+//! affiche les erreurs de compilation.
+int program_print_errors( const GLuint program );
 
 //! renvoie l'indice d'un attribut declare dans le vertex shader.
 GLint program_attribute( const GLuint program, const char *attribute );
