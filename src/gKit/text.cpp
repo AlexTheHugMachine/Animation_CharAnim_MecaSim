@@ -12,10 +12,14 @@
 Text create_text( )
 {
     Text text;
+    clear(text);
     text.font= read_texture(0, "data/font.png");
     text.program= read_program("data/shaders/text.glsl");
+    
+    program_print_errors(text.program);
+    
     text.vao= create_vertex_format();
-    text.ubo= make_buffer(GL_UNIFORM_BUFFER, sizeof(text.buffer), NULL);
+    text.ubo= make_buffer(GL_UNIFORM_BUFFER, sizeof(text.buffer), text.buffer);
     
     clear(text);
     return text;
@@ -69,7 +73,7 @@ void print_background( Text& text, const int px, const int py, const int backgro
     int y= 23 - py;     // premiere ligne en haut... 
     if(x < 0 || y < 0) return;
     if(x >= 128 || y >= 24) return;
-    if(!isprint(c)) return;
+    //~ if(!isprint(c)) return;
     
     text.buffer[y][x]= (int) c | (background << 8);
 }
@@ -86,25 +90,27 @@ void print( Text& text, const int px, const int py, const char *message )
 
 void printf_background( Text& text, const int px, const int py, const char *format, ... )
 {
-    char tmp[24*128] = { 0 };
+    char tmp[24*128+1] = { 0 };
     
     va_list args;
     va_start(args, format);
     vsnprintf(tmp, sizeof(tmp), format, args);
     va_end(args);
     
+    tmp[24*128]= 0;
     print(text, px, py, 2, tmp);
 }
 
 void printf( Text& text, const int px, const int py, const char *format, ... )
 {
-    char tmp[24*128] = { 0 };
+    char tmp[24*128+1] = { 0 };
     
     va_list args;
     va_start(args, format);
     vsnprintf(tmp, sizeof(tmp), format, args);
     va_end(args);
     
+    tmp[24*128]= 0;
     print(text, px, py, 0, tmp);
 }
 
@@ -122,6 +128,13 @@ void draw( const Text& text, const int width, const int height )
     glBindBufferBase(GL_UNIFORM_BUFFER, index, text.ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(text.buffer), text.buffer);
     
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 }
 
