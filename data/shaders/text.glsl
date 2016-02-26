@@ -28,7 +28,7 @@ void main( )
 {
     ivec2 pixel= ivec2(gl_FragCoord.xy) - ivec2(0, offset);
     ivec2 cell=  pixel / ivec2(8, 16);
-    if(cell.x < 0 || cell.y < 0)
+    if(cell.x < 0 || cell.y <= 0)
         discard;
     if(cell.x >= 128 || cell.y >= 24)
         discard;
