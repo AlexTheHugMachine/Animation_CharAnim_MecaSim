@@ -30,6 +30,7 @@ GLuint program;
 
 // affichage des erreurs
 std::string program_log;
+int program_area;
 bool program_failed;
 
 GLuint vao;
@@ -52,6 +53,7 @@ void reload_program( )
     // recupere les erreurs, si necessaire
     program_format_errors(program, program_log);
     program_failed= (program_log.size() > 0);
+    program_area= 1;
 }
 
 //! compile les shaders et construit le programme + les buffers + le vertex array.
@@ -155,7 +157,13 @@ int draw( )
     begin(widgets);
         begin_line(widgets);
             if(program_failed)
-                label(widgets, "[error] program '%s'\n%s\n", program_filename, program_log.c_str());
+            {
+                //~ label(widgets, "[error] program '%s'\n%s\n", program_filename, program_log.c_str());
+                label(widgets, "[error] program '%s'", program_filename);
+                begin_line(widgets);
+                    text_area(widgets, 20, program_log.c_str(), program_area);
+                end_line(widgets);
+            }
             else
                 label(widgets, "program %u, '%s' running...", program, program_filename);
         end_line(widgets);
