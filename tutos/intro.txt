@@ -1,0 +1,67 @@
+
+/*! \addtogroup intro3d introduction api 3d, openGL et pipeline graphique
+
+## introduction : une api 3d ? c'est quoi ?
+
+facile, c'est un ensemble de fonctions permettant de paramétrer un pipeline graphique pour dessiner des objets...
+
+## un pipeline graphique ? c'est quoi ?
+
+c'est l'ensemble de traitements qui permet de dessiner des objets.
+
+## et openGL ?
+
+c'est une api 3d permettant d'utiliser une carte graphique pour dessiner des objets.
+
+## et alors ?
+
+une api 3d permet de configurer et de paramétrer les différentes étapes d'un pipeline graphique.
+pour comprendre comment utiliser openGL, il faut avoir quelques idées sur le fonctionnement de ces étapes...
+
+exemple : pour dessiner un point, il faut connaitre ses coordonnées, les convertir en position dans l'image 
+et choisir une couleur pour le pixel.
+si on voulait construire un pipeline pour dessiner des points, il faudrait :
+    - les coordonnées du point : x et y dans le plan 2d, entre -1 et 1, par exemple,
+    - la couleur du point : rouge, vert, bleu,
+    - les dimensions de l'image : largeur, hauteur,
+    - et l'image pour stocker le résultat.
+
+mais il faut aussi définir comment passer des coordonnées du point (entre -1 et 1) aux coordonnées du 
+pixel dans l'image (entre largeur et hauteur).
+
+pour dessiner un triangle, un pipeline à besoin de ces informations pour les 3 sommets du triangle.
+mais il y a des choix à faire : par exemple, si les 3 sommets n'ont pas la même couleur, laquelle choisir ?
+    - utiliser la couleur du premier sommet ?
+    - interpoler les 3 couleurs ?
+
+en gros, le pipeline peut proposer plusieurs solutions standards, mais la solution la plus souple est 
+d'écrire une fonction qui fait exactement ce que l'on veut et de la "donner" au pipeline pour qu'il l'utilise.
+    
+pour dessiner plusieurs triangles, il faut "donner" au pipeline les coordonnées et les couleurs des sommets
+de chaque triangle. que se passe-t-il lorsque plusieurs triangles se dessinent sur le même pixel de l'image ?
+    - openGL, par exemple, propose 3 solutions :
+        - dessiner les triangles dans l'ordre, chaque pixel garde la couleur du dernier triangle dessiné,
+        - ou utiliser la profondeur, en 3d, pour ne garder que la couleur du triangle le plus "proche", ou le plus "loin".
+        
+en résumé, les fonctions de l'api openGL permettent de :
+    - "donner" des informations sur les sommets des triangles à dessiner, 
+    - "donner" une fonction qui transforme les coordonnées des sommets en position dans l'image,
+    - de choisir comment remplir l'intérieur des triangles (couleur du premier sommet, interpolation, etc) et la meilleure 
+solution est d'écrire une fonction, un shader, qui calcule la couleur du pixel,
+    - de choisir quel triangle garder pour chaque pixel de l'image,
+    
+et à chaque fois, les mêmes étapes se repètent, créer un objet (un buffer par exemple, pour stocker les 
+informations sur les sommets) et de configurer le pipeline pour utiliser les informations/paramètres qu'il contient
+pour dessiner des triangles, des points, ou des droites.
+
+\section pipeline pipeline graphique openGL
+
+bon maintenant, on peut discuter...
+
+le schema du pipeline openGL 4 :
+
+
+
+
+
+ */
