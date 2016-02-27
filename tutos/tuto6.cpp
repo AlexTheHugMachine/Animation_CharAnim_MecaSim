@@ -2,7 +2,7 @@
 // tuto6 : dessiner un objet texture 
 // utiliser mesh pour charger un objet .obj 
 // camera pour le dessiner du point de vue d'une camera + controle de la camera a la souris
-// texture
+// texture : creation a partir d'un fichier, utilisation avec draw(mesh, ...) et destruction avec glDeleteTextures( )
 
 #include "window.h"
 
@@ -31,10 +31,13 @@ int init( )
     // regle le point de vue de la camera pour observer l'objet
     camera= make_orbiter_lookat( center(pmin, pmax), distance(pmin, pmax) );
 
-    // etape 3 : charger une texture a aprtir d'un fichier .bmp, .jpg, .png, .tga, etc, utilise reaad_iamge( ) et sdl_image
+    // etape 3 : charger une texture a aprtir d'un fichier .bmp, .jpg, .png, .tga, etc, utilise read_image( ) et sdl_image
 /*
-    openGL peut utiliser plusieurs textures simultanement (au moins 32), elles sont numerotees, cf texture units.
-    la texture est creee sur l'unite 0
+    openGL peut utiliser plusieurs textures simultanement pour dessiner un objet, il faut les numeroter.
+    une texture et ses parametres sont selectionnes sur une unite de texture.
+    et ce sont les unites de texture qui sont utilisees pour dessiner un objet.
+    
+    l'exemple cree la texture sur l'unite 0 avec les parametres par defaut
  */
     texture= read_texture(0, "data/debug2x2red.png");
     
@@ -81,8 +84,11 @@ int draw( )
 
 int quit( )
 {
-    // etape 3 : detruire la description du triangle
+    // etape 3 : detruire la description de l'objet
     release_mesh(objet);
+    // et la texture
+    glDeleteTextures(1, &texture);
+    
     return 0;   // ras, pas d'erreur
 }
 
