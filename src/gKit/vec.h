@@ -106,4 +106,5 @@ vec4 make_vec4( const Point& a );
 //! construit un vecteur 3d homogene (x, y, z, 0).
 vec4 make_vec4( const Vector& v );
 
+///@}
 #endif

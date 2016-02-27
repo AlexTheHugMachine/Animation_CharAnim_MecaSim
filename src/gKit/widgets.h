@@ -117,4 +117,5 @@ void end( Widgets& widgets );
 //! affiche les elements decrits entre begin() et end().
 void draw( Widgets& widgets, const int width, const int height );
 
+///@}
 #endif
