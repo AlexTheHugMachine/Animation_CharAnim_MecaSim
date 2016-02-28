@@ -7,10 +7,10 @@ out vec2 position;
 
 void main( )
 {
-    vec2 quad[4]= vec2[4]( vec2(-1,-1), vec2(1,-1), vec2(-1, 1), vec2(1, 1) );
+    vec2 positions[3]= vec2[3]( vec2(-1,-3), vec2(3, 1), vec2(-1, 1) );
     
-    position= quad[gl_VertexID];
-    gl_Position= vec4(quad[gl_VertexID], 0, 1);
+    position= positions[gl_VertexID];
+    gl_Position= vec4(positions[gl_VertexID], 0, 1);
 }
 
 #endif
@@ -41,8 +41,8 @@ float object( const vec3 p )
 {
     //~ float d1= sphere(p, 0.75);
     float d1= box(p, vec3(0.5, 0.5, 0.5), 0.1);
-    float d2= displace(p);
-    //~ float d2= 0;
+    //~ float d2= displace(p);
+    float d2= 0;
     
     return d1+d2;
 }
@@ -58,18 +58,17 @@ out vec4 fragment_color;
 void main( )
 {
     // construction du rayon pour le pixel
-    vec4 oh= mvpInvMatrix * vec4(position, 0, 1);  // origine sur near
-    vec4 eh= mvpInvMatrix * vec4(position, 1, 1);  // extremite sur far
+    vec4 oh= mvpInvMatrix * vec4(position, 0, 1);       // origine sur near
+    vec4 eh= mvpInvMatrix * vec4(position, 1, 1);       // extremite sur far
     
     // origine et direction normalisee
-    vec3 o= oh.xyz / oh.w;                         // origine
-    vec3 d= eh.xyz / eh.w - oh.xyz / oh.w;         // direction
-    d= normalize(d);
+    vec3 o= oh.xyz / oh.w;                              // origine
+    vec3 d= normalize(eh.xyz / eh.w - oh.xyz / oh.w);   // direction
     
     float t= 0.0;
     float distance= 0.0;
     vec3 p;
-    for(int i= 0; i < 128; i++)
+    for(int i= 0; i < 64; i++)
     {
         p= o + t * d;
         
@@ -77,7 +76,9 @@ void main( )
         t= t + distance / 1.5;
     }
     
-    vec3 n= cross(normalize(dFdx(p)), normalize(dFdy(p)));
+    vec4 q= mvMatrix * vec4(p, 1);
+    q/= q.w;
+    vec3 n= cross(normalize(dFdx(q.xyz)), normalize(dFdy(q.xyz)));
     fragment_color= vec4(abs(n), 1);
 }
 

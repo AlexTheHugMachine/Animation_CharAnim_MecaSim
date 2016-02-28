@@ -25,7 +25,7 @@
 
 
 // program
-const char *program_filename= "toy.glsl";
+char program_filename[1024]= "toy.glsl";
 GLuint program;
 
 // affichage des erreurs
@@ -66,7 +66,7 @@ int init( const int argc, const char **argv )
     
     program= 0;
     if(argc > 1) 
-        program_filename= argv[1];
+        strcpy(program_filename, argv[1]);
     reload_program();
     
     glGenVertexArrays(1, &vao);
@@ -144,7 +144,7 @@ int draw( )
         program_uniform(program, "mvpInvMatrix", mvpInv);
         program_uniform(program, "mvMatrix", mv);
         
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
     }
     
     if(key_state('s'))
@@ -155,18 +155,19 @@ int draw( )
     
     // affiche les infos
     begin(widgets);
+    if(program_failed)
+    {
+        label(widgets, "[error] program '%s'", program_filename);
         begin_line(widgets);
-            if(program_failed)
-            {
-                //~ label(widgets, "[error] program '%s'\n%s\n", program_filename, program_log.c_str());
-                label(widgets, "[error] program '%s'", program_filename);
-                begin_line(widgets);
-                    text_area(widgets, 20, program_log.c_str(), program_area);
-                end_line(widgets);
-            }
-            else
-                label(widgets, "program %u, '%s' running...", program, program_filename);
-        end_line(widgets);
+        text_area(widgets, 20, program_log.c_str(), program_area);
+    }
+    else
+    {
+        label(widgets, "running...", program);
+        begin_line(widgets);
+        if(edit(widgets, 128, program_filename))
+            reload_program();
+    }
     end(widgets);
     
     draw(widgets, window_width(), window_height());
