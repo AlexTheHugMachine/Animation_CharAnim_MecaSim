@@ -73,4 +73,5 @@ Vector transform( const Transform& m, const Vector& v );
 //! renvoie le point/vecteur homogene transforme.
 vec4 transform( const Transform& m, const vec4& v );
 
+///@}
 #endif

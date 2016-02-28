@@ -16,8 +16,8 @@
 //! \file 
 //! shader program openGL
 
-//! cree un shader program, charge un seul fichier, les shaders sont separes par #ifdef VERTEX_SHADER / #endif et #ifdef FRAGMENT_SHADER / #endif.
-//! \param definitions est une chaine de caracteres pouvant comporter plusieurs lignes #define what value\n.
+//! cree un shader program, charge un seul fichier, les shaders sont separes par \#ifdef VERTEX_SHADER / \#endif et \#ifdef FRAGMENT_SHADER / \#endif.
+//! \param definitions est une chaine de caracteres pouvant comporter plusieurs lignes \#define what value\n.
 GLuint read_program( const char *filename, const char *definitions= "" );
 
 //! recharge les sources et recompile un shader program.
