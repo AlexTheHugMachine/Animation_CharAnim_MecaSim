@@ -1,5 +1,5 @@
 
-SRCS = tutos/tuto5.cpp \
+SRCS = src/shader_kit.cpp \
 	src/gKit/window.cpp src/gKit/vec.cpp src/gKit/program.cpp src/gKit/mesh.cpp src/gKit/image.cpp src/gKit/color.cpp \
 	src/gKit/wavefront.cpp src/gKit/texture.cpp src/gKit/orbiter.cpp src/gKit/mat.cpp src/gKit/buffer.cpp src/gKit/draw.cpp \
 	src/gKit/text.cpp src/gKit/widgets.cpp
@@ -31,7 +31,7 @@ INCLUDE_DIR	= -I src $(INCLUDELIBS_DIR)
 SRC_DIR 	= src
 BIN_DIR 	= bin
 OBJ_DIR 	= bin
-OBJ_DIRS 	= $(OBJ_DIR)/viewer $(OBJ_DIR)/src/gKit $(OBJ_DIR)/tutos
+OBJ_DIRS 	= $(OBJ_DIR)/viewer $(OBJ_DIR)/src $(OBJ_DIR)/src/gKit $(OBJ_DIR)/tutos
 
 
 
