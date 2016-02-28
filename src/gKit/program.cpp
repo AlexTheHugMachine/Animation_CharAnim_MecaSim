@@ -272,8 +272,8 @@ int program_print_errors( const GLuint program )
 {
     std::string errors;
     int code= program_format_errors(program, errors);
-    
-    printf("%s\n", errors.c_str());
+    if(errors.size() > 0) 
+        printf("%s\n", errors.c_str());
     return code;
 }
 
