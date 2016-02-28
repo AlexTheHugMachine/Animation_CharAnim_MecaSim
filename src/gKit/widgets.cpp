@@ -15,6 +15,7 @@ Widgets create_widgets( )
     w.focus= 0; w.fx= 0; w.fy= 0;
     w.mb= 0; w.mx= 0; w.my= 0;
     w.wx= 0; w.wy= 0;
+    //~ w.drop= 0; w.filename= NULL;
     return w;
 }
 
@@ -84,6 +85,15 @@ void begin( Widgets& w )
         w.key= input.text[0];
         clear_text_event();
     }
+    
+    //~ const char *filename= drop_event();
+    //~ w.drop= 0;
+    //~ w.filename= NULL;
+    //~ if(filename != NULL && filename[0] != 0)
+    //~ {
+        //~ w.drop= 1;
+        //~ w.filename= filename;
+    //~ }
 }
 
 
@@ -193,12 +203,12 @@ void text_area( Widgets& w, const int height, const char *text, int& begin_line 
     for(int i= 0; text[i] != 0; i++)
         if(text[i] == '\n')
             n++;
-
+    // ligne de depart, pout que tout le texte reste affiche
     if(begin_line + height > n)
         begin_line= n - height;
     if(begin_line < 1)
         begin_line= 1;
-    
+    // retrouve le debut de la ligne
     int line= 1;
     int offset= 0;
     for(int i= 0; text[i] != 0; i++)
@@ -210,7 +220,7 @@ void text_area( Widgets& w, const int height, const char *text, int& begin_line 
                 offset= i;
         }
     }
-    
+    // affiche le texte
     print(w.console, r.x, r.y, text + offset);
 }
 
@@ -225,7 +235,17 @@ bool edit( Widgets& w, int text_size, char *text )
     if(w.mb > 0)
     {
         if(overlap(r, w.mx, w.my))
+        {
             w.focus= 1;
+            //~ if(w.drop > 0)
+            //~ {
+                //~ strncpy(text, w.filename, text_size);
+                //~ text[text_size -1]= 0;
+                //~ clear_drop_event();
+                //~ w.focus= 0;
+                //~ change= true;
+            //~ }
+        }
         else
         {
             change= (w.focus > 0);      // click en dehors de la zone editable

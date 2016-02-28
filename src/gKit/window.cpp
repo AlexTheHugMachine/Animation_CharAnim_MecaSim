@@ -19,84 +19,75 @@
 
 static int width;
 static int height;
-
 int window_width( )
 {
     return width;
 }
-
 int window_height( )
 {
     return height;
 }
 
-
 static std::vector<unsigned char> key_states;
-
 int key_state( const SDL_Keycode key )
 {
     SDL_Scancode code= SDL_GetScancodeFromKey(key);
     assert((size_t) code < key_states.size());
-    
     return (int)  key_states[code];
 }
-
 void clear_key_state( const SDL_Keycode key )
 {
     SDL_Scancode code= SDL_GetScancodeFromKey(key);
     assert((size_t) code < key_states.size());
-    
     key_states[code]= 0;
 }
 
-
 static SDL_KeyboardEvent last_key;
-
 SDL_KeyboardEvent key_event( )
 {
     return last_key;
 }
-
 void clear_key_event( )
 {
     last_key.type= 0;
     last_key.keysym.sym= 0;
 }
 
-
 static SDL_TextInputEvent last_text;
-
 SDL_TextInputEvent text_event( )
 {
     return last_text;
 }
-
 void clear_text_event( )
 {
     last_text.text[0]= 0;
 }
 
+static std::string last_drop;
+const char *drop_event( )
+{
+    return last_drop.c_str();
+}
+void clear_drop_event( )
+{
+    last_drop.clear();
+}
 
 static SDL_MouseButtonEvent last_button;
-
 SDL_MouseButtonEvent button_event( )
 {
     return last_button;
 }
-
 void clear_button_event( )
 {
     last_button.state= 0;
 }
 
-
 static SDL_MouseWheelEvent last_wheel;
-
 SDL_MouseWheelEvent wheel_event( )
 {
     return last_wheel;
 }
-
 void clear_wheel_event( )
 {
     last_wheel.x= 0;
@@ -106,9 +97,13 @@ void clear_wheel_event( )
 
 //! boucle de gestion des evenements de l'application.
 int draw( );    //!< declaration anticipee.
+
 int run( Window window )
 {
     SDL_StartTextInput();
+
+    SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
+    last_drop= std::string();
     
     int stop= 0;
     while(stop == 0)
@@ -133,9 +128,15 @@ int run( Window window )
                     }
                     break;
 
+                case SDL_DROPFILE:
+                    last_drop.assign(event.drop.file);
+                    SDL_free(event.drop.file);
+                    break;
+                
                 case SDL_TEXTINPUT:
                     // conserver le dernier caractere
                     last_text= event.text;
+                    break;
                 
                 case SDL_KEYDOWN:
                     // modifier l'etat du clavier
@@ -217,7 +218,7 @@ Window create_window( const int w, const int h )
     // conserve les dimensions de la fenetre
     width= w;
     height= h;
-
+    
     SDL_SetWindowDisplayMode(window, NULL);
     return window;
 }

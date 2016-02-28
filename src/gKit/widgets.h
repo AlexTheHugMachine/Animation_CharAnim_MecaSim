@@ -73,8 +73,11 @@ struct Widgets
     int mx, my;         //!< position du click
     int wx, wy;         //!< scroll
     
-    int key;            //<! touche
-    unsigned int mod;   //<! touches supplementaires, alt, ctrl, etc.
+    int key;            //!< touche
+    unsigned int mod;   //!< touches supplementaires, alt, ctrl, etc.
+    
+    //~ int drop;
+    //~ const char *filename;
 };
 
 
