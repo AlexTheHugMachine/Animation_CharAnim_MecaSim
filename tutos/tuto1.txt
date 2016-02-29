@@ -1,0 +1,6 @@
+
+/*! \addtogroup tuto_application écrire une application openGL
+
+cf tuto1.cpp
+
+ */

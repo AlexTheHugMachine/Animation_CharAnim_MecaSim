@@ -198,8 +198,8 @@ cette fonction est appellée pour déplacer chaque sommet des triangles que l'on
 
 \code
 /*
-une carte graphique fait quelque chose d'équivalent (mais en parallèle et avec du matériel spécialisé), 
-une fois que les 3 sommets d'un triangle sont transformés, on peut dessiner le triangle.
+    une carte graphique fait quelque chose d'équivalent (mais en parallèle et avec du matériel spécialisé), 
+    une fois que les 3 sommets d'un triangle sont transformés, on peut dessiner le triangle.
  */
 void draw( const int count )
 {
@@ -216,7 +216,7 @@ void draw( const int count )
     
     for(int i= 0; i +2 < count; i= i +3)
     {
-        // dessiner un triangle par triplet de sommet...
+        // dessiner un triangle par triplet de sommets...
         draw_triangle(vertices[i], vertices[i +1], vertices[i +2]);
     }
     
@@ -280,16 +280,232 @@ comme uniform ne peuvent pas occupper plus de 64Ko (les 4 floats de chaque somme
 donc on peut dessiner 64000 / 16 / 3 = à peu près 1000 triangles).
 
 
-la solution "normale" est un peu plus longue à mettre en place, mais n'est pas plus compliquée.
+la solution "normale" est un peu plus longue à mettre en place, mais fonctionne exactement de la même manière.
 
+si vous êtes pressés, vous pouvez consulter les autres tutos pour écrire une première application openGL. mais il est 
+conseillé de jeter un oeil à la 2ieme partie du pipeline...
+
+_raccourcis :_
 pour écrire une première application openGL qui utilise les 2 premières solutions : 
-    - comment écrire une application openGL : tuto1, ouvrir une fenêtre et initialiser openGL,
-    - les fonctions d'openGL : interfaceC,
-    - compiler un shader : tuto2GL, avec vérification des erreurs tuto2GL_erreurs, avec gKit, tuto2GL_gkit,
+    - \ref tuto_application, ouvrir une fenêtre et initialiser openGL,
+    - \ref interfaceC, les fonctions d'openGL, la construction de l'interface en C pur,
+    - \ref tuto2GL compiler un shader : tuto2GL, avec vérification des erreurs tuto2GL_erreurs, avec gKit, tuto2GL_gkit,
     - passer des paramètres, des valeurs uniform, à un shader : tuto3GL,
     - dessiner des triangles avec la solution classique : tuto4GL, buffers et vertex arrays.
 
+
 ## pipeline pixels
+
+le role de la deuxième partie du pipeline est de dessiner les triangles en connaissant les coordonnées des sommets dans le 
+repère projectif homogène de la caméra. ces coordonnées sont calculées par la première partie du pipeline.
+
+### comment ça marche ?
+
+une fois que les vertex shaders ont été exécutés, le pipeline connait les coordonnées des sommets des triangles dans le 
+repère projectif. mais il reste un test de visibilité à faire, pour déterminer si le triangle est, au moins, en partie visible, ainsi
+qu'un dernier changement de repère, le passage vers le repère image.
+
+tous les sommets ont des coordonnées dans le repère projectif, mais, par convention, seuls ceux qui se trouvent dans le cube 
+[-1 1] sur x, y, et z correspondent à des pixels de l'image.
+
+le premier traitement réalisé est donc ce test de visibilité, suivi, ou pas, de la dernière transformation vers le repère image, et enfin
+du test qui permet de déterminer quels pixels permettent de dessiner le triangle.
+
+en gros, on peut l'écrire comme ça :
+\code
+bool visible( const Point p )
+{
+    if(p.x < -1 || p.x > 1) return false;   // trop à droite, ou à gauche
+    if(p.y < -1 || p.y > 1) return false;   // trop haut, ou trop bas
+    if(p.z < -1 || p.z > 1) return false;   // trop loin ou derrière
+    
+    // le sommet est bien dans le cube -1 1, il est visible
+    return true;
+}
+\endcode
+
+si aucun des 3 sommets d'un triangle n'est visible, le triangle n'est pas dessiné, sinon, les coordonnées sont transformées en 
+position de pixels dans l'image, et le _fragment shader_, la fonction responsable de donner une couleur au pixel est exécutée,
+puis la couleur est écrite dans l'image.
+\code
+/*
+    une carte graphique fait quelque chose d'équivalent (mais en parallèle et avec du matériel spécialisé).
+ */
+ 
+struct Image { ... };
+
+Image image = { ... };                  // image resultat
+int width= ...;                         // largeur de l'image
+int height= ...;                        // hauteur de l'image
+
+struct Fragment { float x, y; };        // representation d'un fragment
+struct Color { float r, g, b; };        // representation d'une couleur
+
+void draw_triangle( const Point a, const Point b, const Point c )
+{
+    if( visible(a) == false && visible(b) == false && visible(c) == false)
+        // aucun sommet n'est visible, pas la peine de dessiner le triangle
+        return;
+    
+    // passage dans le repère image, de [-1 1]x[-1 1] vers [0 width]x[0 height]
+    Point a_pixel;
+    Point b_pixel;
+    Point c_pixel;
+    a_pixel.x= (a.x + 1) * width / 2;
+    b_pixel.x= (b.x + 1) * width / 2;
+    c_pixel.x= (c.x + 1) * width / 2;
+    a_pixel.y= (a.y + 1) * height / 2;
+    b_pixel.y= (b.y + 1) * height / 2;
+    c_pixel.y= (c.y + 1) * height / 2;
+    
+    // dessiner le triangle
+    for(int y= 0; y < height; y++)
+    for(int x= 0; x < width; x++)
+    {
+        // verifier que le pixel x, y fait partie du triangle...
+        if(inside(x, y, a_pixel, b_pixel, c_pixel))
+        {
+            // executer le fragment shader pour connaitre la couleur du pixel
+            Fragment gl_FragCoord;      // position du fragment
+            gl_FragCoord.x= x;
+            gl_FragCoord.y= y;
+            
+            Color gl_FragColor;         // couleur du fragment
+            gl_FragColor.r= 0;
+            gl_FragColor.g= 0;
+            gl_FragColor.b= 0;
+            
+            // execute la fonction / fragment shader
+            main();
+            // ecrit la couleur dans l'image
+            image(x, y)= gl_FragColor;
+        }
+    }
+}
+\endcode
+
+le _fragment shader_ utilise aussi une convention particulière, la position du pixel est disponible dans une variable globale, gl_FragCoord, la couleur 
+du pixel doit être aussi écrite dans une variable globale, gl_FragColor.
+
+le shader le plus simple donne une couleur constante à chaque pixel du triangle :
+\code
+const Fragment gl_FragCoord= ... ;      // valeur donnée par openGL
+Color gl_FragColor;                     // stockage du résultat, utilise par la suite du pipeline
+
+void main( )
+{
+    gl_FragColor= Color(1, 1, 1);       // le pixel sera blanc...
+}
+\endcode
+
+la fonction qui permet vraiment de dessiner le triangle, en testant l'inclusion d'un pixel x, y dans le triangle a, b, c, appelée inside( ), est plus interressante, 
+et c'est un bon exercice...
+
+si openGL ne dessinait qu'un seul triangle de couleur constante, la présentation serait terminée. il y a donc quelques détails supplémentaires...
+
+### et avec plusieurs triangles ?
+
+comme évoqué dans l'introduction, plusieurs triangles peuvent se dessiner sur le même pixel. dans ce cas, il faut choisir quelle couleur conserver.
+une option nécessaire pour obtenir une image cohérente de la scène est de garder la couleur du triangle le plus proche de la camera. si les objets représentés
+par les triangles sont opaques, c'est la bonne solution...
+
+le pipeline calcule donc une autre information pour chaque fragment : la distance jusqu'à la camera et la conserve pour chaque pixel dans une autre image, 
+le _zbuffer_.
+
+contrairement à l'intuition, le repère image n'est pas un carre en 2d. la profondeur d'un sommet, sa coordonnée z, est connue, et il suffit de garder
+le triangle avec le plus petit z, pour chaque pixel de l'image. le repère image est donc un cube en 3d, de dimensions [0 largeur]x[0 hauteur]x[0 1], la profondeur 
+est normalisée entre 0 et 1. la camera n'observe qu'une région de la scène, les triangles trop proches, ainsi que ceux qui sont trop loin, ne sont pas 
+dessinés. ces paramètres sont fournis lors de la construction de la transformation _projection_. cf les paramètres znear et zfar de make_perspective( ).
+
+il y a quand même un problème à régler, le pipeline connait les coordonnées des sommets de chaque triangle, mais il faut calculer les coordonnées de chaque
+fragment, c'est à dire la coordonnée z pour chaque pixel x, y occuppé par le triangle dans l'image.
+
+une solution est d'interpoler la valeur z pour tous les pixels du triangle. _comment ?_
+
+la fonction inside( ), qui permet de savoir si un pixel x, y appartient à un triangle a, b, c, fournit quasiment la réponse.
+
+l'idée du test réalisé par inside( ) est de vérifier que le pixel x, y est du "bon" coté des 3 arêtes du triangle. ce test revient à calculer l'aire signée (algébrique) 
+des 3 triangles formés par le pixel p, et les 3 arêtes ab, bc, et ca (cf [Modern triangles / section Modern triangles](http://geomalgorithms.com/a01-_area.html)).
+si les aires des triangles pab, pbc et pca ont le même signe, le pixel p est à l'intérieur du triangle.
+
+en résumé, si le pixel p fait parti du triangle, on connait l'aire des 3 sous-triangles pab, pbc et pca, et, en plus, on sait, par construction, que la somme de ces
+3 aires est égale à celle du triangle a, b, c. ce sont exactement les coordonnées barycentriques du pixel p dans le triangle, et on peut interpoler ces coordonnées
+pour obtenir la coordonnée z pour le pixel x, y en ne connaissant que les coordonnées des sommets.
+(cf [wikipedia](https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_barycentriques))
+
+au final, dessiner un triangle ressemble plutot à ça :
+\code
+struct Image { ... };
+
+Image image= { ... };                   // image resultat
+Image zbuffer= { ... };                 // image resultat
+int width= ...;                         // largeur de l'image
+int height= ...;                        // hauteur de l'image
+
+struct Fragment { float x, y, z; };     // representation d'un fragment
+struct Color { float r, g, b; };        // representation d'une couleur
+
+void draw_triangle( const Point a, const Point b, const Point c )
+{
+    if( visible(a) == false && visible(b) == false && visible(c) == false)
+        // aucun sommet n'est visible, pas la peine de dessiner le triangle
+        return;
+    
+    // passage dans le repère image, de [-1 1]x[-1 1]x[-1 1] vers [0 width]x[0 height]x[0 1]
+    Point a_pixel;
+    Point b_pixel;
+    Point c_pixel;
+    a_pixel.x= (a.x + 1) * width / 2;
+    b_pixel.x= (b.x + 1) * width / 2;
+    c_pixel.x= (c.x + 1) * width / 2;
+    a_pixel.y= (a.y + 1) * height / 2;
+    b_pixel.y= (b.y + 1) * height / 2;
+    c_pixel.y= (c.y + 1) * height / 2;
+    a_pixel.z= (a.z + 1) / 2;
+    b_pixel.z= (b.z + 1) / 2;
+    c_pixel.z= (c.z + 1) / 2;
+    
+    // dessiner le triangle
+    for(int y= 0; y < height; y++)
+    for(int x= 0; x < width; x++)
+    {
+        // verifier que le pixel x, y fait partie du triangle...
+        if(inside(x, y, a_pixel, b_pixel, c_pixel))
+        {
+            // executer le fragment shader pour connaitre la couleur du pixel
+            Fragment gl_FragCoord;      // position du fragment
+            gl_FragCoord.x= x;
+            gl_FragCoord.y= y;
+            // interpoler la profondeur du fragment
+            gl_FragCoord.z= z_interpolate(x, y, a_pixel, b_pixel, c_pixel);
+            
+            Color gl_FragColor;         // couleur du fragment
+            gl_FragColor.r= 0;
+            gl_FragColor.g= 0;
+            gl_FragColor.b= 0;
+            
+            // execute la fonction / fragment shader
+            main();
+            
+            // ecrit la couleur dans l'image, si le fragment est plus proche == test de profondeur
+            if(gl_FragCoord.z < zbuffer(x, y))
+            {
+                image(x, y)= gl_FragColor;
+                zbuffer(x, y)= gl_FragCoord.z;
+            }
+        }
+    }
+}
+\endcode
+
+implication directe pour l'application, il plutôt important d'initialiser correctement les valeurs du zbuffer avant de dessiner des triangles, sinon le test de 
+profondeur ne conservera pas le bon triangle pour chaque pixel.
+
+une autre conséquence directe de cette interpolation : on peut interpoler n'importe quelle valeur définie sur les sommets du triangle, comme des couleurs, 
+des normales, des coordonnées de textures, etc.  
+
+_en pratique, l'interpolation des informations associées aux sommets est toujours faite par openGL._
+
 
 
 

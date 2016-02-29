@@ -1,0 +1,6 @@
+
+/*! \addtogroup tuto2GL compiler et linker un shader program.
+
+cf tuto2GL.cpp
+
+ */
