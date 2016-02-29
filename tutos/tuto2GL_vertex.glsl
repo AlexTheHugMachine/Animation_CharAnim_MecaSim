@@ -1,8 +1,6 @@
 
 #version 330
 
-#ifdef VERTEX_SHADER
-
 const float dx= 0.0;
 const float dy= 0;
 const float dz= 0;
@@ -31,14 +29,3 @@ void main( )
     // renvoyer le sommet transforme
     gl_Position= r;
 }
-#endif
-
-
-#ifdef FRAGMENT_SHADER
-
-void main( )
-{
-    // remplir le triangle avec une couleur uniforme
-    gl_FragColor= vec4(0.8, 0.4, 0, 1);
-}
-#endif

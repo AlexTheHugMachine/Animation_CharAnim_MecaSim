@@ -133,12 +133,12 @@ openGL à besoin de connaitre les coordonnées des sommets des triangles dans le
 ensuite dessiner les triangles, et comme on écrit une fonction qui fait le calcul, on est libre d'utiliser des matrices, 
 ou pas... il faut "juste" l'expliquer à openGL, et écrire le _vertex shader_ responsable de cette partie du pipeline. 
 
-si on souhaite écrire une fonction en C/C++ qui déplace un sommet, on aura quelquechose comme ca :
+si on souhaite écrire une fonction en C/C++ qui déplace un sommet, on aura quelque chose comme ca :
 
 \code
 struct Point
 {
-    float x, y, z;
+    float x, y, z, w;
 };
 
 Point transform( const Point position, const float dx, const float dy, const float dz )
@@ -147,6 +147,7 @@ Point transform( const Point position, const float dx, const float dy, const flo
     r.x= position.x + dx;
     r.y= position.y + dy;
     r.z= position.z + dz;
+    r.w= 1;
     return r;
 }
 \endcode
@@ -154,9 +155,14 @@ Point transform( const Point position, const float dx, const float dy, const flo
 pour simplifier les calculs, on choisit des sommets qui sont deja placés devant la camera, et par convention, 
 leurs coordonnées doivent être entre -1 et 1 sur x, y, et z, pour être visible. la 4ieme coordonnée est 1 pour un point.
 
-cette fonction ne transforme qu'un seul sommet, il faut donc l'utiliser 3 fois. openGL impose une solution particulière,
-par defaut, il se contente de numéroter les sommets : le shader ne prend en entrée qu'un seul paramètre, l'indice 
-du sommet à tansformer, la fonction s'appelle main et le résultat doit être écrit dans une variable globale.
+(_rappel :_ vu que les transformations sont représentées par des matrices à 4 lignes de 4 colonnes, un _point_ ou un _vecteur_ 
+à forcement 4 coordonnées : x, y, z et w, le poids homogène)
+
+cette fonction ne transforme qu'un seul sommet, il faut donc l'utiliser 3 fois pour déplacer un triangle. 
+openGL impose une solution particulière : par defaut, il se contente de numéroter les sommets, le shader ne prend en 
+entrée qu'un seul paramètre, l'indice du sommet à tansformer. la fonction s'appelle main et le résultat doit être écrit 
+dans une variable globale.
+
 le shader ressemble plutot à ça :
 
 \code
@@ -187,7 +193,8 @@ void main( )
 }
 \endcode
 
-elle est appellée pour déplacer chaque sommet des triangles que l'on dessine, et gl_VertexID change de valeur à chaque fois.
+cette fonction est appellée pour déplacer chaque sommet des triangles que l'on dessine, et gl_VertexID change de valeur
+à chaque fois. en gros, le pipeline openGL utilise le vertex shader de cette manière :
 
 \code
 /*
@@ -200,13 +207,16 @@ void draw( const int count )
     
     for(int i= 0; i < count; i= i +1)
     {
+        // transformer chaque sommet...
         gl_VertexID= i;
         main();
+        // conserver les coordonnees du sommet dans le repere projectif
         vertices[i]= gl_Position;
     }
     
     for(int i= 0; i +2 < count; i= i +3)
     {
+        // dessiner un triangle par triplet de sommet...
         draw_triangle(vertices[i], vertices[i +1], vertices[i +2]);
     }
     
@@ -225,6 +235,59 @@ sur R pour recharger le shader...
 
 _remarque_: shader_kit n'affiche qu'un seul triangle de cette manière...
 
+
+_et avec plusieurs triangles ?_
+
+le vertex shader est presque le même, mais le tableau de sommets est global, et sa déclaration est un peu 
+particulière, et c'est l'application qui le remplit, pas le shader.
+
+\code
+// valeurs definies par l'application
+layout(std140) 
+uniform vec4 positions[10];
+
+const float dx= ... ;
+const float dy= ... ;
+const float dz= ... ;
+
+void main( )
+{
+    Point r;
+    r.x= positions[gl_VertexID].x + dx;
+    r.y= positions[gl_VertexID].y + dy;
+    r.z= positions[gl_VertexID].z + dz;
+    r.w= 1;
+    
+    gl_Position= r;
+}
+\endcode
+
+sans rentrer dans les détails, pour le moment, les processeurs de la carte graphique qui exécutent les shaders, 
+sont différents du processeur qui exécute l'application. 
+les variables ne sont pas stockées de la même manière dans la mémoire de l'application et dans la mémoire de la carte 
+graphique. layout(std140) est une des conventions qui permet aux processeurs d'échanger / de partager des données.
+autre différence, le mot-clé uniform, indique que le tableau positions ne change pas entre 2 exécutions du shader. 
+c'est bien ce que l'on veut, le vertex shader doit transformer tous les sommets du tableau pour pouvoir dessiner 
+les triangles.
+
+la différence principale avec la première solution : l'application remplit le tableau positions, fournit le shader et demande
+à openGL de dessiner 10 triangles.
+c'est ce qu'il faut retenir : un shader, et le pipeline graphique en général, fonctionne avec les données et paramètres
+fourni par l'application, ils sont dépendents l'un de l'autre.
+
+c'est la solution la plus directe pour dessiner quelques triangles, mais elle est limitée. les variables et tableaux déclarés
+comme uniform ne peuvent pas occupper plus de 64Ko (les 4 floats de chaque sommet, occuppent 16 octets, 
+donc on peut dessiner 64000 / 16 / 3 = à peu près 1000 triangles).
+
+
+la solution "normale" est un peu plus longue à mettre en place, mais n'est pas plus compliquée.
+
+pour écrire une première application openGL qui utilise les 2 premières solutions : 
+    - comment écrire une application openGL : tuto1, ouvrir une fenêtre et initialiser openGL,
+    - les fonctions d'openGL : interfaceC,
+    - compiler un shader : tuto2GL, avec vérification des erreurs tuto2GL_erreurs, avec gKit, tuto2GL_gkit,
+    - passer des paramètres, des valeurs uniform, à un shader : tuto3GL,
+    - dessiner des triangles avec la solution classique : tuto4GL, buffers et vertex arrays.
 
 ## pipeline pixels
 
