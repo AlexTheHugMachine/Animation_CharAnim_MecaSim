@@ -56,11 +56,177 @@ pour dessiner des triangles, des points, ou des droites.
 
 \section pipeline pipeline graphique openGL
 
-bon maintenant, on peut discuter...
+le pipeline openGL est découpé en 2 parties :
+    - la première partie traite la géométrie, les sommets des triangles. son rôle est de transformer les coordonnées des 
+    sommets, qui sont fournies dans un repère quelconque, en positions dans l'image, 
+    - la deuxième partie détermine quels pixels de l'image doivent changer de couleur pour dessiner chaque triangle, 
+    en utilisant les positions calculées par la première étape. 
 
-le schema du pipeline openGL 4 :
+ces 2 parties sont à moitié programmable, avec des shaders, et à moitié configurable, il faut choisir quelle solution 
+standard utiliser. par exemple, il faut choisir quel triangle donne sa couleur à chaque pixel de l'image, soit en fonction 
+de sa profondeur (le plus proche ou le plus loin), soit en fonction de l'ordre d'affichage. autre option disponible, on 
+peut choisir de dessiner tout le triangle (son intérieur et son bord), ou uniquement son bord, voire uniquement ses 
+sommets. 
+
+## pipeline géométrique
+
+le role de la première partie est préparer le dessin des triangles, et son principal travail est de transformer les positions
+des sommets pour déterminer sur quel pixel de l'image ils se projettent.
+
+_pourquoi faut-il transformer les positions des sommets ?_
+
+quand on crée un objet, on le dessine tout seul, avec un logiciel comme blender, par exemple, ou on le construit en
+calculant la position de chacun de ses sommets.
+
+ensuite ces objets, crées séparement, sont disposés dans une scène, il faut les placer, les orienter, ajuster leur taille,
+etc. pour dessiner ces objets, il faut choisir un point de vue, une camera, qui est aussi placée et orientée dans la scène.
+et l'information nécessaire pour dessiner un triangle est de savoir sur quels pixels le dessiner, quelque soit la 
+position de la camera. si la camera bouge, les triangles doivent aussi se déplacer dans l'image pour recréer une vue 
+correcte de la scène.
+
+au final, les sommets existent dans plusieurs repères :
+    - le repère de création de l'objet,
+    - le repère de la scène, ou du monde,
+    - le repère de la caméra, 
+    - le repère projectif, qui permet de passer de la 3d à la 2d de l'image,
+    - et enfin, le repère image, 
+    
+le même sommet à donc 5 ou 6 coordonnées différentes (selon qu'il est visible ou pas, un sommet non visible dans 
+l'image n'a pas de coordonnées image).
+
+en résumé, cette première partie du pipeline doit déterminer où se trouve chaque triangle par rapport à la caméra.
+si un triangle est devant caméra, il sera visible dans l'image, et les coordonnées de ses sommets dans le repère image 
+permettent de le dessiner.
+
+### comment ça marche ?
+
+pour placer un triangle dans la scène, on modifie les coordonnées de ses sommets, que l'on connait dans son repère
+de création. la _transformation_ dans ce cas, est une _translation_. on ajoute un déplacement, un _vecteur_, 
+à chaque _point_. (cf [wikipedia](https://fr.wikipedia.org/wiki/Translation_%28g%C3%A9om%C3%A9trie%29))
+
+si l'on veut faire tourner / réorienter un triangle autour d'un axe, ou d'un vecteur, on peut calculer ses nouvelles 
+coordonnées, avec le sinus et le cosinus de l'angle de la rotation.
+(cf [wikipedia](https://fr.wikipedia.org/wiki/Rotation_affine))
+
+le changement, le passage d'un repère au suivant peut se représenter à chaque fois de manière assez directe 
+avec une matrice (qui ne sont au final, qu'une notation compacte pour un calcul un peu long à écrire avec les 
+3 coordonnées de chaque sommet). le cas des translations et des projections est un peu à part et nécessite 
+des matrices avec une ligne et une colonne de plus. 
+(cf [wikipedia](https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_homog%C3%A8nes#Notation_matricielle))
+
+mais au final, le passage d'un repère au suivant se représente avec une matrice 4x4 :
+    - placer l'objet dans la scène : passage du repère de création vers le repère monde, matrice _model_,
+    - passage monde vers le repère de la caméra, matrice _view_,
+    - passage camera vers le repère projectif, matrice _projection_,
+    - passage projectif vers le repère image, matrice _viewport_ (uniquement pour les sommets visibles).
+
+tous les pipelines 3d utilisent ces matrices, même si ce n'est pas toujours intuitif à manipuler.
+par contre, ces matrices ont des propriétés très interressantes : on peut multiplier plusieurs matrices pour 
+sauter plusieurs changements de repères, ce qui permet de faire des calculs plus rapides, 
+on peut inverser une matrice pour obtenir le passage dans l'autre sens, ce qui permet, par exemple, de faire du lancer
+de rayons, on peut facilement construire des objets articulés et les animer, ou faire bouger des objets les uns
+par rapport aux autres... et tout ca  serait beaucoup plus difficile ou limité sans utiliser de matrices.
+
+_et openGL ?_
+
+openGL à besoin de connaitre les coordonnées des sommets des triangles dans le repère _projectif_ pour pouvoir
+ensuite dessiner les triangles, et comme on écrit une fonction qui fait le calcul, on est libre d'utiliser des matrices, 
+ou pas... il faut "juste" l'expliquer à openGL, et écrire le _vertex shader_ responsable de cette partie du pipeline. 
+
+si on souhaite écrire une fonction en C/C++ qui déplace un sommet, on aura quelquechose comme ca :
+
+\code
+struct Point
+{
+    float x, y, z;
+};
+
+Point transform( const Point position, const float dx, const float dy, const float dz )
+{
+    Point r;
+    r.x= position.x + dx;
+    r.y= position.y + dy;
+    r.z= position.z + dz;
+    return r;
+}
+\endcode
+
+pour simplifier les calculs, on choisit des sommets qui sont deja placés devant la camera, et par convention, 
+leurs coordonnées doivent être entre -1 et 1 sur x, y, et z, pour être visible. la 4ieme coordonnée est 1 pour un point.
+
+cette fonction ne transforme qu'un seul sommet, il faut donc l'utiliser 3 fois. openGL impose une solution particulière,
+par defaut, il se contente de numéroter les sommets : le shader ne prend en entrée qu'un seul paramètre, l'indice 
+du sommet à tansformer, la fonction s'appelle main et le résultat doit être écrit dans une variable globale.
+le shader ressemble plutot à ça :
+
+\code
+struct Point
+{
+    float x, y, z, w;
+};
+
+// variables definies par l'application
+const float dx= ... ;
+const float dy= ... ;
+const float dz= ... ;
+
+const int gl_VertexID = ... ; // valeur donnée par openGL
+Point gl_Position;            // stockage du résultat, utilise par la suite du pipeline
+
+void main( )
+{
+    const Point positions[3] = { { ... }, { ... }, { ... } };
+
+    Point r;
+    r.x= positions[gl_VertexID].x + dx;
+    r.y= positions[gl_VertexID].y + dy;
+    r.z= positions[gl_VertexID].z + dz;
+    r.w= 1;
+    
+    gl_Position= r;
+}
+\endcode
+
+elle est appellée pour déplacer chaque sommet des triangles que l'on dessine, et gl_VertexID change de valeur à chaque fois.
+
+\code
+/*
+une carte graphique fait quelque chose d'équivalent (mais en parallèle et avec du matériel spécialisé), 
+une fois que les 3 sommets d'un triangle sont transformés, on peut dessiner le triangle.
+ */
+void draw( const int count )
+{
+    Point *vertices= new Point[count];
+    
+    for(int i= 0; i < count; i= i +1)
+    {
+        gl_VertexID= i;
+        main();
+        vertices[i]= gl_Position;
+    }
+    
+    for(int i= 0; i +2 < count; i= i +3)
+    {
+        draw_triangle(vertices[i], vertices[i +1], vertices[i +2]);
+    }
+    
+    delete [] vertices;
+}
+\endcode
+
+le plus simple est de le tester.
+
+compilez shader_kit et jouez un peu avec le shader intro1.glsl
+\code
+./bin/shader_kit tutos/intro1.glsl
+\endcode
+ouvrez tutos/intro1.glsl avec un éditeur, faites des modifications, réactivez la fenêtre de shader_kit et appuyez 
+sur R pour recharger le shader...
+
+_remarque_: shader_kit n'affiche qu'un seul triangle de cette manière...
 
 
+## pipeline pixels
 
 
 
