@@ -19,7 +19,7 @@ void main( )
     vec3 positions[3]= vec3[3]( vec3(-0.5, -0.5, 0), vec3(0.5, -0.5, 0), vec3(0, 0.5, 0) );
     
     // recuperer le sommet a traiter
-    vec3 p= positions[gl_VertexID];
+    vec3 p= positions[i];
 
     // calculer le resultat 
     vec4 r;
