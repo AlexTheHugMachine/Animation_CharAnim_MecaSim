@@ -1,15 +1,15 @@
 
-// tuto3: passer des parametres a un shader program, afficher quelques triangles et les deplacer...
+//! \file tuto3GL.cpp passer des parametres a un shader program, afficher quelques triangles et les deplacer...
 
 #include "window.h"
 #include "program.h"
 #include "mesh.h"
 #include "wavefront.h"
 
-// shader program
+// identifiant du shader program
 GLuint program;
 
-// vertex array object
+// identifiant du vertex array object
 GLuint vao;
 
 
@@ -19,7 +19,7 @@ int init( )
     Mesh cube= read_mesh("data/flat_bbox.obj");
     printf("  %u positions\n", (unsigned int) cube.positions.size());
     
-    // compile le shader program
+    // compile le shader program, le program est selectionne
     program= read_program("tutos/tuto3GL.glsl");
     
     // transfere les 36 positions dans le tableau declare par le vertex shader
@@ -28,7 +28,7 @@ int init( )
     // etape 2 : modifier sa valeur
     glUniform3fv(location, cube.positions.size(), &cube.positions.front().x);
     
-    // creer un vertex arrya object
+    // creer un vertex array object
     glGenVertexArrays(1, &vao);
     
     // etat openGL par defaut

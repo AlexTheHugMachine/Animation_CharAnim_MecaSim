@@ -3,4 +3,238 @@
 
 cf tuto2GL.cpp
 
+un shader program est la même chose que d'habitude : le code exécutable crée par l'édition de liens des binaires obtenus 
+après la compilations des shaders.
+
+et comme d'habitude, il peut y avoir des erreurs de compilation et des erreurs d'édition de liens.
+
+la démarche est très classique :
+	- lire le fichier source,
+	- créer un vertex shader
+	- lui donner le source,
+	- compiler,
+	- recommencer pour le fragment shader,
+	- créer un shader program
+	- associer les 2 shaders au program,
+	- linker
+	- utiliser / exécuter, si tout c'est bien passé.
+	
+la partie la plus longue est finalement la vérification et la récupération des erreurs, sans grande surprise...
+
+_rappel :_  les objets openGL sont manipulés à travers des identifiants numériques, openGL définit le type GLuint spécialement pour ça. 
+vous pouvez repasser dans \ref interfaceC, si nécessaire.
+
+## lire les sources
+
+le plus simple en C++, renvoie une chaine de caractères std::string :
+\code
+std::string read( const char *filename )
+{
+	std::stringbuf source;
+	std::ifstream in(filename);
+	// verifie que le fichier existe
+	if(in.good() == false)
+		// affiche une erreur, si le fichier n'existe pas ou n'est pas accessible
+		printf("[error] loading program '%s'...\n", filename);
+	else
+		printf("loading program '%s'...\n", filename);
+
+	// lire le fichier, jusqu'au premier separateur, 
+	// le caractere '\0' ne peut pas se trouver dans un fichier texte, donc lit tout le fichier d'un seul coup
+	in.get(source, 0);
+
+	// renvoyer la chaine de caracteres
+	return source.str();
+}
+\endcode
+
+## créer et compiler les shaders
+
+\code
+	GLenum type= GL_VERTEX_SHADER;	 // ou GL_FRAGMENT_SHADER...
+	GLuint shader= glCreateShader(type);
+\endcode
+
+il faut ensuite préparer les sources à compiler. la fonction glShaderSource() veut un tableau de chaines de caracteres. il faut 
+donc le construire.
+\code
+	std::string source= read( "vertex_shader.glsl" );
+	const char *strings[]= { source.c_str() };
+	glShaderSource(shader, 1, strings, NULL);
+\endcode
+
+puis compiler le shader :
+\code
+	glCompileShader(shader);
+\endcode
+
+## vérifier les erreurs de compilation du shader
+
+un objet shader openGL maintient un état de compilation ainsi que les messages d'erreurs (et sonsource également). il suffit de l'interroger
+avec glGetShader( ) :
+
+\code
+	GLint status;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+	if(status == GL_TRUE)
+		// pas d'erreurs de compilation
+	else
+		// erreurs
+\endcode
+
+si la compilation à échoué, il faut récupérer et afficher les messages, cf glGetShaderInfoLog( ).
+comme on ne connait pas a priori la longueur des messages, il faut la demander, allouer une chaine de caractères de la bonne taille
+et enfin récupérer les messsages...
+\code
+	// recuperer la longueur des messages d'erreurs 
+	GLint length;
+	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+	
+	// allouer une chaine de caracteres, length compte le 0 a la fin de la chaine
+	char *message= new char [length];
+	
+	// recuperer les messages d'erreurs
+	glGetShaderInfoLog(shader, length, message, NULL);
+	
+	// afficher 
+	printf("[errors]\n%s\n", message);
+
+	// nettoyer 
+	delete [] message;
+\endcode
+
+si tout c'est bien passé pour le premier shader, on peut passer au 2ieme, seul le type de shader change : ce sera GL_FRAGMENT_SHADER au 
+lieu de GL_VERTEX_SHADER.
+
+## créer et linker le program
+
+la démarche est la même que pour les shaders, il faut indiquer au program quels shaders linker ensemble avec glAttachShader( ), puis 
+vérifier les erreurs,
+\code
+	GLuint program= glCreateProgram();
+	glAttachShader(program, vertex_shader);
+	glAttachShader(program, fragment_shader);
+	glLinkProgram(program);
+	
+	GLint status;
+	glGetProgramiv(program, GL_LINK_STATUS, &status);
+	if(status == GL_TRUE)
+		// pas d'erreur de link, le program est pret a etre utilise !
+	else
+		// erreurs ...
+\endcode
+
+et éventuellement récupérer et afficher les erreurs...
+\code
+	// recuperer la longueur des messages d'erreurs 
+	GLint length;
+	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+	
+	// allouer une chaine de caracteres, length compte le 0 a la fin de la chaine
+	char *message= new char [length];
+	
+	// recuperer les messages d'erreurs
+	glGetProgramInfoLog(program, length, message, NULL);
+	
+	// afficher 
+	printf("[link errors]\n%s\n", message);
+
+	// nettoyer 
+	delete [] message;
+\endcode
+
+voila, rien de bien compliqué, mais c'est un peu long.
+
+un exemple minimaliste est dispo tuto2GL.cpp
+
+par contre les messages d'erreurs sont très succints et n'affichent qu'un numéro de ligne sans aucun contexte, ce qui est assez pénible 
+pour corriger l'erreur.
+
+exemple: la compilation du shader suivant, qui comporte une erreur :
+\code
+#version 330
+
+const float dx= 0.0;
+const float dy= 0;
+const float dz= 0;
+
+void main( )
+{
+    // intialiser les coordonnees des 3 sommets
+    vec3 positions[3]= vec3[3]( vec3(-0.5, -0.5, 0), vec3(0.5, -0.5, 0), vec3(0, 0.5, 0) );
+    
+    // recuperer le sommet a traiter
+    vec3 p= positions[i];
+
+    // calculer le resultat 
+    vec4 r;
+    r.x= p.x + dx;
+    r.y= p.y + dy;
+    r.z= p.z + dz;
+    r.w= 1;
+    
+    // renvoyer le sommet transforme
+    gl_Position= r;
+}
+\endcode
+
+renvoie les erreurs :
+\code
+[errors]
+0(15) : error C1008: undefined variable "i"
+\endcode
+
+ce qui n'est pas vraiment utilisable...
+
+program.h fournit une fonction utilitaire qui analyse le message d'erreur, retrouve les numéros de lignes sur lesquels se sont produit 
+les erreurs, et les insere dans le source du shader :
+
+\code
+GLuint program= read_program("source.glsl");
+program_print_errors(program);
+\endcode
+
+ce qui donne :
+
+\code
+  0001  #version 330
+  0003  
+  0004  
+  0005  const float dx= 0.0;
+  0006  const float dy= 0;
+  0007  const float dz= 0;
+  0008  
+  0009  void main( )
+  0010  {
+  0011      // intialiser les coordonnees des 3 sommets
+  0012      vec3 positions[3]= vec3[3]( vec3(-0.5, -0.5, 0), vec3(0.5, -0.5, 0), vec3(0, 0.5, 0) );
+  0013      
+  0014      // recuperer le sommet a traiter
+  0015      vec3 p= positions[i];
+
+error C1008: undefined variable "i"
+
+  0016  
+  0017      // calculer le resultat 
+  0018      vec4 r;
+  0019      r.x= p.x + dx;
+  0020      r.y= p.y + dy;
+  0021      r.z= p.z + dz;
+  0022      r.w= 1;
+  0023      
+  0024      // renvoyer le sommet transforme
+  0025      gl_Position= r;
+  0026  }
+\endcode
+
+la fonction program_print_errors( ), ne dépend pas de read_program(), vous pouvez compiler les shaders comme vous voulez et utiliser 
+uniquement program_print_errors() ou program_format_errors().
+
+_pour les curieux :_ le source est dispo program.cpp, fonctions print_line( ) et print_errors( ).
+
+autre solution, shader_kit.cpp peut etre utilisé comme compilateur de shader, il affiche les erreurs sous cette forme un peu plus lisible, et 
+permet de recharger et de recompiler le shader en appuyant sur la touche R. ça permet de corriger interactivement le source du shader 
+en le modifiant dans un éditeur.
+
+
  */
