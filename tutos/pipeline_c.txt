@@ -1,0 +1,6 @@
+
+/*! \addtogroup pipeline_c mini pipeline graphique
+
+cf pipeline.cpp
+
+ */

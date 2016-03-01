@@ -22,7 +22,7 @@ int init( )
     // compile le shader program
     program= read_program("tutos/tuto3GL.glsl");
     
-    // transfere les 36 positions dans le tableau declare par le vretex shader
+    // transfere les 36 positions dans le tableau declare par le vertex shader
     // etape 1 : recuperer l'identifiant de l'uniform
     GLint location= glGetUniformLocation(program, "positions"); // uniform vec3 positions[36];
     // etape 2 : modifier sa valeur

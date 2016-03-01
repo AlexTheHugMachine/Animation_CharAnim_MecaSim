@@ -109,7 +109,7 @@ coordonnées, avec le sinus et le cosinus de l'angle de la rotation.
 (cf [wikipedia](https://fr.wikipedia.org/wiki/Rotation_affine))
 
 le changement, le passage d'un repère au suivant peut se représenter à chaque fois de manière assez directe 
-avec une matrice (qui ne sont au final, qu'une notation compacte pour un calcul un peu long à écrire avec les 
+avec une matrice (qui n'est au final, qu'une notation compacte pour un calcul un peu long à écrire avec les 
 3 coordonnées de chaque sommet). le cas des translations et des projections est un peu à part et nécessite 
 des matrices avec une ligne et une colonne de plus. 
 (cf [wikipedia](https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_homog%C3%A8nes#Notation_matricielle))
@@ -243,8 +243,7 @@ particulière, et c'est l'application qui le remplit, pas le shader.
 
 \code
 // valeurs definies par l'application
-layout(std140) 
-uniform vec4 positions[10];
+uniform vec3 positions[12];
 
 const float dx= ... ;
 const float dy= ... ;
@@ -262,16 +261,23 @@ void main( )
 }
 \endcode
 
+
+[
+a virer
 sans rentrer dans les détails, pour le moment, les processeurs de la carte graphique qui exécutent les shaders, 
 sont différents du processeur qui exécute l'application. 
 les variables ne sont pas stockées de la même manière dans la mémoire de l'application et dans la mémoire de la carte 
 graphique. layout(std140) est une des conventions qui permet aux processeurs d'échanger / de partager des données.
-autre différence, le mot-clé uniform, indique que le tableau positions ne change pas entre 2 exécutions du shader. 
-c'est bien ce que l'on veut, le vertex shader doit transformer tous les sommets du tableau pour pouvoir dessiner 
-les triangles.
+autre différence, 
+]
+
+le mot-clé uniform, indique que le tableau positions ne change pas entre 2 exécutions du shader. 
+c'est bien ce que l'on veut, du point de vue du vertex shader le tableau est une constante et le shader doit transformer 
+tous les sommets du tableau pour pouvoir dessiner les triangles. par contre, l'application peut changer le contenu du 
+tableau pour afficher un autre ensemble de triangles.
 
 la différence principale avec la première solution : l'application remplit le tableau positions, fournit le shader et demande
-à openGL de dessiner 10 triangles.
+à openGL de dessiner 12 sommets, soit 4 triangles.
 c'est ce qu'il faut retenir : un shader, et le pipeline graphique en général, fonctionne avec les données et paramètres
 fourni par l'application, ils sont dépendents l'un de l'autre.
 
@@ -289,8 +295,8 @@ _raccourcis :_
 pour écrire une première application openGL qui utilise les 2 premières solutions : 
     - \ref tuto_application, ouvrir une fenêtre et initialiser openGL,
     - \ref interfaceC, les fonctions d'openGL, la construction de l'interface en C pur,
-    - \ref tuto2GL compiler un shader : tuto2GL, avec vérification des erreurs tuto2GL_erreurs, avec gKit, tuto2GL_gkit,
-    - passer des paramètres, des valeurs uniform, à un shader : tuto3GL,
+    - \ref tuto2GL compiler un shader, avec vérification des erreurs, avec les utilitaires de gKit,
+    - \ref tuto3GL passer des paramètres, des valeurs uniform, à un shader,
     - dessiner des triangles avec la solution classique : tuto4GL, buffers et vertex arrays.
 
 
@@ -309,7 +315,7 @@ tous les sommets ont des coordonnées dans le repère projectif, mais, par conve
 [-1 1] sur x, y, et z correspondent à des pixels de l'image.
 
 le premier traitement réalisé est donc ce test de visibilité, suivi, ou pas, de la dernière transformation vers le repère image, et enfin
-du test qui permet de déterminer quels pixels permettent de dessiner le triangle.
+du test qui détermine quels pixels permettent de dessiner le triangle.
 
 en gros, on peut l'écrire comme ça :
 \code
@@ -428,9 +434,12 @@ l'idée du test réalisé par inside( ) est de vérifier que le pixel x, y est d
 des 3 triangles formés par le pixel p, et les 3 arêtes ab, bc, et ca (cf [Modern triangles / section Modern triangles](http://geomalgorithms.com/a01-_area.html)).
 si les aires des triangles pab, pbc et pca ont le même signe, le pixel p est à l'intérieur du triangle.
 
-en résumé, si le pixel p fait parti du triangle, on connait l'aire des 3 sous-triangles pab, pbc et pca, et, en plus, on sait, par construction, que la somme de ces
-3 aires est égale à celle du triangle a, b, c. ce sont exactement les coordonnées barycentriques du pixel p dans le triangle, et on peut interpoler ces coordonnées
-pour obtenir la coordonnée z pour le pixel x, y en ne connaissant que les coordonnées des sommets.
+[schema : triangle abc, sous triangles pabc, avec p dedans et p dehors]
+
+
+en résumé, si le pixel p fait parti du triangle, on connait l'aire des 3 sous-triangles pab, pbc et pca, et, en plus, on sait, par construction, que la 
+somme de ces 3 aires est égale à celle du triangle a, b, c. ce sont exactement les coordonnées barycentriques du pixel p dans le triangle, et on 
+peut utiliser ces coordonnées pour interpoler la coordonnée z pour le pixel x, y en ne connaissant que les coordonnées des sommets.
 (cf [wikipedia](https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_barycentriques))
 
 au final, dessiner un triangle ressemble plutot à ça :
@@ -498,15 +507,99 @@ void draw_triangle( const Point a, const Point b, const Point c )
 }
 \endcode
 
-implication directe pour l'application, il plutôt important d'initialiser correctement les valeurs du zbuffer avant de dessiner des triangles, sinon le test de 
-profondeur ne conservera pas le bon triangle pour chaque pixel.
+_remarque :_ le code complet est disponible dans \ref pipeline_c.
 
-une autre conséquence directe de cette interpolation : on peut interpoler n'importe quelle valeur définie sur les sommets du triangle, comme des couleurs, 
-des normales, des coordonnées de textures, etc.  
+implication directe pour l'application, il plutôt important d'initialiser correctement les valeurs du zbuffer avant de dessiner des triangles, sinon
+le test de profondeur ne conservera pas le bon triangle pour chaque pixel. 
 
-_en pratique, l'interpolation des informations associées aux sommets est toujours faite par openGL._
+_quelle est la profondeur max d'un fragment visible ?_
+
+c'est ... 1, la coordonnée z d'un sommet visible est comprise entre -1 et 1 dans le repère projectif, et est ensuite normalisée
+entre 0 et 1 dans le repère image.
+
+une autre conséquence directe de cette interpolation : on peut interpoler n'importe quelle valeur définie sur les sommets du triangle,
+comme des couleurs, des normales, des coordonnées de textures, etc. ou même calculer une valeur dans le vertex shader et la transmettre 
+au fragment shader.
+
+le pipeline pourrait interpoler automatiquement toutes les informations définies par sommet du triangle et les donner au fragment shader,
+mais cette solution n'est pas assez souple. par exemple, on peut tres bien _calculer_ les coordonnées de texture d'un sommet sans quelles 
+fassent partie des informations associées au sommet.
+
+il faut donc un "mécanisme" plus souple : les shaders peuvent déclarer un nouveau type de variable, des _varyings_ qui sont calculés par un shader
+et récupérés par le shader suivant dans le pipeline. (_remarque :_ cet exemple n'utilise que des vertex et des fragment shaders, mais il y a 5 types
+de shaders dans le pipeline graphique openGL...)
+
+ces variables sont donc déclarées en sortie du vertex shader et en entrée du fragment shader, et sont bien sur interpolées par le pipeline.
+
+\code
+// vertex shader
+out vec3 texcoord;  // declaration d'une sortie optionnelle, un varying, mot clé: out
+
+uniform vec3 positions[12];
+uniform vec3 deplacement;
+
+void main()
+{
+    gl_Position= positions[gl_VertexID] + deplacement;  // sortie obligatoire du vertex shader
+    texcoord= positions[gl_VertexID];   // varying, sortie "optionnelle" du vertex shader, a déclarer avec le mot clé: out
+}
+\endcode
+
+\htmlonly 
+<div align="center">
+<img src="mesh.png" width="40%"/> 
+<img src="mesh_uvgrid.png" width="40%"/> 
+</div>
+\endhtmlonly
+
+\code
+// fragment shader
+in vec3 texcoord;   // declaration d'une entrée optionnelle, un varying, mot clé: in, 
+// doit avoir le même nom et le même type que la sortie déclarée dans le vertex shader
+
+void main( )
+{
+    vec3 color= vec3(0, 0, 0);
+    
+    // calculer la couleur du fragment en fonction de texcoord
+    // construit une grille dans le repere local de l'objet, et donne une couleur en fonction de la distance à la cellule la plus proche
+    // texcoord contient la position du fragment du triangle visible pour le pixel, et est interpolé par le pipeline
+    
+    vec3 p= texcoord * 8;
+    float d= length( p - (floor(p) + 0.5));
+    if(d > 1) d= 0;
+        color=  vec3(d*0.8*2, d*0.4*2, 0);
+
+    glFragColor= color;
+}
+\endcode
 
 
+# résumé
+
+pour résumer, voila à quoi ressemble le pipeline openGL :
+
+[schema pipeline gl 3]
+
+certaines étapes sont programmables, ce sont les shaders, et les autres sont paramétrables :
+    - assemblage des attributs / informations des sommets de chaque triangle,
+    - exécution des vertex shaders, pour transformer chaque sommet de chaque triangle,
+    - assemblage des triangles, récupère les 3 sommets transformés de chaque triangle (et ses varyings...)
+    - visibilité / orientation du triangle par rapport à la caméra, les triangles à l'arrière des objets opaques ne peuvent pas être visibles, 
+    ce n'est pas la peine de les dessiner, si l'aire signée du triangle n'est pas positive, 
+    - fragmentation du triangle, détermine l'ensemble de pixels permettant de dessiner le triangle, interpole les varyings déclarés en sortie du vertex shader,
+    - exécution des fragment shaders, pour donner une couleur à chaque pixel de chaque triangle, 
+    - test de profondeur de chaque fragment,
+    - écriture dans l'image résultat et mise à jour du zbuffer par le pipeline, pour chaque fragment, de chaque triangle,
+    
+pour dessiner un triangle (ou plusieurs), il faut donc paramétrer le pipeline pour obtenir le résultat voulu...
+
+suite de la lecture :
+    - \ref interfaceC, les fonctions d'openGL, la construction de l'interface en C pur,
+    - \ref tuto_application, ouvrir une fenêtre et initialiser openGL,
+    - \ref tuto2GL compiler un shader program, avec vérification des erreurs, avec les utilitaires de gKit,
+    - \ref tuto3GL passer des paramètres, des valeurs uniform, à un shader : tuto3GL,
+    - dessiner des triangles avec la solution classique, description des attributs des sommets : tuto4GL, buffers et vertex arrays.
 
 
  */
