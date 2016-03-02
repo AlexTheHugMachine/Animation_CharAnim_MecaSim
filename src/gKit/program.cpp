@@ -11,7 +11,7 @@
 #include "program.h"
 
 
-//! charge un fichier texte.
+// charge un fichier texte.
 static
 std::string read( const char *filename )
 {
@@ -26,6 +26,7 @@ std::string read( const char *filename )
     return source.str();
 }
 
+// insere les definitions apres la ligne contenant #version
 static 
 std::string prepare_source( std::string file, const std::string& definitions )
 {
@@ -147,6 +148,28 @@ GLuint read_program( const char *filename, const char *definitions )
     return program;
 }
 
+int release_program( const GLuint program )
+{
+    if(program == 0)
+        return -1;
+    
+    // recupere les shaders
+    int shaders_max= 0;
+    glGetProgramiv(program, GL_ATTACHED_SHADERS, &shaders_max);
+    
+    std::vector<GLuint> shaders(shaders_max, 0);
+    glGetAttachedShaders(program, shaders_max, NULL, &shaders.front());
+    for(int i= 0; i < shaders_max; i++)
+    {
+        glDetachShader(program, shaders[i]);
+        glDeleteShader(shaders[i]);
+    }
+    
+    return 0;
+}
+
+
+// formatage des erreurs de compilation des shaders
 
 static
 void print_line( std::string& errors, const char *source, const int begin_id, const int line_id )
@@ -278,6 +301,8 @@ int program_print_errors( const GLuint program )
 }
 
 
+// utilitaires
+
 GLint program_attribute( const GLuint program, const char *attribute )
 {
     if(program == 0) 
@@ -374,6 +399,11 @@ void program_uniform( const GLuint program, const char *uniform, const Vector& v
 void program_uniform( const GLuint program, const char *uniform, const vec4& v )
 {
     glUniform4fv( location(program, uniform), 1, &v.x );
+}
+
+void program_uniform( const GLuint program, const char *uniform, const Color& c )
+{
+    glUniform4fv( location(program, uniform), 1, &c.r );
 }
 
 void program_uniform( const GLuint program, const char *uniform, const Transform& v )

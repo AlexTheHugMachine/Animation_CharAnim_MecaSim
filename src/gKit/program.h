@@ -9,6 +9,8 @@
 
 #include "vec.h"
 #include "mat.h"
+#include "color.h"
+
 
 //! \addtogroup openGL utilitaires openGL
 ///@{
@@ -19,6 +21,9 @@
 //! cree un shader program, charge un seul fichier, les shaders sont separes par \#ifdef VERTEX_SHADER / \#endif et \#ifdef FRAGMENT_SHADER / \#endif.
 //! \param definitions est une chaine de caracteres pouvant comporter plusieurs lignes \#define what value\n.
 GLuint read_program( const char *filename, const char *definitions= "" );
+
+//! detruit les shaders et le program.
+int release_program( const GLuint program );
 
 //! recharge les sources et recompile un shader program.
 int reload_program( const GLuint program, const char *filename, const char *definitions= "" );
@@ -38,16 +43,22 @@ void program_uniform( const GLuint program, const char *uniform, const unsigned 
 void program_uniform( const GLuint program, const char *uniform, const int v );
 //! affecte une valeur a un uniform du shader program. float.
 void program_uniform( const GLuint program, const char *uniform, const float v );
+
 //! affecte une valeur a un uniform du shader program. vec2.
 void program_uniform( const GLuint program, const char *uniform, const vec2& v );
+
 //! affecte une valeur a un uniform du shader program. vec3.
 void program_uniform( const GLuint program, const char *uniform, const vec3& v );
 //! affecte une valeur a un uniform du shader program. Point.
 void program_uniform( const GLuint program, const char *uniform, const Point& v );
 //! affecte une valeur a un uniform du shader program. Vector.
 void program_uniform( const GLuint program, const char *uniform, const Vector& v );
+
 //! affecte une valeur a un uniform du shader program. vec4.
 void program_uniform( const GLuint program, const char *uniform, const vec4& v );
+//! affecte une valeur a un uniform du shader program. Color.
+void program_uniform( const GLuint program, const char *uniform, const Color& c );
+
 //! affecte une valeur a un uniform du shader program. Transform.
 void program_uniform( const GLuint program, const char *uniform, const Transform& v );
 
