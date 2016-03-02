@@ -91,7 +91,7 @@ int init( )
     
     // construit l'englobant de l'objet
     Point pmin, pmax;
-    bounds(cube, pmin, pmax);
+    mesh_bounds(cube, pmin, pmax);
     
     // regle la cmaera pour observer l'objet
     camera= make_orbiter_lookat( center(pmin, pmax), distance(pmin, pmax) );

@@ -114,7 +114,7 @@ void push_triangle_last( Mesh& m, const int a, const int b, const int c );
 void restart_strip( Mesh& m );
 
 //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet.
-void bounds( const Mesh& m, Point& pmin, Point& pmax );
+void mesh_bounds( const Mesh& m, Point& pmin, Point& pmax );
 
 //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire.
 //! exemple, cf make_mesh_program( )

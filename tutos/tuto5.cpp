@@ -20,7 +20,7 @@ int init( )
     // etape 2 : creer une camera pour observer l'objet
     // construit l'englobant de l'objet, les extremites de sa boite englobante
     Point pmin, pmax;
-    bounds(objet, pmin, pmax);
+    mesh_bounds(objet, pmin, pmax);
     
     // regle le point de vue de la camera pour observer l'objet
     camera= make_orbiter_lookat( center(pmin, pmax), distance(pmin, pmax) );

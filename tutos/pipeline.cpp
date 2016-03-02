@@ -130,7 +130,7 @@ int main( void )
     
     // regle le point de vue de la camera pour observer l'objet
     Point pmin, pmax;
-    bounds(mesh, pmin, pmax);
+    mesh_bounds(mesh, pmin, pmax);
     Orbiter camera= make_orbiter_lookat(center(pmin, pmax), distance(pmin, pmax));
 
     BasicPipeline pipeline( mesh, 

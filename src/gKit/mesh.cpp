@@ -164,7 +164,7 @@ void restart_strip( Mesh& m )
 #endif
 }
 
-void bounds( const Mesh& m, Point& pmin, Point& pmax )
+void mesh_bounds( const Mesh& m, Point& pmin, Point& pmax )
 {
     if(m.positions.size() < 1)
         return;
