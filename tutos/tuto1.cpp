@@ -1,5 +1,5 @@
 
-// tuto1: creation d'une application vide. affiche une fenetre vide / noire.
+//! \file tuto1.cpp creation d'une application vide. affiche une fenetre vide / noire.
 
 #include "window.h"
 

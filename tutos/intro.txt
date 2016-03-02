@@ -297,7 +297,7 @@ pour écrire une première application openGL qui utilise les 2 premières solut
     - \ref interfaceC, les fonctions d'openGL, la construction de l'interface en C pur,
     - \ref tuto2GL compiler un shader, avec vérification des erreurs, avec les utilitaires de gKit,
     - \ref tuto3GL passer des paramètres, des valeurs uniform, à un shader,
-    - dessiner des triangles avec la solution classique : tuto4GL, buffers et vertex arrays.
+    - \ref tuto4GL dessiner des triangles avec la solution classique, description des attributs des sommets, buffers, vertex arrays et shaders.
 
 
 ## pipeline pixels
@@ -404,6 +404,8 @@ void main( )
 }
 \endcode
 
+\image html grid_triangle.png "le triangle et la grille de pixels à tester..."
+
 la fonction qui permet vraiment de dessiner le triangle, en testant l'inclusion d'un pixel x, y dans le triangle a, b, c, appelée inside( ), est plus interressante, 
 et c'est un bon exercice...
 
@@ -430,17 +432,22 @@ une solution est d'interpoler la valeur z pour tous les pixels du triangle. _com
 
 la fonction inside( ), qui permet de savoir si un pixel x, y appartient à un triangle a, b, c, fournit quasiment la réponse.
 
-l'idée du test réalisé par inside( ) est de vérifier que le pixel x, y est du "bon" coté des 3 arêtes du triangle. ce test revient à calculer l'aire signée (algébrique) 
-des 3 triangles formés par le pixel p, et les 3 arêtes ab, bc, et ca (cf [Modern triangles / section Modern triangles](http://geomalgorithms.com/a01-_area.html)).
+l'idée du test réalisé par inside( ) est de vérifier que le pixel x, y est du "bon" coté des 3 arêtes du triangle. 
+
+\image html grid_edges.png "les 3 arêtes à tester, pour chaque pixel..."
+
+ce test revient à calculer l'aire signée (algébrique) des 3 triangles formés par le pixel p, et les 3 arêtes ab, bc, et ca 
+(cf [Modern triangles / section Modern triangles](http://geomalgorithms.com/a01-_area.html)).
 si les aires des triangles pab, pbc et pca ont le même signe, le pixel p est à l'intérieur du triangle.
 
-[schema : triangle abc, sous triangles pabc, avec p dedans et p dehors]
-
+\image html grid_samples.png "les 2 triangles (verts) ont des aires de signes opposés, à gauche le pixel est à intérieur, à droite, le pixel est à l'extérieur."
 
 en résumé, si le pixel p fait parti du triangle, on connait l'aire des 3 sous-triangles pab, pbc et pca, et, en plus, on sait, par construction, que la 
 somme de ces 3 aires est égale à celle du triangle a, b, c. ce sont exactement les coordonnées barycentriques du pixel p dans le triangle, et on 
 peut utiliser ces coordonnées pour interpoler la coordonnée z pour le pixel x, y en ne connaissant que les coordonnées des sommets.
 (cf [wikipedia](https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_barycentriques))
+
+\image html grid_fragments.png "résultat: les pixels à l'intérieur du triangle..."
 
 au final, dessiner un triangle ressemble plutot à ça :
 \code
@@ -545,13 +552,6 @@ void main()
 }
 \endcode
 
-\htmlonly 
-<div align="center">
-<img src="mesh.png" width="40%"/> 
-<img src="mesh_uvgrid.png" width="40%"/> 
-</div>
-\endhtmlonly
-
 \code
 // fragment shader
 in vec3 texcoord;   // declaration d'une entrée optionnelle, un varying, mot clé: in, 
@@ -574,12 +574,13 @@ void main( )
 }
 \endcode
 
+\image html mesh_uvgrid.png
 
 # résumé
 
 pour résumer, voila à quoi ressemble le pipeline openGL :
 
-[schema pipeline gl 3]
+\image html opengl_pipeline.png
 
 certaines étapes sont programmables, ce sont les shaders, et les autres sont paramétrables :
     - assemblage des attributs / informations des sommets de chaque triangle,
@@ -591,15 +592,17 @@ certaines étapes sont programmables, ce sont les shaders, et les autres sont pa
     - exécution des fragment shaders, pour donner une couleur à chaque pixel de chaque triangle, 
     - test de profondeur de chaque fragment,
     - écriture dans l'image résultat et mise à jour du zbuffer par le pipeline, pour chaque fragment, de chaque triangle,
-    
+
+\image html shader2_pipeline.png
+
 pour dessiner un triangle (ou plusieurs), il faut donc paramétrer le pipeline pour obtenir le résultat voulu...
 
 suite de la lecture :
     - \ref interfaceC, les fonctions d'openGL, la construction de l'interface en C pur,
     - \ref tuto_application, ouvrir une fenêtre et initialiser openGL,
     - \ref tuto2GL compiler un shader program, avec vérification des erreurs, avec les utilitaires de gKit,
-    - \ref tuto3GL passer des paramètres, des valeurs uniform, à un shader : tuto3GL,
-    - dessiner des triangles avec la solution classique, description des attributs des sommets : tuto4GL, buffers et vertex arrays.
+    - \ref tuto3GL passer des paramètres, des valeurs uniform, à un shader,
+    - \ref tuto4GL dessiner des triangles avec la solution classique, description des attributs des sommets, buffers, vertex arrays et shaders.
 
 
  */

@@ -1,6 +1,76 @@
 
 /*! \addtogroup interfaceC interface C openGL
 
-interface C
+## une api3d est...
 
+un ensemble de fonctions. openGL est utilisable à travers un ensemble de fonctions C, ce qui signifie, pas de surchage, 
+mais une famille de fonctions, des types opaques, pas d'objet, mais des identifiants.
+
+une interface C++ pourrait ressembler à ça :
+\code
+Context *context= new Context();
+
+Point positions[]= { ... };
+Buffer *buffer= context->createBuffer();
+buffer->data(sizeof(positions), positions);
+\endcode
+
+tout est explicite, on connait le contexte, le buffer, etc.
+
+la version C pur pourrait ressembler à ça :
+\code
+struct Context *context= context_create();
+
+Point positions[]= { ... };
+struct Buffer *buffer= context_createBuffer(context);
+buffer_data(buffer, sizeof(positions), positions);
+\endcode
+
+tout est explicite, mais un peu plus long à écrire.
+
+l'interface d'openGL utilise une _convention_ différente : au lieu de rendre explicite l'objet / la structure manipulée, elle est 
+d'abord "sélectionnée" pour une opération particulière, puis manipulée implicitement :
+\code
+createContext();                                // crée un contexte, et le sélectionne, 
+
+uint buffer= createBuffer();                    // crée un buffer, représenté par un identifiant numérique
+bindBuffer(0, buffer);                          // sélectionne le buffer, pour une utilisation particulière
+
+Point positions[]= { ... };
+bufferData(0, sizeof(positions), positions);    // alloue le buffer et l'initialise avec le contenu de positions.
+// le buffer manipulé est celui sélectionné sur l'attribut 0...
+\endcode
+
+ce qui permet d'obtenir une syntaxe compacte, mais peut être source de nombreuses erreurs, si l'on n'y prête pas attention.
+
+## pas de surcharge 
+
+autre détail important, il n'y a pas de surchage en C, on ne peut écrire ça pour modifier la valeur d'un paramètre de shader :
+
+\code
+Program *program= context->createProgram( ... );
+program->uniform("color", Color(1, 1, 0));      // affecter une couleur
+program->uniform("time", 12);                   // affecter un float
+
+\endcode
+
+ni ça :
+\code
+struct Program *program= context_createProgram( context, ... );
+program_uniform(program, "color", make_color(1, 1, 0));
+program_uniform(program, "time", 12);
+\endcode
+
+mais plutot ça :
+\code
+uint program= createProgram( ... );
+program_uniform3f(program, "color", 1.0f, 1.0f, 0.0f);
+program_uniform1f(program, "time", 12.0f);
+\endcode
+
+chaque surcharge est nommée explicitement, puisque seul le nom de la fonction est utilisé. selon le type de valeur à manipuler,
+les noms de fonctions sont décorés par un suffixe indiquant le nombre de paramètres (1, 2, 3, ou 4) et leur type (f pour float, 
+i pour int, u pour unsigned int, v pour un pointeur sur une valeur, etc.)
+
+l'api complète et sa documentation est consultable sur [opengl.org](https://www.opengl.org/sdk/docs/man/)
  */

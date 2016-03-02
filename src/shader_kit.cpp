@@ -1,5 +1,5 @@
 
-// shader_kit light, bac a sable fragment shader, cf shader_toy 
+//! \file shader_kit.cpp shader_kit light, bac a sable fragment shader, cf shader_toy 
 
 #include <fstream>
 #include <sstream>
@@ -52,6 +52,9 @@ void reload_program( )
     
     // recupere les erreurs, si necessaire
     program_format_errors(program, program_log);
+    if(program_log.size() > 0)
+        printf("[boom]\n%s\n", program_log.c_str());
+    
     program_failed= (program_log.size() > 0);
     program_area= 1;
 }

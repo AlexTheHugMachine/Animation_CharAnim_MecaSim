@@ -1,5 +1,5 @@
 
-// tuto2: le premier shader, afficher un triangle et le deplacer...
+//! \file tuto2GL.cpp le premier shader, afficher un triangle et le deplacer...
 
 #include <fstream>
 #include <sstream>
@@ -23,7 +23,7 @@
     draw( ) est un peu a part, elle est appellee par la fonction run( ) qui traite les evenements clavier, souris, clicks, etc,
     ca permet de reagir a ces evenements et de modifier / deplacer / animer ce que l'on dessine.
     
-    le shader sera compile dans init( ), utilise dans draw( ) et détruit à la fin de l'application dans quit( ).
+    le shader sera compile dans init( ), utilise dans draw( ) et detruit a la fin de l'application dans quit( ).
  */
 
 // identifiants des shaders

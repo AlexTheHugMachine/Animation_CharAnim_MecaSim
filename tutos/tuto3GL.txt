@@ -1,0 +1,190 @@
+
+
+/*! \addtogroup tuto3GL afficher plusieurs triangles, modifier les paramètres uniform d'un shader program.
+
+cf tuto3GL.cpp
+
+pour pouvoir dessiner quelque chose, il faut commencer par configurer le pipeline openGL, repassez dans \ref intro3d si nécessaire. 
+
+la configuration minimale est :
+    - les dimensions de l'image, cf glViewport( ),
+    - la couleur par défaut de l'image, cf glClearColor( ),
+    - la profondeur par défaut du zbuffer, cf glClearDepthf( ),
+    - le test de profondeur, cf glEnable/Disable(GL_DEPTH_TEST),
+    - l'élimination des faces arrières, cf glEnable/Disable(GL_CULL_FACE),
+    - la description des attributs des sommets, sélectionner un vertex array, cf glBindVertexArray( ),
+    - un shader program, sélectionner un shader program, cf glUseProgram( )
+    
+glClearColor() et glClearDepthf() définissent les valeurs par défaut utilisées pour "éffacer" l'image et le zbuffer, avec glClear( ). 
+la taille de l'image est fournie par glViewport( ). 
+pour une application simple, il suffit de fixer les valeurs une fois dans init( ) :
+\code
+glClearColor(0.2f, 0.2f, 0.2f);
+glClearDepthf(1.0f);
+glViewport(0, 0, window_width(), window_height());
+\endcode
+
+_remarque :_ si la fenetre de l'application change de dimension, il ne faut pas oublier de modifier glViewport(). 
+si vous utilisez run( ) de window.h, c'est fait automatiquement.
+
+et d'effacer l'image et le zbuffer au début de draw( ):
+\code
+glClear(GL_COLOR_BUFFER_BIT);   // effacer l'image
+glClear(GL_DEPTH_BUFFER_BIT);   // effacer le zbuffer, si nécessaire
+\endcode
+on peut combiner les deux, avec un OU logique :
+\code
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // effacer l'image et le zbuffer
+\endcode
+
+
+## ztest et zbuffer
+
+pour obtenir une visibilité correcte lorsque plusieurs triangles se dessinent sur le même pixel, il faut indiquer lequel garder, celui dont la 
+profondeur est la plus petite, ou la plus grande, ou égale, etc.
+\code
+glDepthFunc(GL_LESS);           // conserver le triangle le plus proche, 
+glDepthFunc(GL_GREATER);        // conserver le triangle le plus loin, 
+glDepthFunc(GL_ALWAYS);         // conserver le dernier triangle dessine 
+\endcode
+
+_remarque :_  pour conserver le triangle le plus loin, avec glDepthFunc(GL_GREATER), il faut initialiser le zbuffer correctement : avec 
+la profondeur la plus petite, c'est à dire 0, dans le repère image, cf \ref intro3d.
+
+glDepthFunc() permet de choisir le test, mais il faut aussi l'activer (ou le désactiver) :
+\code
+glEnable(GL_DEPTH_TEST);        // activer le ztest
+glDisable(GL_DEPTH_TEST);       // desactiver le ztest
+\endcode
+
+
+## élimination des faces arrières / back face culling
+
+lorsque les triangles décrivent la surface d'un objet opaque, les triangles à l'arrière de l'objet ne sont pas visibles, il est assez simple de les 
+détecter, cf \ref intro3d, par contre, il faut donner l'orientation normale des faces, trigo ou horaire, et choisir lesquelles on veut supprimer 
+(avant ou arrière) et enfin, activer le test :
+
+\code
+glFrontFace(GL_CCW);            // les faces visibles / avant sont dans le sens trigo / counter clockwise
+glFrontFace(GL_CW);             // les faces visibles / avant sont dans le sens horaire / clockwise
+\endcode
+\code
+glCullFace(GL_BACK);            // eliminer les faces arrieres
+glCullFace(GL_FRONT);           // ou les faces avant ?
+\endcode
+
+\code
+glEnable(GL_CULL_FACE);         // activer le test
+glDisable(GL_CULL_FACE);        // desactiver le test
+\endcode
+
+le test pour éliminer les faces arrières standards s'écrit :
+\code
+glFrontFace(GL_CCW);
+glCullFace(GL_BACK);
+glEnable(GL_CULL_FACE);
+\endcode
+
+
+## attributs de sommets, vertex array object, vao
+
+pour dessiner des triangles, il faut décrire les informations associées aux sommets, indiquer ou les trouver, leur organisation mémoire, 
+et indiquer à quelles entrées du vertex shader elles sont associées.
+
+le cas général est présenté dans \ref tuto4GL, pour l'instant, la solution simple utilise un tableau uniform déclaré par le vertex shader, et 
+aucune description de format de sommet n'est nécessaire. c'est un objet openGL, appelé vertex array object qui stocke cette description.
+il suffit donc de créer un vertex array object vide / par défaut.
+
+la création des objets openGL utilise des fonctions de la forme glGenXXX( int n, GLuint *names ). cette famille de fonctions permet de créer 
+plusieurs objets en même temps et renvoye un tableau d'identifiants des nouveaux objets. pour en créer un seul, on peut utiliser :
+\code
+GLuint vao;
+glGenVertexArrays(1, &vao);
+\endcode
+
+il ne reste plus qu'à le sélectionner pour configurer le pipeline :
+\code
+glBindVertexArray(vao);
+\endcode
+
+
+## uniforms et shader program
+
+après avoir compilé et linké un shader program, cf \ref tuto2GL, il faut le sélectionner pour configurer le pipeline :
+\code
+GLuint program= read_program("...");
+glUseProgram(program);
+\endcode
+
+avant de pouvoir dessiner, il faut affecter une valeur à tous les uniforms utilisés par le shader program. l'affectation se fait en 2 étapes :
+    - récupérer l'identifiant du paramètre uniform, cf glGetUniformLocation( ),
+    - affecter une valeur en utilisant la bonne fonction de la (grande) famille glUniform( ),
+
+__attention :__ il ne faut pas oublier que glUniform() affecte une valeur à un uniform du program actuellement sélectionné par glUseProgram()...
+
+\ref tuto3GL.glsl déclare 3 uniforms : 
+    - uniform float time;
+    - uniform vec4 color;
+    - uniform vec3 positions[36];
+
+la démarche est identique dans les 3 cas, même pour le tableau. par contre, il faut utiliser la bonne version de glUniform() à chaque fois.
+
+pour time, 1 float, il faut utiliser glUniform1f() pour l'affectation (cf \ref interfaceC pour les conventions de nommage) :
+\code
+GLint location= glGetUniformLocation(program, "time");
+glUniform1f(location, 12);
+\endcode
+
+pour color, 4 float, il faut utiliser... glUniform4f() :
+\code
+GLint location= glGetUniformLocation(program, "color");
+glUniform4f(location, 1, 1, 1, 1);
+\endcode
+
+pour le tableau positions, les éléments du tableau sont des vec3. pour un seul vec3, on utiliserait glUniform3f( ), pour un tableau, les valeurs
+sont passées par pointeur, et c'est la variante glUniform3fv(location, size, data) qu'il faut utiliser. size indique le nombre d'élements vec3 à transférer.
+
+\code
+#include "vec.h"
+
+vec3 data[36]= { ... };
+
+GLint location= glGetUniformLocation(program, "positions");
+glUniform3fv(location, 36, data);
+\endcode
+
+_remarque :_ on peut utiliser les variantes pointeurs pour une valeur unique, il suffit de donner 1 comme nombre d'éléments à affecter.
+par exemple :
+\code
+float data= 12;
+GLint location= glGetUniformLocation(program, "time");
+glUniform1fv(location, 1, &data);
+\endcode
+ou encore 
+\code
+#include "color.h"
+
+Color data= make_color(1, 1, 1);
+GLint location= glGetUniformLocation(program, "color");
+glUniform4fv(location, 1, &data);
+\endcode
+
+\ref program.h définit plusieurs surcharges de la famille glUniform() pour les types les plus courants.
+\code
+#include "program.h"
+
+program_uniform(program, "time", 12);
+program_uniform(program, "color", make_color(1, 1, 1));
+\endcode
+
+## glDraw( )
+
+on peut enfin dessiner les 12 triangles, c'est à dire les indices de 0 à 36.
+
+\code
+glDrawArrays(GL_TRIANGLES, 0, 36);
+\endcode
+
+l'exemple complet est dans \ref tuto3GL.cpp 
+
+ */
