@@ -1,10 +1,6 @@
 
 //! \file shader_kit.cpp shader_kit light, bac a sable fragment shader, cf shader_toy 
 
-#include <fstream>
-#include <sstream>
-#include <string>
-
 #define GLEW_NO_GLU
 #include "GL/glew.h"
 
@@ -24,8 +20,18 @@
 #include "widgets.h"
 
 
+// utilitaire
+struct Filename
+{
+    char path[1024];
+    
+    Filename( ) { path[0]= 0; }
+    Filename( const char *_filename ) { strcpy(path, _filename); }
+    operator const char *( ) { return path; }
+};
+
 // program
-char program_filename[1024]= { 0 };
+Filename program_filename;
 GLuint program;
 
 // affichage des erreurs
@@ -33,12 +39,13 @@ std::string program_log;
 int program_area;
 bool program_failed;
 
-
-//~ GLuint texture;
-char mesh_filename[1024]= { 0 };
+Filename mesh_filename;
 Mesh mesh;
-GLuint vao;
 unsigned int vertex_count;
+GLuint vao;
+
+std::vector<Filename> texture_filenames;
+std::vector<GLuint> textures;
 
 Orbiter camera;
 Widgets widgets;
@@ -53,23 +60,29 @@ void reload_program( )
         reload_program(program, program_filename);
     
     // recupere les erreurs, si necessaire
-    program_format_errors(program, program_log);
+    program_area= program_format_errors(program, program_log);
+    //~ if(program_area > 10 )
+        //~ program_area= program_area - 10;
+    
     if(program_log.size() > 0)
         printf("[boom]\n%s\n", program_log.c_str());
     
     program_failed= (program_log.size() > 0);
-    program_area= 1;
 }
 
 
 // cherche un fichier avec l'extension ext dans les options
-const char *option_find( const int argc, const char **argv, const char *ext )
+const char *option_find( std::vector<const char *>& options, const char *ext )
 {
-    for(int i= 1; i < argc; i++)
+    for(unsigned int i= 0; i < (unsigned int) options.size() ; i++)
     {
-        std::string option(argv[i]);
-        if(option.rfind(ext) != std::string::npos)
-            return argv[i];
+        if(std::string(options[i]).rfind(ext) != std::string::npos)
+        {
+            const char *option= options[i];
+            options[i]= options.back();
+            options.pop_back();
+            return option;
+        }
     }
     
     return NULL;
@@ -77,7 +90,7 @@ const char *option_find( const int argc, const char **argv, const char *ext )
 
 //! compile les shaders et construit le programme + les buffers + le vertex array.
 //! renvoie -1 en cas d'erreur.
-int init( const int argc, const char **argv )
+int init( std::vector<const char *>& options )
 {
     widgets= create_widgets();
     
@@ -85,23 +98,25 @@ int init( const int argc, const char **argv )
     
     program= 0;
     const char *option;
-    option= option_find(argc, argv, ".glsl");
+    option= option_find(options, ".glsl");
     if(option != NULL)
     {
-        strcpy(program_filename, option);
+        //~ strcpy(program_filename, option);
+        program_filename= Filename(option);
         reload_program();
     }
     
     glGenVertexArrays(1, &vao);
     vertex_count= 3;
     
-    option= option_find(argc, argv, ".obj");
+    option= option_find(options, ".obj");
     if(option != NULL)
     {
         mesh= read_mesh(option);
         if(mesh.positions.size() > 0)
         {
-            strcpy(mesh_filename, option);
+            //~ strcpy(mesh_filename, option);
+            mesh_filename= Filename(option);
             
             vao= make_mesh_vertex_format(mesh);
             vertex_count= (unsigned int) mesh.positions.size();
@@ -109,6 +124,17 @@ int init( const int argc, const char **argv )
             Point pmin, pmax;
             mesh_bounds(mesh, pmin, pmax);
             orbiter_lookat(camera, center(pmin, pmax), distance(pmin, pmax));
+        }
+    }
+    
+    // charge les textures, si necessaire
+    for(unsigned int i= 0; i < (unsigned int) options.size(); i++)
+    {
+        GLuint texture= read_texture(0, options[i]);
+        if(texture > 0)
+        {
+            texture_filenames.push_back(Filename(options[i]));
+            textures.push_back(texture);
         }
     }
     
@@ -137,10 +163,9 @@ int init( const int argc, const char **argv )
 int quit( )
 {
     release_widgets(widgets);
-    // detruit les objets openGL
-    //~ glDeleteTextures(1, &texture);
-    glDeleteVertexArrays(1, &vao);
     release_program(program);
+    // detruit les objets openGL
+    glDeleteVertexArrays(1, &vao);
     return 0;
 }
 
@@ -202,6 +227,13 @@ int draw( )
         program_uniform(program, "motion", make_vec3(mx, my, mb & SDL_BUTTON(1)));
         program_uniform(program, "mouse", make_vec3(mousex, mousey, mb & SDL_BUTTON(1)));
         
+        for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
+        {
+            char uniform[1024];
+            snprintf(uniform, sizeof(uniform), "texture%d", i);
+            program_use_texture(program, uniform, i, textures[i]);
+        }
+        
         glDrawArrays(GL_TRIANGLES, 0, vertex_count);
     }
     
@@ -215,20 +247,25 @@ int draw( )
     begin(widgets);
     if(program_failed)
     {
-        label(widgets, "[error] program '%s'", program_filename);
+        label(widgets, "[error] program '%s'", program_filename.path);
         begin_line(widgets);
         text_area(widgets, 20, program_log.c_str(), program_area);
     }
     else
     {
-        label(widgets, "program '%s' running...", program_filename);
+        label(widgets, "program '%s' running...", program_filename.path);
         if(mesh_filename[0] != 0)
         {
             begin_line(widgets);
-            label(widgets, "mesh '%s', %u positions, %u texcoords, %u normals", mesh_filename, 
+            label(widgets, "mesh '%s', %u positions, %u texcoords, %u normals", mesh_filename.path, 
                 (unsigned int) mesh.positions.size(),
                 (unsigned int) mesh.texcoords.size(),
                 (unsigned int) mesh.normals.size());
+        }
+        for(unsigned int i= 0; i < (unsigned int) texture_filenames.size(); i++)
+        {
+            begin_line(widgets);
+            label(widgets, "texture%u '%s'", i, texture_filenames[i].path);
         }
     }
     end(widgets);
@@ -256,7 +293,8 @@ int main( const int argc, const char **argv )
         return 1;
     
     // creation des objets opengl
-    if(init(argc, argv) < 0)
+    std::vector<const char *> options(argv + 1, argv + argc);
+    if(init(options) < 0)
     {
         printf("[error] init failed.\n");
         return 1;
