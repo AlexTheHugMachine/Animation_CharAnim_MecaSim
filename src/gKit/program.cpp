@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 
+#include <climits>
 #include <cstdio>
 #include <cassert>
 
@@ -202,9 +203,11 @@ void print_line( std::string& errors, const char *source, const int begin_id, co
 }
 
 static
-void print_errors( std::string& errors, const char *log, const char *source )
+int print_errors( std::string& errors, const char *log, const char *source )
 {
     printf("[error log]\n%s\n", log);
+    
+    int first_error= INT_MAX;
     int last_string= -1;
     int last_line= -1;
     for(int i= 0; log[i] != 0; i++)
@@ -218,6 +221,9 @@ void print_errors( std::string& errors, const char *log, const char *source )
         {
             if(string_id != last_string || line_id != last_line)
             {
+                // conserve la premiere erreur
+                first_error= std::min(first_error, line_id);
+                
                 // extrait la ligne du source...
                 errors.append("\n");
                 print_line(errors, source, last_line +1, line_id);
@@ -238,6 +244,8 @@ void print_errors( std::string& errors, const char *log, const char *source )
     errors.append("\n");
     print_line(errors, source, last_line +1, 1000);
     errors.append("\n");
+    
+    return first_error;
 }
 
 int program_format_errors( const GLuint program, std::string& errors )
@@ -245,12 +253,17 @@ int program_format_errors( const GLuint program, std::string& errors )
     errors.clear();
     
     if(program == 0)
+    {
+        errors.append("[error] no program...\n");
         return -1;
+    }
     
     GLint status;
     glGetProgramiv(program, GL_LINK_STATUS, &status);
     if(status == GL_TRUE) 
         return 0;
+    
+    int first_error= INT_MAX;
     
     // recupere les shaders
     int shaders_max= 0;
@@ -284,11 +297,11 @@ int program_format_errors( const GLuint program, std::string& errors )
                 errors.append("shader...\n");
             
             // formatte les erreurs
-            print_errors(errors, &log.front(), &source.front());
+            first_error= std::min(first_error, print_errors(errors, &log.front(), &source.front()));
         }
     }
     
-    return 0;
+    return first_error;
 }
 
 int program_print_errors( const GLuint program )
@@ -413,7 +426,11 @@ void program_uniform( const GLuint program, const char *uniform, const Transform
 
 void program_use_texture( const GLuint program, const char *sampler, const int unit, const GLuint texture )
 {
+    int id= location(program, sampler);
+    if(id < 0)
+        return;
+    
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, texture);
-    program_uniform(program, sampler, unit);
+    glUniform1i(id, unit);
 }
