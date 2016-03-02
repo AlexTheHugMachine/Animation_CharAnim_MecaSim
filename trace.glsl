@@ -12,7 +12,6 @@ void main( )
     position= positions[gl_VertexID];
     gl_Position= vec4(positions[gl_VertexID], 0, 1);
 }
-
 #endif
 
 #ifdef FRAGMENT_SHADER
@@ -39,6 +38,9 @@ float sphere( const in vec3 o, const in vec3 d, const in vec3 center, const in f
     
     h= sqrt(h);
     float t1= (-b - h);
+    
+/*  solution classique avec les 2 racines :
+ */
     float t2= (-b + h);
     if(t1 <= 0 && t2 <= 0)
         return inf;
@@ -46,7 +48,14 @@ float sphere( const in vec3 o, const in vec3 d, const in vec3 center, const in f
         return min(t1, t2) / dot(d, d); // plus petite racine postive
     else
         return max(t1, t2) / dot(d, d); // racine positive
-        
+
+/*  solution courte : si l'origine du rayon est a l'exterieur de la sphere... 
+    if(t1 < 0)
+        return inf;
+    else
+        return t1 / dot(d, d);
+ */
+
     // on peut simplifier si la direction du rayon est normalisee, dot(d, d) == 1...
 }
 
@@ -120,5 +129,4 @@ void main( )
         fragment_color= vec4(abs(normalize(d)), 1);
     
 }
-
 #endif
