@@ -28,13 +28,20 @@ float sphere( const in vec3 o, const in vec3 d, const in vec3 center, const in f
 {
     vec3 oc= o - center;
     float b= dot(oc, d);
-
     float c= dot(oc, oc) - radius*radius;
     float h= b*b - dot(d, d) * c;
     if(h < 0.0) return inf;
-    h = sqrt(h);
-    return (-b - h) / dot(d, d);
     
+    h= sqrt(h);
+    float t1= (-b - h);
+    float t2= (-b + h);
+    if(t1 <= 0 && t2 <= 0)
+        return inf;
+    else if(t1 > 0 && t2 > 0)
+        return min(t1, t2) / dot(d, d); // plus petite racine postive
+    else
+        return max(t1, t2) / dot(d, d); // racine positive
+        
     // on peut simplifier si la direction du rayon est normalisee, dot(d, d) == 1...
 }
 
@@ -46,12 +53,29 @@ float plane( const in vec3 o, const in vec3 d, const in vec3 anchor, const in ve
 }
 
 
-float object( const in vec3 o, const in vec3 d )
+bool object( const in vec3 o, const in vec3 d, out float t, out vec3 n )
 {
-    float t1= sphere(o, d, vec3(0, 0, 0), 0.5);
+    vec3 center= vec3(0, 0, 0);
+    float radius= 0.6;
+    float t1= sphere(o, d, center, radius);
     float t2= plane(o, d, vec3(0, -1, 0), vec3(0, 1, 0));
     
-    return min(t1, t2);
+    if(t1 < inf && t1 < t2)
+    {
+        n= normalize(o + t1*d - center); 
+        t= t1;
+        return true;
+    }
+    else if(t2 < inf && t2 < t1)
+    {
+        n= vec3(0, 1, 0);
+        t= t2;
+        return true;
+    }
+    
+    n= vec3(0, 0, 1);
+    t= inf;
+    return false;
 }
 
 uniform mat4 mvpInvMatrix;
@@ -70,20 +94,28 @@ void main( )
     // origine et direction
     vec3 o= oh.xyz / oh.w;                              // origine
     vec3 d= eh.xyz / eh.w - oh.xyz / oh.w;              // direction
+    d= normalize(d);
     
-    float t= object(o, d);
-    vec3 p= o + t*d;
-    // calculer correctement la normale de l'intersection...
-    vec3 n= normalize(cross(
-        normalize(dFdx( vec3(mvMatrix * vec4(p, 1)) )), 
-        normalize(dFdy( vec3(mvMatrix * vec4(p, 1)) ))
-    ));
-    
-    float shadow= object(p + n * 0.01, vec3(0, 1, 0));
-    if(shadow < 1.0)
-        fragment_color= vec4(0, 0, 0, 1);
+    vec3 n;
+    float t;
+    if(object(o, d, t, n))
+    {
+        vec3 p= o + t*d;
+        vec3 light= normalize(vec3(2, 1, 0));
+        vec3 shadown;
+        float shadow;
+        bool hit= object(p + n * 0.001, light, shadow, shadown);
+        
+        vec3 color= vec3(1, 1, 1) * abs(dot(n, light));
+        if(hit)
+            fragment_color= vec4(color*0.3, 1);
+        else
+            fragment_color= vec4(color, 1);
+    }
     else
-        fragment_color= vec4(abs(n), 1);
+        // env map
+        fragment_color= vec4(abs(normalize(d)), 1);
+    
 }
 
 #endif
