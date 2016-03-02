@@ -7,8 +7,11 @@
 GLuint make_buffer( const GLenum target, const int data_size, const void *data )
 {
     if(data_size == 0)
+    {
+        printf("[error] 0B vertex buffer...\n");
         return 0;
-
+    }
+    
     GLuint buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(target, buffer);
@@ -64,7 +67,7 @@ GLuint make_vertex_buffer( const GLuint vao, const GLint attribute, const int si
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint *) &current);
     if(current != vao)
     {
-        printf("invalid vertex array %u...\n", current);
+        printf("[error] wrong vertex array %u...\n", current);
         glBindVertexArray(vao);
     }
 #endif
@@ -87,7 +90,7 @@ GLuint make_index_buffer( const GLuint vao, const int data_size, const void *dat
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint *) &current);
     if(current != vao)
     {
-        printf("invalid vertex array %u...\n", current);
+        printf("[error] wrong vertex array %u...\n", current);
         glBindVertexArray(vao);
     }
 #endif
