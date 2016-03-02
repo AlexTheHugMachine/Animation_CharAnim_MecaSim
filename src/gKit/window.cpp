@@ -100,11 +100,16 @@ int draw( );    //!< declaration anticipee.
 
 int run( Window window )
 {
+    // configure sdl
     SDL_StartTextInput();
 
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
     last_drop= std::string();
     
+    // configure openGL
+    glViewport(0, 0, width, height);
+    
+    // run
     int stop= 0;
     while(stop == 0)
     {
@@ -177,7 +182,7 @@ int run( Window window )
 
         // dessiner
         if(draw() < 1)
-            stop= 0;    // fermer l'application si draw() renvoie 0 ou -1...
+            stop= 1;    // fermer l'application si draw() renvoie 0 ou -1...
         
         // presenter le resultat
         SDL_GL_SwapWindow(window);
