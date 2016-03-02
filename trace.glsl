@@ -17,6 +17,11 @@ void main( )
 
 #ifdef FRAGMENT_SHADER
 
+uniform float time;
+uniform vec3 motion;    // x, y, button > 0
+uniform vec3 mouse;     // x, y, button > 0
+uniform vec2 viewport;
+
 /*
 catalogue de fonctions sur les spheres :
 http://www.iquilezles.org/www/articles/spherefunctions/spherefunctions.htm
@@ -55,10 +60,10 @@ float plane( const in vec3 o, const in vec3 d, const in vec3 anchor, const in ve
 
 bool object( const in vec3 o, const in vec3 d, out float t, out vec3 n )
 {
-    vec3 center= vec3(0, 0, 0);
+    vec3 center= vec3(0, 0, 0) + vec3(cos(time / 1000), sin(time / 4000) /2, sin(time / 1000));
     float radius= 0.6;
     float t1= sphere(o, d, center, radius);
-    float t2= plane(o, d, vec3(0, -1, 0), vec3(0, 1, 0));
+    float t2= plane(o, d, vec3(0, -0.5, 0), vec3(0, 1, 0));
     
     if(t1 < inf && t1 < t2)
     {
@@ -87,7 +92,7 @@ out vec4 fragment_color;
 
 void main( )
 {
-    // construction du rayon pour le pixel
+    // construction du rayon pour le pixel, passage depuis le repere projectif
     vec4 oh= mvpInvMatrix * vec4(position, 0, 1);       // origine sur near
     vec4 eh= mvpInvMatrix * vec4(position, 1, 1);       // extremite sur far
     
@@ -106,11 +111,9 @@ void main( )
         float shadow;
         bool hit= object(p + n * 0.001, light, shadow, shadown);
         
-        vec3 color= vec3(1, 1, 1) * abs(dot(n, light));
-        if(hit)
-            fragment_color= vec4(color*0.3, 1);
-        else
-            fragment_color= vec4(color, 1);
+        vec3 color= vec3(1, 0.9, 0.9) * abs(dot(n, light));
+        if(hit) color= color*0.3;
+        fragment_color= vec4(color, 1);
     }
     else
         // env map
