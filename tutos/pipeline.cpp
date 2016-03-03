@@ -41,7 +41,7 @@ struct ZBuffer
 struct Fragment
 {
     float x, y, z;  // coordonnees espace image
-    float u, v, w;  // coordonnees barycentriques du fragment dans le triangle, p(u, v, w) = u * a + v * b + w * c;
+    float u, v, w;  // coordonnees barycentriques du fragment dans le triangle abc, p(u, v, w) = u * c + v * a + w * b;
 };
 
 
@@ -51,9 +51,15 @@ struct Pipeline
     Pipeline( ) {}
     virtual ~Pipeline( ) {}
     
+    // vertex shader, doit renvoyer les coordonnees du sommet dans le repere projectif
     virtual Point vertex_shader( const int vertex_id ) const = 0;
     
-    virtual Color fragment_shader( const int primitive_id, const Fragment fragment ) const = 0;
+    // fragment shader, doit renvoyer la couleur du fragment de la primitive
+    // doit interpoler lui meme les "varyings", fragment.uvw definissent les coefficients.
+    virtual Color fragment_shader( const int primitive_id, Fragment& fragment ) const = 0;
+    // pour simplifier le code, les varyings n'existent pas dans cette version,
+    // il faut recuperer les infos des sommets de la primitive et faire l'interpolation.
+    // remarque : les gpu amd gcn fonctionnent comme ca...
 };
 
 // pipeline simple
@@ -75,22 +81,32 @@ struct BasicPipeline : public Pipeline
     
     Point vertex_shader( const int vertex_id ) const
     {
+        // recupere la position du sommet
         Point p= make_point( mesh.positions[vertex_id] );
+        // renvoie les coordonnees dans le repere projectif
         return transform(mvp, p);
     }
     
-    Color fragment_shader( const int primitive_id, const Fragment fragment ) const
+    Color fragment_shader( const int primitive_id, Fragment& fragment ) const
     {
+        // recuperer les normales des sommets de la primitive
         Vector a= transform(mv, make_vector( mesh.normals[primitive_id * 3] ));
         Vector b= transform(mv, make_vector( mesh.normals[primitive_id * 3 +1] ));
         Vector c= transform(mv, make_vector( mesh.normals[primitive_id * 3 +2] ));
         
+        // interpoler la normale
         Vector n= fragment.u * c + fragment.v * a + fragment.w * b;
+        // et la normaliser, l'interpolation ne conserve pas la longueur des vecteurs
         n= normalize(n);
+        
+        // calcule une couleur qui depend de l'orientation de la primitive par rapport a la camera
         return make_color(1, 0.5, 0) * std::abs(n.z);
-        //~ return make_color(std::abs(n.x), std::abs(n.y), std::abs(n.z));
+        
+        // on peut faire autre chose, par exemple, afficher la normale...
+        // return make_color(std::abs(n.x), std::abs(n.y), std::abs(n.z));
     }
 };
+
 
 struct Edge
 {
@@ -157,7 +173,12 @@ int main( void )
         b= transform(viewport, b);
         c= transform(viewport, c);
         
-        // dessiner le triangle, solution naive, parcours tous les pixels de l'image, peut mieux faire...
+        // question: comment ne pas dessiner le triangle s'il est mal oriente ?
+        
+        // dessiner le triangle
+        // solution naive, parcours tous les pixels de l'image
+        // question : comment eviter de tester tous les pixels ? 
+        // indice : il est sans doute possible de determiner que le triangle ne touche pas un bloc de pixels en ne testant que les coins...
         for(int y= 0; y < color.height; y++)
         for(int x= 0; x < color.width; x++)
         {
@@ -172,11 +193,12 @@ int main( void )
             frag.y= y;
             frag.z= 0; // interpole plus tard
             
-            frag.u= ab.eval(x, y); // distance c / ab
-            frag.v= bc.eval(x, y); // distance a / bc
-            frag.w= ca.eval(x, y); // distance b / ac
+            frag.u= ab.eval(x, y);      // distance c / ab
+            frag.v= bc.eval(x, y);      // distance a / bc
+            frag.w= ca.eval(x, y);      // distance b / ac
             if(frag.u > 0 && frag.v > 0 && frag.w > 0)
             {
+                // aire du triangle abc
                 float area= length(cross( make_vector(a, b), make_vector(a, c) ));
                 // normalise les coordonnees barycentriques du fragment
                 frag.u= frag.u / area;
@@ -188,11 +210,16 @@ int main( void )
                 // evalue la couleur du fragment du triangle
                 Color frag_color= pipeline.fragment_shader(i/3, frag);
                 
+                // ztest
                 if(frag.z < depth(x, y))
                 {
                     image_set_pixel(color, x, y, frag_color);
                     depth(x, y)= frag.z;
                 }
+                
+                // question : pour quelle raison le ztest est-il fait apres l'execution du fragment shader ? est-ce obligatoire ?
+                // question : peut on eviter d'executer le fragment shader sur un bloc de pixels couverts par le triangle ? 
+                //   dans quelles conditions sait-on qu'il n'y a rien a dessiner dans un bloc de pixels ?
             }
         }
     }

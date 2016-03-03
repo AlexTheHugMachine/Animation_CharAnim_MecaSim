@@ -9,8 +9,45 @@
 //! \addtogroup application 
 ///@{
 
-//! \file
-//! console texte.
+/*! \file
+console texte minimaliste de taille fixe : 24 lignes et 128 colonnes.
+
+permet de placer une chaine de caracteres n'importe ou dans la console. utilise la meme convention que printf().
+
+exemple :
+\code
+#include "text.h"
+
+Text console;
+
+int init( )
+{
+    console= create_text()
+    ...
+}
+
+int quit( )
+{
+    release_text(console);
+    ...
+}
+
+int draw( ) 
+{
+    // effacer la console
+    clear(console);
+    // afficher
+    printf(console, 0, 0, "en haut a gauche");
+    printf(console, 0, 23, "en bas a gauche");
+    printf(console, 0, 10, "au mileu, int= %d string= %s", 10, "coucou");
+    printf(console, 0, 12, "et\n avec\n   plusieurs\n    lignes ?")
+    
+    // dessiner la console
+    draw(console, window_width(), window_height());
+    ...
+}
+\endcode    
+ */
 
 //! representation d'une console texte, dimension fixe, 24 lignes de 128 colonnes.
 struct Text

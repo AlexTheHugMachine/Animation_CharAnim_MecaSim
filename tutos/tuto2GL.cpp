@@ -98,6 +98,18 @@ int init( )
         return -1;
 }
 
+
+// destruction des objets openGL
+int quit( )
+{
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+    glDeleteProgram(program);
+    glDeleteVertexArrays(1, &vao);
+    return 0;   // ras, pas d'erreur
+}
+
+
 // affichage
 int draw( )
 {
@@ -115,16 +127,6 @@ int draw( )
     glDrawArrays(GL_TRIANGLES, 0, 3);
     
     return 1;   // on continue, renvoyer 0 pour sortir de l'application
-}
-
-// destruction des objets openGL
-int quit( )
-{
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
-    glDeleteProgram(program);
-    
-    return 0;   // ras, pas d'erreur
 }
 
 

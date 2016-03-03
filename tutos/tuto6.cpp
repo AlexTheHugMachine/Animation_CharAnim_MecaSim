@@ -1,5 +1,5 @@
 
-// tuto6 : dessiner un objet texture 
+//! \file tuto6.cpp dessiner un objet texture 
 // utiliser mesh pour charger un objet .obj 
 // camera pour le dessiner du point de vue d'une camera + controle de la camera a la souris
 // texture : creation a partir d'un fichier, utilisation avec draw(mesh, ...) et destruction avec glDeleteTextures( )

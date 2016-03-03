@@ -8,7 +8,7 @@
 ///@{
 
 //! \file
-//! squelette d'application: creation d'une fenetre, d'un contexte openGL et gestion des evenements.
+//! squelette d'application: creation d'une fenetre, d'un contexte openGL et gestion des evenements. cf tuto1.cpp pour un exemple complet.
 
 typedef SDL_Window *Window;
 

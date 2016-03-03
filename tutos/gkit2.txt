@@ -1,0 +1,35 @@
+
+/*! \mainpage gKit2light
+
+gKit2light est une base de code permettant d'écrire des applications utilisant openGL.
+
+elle est composée de plusieurs utilitaires :
+    - window.h fournit un squelette d'application, 
+    - mesh.h permet de décrire et d'afficher des triangles,
+    - image.h et color.h permettent de charger, d'enregistrer et de manipuler des images, pixel par pixel,
+    - vec.h et mat.h définissent des vecteurs, des matrices pour manipuler des transformations, des points, des vecteurs,
+    - program.h permet de compiler facilement des shaders,
+    - orbiter.h permet de déplacer une caméra autour d'un objet pour l'observer, draw.h affiche un mesh pour une caméra, 
+    - wavefront.h permet de charger des fichiers .obj et renvoie un mesh,
+    - text.h permet d'afficher directement du texte sur la fenetre de l'application,
+    - widgets.h permet de controler l'application avec une interface graphique minimaliste.
+
+mais il y a aussi pas mal de tutos :
+    - \ref tuto_application,
+    - tuto2.cpp utilisation de mesh pour décrire les sommets d'un ou plusieurs triangles et les dessiner,
+    - tuto3.cpp transformations, rotation d'un triangle dans l'image,
+    - tuto4.cpp utiliser une camera pour observer un objet,
+    - tuto5.cpp charger un fichier .obj, utiliser une camera pour l'observer et controler la camera à la souris,
+    - tuto6.cpp idem tuto5, charge une texture et la plaque sur l'objet dessiné.
+    
+plus ceux dédiés à openGL :
+    - \ref intro3d,
+    - \ref glsl,
+    - \ref interfaceC,
+    - \ref tuto2GL,
+    - \ref tuto3GL,
+    - \ref tuto4GL
+    
+et un utilitaire pour jouer avec les shaders, shader_kit, décrit dans \ref tuto2GL.
+
+ */

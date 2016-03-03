@@ -72,6 +72,7 @@ autre exemple d'utilisation : faire une capture d'écran de l'application
 
 \code
 #include "window.h"
+#include "texture.h"
 
 int draw( )
 {

@@ -106,7 +106,7 @@ int init( )
     
     PPPPPPPPNNNNNNNN
     
-    offset(positions)= 0;
+    offset(position)= 0;
     stride(position)= 0; // par definition stride(position) == sizeof(vec3)
     
     offset(normal)= sizeof(vec3) * size(positions);

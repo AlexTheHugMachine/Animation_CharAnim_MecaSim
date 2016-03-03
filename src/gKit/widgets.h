@@ -10,13 +10,15 @@
 /*! \file
 interface graphique minimaliste.
 les elements sont disposes sur une grille de la droite vers la gauche.
-pour changer de ligne, utiliser begin_line( ) / end_line( ).
+pour changer de ligne, utiliser begin_line( ).
 
 les elements interactifs renvoient vrai lorsqu'ils changent d'etat. 
 par exemple, un bouton renvoie vrai lorsque l'on clique dessus. son etat (selectionne ou pas) est stocke dans une variable passee en parametre.
 
 dans l'exemple suivant, des widgets differents sont affiches selon qu'un bouton est selectionne ou pas.
 \code
+#include "widgets.h"
+
 Widgets widgets;
 int click;
 
@@ -40,17 +42,15 @@ int draw( )
     
     begin(widgets);
         begin_line(widgets);
-            label(widgets, "texte");
-            label(widgets, "texte formate %d", 10);
-            
-            button(widgets, "cliquez ici", click);
-            if(click)
-            {
-                begin_line(widgets);
-                    label(widgets, "ahah tu as clique...");
-                end_line(widgets);
-            }
-        end_line(widgets);
+        label(widgets, "texte");
+        label(widgets, "texte formate %d", 10);
+        
+        button(widgets, "cliquez ici", click);
+        if(click)
+        {
+            begin_line(widgets);
+            label(widgets, "ahah tu as clique...");
+        }
     end(widgets);
     
     // afficher l'interface

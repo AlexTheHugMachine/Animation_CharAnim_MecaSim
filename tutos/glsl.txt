@@ -1,0 +1,164 @@
+
+/*! \addtogroup glsl shaders et GLSL 
+
+le pipeline a besoin d'un vertex shader et d'un fragment shader pour fonctionner, repassez dans \ref intro3d si nécessaire, et 
+dans \ref tuto2GL pour savoir comment les compiler, et \ref tuto3GL pour afficher simplement quelques triangles (un cube, par exemple).
+
+## présentation GLSL
+
+GLSL est le langage permettant d'écrire des shaders, il est très proche du C/C++, avec quelques limitations :
+    - pas de pointeurs,
+    - pas de fonctions récursives,
+    - des tableaux, mais une dimension,
+    - des structs, mais pas d'heritage,
+    - pas de passage de valeur par référence, mais par copie.
+    
+les types de base sont classiques : int, uint, bool, float, mais les vecteurs et les matrices sont définies ainsi que leurs opérations :
+    - vec2, vec3, vec4 : pour des vecteurs à 2, 3, 4 composantes float,
+    - ivec2, ivec3, ivec4 : pour des vecteurs d'entiers,
+    - uvec2, uvec3, uvec4 : pour des vecteurs d'entiers non signés,
+    - bvec2, bvec3, bvec4 : pour des vecteurs de bool,
+    - mat2, mat3, mat4 : pour les matrices 2x2, 3x3 et 4x4.
+
+la librairie standard contient à peu près tout ce qui est nécessaire pour des calculs graphiques, consultez la doc officielle :
+[openGL SDK](https://www.opengl.org/sdk/docs/man/),
+par exemple les produits de matrices, les produits matrices / vecteurs... 
+
+l'initialisation des vecteurs, matrices et vecteurs n'utilise pas toujours la même syntaxe que le C++, par exemple :
+\code
+vec3 point;
+point= vec3(1, 1, 1);
+vec3 extremite= vec3(1, 0, 0);  // vec3 extremite(1, 0, 0); n'existe pas
+vec3 direction= extremite - point;
+
+mat4 m= mat4( vec4(....), vec4(...), vec4(...), vec4(...) );
+
+vec3 positions[3]= vec3[3]( vec3(-0.5, -0.5, 0), vec3(0.5, -0.5, 0), vec3(0, 0.5, 0) );
+\endcode
+
+la déclaration des structures est sans surprise :
+\code
+struct Sphere
+{
+    vec3 centre;
+    float rayon;
+};
+
+Sphere scene[4];
+\endcode
+
+les opérateurs sur les vecteurs et les matrices fonctionnent, là encore, sans surprises :
+\code
+vec4 point= vec4( ... );
+mat4 m= mat4( ... );
+vec4 r= m * point;
+
+vec4 q= r + vec4( ... );
+vec4 s= r + point;
+\endcode
+
+l'opérateur de sélection de composantes sur les vecteur est plutôt pratique :
+\code
+vec4 a= vec4( ... );
+vec3 b= a.xyz;
+vec4 c= a.zwxx;
+
+vec3 p= vec3( ... );
+vec3 q.xzy= p.xzy;      // quelle valeur est affectee a q ?
+\endcode
+
+les constructeurs acceptent aussi d'extraire les premières composantes, pour les vecteurs mais aussi pour les matrices :
+\code
+vec4 p= vec4( ... );
+vec3 q= vec3(p);        // ou q= p.xyz;
+
+mat4 m= mat4( ... );
+mat3 t= mat3(m);        // t[0]= vec3(m[0]); t[1]= vec3(m[1]); t[2]= vec3(m[2]);
+\endcode
+
+et ça fonctionne aussi dans l'autre sens, on peut construire un vecteur à partir d'un autre vecteur plus court, plus d'autres valeurs :
+\code
+vec3 position= vec3( ... );
+mat4 mvpMatrix= mat4( ... );
+
+gl_Position= mvpMatrix * vec4(position, 1);     // position 3 floats + un float == 4 floats 
+\endcode
+
+
+### fonctions et passage par copie 
+
+les fonctions (non récursives) s'écrivent sans surprises, la seule différence notable est le passage des paramètres qui utilise des
+mot clés `in`, `out`, `inout` pour indiquer les paramètres d'entrée, de sortie et d'entrée / sortie :
+\code
+void f1( in float a, out float b )
+{
+    b= a + 10;
+}
+
+void f2( in a, inout b )
+{
+    b= a + 2*b;
+}
+\endcode
+
+
+## vertex shader et GLSL
+
+un vertex shader est composée d'une fonction principale, `void main( void )`, et doit écrire les coordonnées des sommets dans 
+une variable globale `gl_Position`. 
+
+les attributs se déclarent en global avec le mot clé `in`, les varyings avec `out`, les constantes 
+initialisées avec `const`.
+
+les variables fournies par l'application sont déclarés avec le mot-clé `uniform` en plus de leur type et de leur nom.
+
+le vertex shader à également accès à des variables définies par le pipeline, elles sont toutes prefixées par `gl_` 
+(cf  [openGL SDK](https://www.opengl.org/sdk/docs/man/), section glsl, lettre g), 
+par exemple : gl_VertexID, l'indice du sommet à traiter.
+
+exemple :
+\code
+// vertex shader de tuto3GL
+
+uniform vec3 positions[36];
+uniform float time;
+
+const vec3 deplace= vec3(...);
+
+void main( )
+{
+    gl_Position= vec4( positions[gl_VertexID] + deplace * time / 1000, 1 );
+    // positions[gl_VertexID] est un vec3 + vec3 * float / float, ce qui donne bien un vec3
+    // et le vec3 est complete par une valeur pour etre affecte a un vec4
+}
+\endcode
+
+le vertex shader déclare, en général, des attributs de sommets initialisés par le pipeline (l'application devra configurer un vertex
+array et créer des buffers, cf \ref tuto4GL) :
+\code
+// vertex shader et attributs
+
+in vec3 position;
+uniform mat4 mvpMatrix;
+
+void main( void )
+{
+    gl_Position= mvpMatrix * vec4(position, 1);
+}
+\endcode
+
+
+## fragment shader et GLSL
+
+le fragment shader est similaire au vertex shader, mais il ne peut pas utiliser les valeurs des attributs, ils ne sont plus accessibles,
+uniquement leurs valeurs interpolées pour le fragment (repassez dans \ref intro3d et \ref pipeline, si ce n'est pas clair)
+
+la couleur du fragment doit être écrite dans `gl_FragColor` ou un varying déclaré par le shader.
+
+un fragment shader peut déclarer des uniforms et des varyings, et accéder à plusieurs variables définies par le pipeline, par exemple :
+    - vec4 gl_FragCoord, les coordonnées dans le repère image du fragment,
+    - int gl_PrimitiveID, l'indice de la primitive, du triangle, traité par le shader,
+    - bool gl_FrontFacing, l'orientation de la primitive traitée par le shader, toujours vrai si les faces arrières sont éliminées avant la fragmentation (cf \ref intro3d).
+
+
+ */

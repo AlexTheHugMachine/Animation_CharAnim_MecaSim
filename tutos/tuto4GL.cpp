@@ -1,5 +1,5 @@
 
-//! \file tuto4GL.cpp affichage d'un maillage + vertex array object + vertex buffer + shader program + uniforms
+//! \file tuto4GL.cpp 
 
 #include "window.h"
 #include "vec.h"
@@ -35,7 +35,7 @@ int init( )
     
     // camera
     Point pmin, pmax;
-    mesh_bounds(mesh, pmin, pmax);
+    bounds(mesh, pmin, pmax);
     
     camera= make_orbiter_lookat(center(pmin, pmax), distance(pmin, pmax));
     

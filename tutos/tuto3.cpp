@@ -1,5 +1,5 @@
 
-// tuto3: utiliser mesh pour dessiner un triangle avec une rotation
+//! \file tuto3.cpp utiliser mesh pour dessiner un triangle avec une rotation
 
 #include "window.h"
 #include "mesh.h"

@@ -1,5 +1,5 @@
 
-// tuto5 : utiliser mesh pour charger un objet .obj et le dessiner du point de vue d'une camera + controle de la camera a la souris
+//! \file tuto5.cpp utiliser mesh pour charger un objet .obj et le dessiner du point de vue d'une camera + controle de la camera a la souris
 
 #include "window.h"
 

@@ -1,5 +1,5 @@
 
-// tuto2: utiliser mesh pour dessiner un triangle au milieu de la fenetre.
+//! \file tuto2.cpp utilisation de mesh pour decrire les sommets d'un ou plusieurs triangles et les dessiner.
 
 #include "window.h"
 #include "mesh.h"

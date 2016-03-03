@@ -1,5 +1,5 @@
 
-// tuto4: utiliser mesh pour dessiner un triangle du point de vue d'une camera
+//! \file tuto4.cpp utiliser mesh pour dessiner un triangle du point de vue d'une camera
 
 #include "window.h"
 #include "mesh.h"

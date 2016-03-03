@@ -1,23 +1,25 @@
 
 
-/*! \addtogroup tuto3GL afficher plusieurs triangles, modifier les paramètres uniform d'un shader program.
+/*! \addtogroup tuto3GL afficher plusieurs triangles, modifier les paramètres uniform d'un shader program
 
 cf tuto3GL.cpp
 
 pour pouvoir dessiner quelque chose, il faut commencer par configurer le pipeline openGL, repassez dans \ref intro3d si nécessaire. 
 
 la configuration minimale est :
-    - les dimensions de l'image, cf glViewport( ),
-    - la couleur par défaut de l'image, cf glClearColor( ),
-    - la profondeur par défaut du zbuffer, cf glClearDepthf( ),
-    - le test de profondeur, cf glEnable/Disable(GL_DEPTH_TEST),
-    - l'élimination des faces arrières, cf glEnable/Disable(GL_CULL_FACE),
-    - la description des attributs des sommets, sélectionner un vertex array, cf glBindVertexArray( ),
-    - un shader program, sélectionner un shader program, cf glUseProgram( )
+    - le pipeline "fixe", des options :
+        - les dimensions de l'image, cf glViewport( ),
+        - la couleur par défaut de l'image, cf glClearColor( ),
+        - la profondeur par défaut du zbuffer, cf glClearDepthf( ),
+        - le test de profondeur, cf glEnable/Disable(GL_DEPTH_TEST),
+        - l'élimination des faces arrières, cf glEnable/Disable(GL_CULL_FACE),
+        - la description des attributs des sommets, sélectionner un vertex array, cf glBindVertexArray( ),
+    - le pipeline programmable, les shaders :
+        - un shader program, sélectionner un shader program, cf glUseProgram( )
     
 glClearColor() et glClearDepthf() définissent les valeurs par défaut utilisées pour "éffacer" l'image et le zbuffer, avec glClear( ). 
 la taille de l'image est fournie par glViewport( ). 
-pour une application simple, il suffit de fixer les valeurs une fois dans init( ) :
+pour une application simple, il suffit de fixer les valeurs une seule fois dans init( ) :
 \code
 glClearColor(0.2f, 0.2f, 0.2f);
 glClearDepthf(1.0f);
@@ -27,7 +29,7 @@ glViewport(0, 0, window_width(), window_height());
 _remarque :_ si la fenetre de l'application change de dimension, il ne faut pas oublier de modifier glViewport(). 
 si vous utilisez run( ) de window.h, c'est fait automatiquement.
 
-et d'effacer l'image et le zbuffer au début de draw( ):
+puis effacer l'image et le zbuffer au début de draw( ):
 \code
 glClear(GL_COLOR_BUFFER_BIT);   // effacer l'image
 glClear(GL_DEPTH_BUFFER_BIT);   // effacer le zbuffer, si nécessaire
@@ -61,7 +63,7 @@ glDisable(GL_DEPTH_TEST);       // desactiver le ztest
 ## élimination des faces arrières / back face culling
 
 lorsque les triangles décrivent la surface d'un objet opaque, les triangles à l'arrière de l'objet ne sont pas visibles, il est assez simple de les 
-détecter, cf \ref intro3d, par contre, il faut donner l'orientation normale des faces, trigo ou horaire, et choisir lesquelles on veut supprimer 
+détecter, cf \ref intro3d, par contre, il faut donner l'orientation normale des faces, sens trigo ou horaire, et choisir lesquelles on veut supprimer 
 (avant ou arrière) et enfin, activer le test :
 
 \code
@@ -91,9 +93,9 @@ glEnable(GL_CULL_FACE);
 pour dessiner des triangles, il faut décrire les informations associées aux sommets, indiquer ou les trouver, leur organisation mémoire, 
 et indiquer à quelles entrées du vertex shader elles sont associées.
 
-le cas général est présenté dans \ref tuto4GL, pour l'instant, la solution simple utilise un tableau uniform déclaré par le vertex shader, et 
-aucune description de format de sommet n'est nécessaire. c'est un objet openGL, appelé vertex array object qui stocke cette description.
-il suffit donc de créer un vertex array object vide / par défaut.
+le cas général est présenté dans \ref tuto4GL, pour l'instant, la solution la plus simple est d'utiliser un tableau uniform déclaré par le vertex
+shader, sans description de format de sommet. c'est un objet openGL, appelé vertex array object qui stocke la description du format de 
+sommets. il suffit donc de créer un vertex array object vide / par défaut.
 
 la création des objets openGL utilise des fonctions de la forme glGenXXX( int n, GLuint *names ). cette famille de fonctions permet de créer 
 plusieurs objets en même temps et renvoye un tableau d'identifiants des nouveaux objets. pour en créer un seul, on peut utiliser :
@@ -120,7 +122,7 @@ avant de pouvoir dessiner, il faut affecter une valeur à tous les uniforms util
     - récupérer l'identifiant du paramètre uniform, cf glGetUniformLocation( ),
     - affecter une valeur en utilisant la bonne fonction de la (grande) famille glUniform( ),
 
-__attention :__ il ne faut pas oublier que glUniform() affecte une valeur à un uniform du program actuellement sélectionné par glUseProgram()...
+__attention :__ ne pas oublier que glUniform() affecte une valeur à un uniform du program actuellement sélectionné par glUseProgram()...
 
 \ref tuto3GL.glsl déclare 3 uniforms : 
     - uniform float time;

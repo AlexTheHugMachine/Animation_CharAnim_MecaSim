@@ -28,6 +28,9 @@ int init( )
     // etape 2 : modifier sa valeur
     glUniform3fv(location, cube.positions.size(), &cube.positions.front().x);
     
+    // mesh n'est plus necessaire
+    release_mesh(mesh);
+    
     // creer un vertex array object
     glGenVertexArrays(1, &vao);
     
@@ -43,7 +46,7 @@ int init( )
 
 int quit( )
 {
-    glDeleteProgram(program);
+    release_program(program);
     glDeleteVertexArrays(1, &vao);
     return 0;
 }
