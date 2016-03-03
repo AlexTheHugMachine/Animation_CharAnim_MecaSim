@@ -2,13 +2,15 @@
 #ifndef _BUFFER_H
 #define _BUFFER_H
 
+#include <cstddef>
+
 #define GLEW_NO_GLU
 #include "GL/glew.h"
 
 //! \addtogroup openGL
 ///@{
 
-//! \file 
+//! \file
 //! buffers et vertex array openGL.
 
 //! cree un buffer.

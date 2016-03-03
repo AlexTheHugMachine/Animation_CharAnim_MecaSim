@@ -1,5 +1,5 @@
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "buffer.h"
 
@@ -11,7 +11,7 @@ GLuint make_buffer( const GLenum target, const size_t data_size, const void *dat
         printf("[error] 0B vertex buffer...\n");
         return 0;
     }
-    
+
     GLuint buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(target, buffer);
@@ -56,7 +56,7 @@ void release_vertex_format( const GLuint vao )
 }
 
 
-GLuint make_vertex_buffer( const GLuint vao, const GLint attribute, 
+GLuint make_vertex_buffer( const GLuint vao, const GLint attribute,
     const int size, const GLenum type, const size_t data_size, const void *data )
 {
     if(attribute < 0)
@@ -64,7 +64,7 @@ GLuint make_vertex_buffer( const GLuint vao, const GLint attribute,
 
 #ifndef GK_RELEASE
     // verifie que le vertex array est selectionne
-    GLuint current; 
+    GLuint current;
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, (GLint *) &current);
     if(current != vao)
     {
@@ -72,11 +72,11 @@ GLuint make_vertex_buffer( const GLuint vao, const GLint attribute,
         glBindVertexArray(vao);
     }
 #endif
-    
+
     GLuint buffer= make_buffer(GL_ARRAY_BUFFER, data_size, data);
     if(buffer > 0)
     {
-        // configure l'utilisation du buffer 
+        // configure l'utilisation du buffer
         glVertexAttribPointer(attribute, size, type, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(attribute);
     }
