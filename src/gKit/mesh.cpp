@@ -1,6 +1,7 @@
 
 #include <cstdio>
 #include <string>
+#include <algorithm>
 
 #include "program.h"
 #include "buffer.h"

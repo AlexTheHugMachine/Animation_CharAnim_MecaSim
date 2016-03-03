@@ -4,7 +4,7 @@
 #include "buffer.h"
 
 
-GLuint make_buffer( const GLenum target, const int data_size, const void *data )
+GLuint make_buffer( const GLenum target, const size_t data_size, const void *data )
 {
     if(data_size == 0)
     {
@@ -56,7 +56,8 @@ void release_vertex_format( const GLuint vao )
 }
 
 
-GLuint make_vertex_buffer( const GLuint vao, const GLint attribute, const int size, const GLenum type, const int data_size, const void *data )
+GLuint make_vertex_buffer( const GLuint vao, const GLint attribute, 
+    const int size, const GLenum type, const size_t data_size, const void *data )
 {
     if(attribute < 0)
         return 0;
@@ -82,7 +83,7 @@ GLuint make_vertex_buffer( const GLuint vao, const GLint attribute, const int si
     return buffer;
 }
 
-GLuint make_index_buffer( const GLuint vao, const int data_size, const void *data )
+GLuint make_index_buffer( const GLuint vao, const size_t data_size, const void *data )
 {
 #ifndef GK_RELEASE
     // verifie que le vertex array est selectionne

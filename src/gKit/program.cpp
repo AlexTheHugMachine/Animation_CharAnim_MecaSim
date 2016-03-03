@@ -4,6 +4,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <algorithm>
 
 #include <climits>
 #include <cstdio>
@@ -104,15 +105,17 @@ int reload_program( GLuint program, const char *filename, const char *definition
     // supprime les shaders attaches au program
     int shaders_max= 0;
     glGetProgramiv(program, GL_ATTACHED_SHADERS, &shaders_max);
-    
-    std::vector<GLuint> shaders(shaders_max, 0);
-    glGetAttachedShaders(program, shaders_max, NULL, &shaders.front());
-    for(int i= 0; i < shaders_max; i++)
+    if(shaders_max > 0)
     {
-        glDetachShader(program, shaders[i]);
-        glDeleteShader(shaders[i]);
+        std::vector<GLuint> shaders(shaders_max, 0);
+        glGetAttachedShaders(program, shaders_max, NULL, &shaders.front());
+        for (int i = 0; i < shaders_max; i++)
+        {
+            glDetachShader(program, shaders[i]);
+            glDeleteShader(shaders[i]);
+        }
     }
-    
+
     // prepare les sources
     std::string common_source= read(filename);
     std::string vertex_source= prepare_source(common_source, std::string(definitions).append("#define VERTEX_SHADER\n"));

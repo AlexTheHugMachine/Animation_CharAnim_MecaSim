@@ -1,6 +1,8 @@
 
 //! \file shader_kit.cpp shader_kit light, bac a sable fragment shader, cf shader_toy 
 
+#include <cstdio>
+
 #define GLEW_NO_GLU
 #include "GL/glew.h"
 
@@ -230,7 +232,7 @@ int draw( )
         for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
         {
             char uniform[1024];
-            snprintf(uniform, sizeof(uniform), "texture%d", i);
+            sprintf(uniform, "texture%d", i);
             program_use_texture(program, uniform, i, textures[i]);
         }
         
@@ -276,7 +278,7 @@ int draw( )
 }
 
 
-int main( const int argc, const char **argv )
+int main( int argc, char **argv )
 {
     if(argc == 1)
     {

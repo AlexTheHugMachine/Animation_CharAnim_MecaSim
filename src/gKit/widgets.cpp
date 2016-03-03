@@ -1,7 +1,9 @@
 
+#include <cstdio>
 #include <cassert>
 #include <cstring>
 #include <vector>
+#include <algorithm>
 
 #include "window.h"
 #include "widgets.h"
@@ -131,7 +133,7 @@ Rect place( Widgets& w, const int width, const int height= 1 )
 static
 Rect place( Widgets& w, const char *text )
 {
-    return place(w, strlen(text));
+    return place(w, (int) strlen(text));
 }
 
 void begin_line( Widgets& w )
@@ -172,7 +174,7 @@ bool button( Widgets& w, const char *text, int& status )
     }
 
     char tmp[128];
-    snprintf(tmp, sizeof(tmp), "%c %s", (status != 0) ? 22 : 20, text);  // strlen(text) + 2
+    sprintf(tmp, "%c %s", (status != 0) ? 22 : 20, text);  // strlen(text) + 2
 
     print(w.console, r.x, r.y, tmp);
     return change;

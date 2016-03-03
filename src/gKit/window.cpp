@@ -234,10 +234,11 @@ void release_window( Window window )
 }
 
 
+#ifndef GK_RELEASE
 //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
 static
-void GK_CALLBACK debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
-    const char *message, void *userParam )
+void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
+    const char *message, const void *userParam )
 {
     static std::set<std::string> log;
     if(log.insert(message).second == false)
@@ -246,13 +247,12 @@ void GK_CALLBACK debug( GLenum source, GLenum type, unsigned int id, GLenum seve
 
     if(severity == GL_DEBUG_SEVERITY_HIGH)
         printf("[openGL error]\n%s\n", message);
-#ifndef GK_RELEASE
     else if(severity == GL_DEBUG_SEVERITY_MEDIUM)
         printf("[openGL warning]\n%s\n", message);
     else
         printf("[openGL message]\n%s\n", message);
-#endif
 }
+#endif
 
 //! cree et configure un contexte opengl
 Context create_context( Window window, const int major, const int minor )
