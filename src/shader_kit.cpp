@@ -1,9 +1,8 @@
 
-//! \file shader_kit.cpp shader_kit light, bac a sable fragment shader, cf shader_toy
+//! \file shader_kit.cpp shader_kit light, bac a sable fragment shader, cf shader_toy 
 
 #include <cstdio>
 #include <cstring>
-
 #define GLEW_NO_GLU
 #include "GL/glew.h"
 
@@ -27,7 +26,7 @@
 struct Filename
 {
     char path[1024];
-
+    
     Filename( ) { path[0]= 0; }
     Filename( const char *_filename ) { strcpy(path, _filename); }
     operator const char *( ) { return path; }
@@ -61,15 +60,15 @@ void reload_program( )
         program= read_program(program_filename);
     else
         reload_program(program, program_filename);
-
+    
     // recupere les erreurs, si necessaire
     program_area= program_format_errors(program, program_log);
     //~ if(program_area > 10 )
         //~ program_area= program_area - 10;
-
+    
     if(program_log.size() > 0)
         printf("[boom]\n%s\n", program_log.c_str());
-
+    
     program_failed= (program_log.size() > 0);
 }
 
@@ -87,7 +86,7 @@ const char *option_find( std::vector<const char *>& options, const char *ext )
             return option;
         }
     }
-
+    
     return NULL;
 }
 
@@ -96,9 +95,9 @@ const char *option_find( std::vector<const char *>& options, const char *ext )
 int init( std::vector<const char *>& options )
 {
     widgets= create_widgets();
-
+    
     camera= make_orbiter();
-
+    
     program= 0;
     const char *option;
     option= option_find(options, ".glsl");
@@ -108,10 +107,10 @@ int init( std::vector<const char *>& options )
         program_filename= Filename(option);
         reload_program();
     }
-
+    
     glGenVertexArrays(1, &vao);
     vertex_count= 3;
-
+    
     option= option_find(options, ".obj");
     if(option != NULL)
     {
@@ -120,16 +119,16 @@ int init( std::vector<const char *>& options )
         {
             //~ strcpy(mesh_filename, option);
             mesh_filename= Filename(option);
-
+            
             vao= make_mesh_vertex_format(mesh);
             vertex_count= (unsigned int) mesh.positions.size();
-
+            
             Point pmin, pmax;
             mesh_bounds(mesh, pmin, pmax);
             orbiter_lookat(camera, center(pmin, pmax), distance(pmin, pmax));
         }
     }
-
+    
     // charge les textures, si necessaire
     for(unsigned int i= 0; i < (unsigned int) options.size(); i++)
     {
@@ -140,27 +139,27 @@ int init( std::vector<const char *>& options )
             textures.push_back(texture);
         }
     }
-
+    
     // nettoyage
     glUseProgram(0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
+    
     // etat openGL par defaut
     glClearColor(0.2f, 0.2f, 0.2f, 1.f);
     glClearDepth(1.f);
-
+    
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     //~ glEnable(GL_CULL_FACE); // n'affiche que les faces correctement orientees...
     glDisable(GL_CULL_FACE);    // les faces mal orientees sont affichees avec des hachures oranges...
-
+    
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
-
-    return 0;
+    
+    return 0;    
 }
 
 int quit( )
@@ -176,19 +175,19 @@ int draw( )
 {
     // effacer l'image
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    
     if(key_state('r'))
     {
         clear_key_state('r');
         reload_program();
     }
-
+    
     // recupere les mouvements de la souris
     int mx, my;
     unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
     int mousex, mousey;
     SDL_GetMouseState(&mousex, &mousey);
-
+    
     // deplace la camera
     if(mb & SDL_BUTTON(1))
         orbiter_rotation(camera, mx, my);      // tourne autour de l'objet
@@ -196,21 +195,22 @@ int draw( )
         orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height()); // deplace le point de rotation
     else if(mb & SDL_BUTTON(3))
         orbiter_move(camera, mx);           // approche / eloigne l'objet
-
+    
     // recupere les transformations
     Transform model= make_identity();
     Transform view= orbiter_view_transform(camera);
     Transform projection= orbiter_projection_transform(camera, window_width(), window_height(), 45);
-
+    Transform viewport= make_viewport(window_width(), window_height());
+    
     Transform mvp= projection * view * model;
     Transform mvpInv= make_inverse(mvp);
     Transform mv= model * view;
-
+    
     // affiche l'objet
     if(program_failed == false)
     {
         glBindVertexArray(vao);
-
+        
         glUseProgram(program);
         program_uniform(program, "modelMatrix", model);
         program_uniform(program, "modelInvMatrix", make_inverse(model));
@@ -218,34 +218,36 @@ int draw( )
         program_uniform(program, "viewInvMatrix", make_inverse(view));
         program_uniform(program, "projectionMatrix", projection);
         program_uniform(program, "projectionInvMatrix", make_inverse(projection));
-
+        program_uniform(program, "viewportMatrix", viewport);
+        program_uniform(program, "viewportInvMatrix", make_inverse(viewport));
+        
         program_uniform(program, "mvpMatrix", mvp);
         program_uniform(program, "mvpInvMatrix", mvpInv);
-
+        
         program_uniform(program, "mvMatrix", mv);
         program_uniform(program, "normalMatrix", make_normal_transform(mv));
-
+        
         program_uniform(program, "viewport", make_vec2(window_width(), window_height()));
         program_uniform(program, "time", (float) SDL_GetTicks());
         program_uniform(program, "motion", make_vec3(mx, my, mb & SDL_BUTTON(1)));
         program_uniform(program, "mouse", make_vec3(mousex, mousey, mb & SDL_BUTTON(1)));
-
+        
         for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
         {
             char uniform[1024];
             sprintf(uniform, "texture%d", i);
             program_use_texture(program, uniform, i, textures[i]);
         }
-
+        
         glDrawArrays(GL_TRIANGLES, 0, vertex_count);
     }
-
+    
     if(key_state('s'))
     {
         clear_key_state('s');
         screenshot("shader_kit.png");
     }
-
+    
     // affiche les infos
     begin(widgets);
     if(program_failed)
@@ -260,7 +262,7 @@ int draw( )
         if(mesh_filename[0] != 0)
         {
             begin_line(widgets);
-            label(widgets, "mesh '%s', %u positions, %u texcoords, %u normals", mesh_filename.path,
+            label(widgets, "mesh '%s', %u positions, %u texcoords, %u normals", mesh_filename.path, 
                 (unsigned int) mesh.positions.size(),
                 (unsigned int) mesh.texcoords.size(),
                 (unsigned int) mesh.normals.size());
@@ -272,9 +274,9 @@ int draw( )
         }
     }
     end(widgets);
-
+    
     draw(widgets, window_width(), window_height());
-
+    
     return 1;
 }
 
@@ -286,15 +288,15 @@ int main( int argc, char **argv )
         printf("usage: %s shader.glsl [mesh.obj] [texture0.png [texture1.png]]\n", argv[0]);
         return 0;
     }
-
+    
     Window w= create_window(1024, 640);
-    if(w == NULL)
+    if(w == NULL) 
         return 1;
-
+    
     Context c= create_context(w);
-    if(c == NULL)
+    if(c == NULL) 
         return 1;
-
+    
     // creation des objets opengl
     std::vector<const char *> options(argv + 1, argv + argc);
     if(init(options) < 0)
@@ -302,7 +304,7 @@ int main( int argc, char **argv )
         printf("[error] init failed.\n");
         return 1;
     }
-
+    
     // affichage de l'application
     run(w);
 
