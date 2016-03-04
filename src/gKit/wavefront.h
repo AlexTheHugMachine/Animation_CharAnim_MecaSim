@@ -13,5 +13,8 @@
 //! charge un fichier wavefront .obj et renvoie un mesh compose de triangles non indexes. utiliser glDrawArrays pour l'afficher.
 Mesh read_mesh( const char *filename );
 
+//! enregistre un mesh dans un fichier .obj.
+int write_mesh( const Mesh& mesh, const char *filename );
+
 ///@}
 #endif

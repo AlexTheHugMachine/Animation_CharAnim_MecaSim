@@ -202,3 +202,55 @@ Mesh read_mesh( const char *filename )
     return data;
 }
 
+int write_mesh( const Mesh& mesh, const char *filename )
+{
+    if(mesh.primitives != GL_TRIANGLES)
+        return -1;
+    if(mesh.positions.size() == 0)
+        return -1;
+    if(filename == NULL)
+        return -1;
+    
+    FILE *out= fopen(filename, "wt");
+    if(out == NULL)
+        return -1;
+    
+    printf("writing mesh '%s'...\n", filename);
+    
+    for(unsigned int i= 0; i < (unsigned int) mesh.positions.size(); i++)
+        fprintf(out, "v %f %f %f\n", mesh.positions[i].x, mesh.positions[i].y, mesh.positions[i].z);
+    fprintf(out, "\n");
+    
+    bool has_texcoords= (mesh.texcoords.size() == mesh.positions.size());
+    for(unsigned int i= 0; i < (unsigned int) mesh.texcoords.size(); i++)
+        fprintf(out, "vt %f %f\n", mesh.texcoords[i].x, mesh.texcoords[i].y);
+    fprintf(out, "\n");
+    
+    bool has_normals= (mesh.normals.size() == mesh.positions.size());
+    for(unsigned int i= 0; i < (unsigned int) mesh.normals.size(); i++)
+        fprintf(out, "vn %f %f %f\n", mesh.normals[i].x, mesh.normals[i].y, mesh.normals[i].z);
+    fprintf(out, "\n");
+    
+    bool has_indices= (mesh.indices.size() > 0);
+    unsigned int n= has_indices ? (unsigned int) mesh.indices.size() : (unsigned int) mesh.positions.size();
+    
+    for(unsigned int i= 0; i +2 < n; i+= 3)
+    {
+        fprintf(out, "f");
+        for(unsigned int k= 0; k < 3; k++)
+        {
+            unsigned int id= has_indices ? mesh.indices[i+k] +1 : i+k +1;
+            fprintf(out, " %u", id);
+            if(has_texcoords && has_normals)
+                fprintf(out, "/%u/%u", id, id);
+            else if(has_texcoords)
+                fprintf(out, "/%u", id);
+            else if(has_normals)
+                fprintf(out, "//%u", id);
+        }
+        fprintf(out, "\n");
+    }
+    
+    fclose(out);
+    return 0;
+}
