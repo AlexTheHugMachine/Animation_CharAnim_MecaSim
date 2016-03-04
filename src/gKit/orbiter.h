@@ -40,8 +40,16 @@ Transform orbiter_view_transform( const Orbiter&o );
 //! renvoie la projection reglee pour une image d'aspect width / height, et une ouverture de fov degres.
 Transform orbiter_projection_transform( const Orbiter&o, const float width, const float height, const float fov );
 
-//! renvoie l'extremite du rayon pour le pixel x, y. l'origine du rayon est la position de la camera.
-Point orbiter_pixel( const Orbiter& o, const float x, const float y, const float z, const float width, const float height, const float fov );
+/*! renvoie les coorodnnees de l'origine d0 et les axes dx, dy du plan image dans le repere du monde. 
+
+permet de construire un rayon pour le pixel x, y : 
+    - sa direction : Vector d= normalize( make_vector(dO + x*dx + y*dy) );
+    - et son origine : Point o= orbiter_position(camera);
+ */
+void orbiter_image_frame( const Orbiter& o, const float width, const float height, const float fov, Point& dO, Vector& dx, Vector& dy );
+
+//! renvoie la position de la camera dans le repere du monde.
+Point orbiter_position( const Orbiter& o );
 
 ///@}
 #endif

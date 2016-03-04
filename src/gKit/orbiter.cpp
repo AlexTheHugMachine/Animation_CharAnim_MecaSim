@@ -58,14 +58,29 @@ Transform orbiter_projection_transform( const Orbiter&o, const float width, cons
     return make_perspective(fov, width / height, o.size*0.01f, o.size*2.f + o.center.z);
 }
 
-Point orbiter_pixel( const Orbiter& o, const float x, const float y, const float z, const float width, const float height, const float fov )
+void orbiter_image_frame( const Orbiter& o, const float width, const float height, const float fov, Point& d0, Vector& dx, Vector& dy )
 {
     Transform view= orbiter_view_transform(o);
     Transform projection= orbiter_projection_transform(o, width, height, fov);
     Transform viewport= make_viewport(width, height);
-    Transform t= viewport * projection * view;
-    Transform tinv= make_inverse(t);
-    //! \todo conserver la transformation et son inverse dans la structure orbiter, c'est tres lent d'inverser numeriquement la matrice a chaque fois...
+    Transform t= viewport * projection * view;  // passage monde vers image
+    Transform tinv= make_inverse(t);            // l'inverse, passage image vers monde
     
-    return transform(tinv, make_point(x, y, z));
+    // origine du plan image
+    d0= transform(tinv, make_point(0, 0, 0));
+    // axe x du plan image
+    Point d1= transform(tinv, make_point(1, 0, 0));
+    // axe y du plan image
+    Point d2= transform(tinv, make_point(0, 1, 0));
+    
+    dx= make_vector(d0, d1);
+    dy= make_vector(d0, d2);
+}
+
+Point orbiter_position( const Orbiter& o )
+{
+    Transform t= orbiter_view_transform(o);     // passage monde vers camera
+    Transform tinv= make_inverse(t);            // l'inverse, passage camera vers monde
+    
+    return transform(tinv, make_point(0, 0, 0));        // la camera se trouve a l'origine, dans le repere camera...
 }
