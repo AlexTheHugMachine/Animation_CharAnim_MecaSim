@@ -12,16 +12,41 @@
 Text create_text( )
 {
     Text text;
-    clear(text);
-    text.font= read_texture(0, "data/font.png");
+    
+    // charge la fonte
+    Image font= read_image("data/font.png");
+    
+    // modifie la transparence du caractere de fond
+    for(unsigned int y= 0; y < 16; y++)
+    for(unsigned int x= 0; x < 8; x++)
+    {
+        const unsigned int starty= 16 *7;
+        const unsigned int startx= 8 *2;
+        Color color= image_pixel(font, startx + x, starty + y);
+        color.a= 0.6;
+        image_set_pixel(font, startx + x, starty + y, color);
+    }
+    
+    // cree le curseur
+    for(unsigned int y= 0; y < 16; y++)
+    for(unsigned int x= 0; x < 8; x++)
+    {
+        const unsigned int starty= 16 *7;
+        const unsigned int startx= 8 *1;
+        Color color= x >1 ? make_alpha_color(1, 1, 1, 0.6) : make_alpha_color(1, 1, 1, 1);
+        image_set_pixel(font, startx + x, starty + y, color);
+    }
+    
+    text.font= make_texture(0, font);
+    release_image(font);
+    
     text.program= read_program("data/shaders/text.glsl");
-    
     program_print_errors(text.program);
-    
+
+    clear(text);
     text.vao= create_vertex_format();
     text.ubo= make_buffer(GL_UNIFORM_BUFFER, sizeof(text.buffer), text.buffer);
     
-    clear(text);
     return text;
 }
 

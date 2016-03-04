@@ -43,7 +43,8 @@ void main( )
     ivec2 front_uv= pixel % ivec2(8, 16) + front_glyph * ivec2(8, 16);
     ivec2 back_uv= pixel % ivec2(8, 16) + back_glyph * ivec2(8, 16);
     vec4 front_color= texelFetch(font, front_uv, 0);
-    vec4 back_color= texelFetch(font, back_uv, 0) * 0.6;
+    vec4 back_color= texelFetch(font, back_uv, 0);
+    back_color.rgb= back_color.rgb * back_color.a;
     
     // composition du caractere sur le fond
     vec4 color= vec4(front_color.rgb * front_color.a + back_color.rgb * (1.0 - front_color.a), front_color.a + back_color.a * (1.0 - front_color.a));

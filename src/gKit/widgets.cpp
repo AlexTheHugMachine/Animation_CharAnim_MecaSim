@@ -315,7 +315,7 @@ bool edit( Widgets& w, int text_size, char *text )
 
     print_background(w.console, r.x, r.y, tmp);
     if(w.focus > 0)
-        print_background(w.console, w.fx, w.fy, 2, '_');
+        print_background(w.console, w.fx, w.fy, text[w.fx - r.x], 1);
     
     return change;
 }
