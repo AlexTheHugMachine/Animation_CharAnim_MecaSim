@@ -3,4 +3,63 @@
 
 cf pipeline.cpp
 
+la solution présentée dans \ref intro3d fonctionne correctement dans les cas simples lorsqe tous les triangles sont devant la 
+camera. un grand triangle dont les sommets ne sont pas visibles dans l'image mais dont l'interieur est visible ne sera pas 
+dessiné... le test de visibilité du triangle n'est pas suffisant.
+
+[ a reprendre
+l'idée est de vérifier que le triangle et la zone visible dans l'image sont séparés... par exemple si tous les sommets du triangle 
+sont à gauche de la limite de l'image, on est sur que l'intérieur du triangle n'est pas visible non plus. et si on recommence pour 
+toutes directions, ca devrait etre mieux ?
+
+\code
+/* sans la division homogene !!
+ */
+bool visible( const Point a, const Point b, const Point c )
+{
+	Point pmin;
+	pmin.x= std::min(a.x, std::min(b.x, c.x));
+	pmin.y= std::min(a.y, std::min(b.y, c.y));
+	pmin.z= std::min(a.z, std::min(b.z, c.z));
+	
+	Point pmax;
+	pmax.x= std::max(a.x, std::max(b.x, c.x));
+	pmax.y= std::max(a.y, std::max(b.y, c.y));
+	pmax.z= std::max(a.z, std::max(b.z, c.z));
+	
+	if(pmax.x < -1 || pmin.x > 1)	// trop a gauche ou trop a droite
+		return false;
+	if(pmax.y < -1 || pmin.y > 1)	// trop haut ou trop bas
+		return false;
+	if(pmax.z < -1 || pmin.z > 1)	// trop loin ou derriere
+		return false;
+	return true;
+}
+\endcode
+]
+
+c'est mieux, mais il y a encore un cas qui pose problème... lorsqu'un triangle est en partie derrière la caméra :
+
+\image html front.png un objet...
+\image html back.png si on avance la camera, certains triangles passent derrière la camera
+\image html back_failed.png et la solution présentée est plutot... fausse !
+
+sans rentrer dans les détails, la projection utilisée est _juste_ une transformation comme une autre, et les points derrière
+la caméra se projettent aussi sur l'image... il faut donc trouver une approche différente qui ne fait pas de projection.
+
+les tests d'inclusion des pixels se font en 2d, dans le plan image, après la projection. si on ne veut pas calculer la projection, 
+il faut faire un test équivalent en 3d.
+
+la solution est logique, au lieu de tester un pixel par rapport à un triangle, et de calculer des aires, il faut tester un point 3d 
+par rapport à un... tetrahèdre et calculer des volumes.
+
+_remarque :_ pour les curieux, toutes les explications sont dans cet [article](http://cg.ivd.kit.edu/publications/p2012/3dr/gi2012.pdf)
+
+le test d'inclusion d'un pixel p dans un triangle abc calcule les aires signées des triangles pab, pbc, pca. pour le test 3d, la camera est
+le sommet du tetrahedre, e, et sa base est le triangle abc. le test d'inclusion du point p se transforme en calcul du volume signé 
+des tetrahedres formés par le point p et les faces abc, eab ebc, eca. s'ils sont tous du même signe, p à est l'interieur du volume pabc, 
+et le pixel fait parti du triangle.
+
+_choix du repère :_ camera, e est l'origine, ca permet de simplifier les calculs.
+
  */

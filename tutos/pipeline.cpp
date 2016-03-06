@@ -56,7 +56,7 @@ struct Pipeline
     
     // fragment shader, doit renvoyer la couleur du fragment de la primitive
     // doit interpoler lui meme les "varyings", fragment.uvw definissent les coefficients.
-    virtual Color fragment_shader( const int primitive_id, Fragment& fragment ) const = 0;
+    virtual Color fragment_shader( const int primitive_id, const Fragment fragment ) const = 0;
     // pour simplifier le code, les varyings n'existent pas dans cette version,
     // il faut recuperer les infos des sommets de la primitive et faire l'interpolation.
     // remarque : les gpu amd gcn fonctionnent comme ca...
@@ -87,7 +87,7 @@ struct BasicPipeline : public Pipeline
         return transform(mvp, p);
     }
     
-    Color fragment_shader( const int primitive_id, Fragment& fragment ) const
+    Color fragment_shader( const int primitive_id, const Fragment fragment ) const
     {
         // recuperer les normales des sommets de la primitive
         Vector a= transform(mv, make_vector( mesh.normals[primitive_id * 3] ));
