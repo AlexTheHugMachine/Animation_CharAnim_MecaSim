@@ -195,7 +195,7 @@ int init( )
     printf("  %u positions\n", (unsigned int) cube.positions.size());
     
     // compile le shader program, le program est selectionne
-    program= read_program("tutos/tuto4GL.glsl");
+    program= read_program("tutos/tuto3GL.glsl");
 
     // affiche les uniforms et leurs valeurs par defaut
     print_uniforms(program);
