@@ -29,7 +29,7 @@ int init( )
     glUniform3fv(location, cube.positions.size(), &cube.positions.front().x);
     
     // mesh n'est plus necessaire
-    release_mesh(mesh);
+    release_mesh(cube);
     
     // creer un vertex array object
     glGenVertexArrays(1, &vao);
