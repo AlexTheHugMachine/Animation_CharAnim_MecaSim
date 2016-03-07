@@ -63,8 +63,6 @@ void reload_program( )
     
     // recupere les erreurs, si necessaire
     program_area= program_format_errors(program, program_log);
-    //~ if(program_area > 10 )
-        //~ program_area= program_area - 10;
     
     if(program_log.size() > 0)
         printf("[boom]\n%s\n", program_log.c_str());
@@ -103,7 +101,6 @@ int init( std::vector<const char *>& options )
     option= option_find(options, ".glsl");
     if(option != NULL)
     {
-        //~ strcpy(program_filename, option);
         program_filename= Filename(option);
         reload_program();
     }
@@ -117,7 +114,6 @@ int init( std::vector<const char *>& options )
         mesh= read_mesh(option);
         if(mesh.positions.size() > 0)
         {
-            //~ strcpy(mesh_filename, option);
             mesh_filename= Filename(option);
             
             vao= make_mesh_vertex_format(mesh);
@@ -168,6 +164,8 @@ int quit( )
     release_program(program);
     // detruit les objets openGL
     glDeleteVertexArrays(1, &vao);
+    for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
+        glDeleteTextures(1, &textures[i]);
     return 0;
 }
 
@@ -209,9 +207,12 @@ int draw( )
     // affiche l'objet
     if(program_failed == false)
     {
+        // configuration minimale du pipeline
         glBindVertexArray(vao);
-        
         glUseProgram(program);
+        
+        // affecte une valeur aux uniforms
+        // transformations standards
         program_uniform(program, "modelMatrix", model);
         program_uniform(program, "modelInvMatrix", make_inverse(model));
         program_uniform(program, "viewMatrix", view);
@@ -227,11 +228,13 @@ int draw( )
         program_uniform(program, "mvMatrix", mv);
         program_uniform(program, "normalMatrix", make_normal_transform(mv));
         
+        // interactions
         program_uniform(program, "viewport", make_vec2(window_width(), window_height()));
         program_uniform(program, "time", (float) SDL_GetTicks());
         program_uniform(program, "motion", make_vec3(mx, my, mb & SDL_BUTTON(1)));
         program_uniform(program, "mouse", make_vec3(mousex, mousey, mb & SDL_BUTTON(1)));
         
+        // textures
         for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
         {
             char uniform[1024];
@@ -239,6 +242,7 @@ int draw( )
             program_use_texture(program, uniform, i, textures[i]);
         }
         
+        // go
         glDrawArrays(GL_TRIANGLES, 0, vertex_count);
     }
     
