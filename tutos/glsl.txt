@@ -12,7 +12,10 @@ GLSL est le langage permettant d'écrire des shaders, il est très proche du C/C
     - des tableaux, mais une dimension,
     - des structs, mais pas d'heritage,
     - pas de passage de valeur par référence, mais par copie.
-    
+
+il existe plusieurs versions du langage, il faut préciser laquelle avec la directive `#version xxx`. la version classique est
+la version 330 / openGL 3.3. la plupart des shaders commencent donc par la ligne `#version 330`.
+
 les types de base sont classiques : int, uint, bool, float, mais les vecteurs et les matrices sont définies ainsi que leurs opérations :
     - vec2, vec3, vec4 : pour des vecteurs à 2, 3, 4 composantes float,
     - ivec2, ivec3, ivec4 : pour des vecteurs d'entiers,
@@ -57,7 +60,7 @@ vec4 q= r + vec4( ... );
 vec4 s= r + point;
 \endcode
 
-l'opérateur de sélection de composantes sur les vecteur est plutôt pratique :
+l'opérateur de sélection de composantes sur les vecteurs est plutôt pratique :
 \code
 vec4 a= vec4( ... );
 vec3 b= a.xyz;
@@ -76,8 +79,11 @@ mat4 m= mat4( ... );
 mat3 t= mat3(m);        // t[0]= vec3(m[0]); t[1]= vec3(m[1]); t[2]= vec3(m[2]);
 \endcode
 
-et ça fonctionne aussi dans l'autre sens, on peut construire un vecteur à partir d'un autre vecteur plus court, plus d'autres valeurs :
+et ça fonctionne aussi dans l'autre sens, on peut construire un vecteur à partir d'un autre vecteur plus court, 
+plus d'autres valeurs :
 \code
+#version 330
+
 vec3 position= vec3( ... );
 mat4 mvpMatrix= mat4( ... );
 
@@ -87,8 +93,8 @@ gl_Position= mvpMatrix * vec4(position, 1);     // position 3 floats + un float 
 
 ### fonctions et passage par copie 
 
-les fonctions (non récursives) s'écrivent sans surprises, la seule différence notable est le passage des paramètres qui utilise des
-mot clés `in`, `out`, `inout` pour indiquer les paramètres d'entrée, de sortie et d'entrée / sortie :
+les fonctions (non récursives) s'écrivent comme d'habitude, la seule différence notable est le passage des paramètres 
+qui utilise des mot clés `in`, `out`, `inout` pour indiquer les paramètres d'entrée, de sortie et d'entrée / sortie :
 \code
 void f1( in float a, out float b )
 {
@@ -104,11 +110,10 @@ void f2( in a, inout b )
 
 ## vertex shader et GLSL
 
-un vertex shader est composée d'une fonction principale, `void main( void )`, et doit écrire les coordonnées des sommets dans 
-une variable globale `gl_Position`. 
+un vertex shader est composée d'une fonction principale, `void main( void )`, et doit écrire les coordonnées des sommets 
+dans une variable globale `gl_Position`. 
 
-les attributs se déclarent en global avec le mot clé `in`, les varyings avec `out`, les constantes 
-initialisées avec `const`.
+les attributs se déclarent en global avec le mot clé `in`, les varyings avec `out`, les constantes initialisées avec `const`.
 
 les variables fournies par l'application sont déclarés avec le mot-clé `uniform` en plus de leur type et de leur nom.
 
@@ -119,6 +124,7 @@ par exemple : gl_VertexID, l'indice du sommet à traiter.
 exemple :
 \code
 // vertex shader de tuto3GL
+#version 330
 
 uniform vec3 positions[36];
 uniform float time;
@@ -127,16 +133,17 @@ const vec3 deplace= vec3(...);
 
 void main( )
 {
-    gl_Position= vec4( positions[gl_VertexID] + deplace * time / 1000, 1 );
+    gl_Position= vec4( positions[gl_VertexID] + deplace * time / 1000.0, 1.0 );
     // positions[gl_VertexID] est un vec3 + vec3 * float / float, ce qui donne bien un vec3
     // et le vec3 est complete par une valeur pour etre affecte a un vec4
 }
 \endcode
 
-le vertex shader déclare, en général, des attributs de sommets initialisés par le pipeline (l'application devra configurer un vertex
-array et créer des buffers, cf \ref tuto4GL) :
+le vertex shader déclare, en général, des attributs de sommets initialisés par le pipeline (l'application devra configurer 
+un vertex array et créer des buffers, cf \ref tuto4GL) :
 \code
 // vertex shader et attributs
+#version 330
 
 in vec3 position;
 uniform mat4 mvpMatrix;
@@ -150,15 +157,41 @@ void main( void )
 
 ## fragment shader et GLSL
 
-le fragment shader est similaire au vertex shader, mais il ne peut pas utiliser les valeurs des attributs, ils ne sont plus accessibles,
-uniquement leurs valeurs interpolées pour le fragment (repassez dans \ref intro3d et \ref pipeline, si ce n'est pas clair)
+le fragment shader est similaire au vertex shader, mais il ne peut pas utiliser les valeurs des attributs, ils ne sont plus
+accessibles, uniquement leurs valeurs interpolées pour le fragment (repassez dans \ref intro3d et \ref pipeline, si ce n'est 
+pas clair)
 
 la couleur du fragment doit être écrite dans `gl_FragColor` ou un varying déclaré par le shader.
 
-un fragment shader peut déclarer des uniforms et des varyings, et accéder à plusieurs variables définies par le pipeline, par exemple :
+un fragment shader peut déclarer des uniforms et des varyings, et accéder à plusieurs variables définies par le pipeline, 
+par exemple :
     - vec4 gl_FragCoord, les coordonnées dans le repère image du fragment,
     - int gl_PrimitiveID, l'indice de la primitive, du triangle, traité par le shader,
-    - bool gl_FrontFacing, l'orientation de la primitive traitée par le shader, toujours vrai si les faces arrières sont éliminées avant la fragmentation (cf \ref intro3d).
+    - bool gl_FrontFacing, l'orientation de la primitive traitée par le shader, toujours vrai si les faces arrières sont éliminées 
+    avant la fragmentation (cf \ref intro3d).
 
+exemple:
+\code
+// fragment shader et variables
+#version 330
+
+uniform vec3 back_color;
+
+void main( void )
+{
+    vec3 color;
+    
+    // utiliser l'indice du triangle, gl_PrimitiveID, pour fabriquer une couleur "aleatoire"
+    color= vec3(1.0 - float(gl_PrimitiveID % 100) / 99.f, float(gl_PrimitiveID % 10) / 9.f, float(gl_PrimitiveID % 1000) / 999.f);
+    // glsl n'autorise pas les conversions implicites... ni les casts avec la syntaxe du C, 
+    // donc utiliser la notation constructeur comme en C++
+    
+    // si le triangle est une face arriere, l'afficher d'une couleur differente, cf parametre uniform, initialise par l'application 
+    if(gl_FrontFacing == false)
+        color= back_color;
+        
+    gl_FragColor= vec3(color, 1);       // couleur opaque, alpha= 1
+}
+\endcode
 
  */

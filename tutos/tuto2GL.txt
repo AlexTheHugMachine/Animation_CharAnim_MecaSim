@@ -21,8 +21,8 @@ la démarche est très classique :
 	
 la partie la plus longue est finalement la vérification et la récupération des erreurs, sans grande surprise...
 
-_rappel :_  les objets openGL sont manipulés à travers des identifiants numériques, openGL définit le type GLuint spécialement pour ça. 
-vous pouvez repasser dans \ref interfaceC, si nécessaire.
+_rappel :_  les objets openGL sont manipulés à travers des identifiants numériques, openGL définit le type GLuint 
+spécialement pour ça. vous pouvez repasser dans \ref interfaceC, si nécessaire.
 
 ## lire les sources
 
@@ -55,8 +55,8 @@ std::string read( const char *filename )
 	GLuint shader= glCreateShader(type);
 \endcode
 
-il faut ensuite préparer les sources à compiler. la fonction glShaderSource() veut un tableau de chaines de caracteres. il faut 
-donc le construire.
+il faut ensuite préparer les sources à compiler. la fonction glShaderSource() veut un tableau de chaines de caracteres. il 
+faut donc le construire.
 \code
 	std::string source= read( "vertex_shader.glsl" );
 	const char *strings[]= { source.c_str() };
@@ -70,8 +70,8 @@ puis compiler le shader :
 
 ## vérifier les erreurs de compilation du shader
 
-un objet shader openGL maintient un état de compilation ainsi que les messages d'erreurs (et sonsource également). il suffit de l'interroger
-avec glGetShader( ) :
+un objet shader openGL maintient un état de compilation ainsi que les messages d'erreurs (et sonsource également). 
+il suffit de l'interroger avec glGetShader( ) :
 
 \code
 	GLint status;
@@ -83,8 +83,8 @@ avec glGetShader( ) :
 \endcode
 
 si la compilation à échoué, il faut récupérer et afficher les messages, cf glGetShaderInfoLog( ).
-comme on ne connait pas a priori la longueur des messages, il faut la demander, allouer une chaine de caractères de la bonne taille
-et enfin récupérer les messsages...
+comme on ne connait pas a priori la longueur des messages, il faut la demander, allouer une chaine de caractères de 
+la bonne taille et enfin récupérer les messsages...
 \code
 	// recuperer la longueur des messages d'erreurs 
 	GLint length;
@@ -103,13 +103,13 @@ et enfin récupérer les messsages...
 	delete [] message;
 \endcode
 
-si tout c'est bien passé pour le premier shader, on peut passer au 2ieme, seul le type de shader change : ce sera GL_FRAGMENT_SHADER au 
-lieu de GL_VERTEX_SHADER.
+si tout c'est bien passé pour le premier shader, on peut passer au 2ieme, seul le type de shader change : ce sera
+GL_FRAGMENT_SHADER au lieu de GL_VERTEX_SHADER.
 
 ## créer et linker le program
 
-la démarche est la même que pour les shaders, il faut indiquer au program quels shaders linker ensemble avec glAttachShader( ), puis 
-vérifier les erreurs,
+la démarche est la même que pour les shaders, il faut indiquer au program quels shaders linker ensemble avec
+glAttachShader( ), puis vérifier les erreurs,
 \code
 	GLuint program= glCreateProgram();
 	glAttachShader(program, vertex_shader);
@@ -147,6 +147,9 @@ voila, rien de bien compliqué, mais c'est un peu long.
 
 un exemple minimaliste est dispo tuto2GL.cpp
 
+une fois que le program est correctement compilé et linké, avant de dessiner avec glDraw( ), il faut donner une valeur à
+tous ses uniforms et associer un buffer à ses attributs cf \ref tuto3GL et \ref tuto4GL. 
+il est aussi possible, pour vérifier que l'on a rien oublié, de demander au shader program quels sont les uniforms déclarés, leur nom, leur type, leur valeur, etc. pour vérifier que l'initialisation est correcte. cf \ref shader_reflect.
 
 ## formatage des erreurs
 
@@ -242,7 +245,7 @@ _pour les curieux :_ le source est dispo program.cpp, fonctions print_line( ) et
 GLuint program= read_program( "tutos/intro1.glsl" );
 \endcode
 
-les shaders sont compilés séparement en utilisant le pré processeur, avec #ifdef VERTEX_SHADER, #ifdef FRAGMENT_SHADER, etc.
+les shaders sont compilés séparement en utilisant le pré processeur, avec \#ifdef VERTEX_SHADER, \#ifdef FRAGMENT_SHADER, etc.
 un fichier .glsl ressemble à ça :
 
 \code
@@ -274,15 +277,15 @@ void main( )
 
 ## utilitaires : shader_kit 
 
-autre solution, shader_kit.cpp peut être utilisé comme compilateur de shader, il affiche les erreurs sous cette forme un peu plus lisible, et 
-permet de recharger et de recompiler le shader en appuyant sur la touche R. ça permet de corriger interactivement le source du shader 
-en le modifiant dans un éditeur.
+autre solution, shader_kit.cpp peut être utilisé comme compilateur de shader, il affiche les erreurs sous cette forme un peu 
+plus lisible, et permet de recharger et de recompiler le shader en appuyant sur la touche R. ça permet de corriger
+interactivement le source du shader en le modifiant dans un éditeur.
 
-shader_kit est un 'bac à sable' permettant d'écrire et de tester des shaders assez facilement. il permet aussi de charger un objet 
-.obj, des textures et permet de déplacer la camera à la souris. 
+shader_kit est un 'bac à sable' permettant d'écrire et de tester des shaders assez facilement. il permet aussi de charger 
+un objet .obj, des textures et permet de déplacer la camera à la souris. 
 
 comme il n'est pas possible d'écrire une solution totalement générique, shader_kit à des limites :
-	- 1 seul shader program, écrit dans un seul fichier .glsl, avec les #ifdef VERTEX_SHADER, etc, voir plus haut,
+	- 1 seul shader program, écrit dans un seul fichier .glsl, avec les \#ifdef VERTEX_SHADER, etc, voir plus haut,
 	- il n'est pas obligatoire de charger un objet, dans ce cas, il fonctionne comme [shadertoy.com](https://www.shadertoy.com/),
 	- charge 1 seul objet,
 	- plusieurs textures 2d rgba8, jusqu'à la limite d'openGL, 16 ou 32 selon les machines :

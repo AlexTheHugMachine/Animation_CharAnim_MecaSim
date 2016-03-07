@@ -1,0 +1,147 @@
+
+/*! \addtogroup shader_reflect récupérer les uniforms et les attributs utilisés par un shader program
+
+cf tuto3GL_reflect.cpp
+
+
+
+# lister les uniforms utilisés par un program
+
+en plus des glGetUniformLocation( ), l'objet openGL program maintient la liste complètes des uniforms, leur noms, leur type, leur __valeur__ et bien sur leur identifiant / location. glGetActiveUniform( ) permet de récupérer ces informations, mais il faut d'abord obtenir le nombre total d'uniform avec glGetProgram( ) :
+
+\code
+GLuint pogram= ... ;
+
+// recuperer le nombre total d'uniforms
+GLint n= 0;
+glGetProgramiv(program,  GL_ACTIVE_UNIFORMS, &n);
+
+// recuperer la longueur max occuppee par un nom d'uniform
+GLint length_max= 0;
+glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &length_max);
+// allouer une chaine de caractere
+char *name= new char [length_max];
+
+// recuperer les infos de chaque uniform
+for(int i= 0; i < n; i++)
+{
+    GLint glsl_size;
+    GLenum glsl_type;
+    glGetActiveUniform(program, i, length_max, NULL, &glsl_size, &glsl_type, name);
+    
+    // et son identifiant
+    GLint location= glGetUniformLocation(program, name);
+    
+    printf("uniform %i '%s': location %d, type %x, array_size %d\n", i, name, location, glsl_type, glsl_size);
+}
+delete [] name;
+\endcode
+
+récupérer la valeur actuelle d'un uniform est plus long, puisque la fonction qui renvoie la valeur dépend du type de l'uniform.
+pour les types les plus courants, on peut écrire quelquechose comme ça :
+\code
+void print_uniform( const GLuint program, const GLint location, const char *name, const GLenum type )
+{
+    int ivalue= 0;
+    float fvalue= 0;
+    float fvalues[16]= { 0 };
+    
+    switch(type)
+    {
+        case GL_BOOL:
+            glGetUniformiv(program, location, &ivalue);
+            printf("  uniform '%s', type bool (%x), value= %s\n", name, type, ivalue ? "true" : "false");
+            break;
+        case GL_INT:
+            glGetUniformiv(program, location, &ivalue);
+            printf("  uniform '%s', type int (%x), value= %d\n", name, type, ivalue);
+            break;
+        case GL_FLOAT:
+            glGetUniformfv(program, location, &fvalue);
+            printf("  uniform '%s', type float (%x), value= %f\n", name, type, fvalue);
+            break;
+        case GL_FLOAT_VEC2:
+            glGetUniformfv(program, location, fvalues);
+            printf("  uniform '%s', type vec2 (%x), values= %f %f\n", name, type, fvalues[0], fvalues[1]);
+            break;
+        case GL_FLOAT_VEC3:
+            glGetUniformfv(program, location, fvalues);
+            printf("  uniform '%s', type vec3 (%x), values= %f %f %f\n", name, type, fvalues[0], fvalues[1], fvalues[2]);
+            break;
+        case GL_FLOAT_VEC4:
+            glGetUniformfv(program, location, fvalues);
+            printf("  uniform '%s', type vec4 (%x), values= %f %f %f %f\n", name, type, fvalues[0], fvalues[1], fvalues[2], fvalues[3]);
+            break;
+            
+        case GL_FLOAT_MAT4:
+            glGetUniformfv(program, location, fvalues);
+            printf("  uniform '%s', type mat4 (%x), values=\n");
+            for(int r= 0; r < 4; r++)
+            {
+                printf("    ");
+                for(int c= 0; c < 4; c++)
+                    printf("%f ", fvalues[c*4 + r]);
+                printf("\n");
+            }
+            break;
+        
+        default:
+            printf("  uniform '%s', type %x, type unknown\n", name, type);
+            break;
+    }
+}
+\endcode
+
+on peut utiliser cette fonction à chaque draw, pour vérifier que tous les uniforms ont bien une valeur correcte ou la
+modifier pour n'afficher un message que lorsqu'un uniform est égal à zero, ce qui peut signifier que l'application ne lui 
+a pas donné de valeur...
+
+exemple complet, avec un affichage mieux formaté et la gestion des tableaux d'uniforms, dans tuto3GL_reflect.cpp
+
+
+# lister les attributs utilisés par un program / vertex shader
+
+la démarche est la même que pour les uniforms, il faut récupérer le nombre total d'attributs, la longueur max des noms, 
+cf glGetProgram( ).
+
+\code
+GLuint pogram= ... ;
+
+// recuperer le nombre total d'attributs
+GLint n= 0;
+glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &n);
+
+// recuperer la longueur max occuppee par un nom d'attribut
+GLint length_max= 0;
+glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &length_max);
+// allouer une chaine de caractere
+char *name= new char [length_max];
+
+// recuperer les infos de chaque attribut
+for(int i= 0; i < n; i++)
+{
+    GLint glsl_size;
+    GLenum glsl_type;
+    glGetActiveAttrib(program, i, length_max, NULL, &glsl_size, &glsl_type, name);
+    
+    // et son identifiant
+    GLint location= glGetAttribLocation(program, name);
+    
+    printf("attribute %d '%s': location %d, type %x, array_size %d\n", i, name, location, glsl_type, glsl_size);
+}
+delete [] name;
+\endcode
+
+ exemple complet dans tuto3GL_reflect.cpp
+
+il est également possible récupérer quel buffer est associé à un attribut, cf glGetVertexAttrib( ) pour vérifier que tout est cohérent au moment du glDraw( ). c'est le vertex array object qui conserve ces informations, cf \ref tuto4GL.
+
+\code
+    // recupere le buffer associe a l'attribut qui a location pour identifiant
+    GLint buffer= 0; 
+    glGetVertexAttribiv(location, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &buffer );
+    if(buffer > 0)
+        printf("attribute %d: buffer %d\n", location, buffer);
+\endcode
+
+*/

@@ -48,6 +48,12 @@ void print_uniform( const GLuint program, const GLint location, const char *name
     int value= 0;
     float values[16]= { 0 };
     
+/* les tableaux occuppent plusieurs uniforms places les uns apres les autres, donc :
+        for(int i= 0; i < size; i++)
+            glGetActvieUniform(program, location + i, ...)
+    permet de recuperer toutes les cellules du tableau...
+ */
+    
     for(int i= 0; i < size; i++)
     {
         if(size > 1)
@@ -208,7 +214,7 @@ int init( )
     // etape 2 : modifier sa valeur
     glUniform3fv(location, cube.positions.size(), &cube.positions.front().x);
 
-/*      afficher les uniforms apres l'affectation...
+/* afficher les uniforms apres l'affectation...
     print_uniforms(program);
  */ 
  
@@ -253,8 +259,7 @@ int draw( )
     location= glGetUniformLocation(program, "color");   // declare dans le fragment shader
     glUniform4f(location, 1, 0.5, 0, 1);                // vec4 color;
     
-/*
-    modifiez la valeur de time, declare dans le vertex shader pour modifier la position du cube dans le repere du monde,
+/* modifiez la valeur de time, declare dans le vertex shader pour modifier la position du cube dans le repere du monde,
     en fonction du temps. vous pouvez utiliser la fonction mod ou modf pour creer un mouvement cyclique
     
     utilisez la fonction SDL_GetTicks( ), pour connaitre l'heure exprimee en milli secondes

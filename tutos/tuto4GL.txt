@@ -3,17 +3,18 @@
 
 cf \ref tuto4GL.cpp
 
-pour dessiner des triangles, il faut décrire les informations associées aux sommets, indiquer ou les trouver, leur organisation mémoire, 
-et indiquer à quelles entrées du vertex shader elles sont associées.
+pour dessiner des triangles, il faut décrire les informations associées aux sommets, indiquer ou les trouver, leur organisation
+mémoire, et indiquer à quelles entrées du vertex shader elles sont associées.
 
-le cas simple permttant de dessiner quelques triangles est présenté dans \ref tuto3GL.
+le cas simple permettant de dessiner quelques triangles est présenté dans \ref tuto3GL.
 
 \section vao vertex array object
 
 c'est un objet openGL, appelé vertex array object, qui stocke la description du format de sommets. 
 
-la création des objets openGL utilise des fonctions de la forme glGenXXX( int n, GLuint *names ). cette famille de fonctions permet de créer 
-plusieurs objets en même temps et renvoye un tableau d'identifiants des nouveaux objets. pour en créer un seul, on peut utiliser :
+la création des objets openGL utilise des fonctions de la forme glGenXXX( int n, GLuint *names ). cette famille de fonctions
+permet de créer plusieurs objets en même temps et renvoye un tableau d'identifiants des nouveaux objets. pour en créer 
+un seul, on peut utiliser :
 \code
 GLuint vao;
 glGenVertexArrays(1, &vao);
@@ -24,14 +25,15 @@ il ne reste plus qu'à le sélectionner pour configurer le pipeline :
 glBindVertexArray(vao);
 \endcode
 
-les informations des sommets, les attributs, sont stockées dans un ou plusieurs vertex buffers, qui ne sont que des tableaux alloués dans la mémoire
-de la carte graphique. cf \ref buffers pour les créer et leur affecter des données.
+les informations des sommets, les attributs, sont stockées dans un ou plusieurs vertex buffers, qui ne sont que des 
+tableaux alloués dans la mémoire de la carte graphique. cf \ref buffers pour les créer et leur affecter des données.
 
 le vertex array object stocke, pour chaque attribut déclaré par le vertex shader :
 	- le type de l'attribut, float, int, etc, paramètre type, GL_FLOAT, GL_INTEGER, etc.
 	- le nombre de composants de l'attribut, 1 pour une valeur scalaire, ou 2, 3, 4 pour un vecteur, paramètre size,
-	- l'identifiant du buffer dans lequel se trouve les valeurs, implicite, c'est le buffer sélectionné sur GL_ARRAY_BUFFER,
-	- la position de la premiere valeur dans le buffer, paramètre offset,
+	- l'identifiant du buffer dans lequel se trouve les valeurs, implicite, c'est le buffer sélectionné sur 
+	GL_ARRAY_BUFFER, cf \ref buffers,
+	- la position de la première valeur dans le buffer, paramètre offset,
 	- la distance entre chaque valeur dans le buffer, paramètre stride.
 
 la configuration se fait en plusieurs étapes :
@@ -40,7 +42,8 @@ la configuration se fait en plusieurs étapes :
 	- apeller glVertexAttribPointer( ),
 	- utiliser l'attribut, cf glEnableVertexAttribArray( )
 	
-exemple : le cas classique, le vertex buffer, identifiant buffer, contient les positions des sommets. le vertex shader déclare : `in vec3 position;`
+exemple : le cas classique, le vertex buffer, identifiant buffer, contient les positions des sommets. 
+le vertex shader déclare : `in vec3 position;`
 \code
 	// selectionner le vertex array object a configurer, si necessaire
 	// glBindVertexArray(vao);
@@ -89,6 +92,9 @@ et les attributs sont déclarés comme : `in vec3 position; in vec3 normal;` dan
 
 exemple complet : \ref tuto4GL_normals.cpp
 
+pour récupérer la liste des attributs déclarés par le vertex shader et vérifier qu'ils sont bien associés à un buffer, 
+cf \ref shader_reflect
+
 ## et si les attributs sont dans le même vertex buffer ?
 
 les paramètres stride et offset permettent d'organiser les données assez librement :
@@ -96,7 +102,8 @@ les paramètres stride et offset permettent d'organiser les données assez libre
 	- stride donne la distance de la valeur suivante (en octets),
 ce qui permet d'itérer sur tous les attributs sans problèmes.
 
-_remarque :_ stride = 0 est interprété comme l'organisation par défaut, les valeurs se suivent, c'est équivalent à stride= sizeof()
+_remarque :_ stride = 0 est interprété comme l'organisation par défaut, les valeurs se suivent, 
+	c'est équivalent à stride= sizeof()
 
 exemple : position et normale dans le même buffer, toutes les positions, puis toutes les normales : `PPPPPPPPNNNNNNNN`
 \code
@@ -125,8 +132,14 @@ et transférer des données, cf glBufferData( ).
 
 on peut également modifier le contenu d'un buffer à n'importe quel moment,
 cf glBufferSubData( ). en fonction de la fréquence de modifications, il faut choisir l'option correspondante lors de la création, 
-cf le paramètre usage de glBufferData( ). l'option par défaut est GL_STATIC_DRAW qui indique que le buffer est utilisé par glDraw( ) 
-et que son contenu ne devrait pas changer.
+cf le paramètre usage de glBufferData( ). l'option par défaut est GL_STATIC_DRAW qui indique que le buffer est utilisé par
+glDraw( ) et que son contenu ne devrait pas changer.
+
+mais bien sur, il faut commencer par créer l'objet openGL, cf glGenBuffers( ) :
+\code
+GLuint buffer;
+glGenBuffers(1, &buffer);
+\endcode
 
 pour pouvoir manipuler un buffer, il faut le sélectionner, comme les autres objets openGL, cf glBindBuffer( ) :
 	- les vertex buffers sont sélectionnés sur GL_ARRAY_BUFFER,

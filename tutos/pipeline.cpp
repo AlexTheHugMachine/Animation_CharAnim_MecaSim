@@ -100,7 +100,7 @@ struct BasicPipeline : public Pipeline
         n= normalize(n);
         
         // calcule une couleur qui depend de l'orientation de la primitive par rapport a la camera
-        return make_color(1, 0.5, 0) * std::abs(n.z);
+        return make_color(1, 1, 1) * std::abs(n.z);
         
         // on peut faire autre chose, par exemple, afficher la normale...
         // return make_color(std::abs(n.x), std::abs(n.y), std::abs(n.z));
@@ -108,20 +108,14 @@ struct BasicPipeline : public Pipeline
 };
 
 
-struct Edge
+// cf http://geomalgorithms.com/a01-_area.html, section modern triangles
+float area( const Point p, const Point a, const Point b )
 {
-    float a, b, c;
-    
-    Edge( const Point& pa, const Point& pb )
-    {
-        a= -(pb.y - pa.y);
-        b= pb.x - pa.x;
-        c= -pa.x * a - pa.y * b;
-    }
-    
-    // renvoie l'aire du triangle pa, pb, (x, y)
-    float eval( const float x, const float y ) const { return (a*x + b*y + c) / 2; }
-};
+    Vector pa= make_vector(p, a); pa.z= 0;
+    Vector pb= make_vector(p, b); pb.z= 0;
+    return cross(pa, pb).z;
+}
+
 
 bool visible( const Point p )
 {
@@ -167,6 +161,7 @@ int main( void )
         // visibilite
         if(visible(a) == false && visible(b) == false && visible(c) == false)
             continue;
+        // faux dans certains cas...
         
         // passage dans le repere image
         a= transform(viewport, a);
@@ -174,6 +169,10 @@ int main( void )
         c= transform(viewport, c);
         
         // question: comment ne pas dessiner le triangle s'il est mal oriente ?
+        // aire du triangle abc
+        float n= area(a, b, c);
+        if(n < 0)
+            continue;
         
         // dessiner le triangle
         // solution naive, parcours tous les pixels de l'image
@@ -182,28 +181,21 @@ int main( void )
         for(int y= 0; y < color.height; y++)
         for(int x= 0; x < color.width; x++)
         {
-            // determine si le pixel est a l'interieur du triangle
-            Edge ab(a ,b);
-            Edge bc(b, c);
-            Edge ca(c, a);
-            
             // fragment 
             Fragment frag;
-            frag.x= x;
-            frag.y= y;
-            frag.z= 0; // interpole plus tard
+            frag.u= area(make_point(x, y, 0), a, b);      // distance c / ab
+            frag.v= area(make_point(x, y, 0), b, c);      // distance a / bc
+            frag.w= area(make_point(x, y, 0), c, a);      // distance b / ac
             
-            frag.u= ab.eval(x, y);      // distance c / ab
-            frag.v= bc.eval(x, y);      // distance a / bc
-            frag.w= ca.eval(x, y);      // distance b / ac
             if(frag.u > 0 && frag.v > 0 && frag.w > 0)
             {
-                // aire du triangle abc
-                float area= length(cross( make_vector(a, b), make_vector(a, c) ));
                 // normalise les coordonnees barycentriques du fragment
-                frag.u= frag.u / area;
-                frag.v= frag.v / area;
-                frag.w= frag.w / area;
+                frag.u= frag.u / n;
+                frag.v= frag.v / n;
+                frag.w= frag.w / n;
+                
+                frag.x= x;
+                frag.y= y;
                 // interpole z
                 frag.z= frag.u * c.z + frag.v * a.z + frag.w * b.z;
                 
@@ -219,7 +211,8 @@ int main( void )
                 
                 // question : pour quelle raison le ztest est-il fait apres l'execution du fragment shader ? est-ce obligatoire ?
                 // question : peut on eviter d'executer le fragment shader sur un bloc de pixels couverts par le triangle ? 
-                //   dans quelles conditions sait-on qu'il n'y a rien a dessiner dans un bloc de pixels ?
+                //      dans quelles conditions sait-on qu'il n'y a rien a dessiner dans un bloc de pixels ?
+                //      == aucun fragment du triangle appartenant au bloc, ne peut modifier l'image et le zbuffer ?
             }
         }
     }

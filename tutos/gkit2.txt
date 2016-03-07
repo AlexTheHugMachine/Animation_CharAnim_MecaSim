@@ -5,12 +5,12 @@ gKit2light est une base de code permettant d'écrire des applications utilisant 
 
 elle est composée de plusieurs utilitaires :
     - window.h fournit un squelette d'application, 
-    - mesh.h permet de décrire et d'afficher des triangles,
+    - mesh.h permet de décrire et d'afficher des objets 3d,
     - image.h et color.h permettent de charger, d'enregistrer et de manipuler des images, pixel par pixel,
     - vec.h et mat.h définissent des vecteurs, des matrices pour manipuler des transformations, des points, des vecteurs,
     - program.h permet de compiler facilement des shaders,
     - orbiter.h permet de déplacer une caméra autour d'un objet pour l'observer, draw.h affiche un mesh pour une caméra, 
-    - wavefront.h permet de charger des fichiers .obj et renvoie un mesh,
+    - wavefront.h permet de charger et d'enregistrer des fichiers .obj,
     - text.h permet d'afficher directement du texte sur la fenetre de l'application,
     - widgets.h permet de controler l'application avec une interface graphique minimaliste.
 
@@ -28,7 +28,8 @@ plus ceux dédiés à openGL :
     - \ref interfaceC,
     - \ref tuto2GL,
     - \ref tuto3GL,
-    - \ref tuto4GL
+    - \ref tuto4GL,
+    - \ref shader_reflect
     
 et un utilitaire pour jouer avec les shaders, shader_kit, décrit dans \ref tuto2GL.
 

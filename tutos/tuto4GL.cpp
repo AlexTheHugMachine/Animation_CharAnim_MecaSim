@@ -51,9 +51,9 @@ int init( )
     
     // dimensionne le buffer actif sur array_buffer, l'alloue et l'initialise avec les positions des sommets de l'objet
     glBufferData(GL_ARRAY_BUFFER, 
-        /* length */ sizeof(vec3) * mesh.positions.size(), 
-        /* data */ &mesh.positions.front(), 
-        /* usage */ GL_STATIC_DRAW);
+        /* length */    sizeof(vec3) * mesh.positions.size(), 
+        /* data */      &mesh.positions.front(), 
+        /* usage */     GL_STATIC_DRAW);
     // GL_STATIC_DRAW decrit l'utilisation du contenu du buffer. dans ce cas, utilisation par draw, sans modifications
 
 /*  le buffer est cree et initialise, mais il est toujours selectionne sur array_buffer,
@@ -81,10 +81,10 @@ int init( )
     // le shader program doit etre compile sans erreurs avant...
     
     // format et organisation des donnees dans le vertex buffer selectionne sur array_buffer,
-    glVertexAttribPointer(attribute, 3, GL_FLOAT,   // l'attribut est un vec3, 
-        /* not normalized */ GL_FALSE,              // les valeurs ne sont pas normalisees entre 0, et 1
-        /* stride */ 0,                             // les vec3 sont ranges les uns a la suite des autres
-        /* offset */ 0);                            // et se trouvent au debut du buffer 
+    glVertexAttribPointer(attribute, 3, GL_FLOAT,       // l'attribut est un vec3, 
+        /* not normalized */    GL_FALSE,               // les valeurs ne sont pas normalisees entre 0, et 1
+        /* stride */            0,                      // les vec3 sont ranges les uns a la suite des autres
+        /* offset */            0);                     // et se trouvent au debut du buffer 
     
     glEnableVertexAttribArray(attribute);
     // cette description est stockee dans le vertex array object selectionne...
@@ -100,12 +100,14 @@ int init( )
     // etat par defaut openGL
     glClearColor(0.2f, 0.2f, 0.2f, 1);
     glClearDepthf(1);
+    // glViewport(0, 0, window_width(), window_height()) // deja fait dans run( )
     
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
     
+    glFrontFace(GL_CCW);
+    glCullFace(GL_BACK);
     glEnable(GL_CULL_FACE);
-    // glViewport(0, 0, window_width(), window_height()) // deja fait dans run( )
     return 0;
 }
 

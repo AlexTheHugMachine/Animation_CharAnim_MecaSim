@@ -201,23 +201,28 @@ cette fonction est appellée pour déplacer chaque sommet des triangles que l'on
     une carte graphique fait quelque chose d'équivalent (mais en parallèle et avec du matériel spécialisé), 
     une fois que les 3 sommets d'un triangle sont transformés, on peut dessiner le triangle.
  */
+Point vertex_shader( const int vertex_id )
+{
+    // definit les variables globales maniplees par le vertex shader
+    int gl_VertexID= vertex_id;
+    Point gl_Position;
+    
+    // appelle le main du vertex shader
+    main( );    
+    return gl_Position;
+}
+
 void draw( const int count )
 {
-    Point *vertices= new Point[count];
-    
-    for(int i= 0; i < count; i= i +1)
-    {
-        // transformer chaque sommet...
-        gl_VertexID= i;
-        main();
-        // conserver les coordonnees du sommet dans le repere projectif
-        vertices[i]= gl_Position;
-    }
-    
     for(int i= 0; i +2 < count; i= i +3)
     {
+        // transforme les 3 sommets du triangle 
+        Point a= vertex_shader(i);
+        Point b= vertex_shader(i +1);
+        Point c= vertex_shader(i +2);
+        
         // dessiner un triangle par triplet de sommets...
-        draw_triangle(vertices[i], vertices[i +1], vertices[i +2]);
+        draw_triangle(a, b, c);
     }
     
     delete [] vertices;
@@ -261,16 +266,6 @@ void main( )
 }
 \endcode
 
-
-[
-a virer
-sans rentrer dans les détails, pour le moment, les processeurs de la carte graphique qui exécutent les shaders, 
-sont différents du processeur qui exécute l'application. 
-les variables ne sont pas stockées de la même manière dans la mémoire de l'application et dans la mémoire de la carte 
-graphique. layout(std140) est une des conventions qui permet aux processeurs d'échanger / de partager des données.
-autre différence, 
-]
-
 le mot-clé uniform, indique que le tableau positions ne change pas entre 2 exécutions du shader. 
 c'est bien ce que l'on veut, du point de vue du vertex shader le tableau est une constante et le shader doit transformer 
 tous les sommets du tableau pour pouvoir dessiner les triangles. par contre, l'application peut changer le contenu du 
@@ -297,7 +292,8 @@ pour écrire une première application openGL qui utilise les 2 premières solut
     - \ref interfaceC, les fonctions d'openGL, la construction de l'interface en C pur,
     - \ref tuto2GL compiler un shader, avec vérification des erreurs, avec les utilitaires de gKit,
     - \ref tuto3GL passer des paramètres, des valeurs uniform, à un shader,
-    - \ref tuto4GL dessiner des triangles avec la solution classique, description des attributs des sommets, buffers, vertex arrays et shaders.
+    - \ref tuto4GL dessiner des triangles avec la solution classique, description des attributs des sommets, buffers, vertex
+    arrays et shaders.
 
 
 ## pipeline pixels
@@ -314,10 +310,10 @@ qu'un dernier changement de repère, le passage vers le repère image.
 tous les sommets ont des coordonnées dans le repère projectif, mais, par convention, seuls ceux qui se trouvent dans le cube 
 [-1 1] sur x, y, et z correspondent à des pixels de l'image.
 
-le premier traitement réalisé est donc ce test de visibilité, suivi, ou pas, de la dernière transformation vers le repère image, et enfin
-du test qui détermine quels pixels permettent de dessiner le triangle.
+le premier traitement réalisé est donc ce test de visibilité, suivi, ou pas, de la dernière transformation vers le repère image, et
+enfin du test qui détermine quels pixels permettent de dessiner le triangle.
 
-en gros, on peut l'écrire comme ça :
+on peut écrire le trest de visibilité d'un sommet comme ça :
 \code
 bool visible( const Point p )
 {
@@ -330,9 +326,10 @@ bool visible( const Point p )
 }
 \endcode
 
-si aucun des 3 sommets d'un triangle n'est visible, le triangle n'est pas dessiné, sinon, les coordonnées sont transformées en 
-position de pixels dans l'image, et le _fragment shader_, la fonction responsable de donner une couleur au pixel est exécutée,
-puis la couleur est écrite dans l'image.
+si aucun des 3 sommets d'un triangle n'est visible, le triangle n'est pas visible non plus et n'est pas dessiné (_remarque :_ ce test 
+n'est pas exact, certains triangles doivent etre dessinés même si leurs sommets ne sont pas visibles... pourquoi ?). 
+sinon, les coordonnées sont transformées en position de pixels dans l'image, et le _fragment shader_, la fonction responsable 
+de donner une couleur au pixel est exécutée, puis la couleur est écrite dans l'image.
 \code
 /*
     une carte graphique fait quelque chose d'équivalent (mais en parallèle et avec du matériel spécialisé).
@@ -406,8 +403,7 @@ void main( )
 
 \image html grid_triangle.png "le triangle et la grille de pixels à tester..."
 
-la fonction qui permet vraiment de dessiner le triangle, en testant l'inclusion d'un pixel x, y dans le triangle a, b, c, appelée inside( ), est plus interressante, 
-et c'est un bon exercice...
+la fonction qui permet vraiment de dessiner le triangle, en testant l'inclusion d'un pixel x, y dans le triangle a, b, c, appelée inside( ), est plus interressante, et c'est un bon exercice...
 
 si openGL ne dessinait qu'un seul triangle de couleur constante, la présentation serait terminée. il y a donc quelques détails supplémentaires...
 
@@ -422,11 +418,12 @@ le _zbuffer_.
 
 contrairement à l'intuition, le repère image n'est pas un carre en 2d. la profondeur d'un sommet, sa coordonnée z, est connue, et il suffit de garder
 le triangle avec le plus petit z, pour chaque pixel de l'image. le repère image est donc un cube en 3d, de dimensions [0 largeur]x[0 hauteur]x[0 1], la profondeur 
-est normalisée entre 0 et 1. la camera n'observe qu'une région de la scène, les triangles trop proches, ainsi que ceux qui sont trop loin, ne sont pas 
-dessinés. ces paramètres sont fournis lors de la construction de la transformation _projection_. cf les paramètres znear et zfar de make_perspective( ).
+est normalisée entre 0 et 1. la camera n'observe qu'une région de la scène, les triangles trop proches, ainsi que ceux qui sont trop loin,
+ne sont pas dessinés. ces paramètres sont fournis lors de la construction de la transformation _projection_. cf les paramètres znear 
+et zfar de make_perspective( ).
 
-il y a quand même un problème à régler, le pipeline connait les coordonnées des sommets de chaque triangle, mais il faut calculer les coordonnées de chaque
-fragment, c'est à dire la coordonnée z pour chaque pixel x, y occuppé par le triangle dans l'image.
+il y a quand même un problème à régler, le pipeline connait les coordonnées des sommets de chaque triangle, mais il faut calculer 
+les coordonnées de chaque fragment, c'est à dire la coordonnée z pour chaque pixel x, y occuppé par le triangle dans l'image.
 
 une solution est d'interpoler la valeur z pour tous les pixels du triangle. _comment ?_
 
@@ -442,9 +439,18 @@ si les aires des triangles pab, pbc et pca ont le même signe, le pixel p est à
 
 \image html grid_samples.png "les 2 triangles (verts) ont des aires de signes opposés, à gauche le pixel est à intérieur, à droite, le pixel est à l'extérieur."
 
-en résumé, si le pixel p fait parti du triangle, on connait l'aire des 3 sous-triangles pab, pbc et pca, et, en plus, on sait, par construction, que la 
-somme de ces 3 aires est égale à celle du triangle a, b, c. ce sont exactement les coordonnées barycentriques du pixel p dans le triangle, et on 
-peut utiliser ces coordonnées pour interpoler la coordonnée z pour le pixel x, y en ne connaissant que les coordonnées des sommets.
+dans l'exemple ci dessus, partie gauche, l'aire du triangle vert sera positive si les sommets du triangle abc sont dans le sens trigo et
+négative dans l'autre cas. on a aire(p, a, b) > 0 (les 3 sommets sont dans le sens trigo) et à droite aire(p, a, b) < 0 (les 3 sommets
+sont dans le sens horaire). 
+
+si le triangle abc est décrit dans l'autre sens, le sens horaire, l'aire change de signe. il est donc très important de décrire les sommets
+des triangles à dessiner en respectant une orientation et de donner cette information au pipeline pour qu'il prenne les bonnes 
+décisions.
+
+en résumé, si le pixel p fait parti du triangle, on connait l'aire des 3 sous-triangles pab, pbc et pca, et, en plus, on sait, par 
+construction, que la somme de ces 3 aires est égale à celle du triangle a, b, c. ce sont exactement les coordonnées barycentriques 
+du pixel p dans le triangle, et on peut utiliser ces coordonnées pour interpoler la coordonnée z pour le pixel x, y en ne connaissant 
+que les coordonnées des sommets.
 (cf [wikipedia](https://fr.wikipedia.org/wiki/Coordonn%C3%A9es_barycentriques))
 
 \image html grid_fragments.png "résultat: les pixels à l'intérieur du triangle..."
@@ -595,7 +601,7 @@ certaines étapes sont programmables, ce sont les shaders, et les autres sont pa
 
 \image html shader2_pipeline.png
 
-pour dessiner un triangle (ou plusieurs), il faut donc paramétrer le pipeline pour obtenir le résultat voulu...
+pour dessiner un triangle (ou plusieurs), il faut donc paramétrer le pipeline pour obtenir le résultat voulu... cf \ref tuto3GL et écrire les 2 shaders... cf \ref glsl
 
 suite de la lecture :
     - \ref interfaceC, les fonctions d'openGL, la construction de l'interface en C pur,
