@@ -22,7 +22,7 @@ void release_mesh( Mesh& m )
     if(m.vao)
         release_vertex_format(m.vao);
     if(m.program)
-        glDeleteProgram(m.program);
+        release_program(m.program);
     return;
 }
 

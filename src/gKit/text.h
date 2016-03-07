@@ -59,7 +59,7 @@ struct Text
     GLuint ubo;         //!< uniform buffer object, pour transferrer le texte a afficher
 };
 
-//! cree une console.
+//! cree une console. a detruire avec release_text( ).
 Text create_text( );
 //! detruit une console.
 void release_text( Text& text );

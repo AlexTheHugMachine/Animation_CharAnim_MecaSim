@@ -4,7 +4,7 @@
 #include <cstdarg>
 
 #include "program.h"
-#include "buffer.h"
+#include "image.h"
 #include "texture.h"
 #include "text.h"
 
@@ -44,18 +44,20 @@ Text create_text( )
     program_print_errors(text.program);
 
     clear(text);
-    text.vao= create_vertex_format();
-    text.ubo= make_buffer(GL_UNIFORM_BUFFER, sizeof(text.buffer), text.buffer);
+    glGenVertexArrays(1, &text.vao);
+    glGenBuffers(1, &text.ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, text.ubo);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(text.buffer), text.buffer, GL_STATIC_DRAW);
     
     return text;
 }
 
 void release_text( Text& text )
 {
-    glDeleteTextures(1, &text.font);
-    glDeleteProgram(text.program);
+    release_program(text.program);
     glDeleteVertexArrays(1, &text.vao);
     glDeleteBuffers(1, &text.ubo);
+    glDeleteTextures(1, &text.font);
 }
 
 void clear( Text& text )

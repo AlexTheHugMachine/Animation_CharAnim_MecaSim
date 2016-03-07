@@ -32,7 +32,8 @@ struct Mesh
     GLuint program;
 };
 
-//! construit un objet / maillage vide compose de primitives de type \param primitives : GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_LINES, etc.
+//! construit un objet / maillage vide compose de primitives de type primitives. a detruire avec release_mesh( ).
+//! \param primitives : GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_LINES, etc.
 Mesh create_mesh( const GLenum primitives );
 //! detruit un objet.
 void release_mesh( Mesh& m );
@@ -116,11 +117,11 @@ void restart_strip( Mesh& m );
 //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet.
 void mesh_bounds( const Mesh& m, Point& pmin, Point& pmax );
 
-//! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire.
+//! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release_mesh( ).\n
 //! exemple, cf make_mesh_program( )
 GLuint make_mesh_vertex_format( Mesh& m, const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
 
-//! construit le shader program configure pour dessiner l'objet avec openGL. utilitaire.
+//! construit le shader program configure pour dessiner l'objet avec openGL. utilitaire. detruit par release_mesh( ).\n
 /*! exemple :
 \code
 Mesh mesh= { ... };
@@ -142,7 +143,8 @@ GLuint make_mesh_program( Mesh& m, const bool use_texcoord= true, const bool use
 
 //! dessine l'objet avec les transformations model, vue et projection.
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection );
-//! dessine l'objet avec les transformations model, vue et projection. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet. 
+//! dessine l'objet avec les transformations model, vue et projection.\n
+//! applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet. 
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, GLuint texture );
 
 ///@}

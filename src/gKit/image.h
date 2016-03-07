@@ -22,7 +22,8 @@ struct Image
     // levels
 };
 
-//! cree une image de couleur uniforme. les pixels sont representes par 3 ou 4 valeurs. 
+//! cree une image de couleur uniforme. a detruire avec release_image( ).\n
+//! les pixels sont representes par 3 ou 4 valeurs / canaux. 
 //! \param width largeur 
 //! \param height  hauteur  
 //! \param channels 3 ou 4 nombre de canaux couleur, 3 pour des pixels opaques, 4 pour des pixels semi transparents
@@ -31,7 +32,7 @@ Image create_image( const int width, const int height, const int channels, const
 //! detruit l'image.
 void release_image( Image& im );
 
-//! charge une image a partir d'un fichier. renvoie une image rouge en cas d'echec.
+//! charge une image a partir d'un fichier. renvoie une image rouge en cas d'echec. a detruire avec release_image( ).
 //! \param filemane nom de l'image a charger 
 Image read_image( const char *filename );
 

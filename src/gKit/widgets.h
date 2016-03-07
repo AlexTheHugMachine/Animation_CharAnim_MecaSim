@@ -81,7 +81,7 @@ struct Widgets
 };
 
 
-//! cree une interface graphique.
+//! cree une interface graphique. a detruire avec release_widgets( ).
 Widgets create_widgets( );
 //! detruit l'interface graphique.
 void release_widgets( Widgets& widgets );

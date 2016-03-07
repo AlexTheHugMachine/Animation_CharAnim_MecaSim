@@ -10,7 +10,7 @@
 //! \file 
 //! charge un fichier wavefront .obj et construit un mesh.
 
-//! charge un fichier wavefront .obj et renvoie un mesh compose de triangles non indexes. utiliser glDrawArrays pour l'afficher.
+//! charge un fichier wavefront .obj et renvoie un mesh compose de triangles non indexes. utiliser glDrawArrays pour l'afficher. a detruire avec release_mesh( ).
 Mesh read_mesh( const char *filename );
 
 //! enregistre un mesh dans un fichier .obj.
