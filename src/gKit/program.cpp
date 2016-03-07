@@ -300,7 +300,8 @@ int program_format_errors( const GLuint program, std::string& errors )
                 errors.append("shader...\n");
             
             // formatte les erreurs
-            first_error= std::min(first_error, print_errors(errors, &log.front(), &source.front()));
+            int last_error= print_errors(errors, &log.front(), &source.front());
+            first_error= std::min(first_error, last_error);
         }
     }
     
