@@ -2,7 +2,11 @@
 #include <cstdio>
 #include <string>
 
+#ifdef _APPLE_
+#include <SDL2_image/SDL_image.h>
+#else
 #include <SDL2/SDL_image.h>
+#endif
 
 #include "image.h"
 

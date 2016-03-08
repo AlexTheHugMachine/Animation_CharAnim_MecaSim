@@ -35,7 +35,7 @@ int init( )
     
     // camera
     Point pmin, pmax;
-    bounds(mesh, pmin, pmax);
+    mesh_bounds(mesh, pmin, pmax);
     
     camera= make_orbiter_lookat(center(pmin, pmax), distance(pmin, pmax));
     
