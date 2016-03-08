@@ -21,10 +21,10 @@ Image create_image( const int w, const int h, const int c, const Color& color )
     im.data.resize(w*h*c);
     unsigned char *data= &im.data.front();
 
-    unsigned char r= color.r * 255.f;
-    unsigned char g= color.g * 255.f;
-    unsigned char b= color.b * 255.f;
-    unsigned char a= color.a * 255.f;
+    unsigned char r= std::min(color.r * 255.f, 255.f);
+    unsigned char g= std::min(color.g * 255.f, 255.f);
+    unsigned char b= std::min(color.b * 255.f, 255.f);
+    unsigned char a= std::min(color.a * 255.f, 255.f);
 
     if(c > 3)
     {
@@ -81,11 +81,11 @@ void image_set_pixel( Image& im, const int x, const int y, const Color& color )
     int offset= im.width * y * im.channels + x * im.channels;
     unsigned char *data= &im.data.front() + offset;
 
-    data[0]= color.r * 255.f;
-    data[1]= color.g * 255.f;
-    data[2]= color.b * 255.f;
+    data[0]= std::min(color.r * 255.f, 255.f);
+    data[1]= std::min(color.g * 255.f, 255.f);
+    data[2]= std::min(color.b * 255.f, 255.f);
     if(im.channels > 3)
-        data[3]= color.a * 255.f;
+        data[3]= std::min(color.a * 255.f, 255.f);
 }
 
 
