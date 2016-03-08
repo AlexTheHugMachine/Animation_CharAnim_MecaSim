@@ -36,7 +36,6 @@ solution "gKit2light"
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 
 	configuration "macosx"
-		defines { "_APPLE_" }
 		buildoptions { "-framework OpenGL -framework SDL2 -framework SDL2_image" }
 		linkoptions { "-framework OpenGL -framework SDL2 -framework SDL2_image" }
 

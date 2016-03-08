@@ -6,7 +6,11 @@ SRCS = src/shader_kit.cpp \
 
 FINAL_TARGET = gKit2light
 
+UNAME := `uname`
+OS?= $(UNAME)
+
 ifeq ($(OS),Windows_NT)
+	#windows avec codeblocks
 	LIBS = 	-Lextern \
 		-Lextern/SDL2_mingw/SDL2-2.0.3/i686-w64-mingw32/lib \
 		-Lextern/SDL2_mingw/SDL2_image-2.0.0/i686-w64-mingw32/lib \
@@ -19,14 +23,21 @@ ifeq ($(OS),Windows_NT)
 		-Isrc/viewer \
 		-Isrc/gKit
 else
-	LIBS = -lSDL2 -lSDL2_image -lGLEW -lGL
-	INCLUDELIBS_DIR = -I /usr/include/SDL2 -I src/gKit -I src/viewer
+	ifeq ($(OS),Darwin)
+	#mac os
+		LIBS= -framework OpenGL -framework SDL2 -framework SDL2_image
+		INCLUDELIBS_DIR= -framework OpenGL -framework SDL2 -framework SDL2_image
+	else
+	#linux
+		LIBS = -lSDL2 -lSDL2_image -lGLEW -lGL
+		INCLUDELIBS_DIR = -I /usr/include/SDL2 -I src/gKit 
+	endif
 endif
 
 CC		= g++
 LD 		= g++
-LDFLAGS  	=
-CPPFLAGS 	= -D_USE_MATH_DEFINES  -Wall -g #-O2   # pour optimiser
+LDFLAGS  	= -g
+CPPFLAGS 	= -D_USE_MATH_DEFINES  -Wall -g
 INCLUDE_DIR	= -I src $(INCLUDELIBS_DIR)
 SRC_DIR 	= src
 BIN_DIR 	= bin
@@ -41,6 +52,7 @@ make_dir:
 	mkdir -p $(OBJ_DIRS)
 
 $(BIN_DIR)/$(FINAL_TARGET): $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
+	@echo building for $(OS)...
 	$(LD) $+ -o $@ $(LDFLAGS) $(LIB_DIR) $(LIBS)
 
 $(OBJ_DIR)/%.o: %.cpp

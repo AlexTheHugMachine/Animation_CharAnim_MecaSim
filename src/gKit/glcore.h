@@ -1,7 +1,7 @@
 
 #ifndef _GK_GL3CORE_H
 
-#ifdef _APPLE_
+#ifdef __APPLE__
     #include <OpenGL/gl3.h>
     #ifndef  CGL_VERSION_1_3
     #error openGL core profile not supported
