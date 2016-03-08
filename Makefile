@@ -6,9 +6,6 @@ SRCS = src/shader_kit.cpp \
 
 FINAL_TARGET = gKit2light
 
-UNAME := `uname`
-OS?= $(UNAME)
-
 ifeq ($(OS),Windows_NT)
 	#windows avec codeblocks
 	LIBS = 	-Lextern \
@@ -23,14 +20,15 @@ ifeq ($(OS),Windows_NT)
 		-Isrc/viewer \
 		-Isrc/gKit
 else
-	ifeq ($(OS),Darwin)
-	#mac os
-		LIBS= -framework OpenGL -framework SDL2 -framework SDL2_image
-		INCLUDELIBS_DIR= -framework OpenGL -framework SDL2 -framework SDL2_image
-	else
+	OS = $(shell uname)
+	ifeq ($(OS),Linux)
 	#linux
 		LIBS = -lSDL2 -lSDL2_image -lGLEW -lGL
 		INCLUDELIBS_DIR = -I /usr/include/SDL2 -I src/gKit 
+	else
+	#mac os
+		LIBS = -F. -framework OpenGL -framework SDL2 -framework SDL2_image
+		INCLUDELIBS_DIR = -framework OpenGL -framework SDL2 -framework SDL2_image
 	endif
 endif
 
@@ -49,10 +47,10 @@ OBJ_DIRS 	= $(OBJ_DIR)/viewer $(OBJ_DIR)/src $(OBJ_DIR)/src/gKit $(OBJ_DIR)/tuto
 default: make_dir $(BIN_DIR)/$(FINAL_TARGET)
 
 make_dir:
+	@echo building for $(OS)...
 	mkdir -p $(OBJ_DIRS)
 
 $(BIN_DIR)/$(FINAL_TARGET): $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
-	@echo building for $(OS)...
 	$(LD) $+ -o $@ $(LDFLAGS) $(LIB_DIR) $(LIBS)
 
 $(OBJ_DIR)/%.o: %.cpp

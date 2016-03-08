@@ -8,12 +8,6 @@
 #include "glcore.h"
 #include "window.h"
 
-#ifndef _MSC_VER
-  #define GK_CALLBACK
-#else
-  #define GK_CALLBACK __stdcall
-#endif
-
 
 static int width;
 static int height;
@@ -232,7 +226,15 @@ void release_window( Window window )
 }
 
 
+#ifdef NO_GLEW
 #ifndef GK_RELEASE
+
+#ifndef _MSC_VER
+  #define GK_CALLBACK
+#else
+  #define GK_CALLBACK __stdcall
+#endif
+
 //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
 static
 void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
@@ -250,6 +252,7 @@ void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum sever
     else
         printf("[openGL message]\n%s\n", message);
 }
+#endif
 #endif
 
 //! cree et configure un contexte opengl
@@ -288,17 +291,20 @@ Context create_context( Window window, const int major, const int minor )
         return NULL;
     }
 
+#ifdef NO_GLEW
     // purge les erreurs opengl generees par glew !
     while(glGetError() != GL_NO_ERROR) {;}
 
-#ifndef GK_RELEASE        
+#ifndef GK_RELEASE
     // configure l'affichage des messages d'erreurs opengl, si l'extension est disponible
     if(GLEW_ARB_debug_output)
     {
+        printf("debug_ouput...\n");
         glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
         glDebugMessageCallbackARB(debug, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
+#endif
 #endif
     
     return context;
