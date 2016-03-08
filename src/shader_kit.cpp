@@ -3,9 +3,8 @@
 
 #include <cstdio>
 #include <cstring>
-#define GLEW_NO_GLU
-#include "GL/glew.h"
 
+#include "glcore.h"
 #include "window.h"
 
 #include "program.h"

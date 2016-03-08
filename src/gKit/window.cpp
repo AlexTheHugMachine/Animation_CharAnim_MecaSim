@@ -5,9 +5,7 @@
 #include <set>
 #include <string>
 
-#define GLEW_NO_GLU
-#include "GL/glew.h"
-
+#include "glcore.h"
 #include "window.h"
 
 #ifndef _MSC_VER

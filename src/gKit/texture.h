@@ -2,10 +2,10 @@
 #ifndef _TEXTURE_H
 #define _TEXTURE_H
 
-#define GLEW_NO_GLU
-#include "GL/glew.h"
+#include "glcore.h"
 
 #include "image.h"
+
 
 //! \addtogroup openGL
 ///@{

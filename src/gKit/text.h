@@ -2,8 +2,7 @@
 #ifndef _TEXT_H
 #define _TEXT_H 
 
-#define GLEW_NO_GLU
-#include "GL/glew.h"
+#include "glcore.h"
 
 
 //! \addtogroup application 

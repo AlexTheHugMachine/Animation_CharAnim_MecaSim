@@ -2,9 +2,9 @@
 #include <cstdio>
 #include <string>
 
-#include "SDL2/SDL_image.h"
-#include "image.h"
+#include <SDL2/SDL_image.h>
 
+#include "image.h"
 
 
 Image create_image( const int w, const int h, const int c, const Color& color )

@@ -2,7 +2,8 @@
 #ifndef _WINDOW_H
 #define _WINDOW_H
 
-#include "SDL2/SDL.h"
+#include <SDL2/SDL.h>
+
 
 //! \addtogroup application utilitaires pour creer une application
 ///@{

@@ -4,6 +4,7 @@
 
 #include "vec.h"
 
+
 //! \addtogroup math manipulations de points, vecteur, matrices, transformations
 ///@{
 

@@ -6,6 +6,7 @@
 
 #include "color.h"
 
+
 //! \addtogroup image utilitaires pour manipuler des images
 ///@{
 

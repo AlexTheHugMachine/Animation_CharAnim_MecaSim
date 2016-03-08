@@ -4,8 +4,7 @@
 
 #include <string>
 
-#define GLEW_NO_GLU
-#include "GL/glew.h"
+#include "glcore.h"
 
 #include "vec.h"
 #include "mat.h"

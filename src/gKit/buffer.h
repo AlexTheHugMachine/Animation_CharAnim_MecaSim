@@ -4,8 +4,8 @@
 
 #include <cstddef>
 
-#define GLEW_NO_GLU
-#include "GL/glew.h"
+#include "glcore.h"
+
 
 //! \addtogroup openGL
 ///@{

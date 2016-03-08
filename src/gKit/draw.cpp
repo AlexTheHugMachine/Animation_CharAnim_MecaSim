@@ -2,6 +2,7 @@
 #include "draw.h"
 #include "window.h"
 
+
 void draw( Mesh& m, const Orbiter& camera )
 {
     // recupere les transformations

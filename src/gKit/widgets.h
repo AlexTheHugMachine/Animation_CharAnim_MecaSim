@@ -4,6 +4,7 @@
 
 #include "text.h"
 
+
 //! \addtogroup application 
 ///@{
 

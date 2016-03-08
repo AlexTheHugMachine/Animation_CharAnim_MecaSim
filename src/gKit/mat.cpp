@@ -1,7 +1,6 @@
 
 #include <cassert>
 #include <cstdio>
-#undef __STRICT_ANSI__
 #include <cmath>
 
 #include "mat.h"

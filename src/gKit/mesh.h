@@ -4,12 +4,12 @@
 
 #include <vector>
 
-#define GLEW_NO_GLU
-#include "GL/glew.h"
+#include "glcore.h"
 
 #include "vec.h"
 #include "mat.h"
 #include "color.h"
+
 
 //! \addtogroup objet3D utilitaires pour manipuler des objets 3d
 ///@{
