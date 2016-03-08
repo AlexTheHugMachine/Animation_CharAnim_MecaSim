@@ -226,13 +226,6 @@ void release_window( Window window )
 
 #ifndef NO_GLEW
 #ifndef GK_RELEASE
-
-#ifndef _MSC_VER
-  #define GK_CALLBACK
-#else
-  #define GK_CALLBACK __stdcall
-#endif
-
 //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
 static
 void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
@@ -279,6 +272,7 @@ Context create_context( Window window, const int major, const int minor )
 
     SDL_GL_SetSwapInterval(1);
 
+#ifndef NO_GLEW
     // initialise les extensions opengl
     glewExperimental= 1;
     GLenum err= glewInit();
@@ -289,7 +283,6 @@ Context create_context( Window window, const int major, const int minor )
         return NULL;
     }
 
-#ifndef NO_GLEW
     // purge les erreurs opengl generees par glew !
     while(glGetError() != GL_NO_ERROR) {;}
 

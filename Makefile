@@ -27,15 +27,16 @@ else
 		INCLUDELIBS_DIR = -I /usr/include/SDL2 -I src/gKit 
 	else
 	#mac os
-		LIBS = -F. -framework OpenGL -framework SDL2 -framework SDL2_image
-		INCLUDELIBS_DIR = -framework OpenGL -framework SDL2 -framework SDL2_image
+		LIBS = -F~/Library/Frameworks/ -framework OpenGL -framework SDL2 -framework SDL2_image
+		INCLUDELIBS_DIR = -F~/Library/Frameworks/ -framework OpenGL -framework SDL2 -framework SDL2_image
+		FLAGS = -D_MAC_OS_
 	endif
 endif
 
 CC		= g++
 LD 		= g++
 LDFLAGS  	= -g
-CPPFLAGS 	= -D_USE_MATH_DEFINES  -Wall -g
+CPPFLAGS 	= -D_USE_MATH_DEFINES  -Wall -g $(FLAGS)
 INCLUDE_DIR	= -I src $(INCLUDELIBS_DIR)
 SRC_DIR 	= src
 BIN_DIR 	= bin

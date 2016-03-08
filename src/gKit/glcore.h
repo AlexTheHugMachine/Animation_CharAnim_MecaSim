@@ -1,7 +1,7 @@
 
 #ifndef _GK_GL3CORE_H
 
-#ifdef __APPLE__
+#ifdef _MAC_OS_
     #include <OpenGL/gl3.h>
     
     // pas la peine d'utiliser glew 
