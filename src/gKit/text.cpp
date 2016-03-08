@@ -4,6 +4,7 @@
 #include <cstdarg>
 
 #include "program.h"
+#include "uniforms.h"
 #include "image.h"
 #include "texture.h"
 #include "text.h"

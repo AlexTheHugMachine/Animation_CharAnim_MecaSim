@@ -9,6 +9,7 @@
 #include "mat.h"
 
 #include "program.h"
+#include "uniforms.h"
 
 #include "orbiter.h"
 #include "mesh.h"

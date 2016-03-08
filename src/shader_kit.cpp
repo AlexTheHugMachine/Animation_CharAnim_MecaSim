@@ -8,6 +8,7 @@
 #include "window.h"
 
 #include "program.h"
+#include "uniforms.h"
 
 #include "texture.h"
 #include "mesh.h"

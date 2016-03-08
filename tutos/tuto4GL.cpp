@@ -164,7 +164,7 @@ int draw( )
     glUniformMatrix4fv(location, 1, GL_TRUE, &mvp.m[0][0]);
     
 /*  plus direct :
-    #include "program.h"
+    #include "uniforms.h"
     program_uniform(program, "mvpMatrix", mvp);
  */    
     

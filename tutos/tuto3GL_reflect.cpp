@@ -38,7 +38,7 @@ const char *glsl_string( const GLenum type )
 }
 
 // utilitaire : affiche la valeur d'un uniform.
-void print_uniform( const GLuint program, const GLint location, const char *name, const GLenum type, const GLint size )
+void print_value( const GLuint program, const GLint location, const char *name, const GLenum type, const GLint size )
 {
     if(program == 0)
         return;
@@ -142,7 +142,7 @@ int print_uniforms( const GLuint program )
 
         printf("  uniform %i '%s': location %d, type %s (0x%x), array_size %d\n", i, name, location, 
             glsl_string(glsl_type), glsl_type, glsl_size);
-        print_uniform(program, location, name, glsl_type, glsl_size);
+        print_value(program, location, name, glsl_type, glsl_size);
     }
     
     delete [] name;

@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "program.h"
+#include "uniforms.h"
 #include "buffer.h"
 #include "mesh.h"
 
