@@ -73,30 +73,32 @@ int quit( )
     return 0;   // ras, pas d'erreur
 }
 
+
 int main( int argc, char **argv )
 {
-    Window w= create_window(1024, 640);
-    if(w == NULL) 
+    // etape 1 : creer la fenetre
+    Window window= create_window(1024, 640);
+    if(window == NULL) 
         return 1;       // erreur lors de la creation de la fenetre ou de l'init de sdl2
     
-    Context c= create_context(w);
-    if(c == NULL) 
+    // etape 2 : creer un contexte opengl pour pouvoir dessiner
+    Context context= create_context(window);
+    if(context == NULL) 
         return 1;       // erreur lors de la creation du contexte opengl
     
-    // creation des objets opengl
+    // etape 3 : creation des objets 
     if(init() < 0)
     {
         printf("[error] init failed.\n");
         return 1;
     }
     
-    // affichage de l'application, tant que la fenetre n'est pas fermee. ou que draw() ne renvoie pas 0
-    run(w);
+    // etape 4 : affichage de l'application, tant que la fenetre n'est pas fermee. ou que draw() ne renvoie pas 0
+    run(window, draw);
 
-    // nettoyage
+    // etape 5 : nettoyage
     quit();
-    release_context(c);
-    release_window(w);
+    release_context(context);
+    release_window(window);
     return 0;
 }
-

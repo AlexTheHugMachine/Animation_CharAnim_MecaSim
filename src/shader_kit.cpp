@@ -168,7 +168,7 @@ int quit( )
     return 0;
 }
 
-int draw( )
+int draw( void )
 {
     // effacer l'image
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -292,12 +292,12 @@ int main( int argc, char **argv )
         return 0;
     }
     
-    Window w= create_window(1024, 640);
-    if(w == NULL) 
+    Window window= create_window(1024, 640);
+    if(window == NULL) 
         return 1;
     
-    Context c= create_context(w);
-    if(c == NULL) 
+    Context context= create_context(window);
+    if(context == NULL) 
         return 1;
     
     // creation des objets opengl
@@ -309,11 +309,11 @@ int main( int argc, char **argv )
     }
     
     // affichage de l'application
-    run(w);
+    run(window, draw);
 
     // nettoyage
     quit();
-    release_context(c);
-    release_window(w);
+    release_context(context);
+    release_window(window);
     return 0;
 }

@@ -19,15 +19,7 @@ solution "gKit2light"
 		buildoptions { "-flto"}
 		linkoptions { "-flto"}
 		links { "GLEW", "SDL2", "SDL2_image", "GL" }
-
-	configuration { "linux", "release" }
-		buildoptions { "-O3" }
-		linkoptions { "-O3" }
-		
-	configuration { "linux", "debug" }
-		buildoptions { "-g" }
-		linkoptions { "-g" }
-
+	
 	configuration "windows"
 		includedirs { "local/windows/include" }
 		libdirs { "local/windows/lib" }

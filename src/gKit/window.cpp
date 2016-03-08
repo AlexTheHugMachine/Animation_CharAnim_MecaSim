@@ -88,9 +88,7 @@ void clear_wheel_event( )
 
 
 //! boucle de gestion des evenements de l'application.
-int draw( );    //!< declaration anticipee.
-
-int run( Window window )
+int run( Window window, int (*draw)( void ) )
 {
     // configure sdl
     SDL_StartTextInput();

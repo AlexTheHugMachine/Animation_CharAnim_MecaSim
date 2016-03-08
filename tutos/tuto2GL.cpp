@@ -133,13 +133,13 @@ int draw( )
 int main( int argc, char **argv )
 {
     // etape 1 : creer la fenetre
-    Window w= create_window(1024, 640);
-    if(w == NULL) 
+    Window window= create_window(1024, 640);
+    if(window == NULL) 
         return 1;       // erreur lors de la creation de la fenetre ou de l'init de sdl2
     
     // etape 2 : creer un contexte opengl pour pouvoir dessiner
-    Context c= create_context(w);
-    if(c == NULL) 
+    Context context= create_context(window);
+    if(context == NULL) 
         return 1;       // erreur lors de la creation du contexte opengl
     
     // etape 3 : creation des objets 
@@ -149,13 +149,12 @@ int main( int argc, char **argv )
         return 1;
     }
     
-    // etape 4 : affichage de l'application, appelle draw( ) tant que la fenetre n'est pas fermee. ou que draw() ne renvoie pas 0
-    run(w);
+    // etape 4 : affichage de l'application, tant que la fenetre n'est pas fermee. ou que draw() ne renvoie pas 0
+    run(window, draw);
 
     // etape 5 : nettoyage
     quit();
-    release_context(c);
-    release_window(w);
+    release_context(context);
+    release_window(window);
     return 0;
 }
-
