@@ -137,7 +137,10 @@ delete [] name;
 il est également possible récupérer quel buffer est associé à un attribut, cf glGetVertexAttrib( ) pour vérifier que tout est cohérent au moment du glDraw( ). c'est le vertex array object qui conserve ces informations, cf \ref tuto4GL.
 
 \code
-    // recupere le buffer associe a l'attribut qui a location pour identifiant
+    // selectionner le vertex array, si necessaire
+    // glVertexArray(vao);
+    
+    // recupere le buffer associe a l'attribut qui a location pour identifiant, dans le vertex array selectionne
     GLint buffer= 0; 
     glGetVertexAttribiv(location, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &buffer );
     if(buffer > 0)

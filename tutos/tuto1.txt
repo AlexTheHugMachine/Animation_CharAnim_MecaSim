@@ -43,7 +43,7 @@ int main( int argc, char **argv )
     
     // etape 4 : affichage de l'application, tant que la fenetre n'est pas fermee. ou que draw() ne renvoie pas 0
     // appelle draw( ) pour dessiner une nouvelle image, 60 fois par seconde.
-    run(window);
+    run(window, draw);
 
     // etape 5 : nettoyage
     quit();	// detruire les objets openGL crees par l'application
