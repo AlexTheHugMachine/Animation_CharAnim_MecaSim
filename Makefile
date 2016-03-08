@@ -1,6 +1,6 @@
 
-SRCS = tutos/tuto4GL_normals.cpp \
-	src/gKit/window.cpp src/gKit/vec.cpp src/gKit/program.cpp src/gKit/mesh.cpp src/gKit/image.cpp src/gKit/color.cpp \
+SRCS = tutos/tuto3GL_reflect.cpp \
+	src/gKit/window.cpp src/gKit/vec.cpp src/gKit/program.cpp src/gKit/uniforms.cpp src/gKit/mesh.cpp src/gKit/image.cpp src/gKit/color.cpp \
 	src/gKit/wavefront.cpp src/gKit/texture.cpp src/gKit/orbiter.cpp src/gKit/mat.cpp src/gKit/buffer.cpp src/gKit/draw.cpp \
 	src/gKit/text.cpp src/gKit/widgets.cpp
 
