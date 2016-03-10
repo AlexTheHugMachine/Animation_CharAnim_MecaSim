@@ -28,9 +28,9 @@ solution "gKit2light"
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 
 	configuration "macosx"
-		local frameworks= "-F ~/Library/Frameworks"
-		defines { "_MAC_OS_" }
-		buildoptions { frameworks .. " -framework OpenGL -framework SDL2 -framework SDL2_image" }
+		local frameworks= "-F /Library/Frameworks/"
+		defines { "GK_MACOS" }
+		buildoptions { frameworks }
 		linkoptions { frameworks .. " -framework OpenGL -framework SDL2 -framework SDL2_image" }
 
 
