@@ -1,5 +1,5 @@
 
-SRCS = tutos/tuto3GL_reflect.cpp \
+SRCS = tutos/scene_tuto1.cpp \
 	src/gKit/window.cpp src/gKit/vec.cpp src/gKit/program.cpp src/gKit/uniforms.cpp src/gKit/mesh.cpp src/gKit/image.cpp src/gKit/color.cpp \
 	src/gKit/wavefront.cpp src/gKit/texture.cpp src/gKit/orbiter.cpp src/gKit/mat.cpp src/gKit/buffer.cpp src/gKit/draw.cpp \
 	src/gKit/text.cpp src/gKit/widgets.cpp
@@ -27,9 +27,9 @@ else
 		INCLUDELIBS_DIR = -I /usr/include/SDL2 -I src/gKit 
 	else
 	#mac os
-		LIBS = -F~/Library/Frameworks/ -framework OpenGL -framework SDL2 -framework SDL2_image
-		INCLUDELIBS_DIR = -F~/Library/Frameworks/ -framework OpenGL -framework SDL2 -framework SDL2_image
-		FLAGS = -D_MAC_OS_
+		LIBS = -F/Library/Frameworks/ -framework OpenGL -framework SDL2 -framework SDL2_image
+		INCLUDELIBS_DIR = -F/Library/Frameworks/ -framework OpenGL -framework SDL2 -framework SDL2_image
+		FLAGS = -DGK_MACOS
 	endif
 endif
 
