@@ -52,6 +52,8 @@ Point operator- ( const Vector& v, const Point& a );
 Point operator- ( const Point& a, const Vector& v );
 //! renvoie le vecteur u+v.
 Vector operator+ ( const Vector& u, const Vector& v );
+//! renvoie le vecteur u-v.
+Vector operator- ( const Vector& u, const Vector& v );
 //! renvoie le vecteur k*u;
 Vector operator* ( const float k, const Vector& v );
 //! renvoie le vecteur k*v;

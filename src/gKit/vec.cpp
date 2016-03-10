@@ -74,6 +74,11 @@ Vector operator+ ( const Vector& u, const Vector& v )
     return make_vector(u.x + v.x, u.y + v.y, u.z + v.z);
 }
 
+Vector operator- ( const Vector& u, const Vector& v )
+{
+    return make_vector(u.x - v.x, u.y - v.y, u.z - v.z);
+}
+
 Vector operator* ( const float k, const Vector& v )
 {
     return make_vector(k * v.x, k * v.y, k * v.z);
