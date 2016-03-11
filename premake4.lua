@@ -1,13 +1,16 @@
 solution "gKit2light"
 	configurations { "debug", "release" }
-
+	platforms { "x64" }
+	
 	includedirs { ".", "src/gKit" }
 	
 	configuration "debug"
+		targetdir "bin/debug"
 		defines { "DEBUG" }
 		flags { "Symbols" }
 
 	configuration "release"
+		targetdir "bin/release"
 --~ 		defines { "NDEBUG" }
 --~ 		defines { "GK_RELEASE" }
 		flags { "OptimizeSpeed" }
