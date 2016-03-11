@@ -1,6 +1,7 @@
 
 #include <cstdio>
 #include <string>
+#include <algorithm>
 
 #ifdef GK_MACOS
 #include <SDL2_image/SDL_image.h>
