@@ -246,12 +246,6 @@ int draw( void )
         glDrawArrays(GL_TRIANGLES, 0, vertex_count);
     }
     
-    if(key_state('s'))
-    {
-        clear_key_state('s');
-        screenshot("shader_kit.png");
-    }
-    
     // affiche les infos
     begin(widgets);
     if(program_failed)
@@ -280,6 +274,13 @@ int draw( void )
     end(widgets);
     
     draw(widgets, window_width(), window_height());
+    
+    
+    if(key_state('s'))
+    {
+        clear_key_state('s');
+        screenshot("shader_kit.png");
+    }
     
     return 1;
 }
