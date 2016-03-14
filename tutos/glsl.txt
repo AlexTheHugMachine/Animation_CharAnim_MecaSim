@@ -115,7 +115,7 @@ dans une variable globale `gl_Position`.
 
 les attributs se déclarent en global avec le mot clé `in`, les varyings avec `out`, les constantes initialisées avec `const`.
 
-les variables fournies par l'application sont déclarés avec le mot-clé `uniform` en plus de leur type et de leur nom.
+les variables fournies par l'application sont déclarées avec le mot-clé `uniform` en plus de leur type et de leur nom.
 
 le vertex shader à également accès à des variables définies par le pipeline, elles sont toutes prefixées par `gl_` 
 (cf  [openGL SDK](https://www.opengl.org/sdk/docs/man/), section glsl, lettre g), 
@@ -193,5 +193,10 @@ void main( void )
     gl_FragColor= vec3(color, 1);       // couleur opaque, alpha= 1
 }
 \endcode
+
+
+## uniforms, varyings et variables
+
+\todo rappel et exemple
 
  */

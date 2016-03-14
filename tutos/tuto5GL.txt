@@ -1,0 +1,329 @@
+
+/*! \addtogroup tuto5GL textures, samplers et pipeline
+
+cf \ref tuto5GL.cpp
+
+pour modifier l'apparence d'un objet, il est relativement simple de plaquer une image à la surface des triangles. l'objectif est de modifier la couleur des pixels
+qui sont utilisés pour dessiner l'objet. et l'idée est d'associer un pixel de la texture à chaque pixel utilisé pour dessiner les triangles de l'objet.
+
+il y a plusieurs choses à faire :
+	- les sommets des triangles ont une information supplémentaire, leur position dans l'image / la texture (en plus de leur position dans le repère local, etc). 
+	il faut stocker ces informations dans un buffer et modifier le format des sommets, cf \ref tuto4GL,
+	- "donner" l'image à openGL pour qu'il puisse l'utiliser, cf créer un objet openGL texture,
+	- écrire le fragment shader qui change la couleur du pixel en fonction de la couleur d'un pixel de la texture,
+	- configurer le pipeline avant le draw, pour que tout fonctionne...
+
+\image html bigguy_notexture.png pas de texture
+\image html bigguy_texspace.png à gauche : les sommets dans la texture, à droite : la texture, chaque face de l'objet est associé à un morceau de la texture
+\image html mesh_kit.png bigguy texturé
+
+
+## pipeline graphique et textures
+
+c'est le fragment shader qui donne sa couleur à un pixel de l'image. si l'on souhaite utiliser la couleur d'un pixel de la texture, il faut que le fragment shader puisse
+lire cette couleur. 2 informations sont nécessaires : la texture elle même et les coordonnées du pixel dans la texture. 
+
+_comment connaitre les coordonnées du pixel dans la texture ?_ lorsque l'on dessine un triangle, les coordonnées de ses sommets (connues dans le repère de 
+création de l'objet) sont transformées pour déterminer sur quels pixels de l'image résultat se projettent les 3 sommets. puis le pipeline interpole ces coordonnées
+pixel par pixel pour calculer la profondeur de chaque fragment du triangle (cf. \ref intro3d / partie plusieurs triangles). les coordonnées des sommets dans la texture
+sont eux aussi interpolés, en même temps, et le fragment shader connait les coordonnées du pixel de la texture correspondant au pixel de l'image. il ne reste plus 
+qu'à lire la couleur dans la texture et à l'utiliser pour colorier le pixel de l'image.
+
+_mais il reste un détail à régler :_ comme précisé dans \ref intro3d, les informations des sommets, les attributs, ne sont pas interpolés automatiquement,
+il le dire à openGL en déclarant explicitement un varying, une sortie optionnelle du vertex shader et en déclarant l'entrée correspondante dans le fragment shader. 
+plus de détails dans écrire les shaders.
+
+_autre explication_ : le fragment shader ne peut pas accéder aux attributs de sommets, il ne sont connus que du vertex shader, il faut donc créer un varying en sortie
+du vertex shader pour que le fragment shader récupère cette information (associée aux sommets). et les varyings sont interpolés par le pipeline.
+
+
+## une texture
+
+on commence par le cas simple, utiliser une seule texture. première étape, charger une image et créer un objet openGL texture qui stocke l'image sous une forme utilisable
+par les shaders.
+
+### charger une image, créer un objet texture openGL
+
+pour créer un objet texture, il faut utiliser glGenTextures( ), la démarche est la même que pour les autres objets openGL :
+\code
+GLuint texture;
+glGenTextures(1, &texture);
+\endcode
+
+maintenant que l'objet est créé, il faut le configurer : quelle type de texture, quelles données, etc, cf la famille de fonctions glTexImage(). mais avant, il faut sélectioner 
+l'objet, cf glBindTexture( ) en fonction du type de texture. les textures les plus courantes sont les textures 2d, GL_TEXTURE_2D, qui correspondent à des images classiques :
+\code
+glBindTexture(GL_TEXTURE_2D, texture);
+\endcode
+
+il ne reste plus qu'à définir les dimensions de la texture, largeur et hauteur, ainsi que le type de ses pixels, combien de canaux couleurs et représentés par des float ou des entiers.
+le cas classique qui correspond aux images stockées aux formats jpg, png, tga, bmp, etc. est 3 ou 4 canaux couleurs stockés sur des octets (non signés) :
+\code
+glTexImage2D(GL_TEXTURE_2D, 
+	/* level */ 0,
+	/* texel format */ GL_RGBA, 
+	/* width, height, border */ width, height, 0,
+	/* data format */ GL_RGBA, /* data type */ GL_UNSIGNED_BYTE,
+	/* data */ pixels);
+
+// nombre de niveaux de la texture : 1 seul, cf level 0
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+\endcode
+
+en résumé : 
+	- le paramètre level est utilisé pour décrire les textures filtrées, cf section texture filtrée et mipmaps, par défaut c'est 0,
+	- le paramètre texel format, désigne le nombre de canaux pour représenter une couleur : 3, GL_RGB pour une couleur opaque et 4, GL_RGBA, pour une couleur semi-transparente,
+	- les paramètres data format, data type, décrivent le format des données transmises à openGL qui est capable de faire plusieurs conversions. par exemple ajouter ou enlever le canal 
+	alpha qui décrit des couleurs semi transparentes. les 2 formats ne sont pas nécessairement identiques.
+
+__attention :__ `glTexParameter( )` permet de régler plusieurs paramètres modifiant l'accès à la texture. l'exemple ne fournit que les données du level 0. 
+par défaut, openGL utilise plusieurs versions de l'image pour la filtrer : mipmap levels / couches de mipmaps, cf section filtrage et mipmaps. 
+si la ligne `glTexParameter(.... GL_TEXTURE_MAX_LEVEL ...)` n'est pas présente, vous aurez une texture __noire__.
+
+_remarque :_ il y plusieurs solutions pour régler ce problème, le plus simple est de continuer à lire le tuto...
+
+en pratique, on charge l'image en utilisant une librairie et selon le type des pixels de l'image, il faut configurer correctement le format des données transmises à openGL. 
+gKit utilise SDL2_image pour charger les images et renvoie une structure simplifiée qui contient : largeur, hauteur, nombre de canaux couleurs et les données, cf la classe Image 
+dans image.h.
+
+du coup, un code pour charger une texture avec gKit ressemble à ça :
+\code
+#include "image.h"
+
+int init( )
+{
+	...
+	Image image= read_image("toto.png");
+	
+	// format des données de l'image, couleurs avec 3 canaux, ou 4
+	GLenum data_format;
+	if(image.channels == 4)
+		data_format= GL_RGBA;
+	if(image.channels == 3)
+		data_format= GL_RGB;
+	// les formats d'image classiques utilisent tous des octets pour représenter les couleurs.
+	GLenum data_type= GL_UNSIGNED_BYTE;	
+	
+	// selectionner la texture, si necessaire
+	// glBindTexture(GL_TEXTURE_2D, texture);
+	
+	glTexImage2D(GL_TEXTURE_2D, 0,
+		GL_RGBA,
+		image.width, image.height, 0,
+		data_format, data_type,
+		&image.data.front());
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+	// plus la peine de garder image en memoire
+	release_image(image);
+	...
+\endcode
+
+et comme c'est toujours la même chose, `make_texture( )` et `read_texture( )` de texture.h font exactement ça.
+
+### décrire les coordonnées de texture des sommets de l'objet
+
+deuxième étape : fournir les coordonnées dans la texture des sommets de l'objet, il faut les stocker dans un vertex buffer et décrire correctement le format de sommet 
+(cf \ref tuto4GL).
+
+le cas simple est de créer un nouveau buffer pour stocker les coordonnées :
+\code
+int init( )
+{
+	...
+	Mesh mesh= { ... };
+
+	GLuint texcoord_buffer;
+	glGenBuffers(1, &texcoord_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * mesh.texcoords.size(), &mesh.texcoords.front(), GL_STATIC_DRAW);
+	...
+\endcode
+
+et d'ajouter cet attribut au format de sommet :
+\code
+int init( )
+{
+	...
+	GLuint vao= { ... };
+	GLuint program= { ... };
+
+	// selectionner le vertex array object, si necessaire
+	// glBindVertexArray(vao);
+
+	// recupere l'identifiant de l'attribut declare dans le vertex shader
+	GLint texcoord_attribute= glGetAttribLocation(program, "texcoord");
+	if(texcoord_attribute < 0)
+		// probleme, l'attribut n'existe pas
+		
+	// selectionner le buffer, si necessaire
+	// glBindBuffer(GL_ARRAY_BUFFER, texcoord_buffer);
+	glVertexAttribPointer(texcoord_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(texcoord_attribute);
+	...
+\endcode
+
+_remarque :_ les coordonnées dans la texture sont en 2d, comme on peut s'y attendre, cf 2, GL_FLOAT et vec2 pour les représenter.
+
+### écrire le fragment shader (et le vertex shader)
+
+troisième étape, les shaders ! 
+
+première chose à faire, modifier le vertex shader pour qu'il récupère les coordonnées de texture et les transmette au fragment shader. 
+
+le vertex shader déclare un attribut, texcoord par exemple et un varying, une sortie optionnelle, vertex_texcoord :
+(repassez dans \ref intro3d et \ref glsl, si nécessaire)
+
+\code
+// vertex shader
+#version 330
+
+in vec2 texcoord;	// attribut 
+
+out vec2 vertex_texcoord;	// varying, sortie du vertex shader
+
+void main( )
+{
+	... 
+	// transmettre les coordonnees de texture au fragment shader
+	vertex_texcoord= texcoord;
+}
+\endcode
+
+de son coté, le fragment shader récupère les coordonnées avec le varying vertex_texcoord :
+\code
+// fragment shader
+#version 330
+
+in vec2 vertex_texcoord;
+
+void main( )
+{
+	...
+}
+\endcode
+
+il ne reste plus qu'à lire la couleur de la texture aux coordonnées stockées dans vertex_texcoord... c'est la famille de fonctions texture( ) de GLSL qui permet de le faire.
+le premier paramètre de texture( ) est un paramètre uniform dont le type dépend du type de la texture : pour une texture 2D, c'est sampler2D.
+texture( ) renvoie un vec4 qui correspond aux 4 canaux de la couleur : rgb et a. 
+
+\code
+// fragment shader
+#version 330
+
+in vec2 vertex_texcoord;
+
+uniform sampler2D diffuse_color;	// declare une texture 2d
+
+void main( )
+{
+	// recupere la couleur dans la texture diffuse_color aux coordonnées vertex_texcoord
+	vec4 color= texture(diffuse_color, vertex_texcoord);
+	
+	// renvoie la couleur du fragment
+	gl_FragColor= color;
+}
+\endcode
+
+au final, les 2 shaders ressemblent à ça :
+\code
+#version 330
+
+#ifdef VERTEX_SHADER
+// vertex shader
+
+in vec3 position;
+in vec2 texcoord;
+
+uniform mvpMatrix;
+
+out vec2 vertex_texcoord;
+
+void main( )
+{
+	// transformation des coordonnees (spatiales) du sommet
+	gl_Position= mvpMatrix * vec4(position, 1.0);
+	
+	// transmet les coordonnees de texture au fragment shader
+	vertex_texcoord= texcoord;
+}
+#endif
+
+#ifdef FRAGMENT_SHADER
+// fragment shader
+
+in vec3 vertex_texcoord;
+
+uniform sampler2D diffuse_color;
+
+void main( )
+{
+	// recupere la couleur dans la texture diffuse_color aux coordonnées vertex_texcoord
+	vec4 color= texture(diffuse_color, vertex_texcoord);
+	
+	// renvoie la couleur du fragment
+	gl_FragColor= color;
+}
+#endif
+\endcode
+
+il ne reste plus qu'à configurer le pipeline pour dessiner un objet texturé !
+
+### configurer le pipeline
+
+quatrième étape, configurer le pipeline :
+	- vertex array object, configuration du format de sommet,
+	- shader program,
+	- uniforms du program,
+	- texture utilisée par le fragment shader,   
+	- glDraw( )
+	
+qu'est qui a changé ? 
+	- le vao contient plus d'informations, mais son utilisation ne change pas : `glBindVertexArray(vao);`
+	- le shader program aussi à changé, mais pas son utilisation : `glUseProgram(program);`
+	- par contre, il y a un uniform de plus à configurer : le sampler2D du fragment shader: `glUniform1i(location, value);`
+	- et bien sur, il faut sélectionner la texture qui est lue par le fragment shader,
+	- glDraw(), rien n'a changé.
+	
+pour sélectionner la texture, c'est glBindTexture(), comme lors de sa création. l'uniform est un peu particulier, pour le shader c'est un `sampler2D` et 
+pour l'application c'est un `int` qui représente l'indice de l'unité de texture. par défaut, lorsque l'application n'utilise qu'une texture, c'est 0.
+
+au final : configurer le pipeline pour utiliser une texture dans le fragment shader ressemble à ça :
+\code
+int draw( )
+{
+	...
+	glBindVertexArray(vao);
+	glUseProgram(program);
+	
+	// configurer les uniforms habituels, matrices, etc :
+	{ ... }
+	
+	// configurer le sampler :
+	GLint location= glGetUniformLocation(program, "diffuse_color");
+	glUniform1i(location, 0);
+	
+	// selectionner la texture :
+	glBindTexture(GL_TEXTURE_2D, texture);
+	
+	// go
+	glDrawArrays(GL_TRIANGLES, 0, count);
+	
+	return 1;
+}
+\endcode
+
+le code complet ressemble a \ref tuto5GL.cpp
+
+
+## plusieurs textures
+
+
+## texture filtrée et mipmaps...
+
+
+
+ */
+ 
+

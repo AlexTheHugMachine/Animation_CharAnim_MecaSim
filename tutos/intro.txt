@@ -224,8 +224,6 @@ void draw( const int count )
         // dessiner un triangle par triplet de sommets...
         draw_triangle(a, b, c);
     }
-    
-    delete [] vertices;
 }
 \endcode
 
@@ -266,7 +264,7 @@ void main( )
 }
 \endcode
 
-le mot-clé uniform, indique que le tableau positions ne change pas entre 2 exécutions du shader. 
+le mot-clé _uniform_, indique que le tableau positions ne change pas entre 2 exécutions du shader. 
 c'est bien ce que l'on veut, du point de vue du vertex shader le tableau est une constante et le shader doit transformer 
 tous les sommets du tableau pour pouvoir dessiner les triangles. par contre, l'application peut changer le contenu du 
 tableau pour afficher un autre ensemble de triangles.
@@ -313,7 +311,7 @@ tous les sommets ont des coordonnées dans le repère projectif, mais, par conve
 le premier traitement réalisé est donc ce test de visibilité, suivi, ou pas, de la dernière transformation vers le repère image, et
 enfin du test qui détermine quels pixels permettent de dessiner le triangle.
 
-on peut écrire le trest de visibilité d'un sommet comme ça :
+on peut écrire le test de visibilité d'un sommet comme ça :
 \code
 bool visible( const Point p )
 {
@@ -330,6 +328,7 @@ si aucun des 3 sommets d'un triangle n'est visible, le triangle n'est pas visibl
 n'est pas exact, certains triangles doivent etre dessinés même si leurs sommets ne sont pas visibles... pourquoi ?). 
 sinon, les coordonnées sont transformées en position de pixels dans l'image, et le _fragment shader_, la fonction responsable 
 de donner une couleur au pixel est exécutée, puis la couleur est écrite dans l'image.
+
 \code
 /*
     une carte graphique fait quelque chose d'équivalent (mais en parallèle et avec du matériel spécialisé).
@@ -389,6 +388,9 @@ void draw_triangle( const Point a, const Point b, const Point c )
 
 le _fragment shader_ utilise aussi une convention particulière, la position du pixel est disponible dans une variable globale, gl_FragCoord, la couleur 
 du pixel doit être aussi écrite dans une variable globale, gl_FragColor.
+
+__fragment :__  par définition, un fragment est la partie du triangle qui se projette sur un pixel. 
+
 
 le shader le plus simple donne une couleur constante à chaque pixel du triangle :
 \code
