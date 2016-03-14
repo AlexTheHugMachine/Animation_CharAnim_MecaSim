@@ -41,9 +41,14 @@ Text create_text( )
     text.font= make_texture(0, font);
     release_image(font);
     
+    // shader
     text.program= read_program("data/shaders/text.glsl");
     program_print_errors(text.program);
 
+    // associe l'uniform buffer a l'entree 0 / binding 0
+    GLint index= glGetUniformBlockIndex(text.program, "textData");
+    glUniformBlockBinding(text.program, index, 0);
+    
     clear(text);
     glGenVertexArrays(1, &text.vao);
     glGenBuffers(1, &text.ubo);
@@ -151,9 +156,8 @@ void draw( const Text& text, const int width, const int height )
     
     program_uniform(text.program, "offset", height - 24*16);
     
-    // transfere le texte dans l'uniform buffer
-    int index= glGetUniformBlockIndex(text.program, "textData");
-    glBindBufferBase(GL_UNIFORM_BUFFER, index, text.ubo);
+    // transfere le texte dans l'uniform buffer associe au binding 0, cf create_text()
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, text.ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(text.buffer), text.buffer);
     
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
