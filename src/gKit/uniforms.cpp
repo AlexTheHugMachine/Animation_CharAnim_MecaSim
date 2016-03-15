@@ -92,13 +92,22 @@ void program_uniform( const GLuint program, const char *uniform, const Transform
     glUniformMatrix4fv( location(program, uniform), 1, GL_TRUE, &v.m[0][0] );
 }
 
-void program_use_texture( const GLuint program, const char *sampler, const int unit, const GLuint texture )
+void program_use_texture( const GLuint program, const char *uniform, const int unit, const GLuint texture, const GLuint sampler )
 {
-    int id= location(program, sampler);
+    // verifie que l'uniform existe
+    int id= location(program, uniform);
     if(id < 0)
         return;
     
+    // selectionne l'unite de texture
     glActiveTexture(GL_TEXTURE0 + unit);
+    // configure la texture
     glBindTexture(GL_TEXTURE_2D, texture);
+    
+    if(sampler > 0)
+        // et ses parametres de filtrage, si necessaire
+        glBindSampler(unit, sampler);
+    
+    // transmet l'indice de l'unite de texture au shader
     glUniform1i(id, unit);
 }

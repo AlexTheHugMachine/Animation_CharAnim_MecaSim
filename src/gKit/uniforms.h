@@ -42,8 +42,8 @@ void program_uniform( const GLuint program, const char *uniform, const Color& c 
 //! affecte une valeur a un uniform du shader program. Transform.
 void program_uniform( const GLuint program, const char *uniform, const Transform& v );
 
-//! configure le pipeline et le shader program pour utiliser une texture.
-void program_use_texture( const GLuint program, const char *sampler, const int unit, const GLuint texture );
+//! configure le pipeline et le shader program pour utiliser une texture, et des parametres de filtrages, eventuellement.
+void program_use_texture( const GLuint program, const char *uniform, const int unit, const GLuint texture, const GLuint sampler= 0 );
 
 ///@}
 #endif
