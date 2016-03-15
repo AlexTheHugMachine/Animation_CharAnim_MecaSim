@@ -334,12 +334,6 @@ et choisir la bonne taille de bloc qui contient la moyenne précalculée. openGL
 
 pour décrire complètement une texture à openGL, il faut donner toutes ces versions pré-calculées de l'image, donc plusieurs levels pour une résolution de base. 
 pour une image 1024x1024, il faudra les versions 512x512, 256x256, 128x128, etc. jusqu'a 1x1. c'est un peu long à écrire, mais pas difficile :
-
-_remarque :_ pour une image rectangulaire, par exemple 1024x512, les versions sont 512x256, 256x128, etc. 2x1 et 1x1
-
-_remarque :_ le niveau 0 est l'image complète, le niveau 1 l'image pré filtrée dont la résolution est divisée par 2 sur chaque axe, etc. en résumé, le niveau level à des dimensions :
-\f$ \mbox{width}= \mbox{image.width} / 2^{level} \f$, et \f$ \mbox{height}= \mbox{image.height} / 2^{level} \f$.
-
 \code
 	Image image= read_image( "..." );
 
@@ -364,11 +358,44 @@ _remarque :_ le niveau 0 est l'image complète, le niveau 1 l'image pré filtré
 		glTexImage2D(GL_TEXTURE_2D, i,
 			GL_RGBA, level.width, level.height, 0,
 			data_format, data_type, &level.data.front());
+			
+		release_image(level);
 	}
 	
 	// nombre de mipmaps initialisés
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, levels);
 \endcode
+
+_remarque :_ pour une image rectangulaire, par exemple 1024x512, les versions sont 512x256, 256x128, etc. 2x1 et 1x1
+
+_remarque :_ le niveau 0 est l'image complète, le niveau 1 l'image pré filtrée dont la résolution est divisée par 2 sur chaque axe, etc. en résumé, 
+le niveau level à des dimensions :
+\f$ \mbox{width}= \mbox{image.width} / 2^{level} \f$, et \f$ \mbox{height}= \mbox{image.height} / 2^{level} \f$.
+ce qui s'écrit directement :
+\code
+int width= std::max(1, image.width / (1 << level));			// la notation (1 << n) calcule 2^n, pourquoi ?
+int height= std::max(1, image.height / (1 << level));
+\endcode
+
+_remarque :_ on peut écrire la fonction miplevels() simplement avec une boucle :
+\code
+int miplevels( const int width, const int height )
+{
+    int w= width;
+    int h= height;
+    int levels= 1;
+    while(w > 1 || h > 1)
+    {
+        w= std::max(w / 2, 1);
+        h= std::max(h / 2, 1);
+        levels= levels + 1;
+    }
+    return levels;
+}
+\endcode
+
+_exercice :_ ecrivez la fonction `make_miplevel( const Image& image, const int level )`.
+
 
 mais il y a encore plus simple, il suffit de demander à openGL de faire les pré-calculs ! cf glGenerateMipmap( ) :
 \code
@@ -392,7 +419,7 @@ mais il y a encore plus simple, il suffit de demander à openGL de faire les pr�
 	glGenerateMipmap(GL_TEXTURE_2D);
 	
 	// optionnel ? à vérifier
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, miplevels(image));
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, miplevels(image.wdith, image.height));
 \endcode
 
 comme ces niveaux de mipmaps ne sont qu'une approximation du vrai calcul, il y a des manières différentes de les utiliser et il faut donc configurer 
@@ -411,9 +438,9 @@ voici les paramètres par défaut qu'utilise openGL ;
 	glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	
 	// quoi faire si les 4 pixels voisins sont, en partie, sur le bord de la texture, utiliser la couleur de la bordure, noir par defaut
-	// pour l'axe s
+	// pour l'axe s, vers la gauche (ou x)
 	glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	// pour l'axe t
+	// pour l'axe t, vers le haut (ou y)
 	glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 \endcode
 
@@ -428,9 +455,27 @@ au final, le code complet ressemble à tuto5GL_sampler.cpp
 ## plusieurs textures
 
 lorsqu'un fragment shader veut utiliser plusieurs textures en même temps pour calculer la couleur d'un pixel, openGL utilise le même principe que pour 
-les attributs de sommets : elles sont numérotées. les textures et leurs paramètres de filtrage (sampler) sont décrits dans plusieurs _unités de textures_. et 
-le fragment shader est configuré (l'uniform sampler2D) avec l'indice de l'unité sur laquelle est sélectionnée la texture et ses paramètres de filtrage, un sampler.
+les attributs de sommets : elles sont numérotées. les textures et leurs paramètres de filtrage (sampler) sont décrits dans plusieurs _unités de textures_. 
+le fragment shader est configuré (l'uniform sampler2D déclaré par le shader) avec l'indice de l'unité sur laquelle est sélectionnée la texture et ses 
+paramètres de filtrage.
+
 openGL définit entre 16 et 32 unités de texture, il suffit de les sélectionner avec glActiveTexture( ) et de les configurer avec glBindTexture( ), et glBindSampler( ).
+\code
+	// selectionne l'unite 0
+	glActiveTexture(GL_TEXTURE0);
+	
+	glBindTexture(GL_TEXTURE_2D, base_texture);	// selectionne la texture sur l'unite 0
+	glBindSampler(0, sampler);					// selectionne un sampler (paramètres de filtrage) sur l'unité 0	
+	
+	// selectionne l'unite 1
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, detail_texture);
+	glBindSampler(1, sampler)
+	...
+\endcode
+
+__attention :__ la numérotation des unités de texture n'est pas très cohérente, c'est `GL_TEXTURE0`, `GL_TEXTURE1`, etc. pour `glActiveTexture( )` 
+et `0`, `1` pour `glBindSampler( )`
 
 exemple :
 \code
@@ -470,7 +515,7 @@ int init( )
 	// cree la texture sur l'unite 0
 	base_texture= read_texture(0, "...");
 	// cree la texture sur l'unite 0
-	detail_texture= read_texutre(0, "...");
+	detail_texture= read_texture(0, "...");
 	...
 	// cree le sampler
 	glGenSamplers(1, &sampler);
@@ -497,7 +542,7 @@ int draw( )
 	glBindVertexArray(vao);
 	glUseProgram(program);
 	
-	// uniforms classiquies
+	// uniforms classiques
 	{ ... }
 	
 	// uniform samplers
@@ -524,7 +569,7 @@ int draw( )
 }
 \endcode
 
-
+code complet dans tuto5GL_multi.cpp
 
  */
  

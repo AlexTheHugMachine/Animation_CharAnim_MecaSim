@@ -29,7 +29,8 @@ plus ceux dédiés à openGL :
     - \ref tuto2GL,
     - \ref tuto3GL,
     - \ref tuto4GL,
-    - \ref shader_reflect
+    - \ref shader_reflect,
+    - \ref tuto5GL
     
 et un utilitaire pour jouer avec les shaders, shader_kit, décrit dans \ref tuto2GL.
 

@@ -1,5 +1,5 @@
 
-//! \file tuto5GL_sampler.cpp 
+//! \file tuto5GL_multi.cpp 
 
 #include "window.h"
 #include "vec.h"
@@ -12,12 +12,13 @@
 #include "wavefront.h"
 
 #include "orbiter.h"
-#include "image.h"
+#include "texture.h"
 
 
 GLuint program;
 
-GLuint texture;
+GLuint base_texture;
+GLuint detail_texture;
 GLuint sampler;
 
 GLuint vao;
@@ -31,7 +32,7 @@ Orbiter camera;
 int init( )
 {
     // etape 1 : shaders
-    program= read_program("tutos/tuto5GL.glsl");
+    program= read_program("tutos/tuto5GL_multi.glsl");
     program_print_errors(program);
     
     // etape 2 : charger un mesh, (avec des texcoords), vao + vertex buffer
@@ -81,7 +82,7 @@ int init( )
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    // etape 3 : sampler
+    // etape 3 : sampler, parametres de filtrage des textures
     glGenSamplers(1, &sampler);
     
     glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -89,25 +90,13 @@ int init( )
     glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     
-    // etape 4 : texture
-    Image image= read_image("data/debug2x2red.png");
-    
-    GLenum data_format= GL_RGBA;
-    GLenum data_type= GL_UNSIGNED_BYTE;
-    if(image.channels == 3)
-        data_format= GL_RGB;
-    
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    
-    glTexImage2D(GL_TEXTURE_2D, 0,
-        GL_RGBA, image.width, image.height, 0,
-        data_format, data_type, &image.data.front());
-    
-    glGenerateMipmap(GL_TEXTURE_2D);
-    
+    // etape 4 : creation des textures 
+    /* utilise les utilitaires de texture.h 
+     */
+    base_texture= read_texture(0, "data/font.png");             // texture 'base'
+    detail_texture= read_texture(0, "data/debug2x2red.png");    // texture 'detail'
+
     // nettoyage
-    release_image(image);
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
     
@@ -131,7 +120,8 @@ int quit( )
     glDeleteBuffers(1, &vertex_buffer);
     glDeleteBuffers(1, &texcoord_buffer);
     glDeleteSamplers(1, &sampler);
-    glDeleteTextures(1, &texture);
+    glDeleteTextures(1, &base_texture);
+    glDeleteTextures(1, &detail_texture);
     return 0;
 }
 
@@ -177,14 +167,31 @@ int draw( )
     Transform mvp= projection * view * model;
     program_uniform(program, "mvpMatrix", mvp);
     
-    // texture et parametres d'acces a la texture
+    // texture et parametres de filtrage de la texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, base_texture);
     glBindSampler(0, sampler);
-    glBindTexture(GL_TEXTURE_2D, texture);
     
-    // sampler2D declare par le fragment shader
-    GLint location= glGetUniformLocation(program, "texture0");
+    glActiveTexture(GL_TEXTURE0 +1);
+    glBindTexture(GL_TEXTURE_2D, detail_texture);
+    glBindSampler(1, sampler);
+    
+    // uniform sampler2D declares par le fragment shader
+    GLint location;
+    location= glGetUniformLocation(program, "base_texture");
     glUniform1i(location, 0);
-    // ou program_uniform(program, "texture0", 0);
+    
+    location= glGetUniformLocation(program, "detail_texture");
+    glUniform1i(location, 1);
+    
+    /*  ou plus court, utilise les utilitaires de uniforms.h, pour configurer a la fois le pipeline 
+        (unite de texture + sampler) et l'uniform du fragment shader
+    
+        #include "uniforms.h"
+        
+        program_use_texture(program, "base_texture", base_texture, sampler);
+        program_use_texture(program, "detail_texture", detail_texture, sampler);
+     */
     
     glDrawArrays(GL_TRIANGLES, 0, vertex_count);
     
