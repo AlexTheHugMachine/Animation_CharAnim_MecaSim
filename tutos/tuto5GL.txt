@@ -208,6 +208,9 @@ il ne reste plus qu'à lire la couleur de la texture aux coordonnées stockées 
 le premier paramètre de texture( ) est un paramètre uniform dont le type dépend du type de la texture : pour une texture 2D, c'est sampler2D.
 texture( ) renvoie un vec4 qui correspond aux 4 canaux de la couleur : rgb et a. 
 
+_remarque :_ même si la texture ne contient pas 4 canaux pour décrire une couleur, la fonction texture() renvoie toujours un vec4, les composantes non utilisées ont 
+une valeur par défaut (0 pour rgb et 1 pour a).  exemple : une texture GL_RG, qui ne contient que 2 canaux, renverra `vec4(r, g, 0, 1);`
+
 \code
 // fragment shader
 #version 330
@@ -273,17 +276,17 @@ il ne reste plus qu'à configurer le pipeline pour dessiner un objet texturé !
 ### configurer le pipeline
 
 quatrième étape, configurer le pipeline :
-	- vertex array object, configuration du format de sommet,
-	- shader program,
-	- uniforms du program,
-	- texture utilisée par le fragment shader,   
+	- vertex array object, configuration du format de sommet, cf glBindVertexArray( ),
+	- shader program, cf glUseProgram( ),
+	- uniforms du program, cf glUniform(),
+	- texture utilisée par le fragment shader, cf glBindTexture( ),
 	- glDraw( )
 	
 qu'est qui a changé ? 
 	- le vao contient plus d'informations, mais son utilisation ne change pas : `glBindVertexArray(vao);`
 	- le shader program aussi à changé, mais pas son utilisation : `glUseProgram(program);`
 	- par contre, il y a un uniform de plus à configurer : le sampler2D du fragment shader: `glUniform1i(location, value);`
-	- et bien sur, il faut sélectionner la texture qui est lue par le fragment shader,
+	- et bien sur, il faut sélectionner la texture qui doit être lue par le fragment shader, `glBindTexture(GL_TEXTURE_2D, texture);`
 	- glDraw(), rien n'a changé.
 	
 pour sélectionner la texture, c'est glBindTexture(), comme lors de sa création. l'uniform est un peu particulier, pour le shader c'est un `sampler2D` et 
@@ -302,7 +305,7 @@ int draw( )
 	
 	// configurer le sampler :
 	GLint location= glGetUniformLocation(program, "diffuse_color");
-	glUniform1i(location, 0);
+	glUniform1i(location, 0);	// une seule texture utilisee, 0 dans ce cas
 	
 	// selectionner la texture :
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -317,10 +320,209 @@ int draw( )
 le code complet ressemble a \ref tuto5GL.cpp
 
 
+## texture filtrée et mipmaps...
+
+comme suggéré dans la section création des textures, une texture est composée de plusieurs niveaux / couches... _pourquoi ?_
+
+lorsqu'on observe un triangle "à la bonne distance", un pixel de l'image correspond à un pixel de la texture. dans ce cas, l'affichage est propre. 
+
+par contre, si on s'éloigne, plusieurs pixels de la texture se projettent sur un pixel de l'image. quelle couleur donner au pixel de l'image ? 
+la bonne réponse est : la moyenne des couleurs des pixels de la texture qui se projettent dans le même pixel de l'image. mais cette solution pose 
+un gros problème : plus l'objet est loin, plus il faut de pixels de la texture pour calculer la moyenne, et plus le calcul est long. pour éviter ce ralentissement
+en fonction de la distance, on peut précalculer les moyennes à des résolutions différentes : pour des blocs de 2x2 pixels, de 4x4, de 8x8, de 16x16, etc. 
+et choisir la bonne taille de bloc qui contient la moyenne précalculée. openGL appelle ces versions _pré-filtrées_ ou pré-calculées de la texture des mipmaps.
+
+pour décrire complètement une texture à openGL, il faut donner toutes ces versions pré-calculées de l'image, donc plusieurs levels pour une résolution de base. 
+pour une image 1024x1024, il faudra les versions 512x512, 256x256, 128x128, etc. jusqu'a 1x1. c'est un peu long à écrire, mais pas difficile :
+
+_remarque :_ pour une image rectangulaire, par exemple 1024x512, les versions sont 512x256, 256x128, etc. 2x1 et 1x1
+
+_remarque :_ le niveau 0 est l'image complète, le niveau 1 l'image pré filtrée dont la résolution est divisée par 2 sur chaque axe, etc. en résumé, le niveau level à des dimensions :
+\f$ \mbox{width}= \mbox{image.width} / 2^{level} \f$, et \f$ \mbox{height}= \mbox{image.height} / 2^{level} \f$.
+
+\code
+	Image image= read_image( "..." );
+
+	GLenum data_type= GL_UNSIGNED_BYTE;	
+	GLenum data_format= GL_RGBA;
+	if(image.channels == 3)
+		data_format= GL_RGB;
+
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	
+	// determine le nombre de niveaux en fonction des dimensions de l'image	
+	int levels= miplevels(image.width, image.height);	
+	// calculer les versions pre filtrées d'une texture 
+	for(int i= 0; i < levels; i++)
+	{
+		// calcule le niveau i de l'image
+		Image level= make_miplevel(image, i);
+		
+		// transmet la version pre filtree
+		glTexImage2D(GL_TEXTURE_2D, i,
+			GL_RGBA, level.width, level.height, 0,
+			data_format, data_type, &level.data.front());
+	}
+	
+	// nombre de mipmaps initialisés
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, levels);
+\endcode
+
+mais il y a encore plus simple, il suffit de demander à openGL de faire les pré-calculs ! cf glGenerateMipmap( ) :
+\code
+	Image image= read_image( "..." );
+	
+	GLenum data_type= GL_UNSIGNED_BYTE;	
+	GLenum data_format= GL_RGBA;
+	if(image.channels == 3)
+		data_format= GL_RGB;
+	
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	
+	// transmet uniquement l'image pleine resolution, level 0
+	glTexImage2D(GL_TEXTURE_2D, 0,
+		GL_RGBA, image.width, image.height, 0,
+		data_format, data_type, &image.data.front());
+	
+	// precalcule les autres nvieaux 
+	glGenerateMipmap(GL_TEXTURE_2D);
+	
+	// optionnel ? à vérifier
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, miplevels(image));
+\endcode
+
+comme ces niveaux de mipmaps ne sont qu'une approximation du vrai calcul, il y a des manières différentes de les utiliser et il faut donc configurer 
+le pipeline... et comme il y a pas mal d'options, elles sont regroupées dans un objet openGL, un sampler, qu'il faut créer, cf glGenSamplers() et configurer,
+cf glSamplerParameter( ).
+
+voici les paramètres par défaut qu'utilise openGL ;
+\code
+	GLuint sampler;
+	glGenSamplers(1, &sampler);
+	
+	// minification filter : quel niveau de mipmap choisir (l'interpolation des 2 plus proches) et quel pixel choisir (ou l'interpolation des 4 voisins)
+	glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	
+	// magnification filter : interpoler (GL_LINEAR) ou pas (GL_NEAREST) les 4 pixels voisins
+	glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
+	// quoi faire si les 4 pixels voisins sont, en partie, sur le bord de la texture, utiliser la couleur de la bordure, noir par defaut
+	// pour l'axe s
+	glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	// pour l'axe t
+	glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+\endcode
+
+il faut aussi configurer le pipeline lors du glDraw( ), cf glBindSampler( ). lorsqu'il n'y a qu'une seule texture :
+\code
+	glBindSampler(0, sampler);
+\endcode
+
+au final, le code complet ressemble à tuto5GL_sampler.cpp
+
+
 ## plusieurs textures
 
+lorsqu'un fragment shader veut utiliser plusieurs textures en même temps pour calculer la couleur d'un pixel, openGL utilise le même principe que pour 
+les attributs de sommets : elles sont numérotées. les textures et leurs paramètres de filtrage (sampler) sont décrits dans plusieurs _unités de textures_. et 
+le fragment shader est configuré (l'uniform sampler2D) avec l'indice de l'unité sur laquelle est sélectionnée la texture et ses paramètres de filtrage, un sampler.
+openGL définit entre 16 et 32 unités de texture, il suffit de les sélectionner avec glActiveTexture( ) et de les configurer avec glBindTexture( ), et glBindSampler( ).
 
-## texture filtrée et mipmaps...
+exemple :
+\code
+#version 330
+
+#ifdef FRAGMENT_SHADER	
+// fragment shader
+
+in vec2 vertex_texcoord;
+
+uniform sampler2D base_texture;
+uniform sampler2D detail_texture;
+
+void main( )
+{
+	// exemple : detail module la couleur de base...
+	vec4 color= texture(base_texture, vertex_texcoord);
+	color= color * texture(detail_texture, vertex_texcoord);
+	
+	gl_FragColor= color;
+}
+#endif
+\endcode
+
+et dans l'application, il faut bien sur créer les 2 textures, créer au moins un sampler, puis configurer le pipeline pour le draw.
+
+\code
+#include "texture.h"
+
+GLuint base_texture;
+GLuint detail_texture;
+GLuint sampler;
+
+int init( )
+{
+	...
+	// cree la texture sur l'unite 0
+	base_texture= read_texture(0, "...");
+	// cree la texture sur l'unite 0
+	detail_texture= read_texutre(0, "...");
+	...
+	// cree le sampler
+	glGenSamplers(1, &sampler);
+	glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	...
+}
+\endcode
+	
+\code
+int draw( )
+{
+	...
+	/* configuration du pipeline 
+		vertex array
+		program
+		uniforms "classiques", matrices, etc.
+		uniform sampler
+		unites de textures
+		draw( )
+	 */
+	glBindVertexArray(vao);
+	glUseProgram(program);
+	
+	// uniforms classiquies
+	{ ... }
+	
+	// uniform samplers
+	GLint location;
+	location= glGetUniformLocation(program, "base_texture");
+	glUniform1i(location, 0);	// utilise la texture selectionnee sur l'unite 0
+	
+	location= glGetUniformLocation(program, "detail_texture");
+	glUniform1i(location, 1);	// utilise la texture selectionnee sur l'unite 1
+	
+	// configure l'unite 0
+	glAciveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, base_texture);
+	glBindSampler(0, sampler);
+
+	// configure l'unite 1
+	glAciveTexture(GL_TEXTURE0 + 1);
+	glBindTexture(GL_TEXTURE_2D, detail_texture);
+	glBindSampler(1, sampler);
+	
+	// go
+	glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+	...
+}
+\endcode
 
 
 

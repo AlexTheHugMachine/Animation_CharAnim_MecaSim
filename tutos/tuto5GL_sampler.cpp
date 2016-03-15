@@ -1,5 +1,5 @@
 
-//! \file tuto5GL.cpp 
+//! \file tuto5GL_sampler.cpp 
 
 #include "window.h"
 #include "vec.h"
@@ -18,6 +18,7 @@
 GLuint program;
 
 GLuint texture;
+GLuint sampler;
 
 GLuint vao;
 GLuint vertex_buffer;
@@ -56,7 +57,7 @@ int init( )
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * mesh.positions.size(), &mesh.positions.front(), GL_STATIC_DRAW);
     
-    // configurer l'attribut position, cf declaration dans le vertex shader : in vec3 position;
+    // configurer l'attribut position
     GLint position= glGetAttribLocation(program, "position");
     if(position < 0)
         return -1;
@@ -68,7 +69,7 @@ int init( )
     glBindBuffer(GL_ARRAY_BUFFER, texcoord_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * mesh.texcoords.size(), &mesh.texcoords.front(), GL_STATIC_DRAW);
     
-    // configurer l'attribut texcoord, cf declaration dans le vertex shader : in vec2 texcoord;
+    // configurer l'attribut texcoord
     GLint texcoord= glGetAttribLocation(program, "texcoord");
     if(texcoord < 0)
         return -1;
@@ -80,15 +81,21 @@ int init( )
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    // etape 3 : texture
+    // etape 3 : sampler
+    glGenSamplers(1, &sampler);
+    
+    glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    
+    // etape 4 : texture
     Image image= read_image("data/debug2x2red.png");
     
-    GLenum data_format;
+    GLenum data_format= GL_RGBA;
     GLenum data_type= GL_UNSIGNED_BYTE;
     if(image.channels == 3)
         data_format= GL_RGB;
-    else // par defaut
-        data_format= GL_RGBA;
     
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -97,7 +104,7 @@ int init( )
         GL_RGBA, image.width, image.height, 0,
         data_format, data_type, &image.data.front());
     
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    glGenerateMipmap(GL_TEXTURE_2D);
     
     // nettoyage
     release_image(image);
@@ -123,6 +130,7 @@ int quit( )
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vertex_buffer);
     glDeleteBuffers(1, &texcoord_buffer);
+    glDeleteSamplers(1, &sampler);
     glDeleteTextures(1, &texture);
     return 0;
 }
@@ -130,8 +138,7 @@ int quit( )
 int draw( )
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-#if 1
+    
     // recupere les mouvements de la souris, utilise directement SDL2
     int mx, my;
     unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
@@ -148,12 +155,13 @@ int draw( )
     else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
         // deplace le point de rotation
         orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height()); 
-#endif
+   
     
-    /*  config pipeline :
+    /*  config pipeline
         vertex array object
         program
         uniforms
+        sampler
         texture
      */
     
@@ -169,7 +177,8 @@ int draw( )
     Transform mvp= projection * view * model;
     program_uniform(program, "mvpMatrix", mvp);
     
-    // texture 
+    // texture et parametres d'acces a la texture
+    glBindSampler(0, sampler);
     glBindTexture(GL_TEXTURE_2D, texture);
     
     // sampler2D declare par le fragment shader
@@ -178,9 +187,10 @@ int draw( )
     // ou program_uniform(program, "texture0", 0);
     
     glDrawArrays(GL_TRIANGLES, 0, vertex_count);
-
+    
     // nettoyage
     glBindTexture(GL_TEXTURE_2D, 0);
+    glBindSampler(0, 0);
     glUseProgram(0);
     glBindVertexArray(0);
     
