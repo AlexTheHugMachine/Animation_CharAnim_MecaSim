@@ -1,6 +1,6 @@
 solution "gKit2light"
 	configurations { "debug", "release" }
-	platforms { "x64" }
+	platforms { "x32", "x64" }
 	
 	includedirs { ".", "src/gKit" }
 	
@@ -13,7 +13,7 @@ solution "gKit2light"
 		targetdir "bin/release"
 --~ 		defines { "NDEBUG" }
 --~ 		defines { "GK_RELEASE" }
-		flags { "OptimizeSpeed" }
+		flags { "Optimize" }
 
 	configuration "linux"
 		buildoptions { "-mtune=native" }
@@ -23,13 +23,23 @@ solution "gKit2light"
 		linkoptions { "-flto"}
 		links { "GLEW", "SDL2", "SDL2_image", "GL" }
 	
-	configuration "windows"
-		includedirs { "local/windows/include" }
-		libdirs { "local/windows/lib" }
+	configuration { "windows" }
 		defines { "WIN32", "NVWIDGETS_EXPORTS", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
 		defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 
+	configuration { "windows", "codeblocks", "x32" }
+		includedirs { "extern/mingw/include" }
+		libdirs { "extern/mingw/lib" }
+		
+	configuration { "windows", "vs2013", "x64" }
+		includedirs { "extern/visual2013/include" }
+		libdirs { "extern/visual2013/lib" }
+		
+	configuration { "windows", "vs2015", "x64" }
+		includedirs { "extern/visual2015/include" }
+		libdirs { "extern/visual2015/lib" }
+		
 	configuration "macosx"
 		local frameworks= "-F /Library/Frameworks/"
 		defines { "GK_MACOS" }
@@ -62,11 +72,15 @@ local tutos = {
 	"tuto4",
 	"tuto5",
 	"tuto6",
+	
 	"tuto2GL",
 	"tuto3GL",
 	"tuto3GL_reflect",
 	"tuto4GL",
-	"tuto4GL_normals"
+	"tuto4GL_normals",
+	"tuto5GL",
+	"tuto5GL_sampler",
+	"tuto5GL_multi"
 }
 
 for i, name in ipairs(tutos) do

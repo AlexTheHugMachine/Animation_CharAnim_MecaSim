@@ -31,11 +31,11 @@ votre environnement de développement : </p>
 
 <h2>linux</h2>
 
-<p>installez les paquets : libsdl2-dev, libsdl2-image-dev, libglew-dev et premake4</p>
+<p>installez les paquets, si nécessaire (pas la peine au nautibus) : libsdl2-dev, libsdl2-image-dev, libglew-dev et premake4</p>
 
 <p>par exemple, pour ubuntu et ses variantes :</p>
 
-<pre><code>sudo apt-get libsdl2-dev, libsdl2-image-dev, libglew-dev premake4
+<pre><code>sudo apt-get install libsdl2-dev libsdl2-image-dev libglew-dev premake4
 </code></pre>
 
 <h2>windows</h2>
@@ -69,17 +69,18 @@ votre environnement de développement : </p>
 
     extern/
         bin/
+
         include/
-        SDL2/
-            SDL.h
-            SDL_image.h
-        GL/
-            glew.h
+            SDL2/
+                SDL.h
+                SDL_image.h
+            GL/
+                glew.h
         lib/
-        glew32.dll et lib
-        SDL2.dll et lib
-        SDL2_image.dll et lib
-        SDL2_main.lib
+            glew32.dll et lib
+            SDL2.dll et lib
+            SDL2_image.dll et lib
+            SDL2_main.lib
 </code></pre>
 
 <p>il faudra modifier le fichier premake4.lua avec le chemin d'accès à ce répertoire, si vous n'utilisez pas cette solution. cf section premake.</p>
@@ -149,9 +150,10 @@ votre environnement de développement : </p>
 interressant pour les projets avec beaucoup de calculs) :</p>
 
 <ul>
-<li><p><code>make shader_kit help</code>, affiche la liste des projets et les options disponibles,</p></li>
+<li><p><code>make help</code>, affiche la liste des projets et les options disponibles,</p></li>
 <li><p><code>make shader_kit</code>, compile la version debug de shader_kit,</p></li>
-<li><p><code>make shader_kit config=release64</code>, compile la version release de shader_kit,</p></li>
+<li><p><code>make shader_kit config=release64</code>, compile la version release, 64bits, de shader_kit,</p></li>
+<li><p><code>make shader_kit config=debug64</code>, compile la version debug, 64bits, de shader_kit,</p></li>
 <li><p><code>make shader_kit verbose=1</code>, compile la version debuf de shader_kit et affiche le détail des commandes exécutées.</p></li>
 </ul>
 
@@ -202,7 +204,7 @@ local projects = {
 
 <h1>FAQ :</h1>
 
-<p><em>erreur horrible dans src/gKit/window.cpp</em> : </p>
+<h2><em>erreur horrible dans src/gKit/window.cpp</em> :</h2>
 
 <p>selon la version glew, le type du dernier paramètre de la fonction window.cpp/debug change, il suffit d'ajouter un <code>const</code> 
 dans la déclaration du dernier paramètre.</p>
@@ -221,5 +223,19 @@ static
 void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char *message, 
     const void *userParam ) //!&lt; const
 </code></pre>
+
+<h2><em>erreur lors du link / édition de liens :</em></h2>
+
+<p>par défaut les projets essayent de générer la version 32bits des applications, selon votre système, ce n'est pas possible ou obligatoire...</p>
+
+<p>configurations générées :</p>
+
+<ul>
+<li><p>windows codeblocks : utiliser la version 32 bits, 64 bits n'existe pas (limitation de gcc pour windows ?)</p></li>
+<li><p>windows visual studio 2013 et 2015, utilisez la version 64bits des librairies 
+(la version 32bits ne linkera pas, sauf si vous avez récupéré les librairies 32bits)...</p></li>
+<li><p>linux codeblocks : utilisez la même version que votre système. cf panneau de configuration / details</p></li>
+<li><p>mac os : les frameworks contiennent les 2 versions.</p></li>
+</ul>
 
 <p></article></p>

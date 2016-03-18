@@ -32,11 +32,11 @@ c'est l'outil premake4 qui permet de créer les projets, et les makefiles, cf se
 
 ## linux
 
-installez les paquets : libsdl2-dev, libsdl2-image-dev, libglew-dev et premake4
+installez les paquets, si nécessaire (pas la peine au nautibus) : libsdl2-dev, libsdl2-image-dev, libglew-dev et premake4
 
 par exemple, pour ubuntu et ses variantes :
 
-	sudo apt-get libsdl2-dev, libsdl2-image-dev, libglew-dev premake4
+	sudo apt-get install libsdl2-dev libsdl2-image-dev libglew-dev premake4
 
 
 ## windows
@@ -68,18 +68,19 @@ le plus simple est de créer un sous répertoire, `extern` par exemple, et d'y c
 			gKit/
 		
 		extern/
-		    bin/
-		    include/
-			SDL2/
-			    SDL.h
-			    SDL_image.h
-			GL/
-			    glew.h
-		    lib/
-			glew32.dll et lib
-			SDL2.dll et lib
-			SDL2_image.dll et lib
-			SDL2_main.lib
+			bin/
+			
+			include/
+				SDL2/
+					SDL.h
+					SDL_image.h
+				GL/
+					glew.h
+			lib/
+				glew32.dll et lib
+				SDL2.dll et lib
+				SDL2_image.dll et lib
+				SDL2_main.lib
 
 il faudra modifier le fichier premake4.lua avec le chemin d'accès à ce répertoire, si vous n'utilisez pas cette solution. cf section premake.
 
@@ -138,11 +139,13 @@ vous pouvez maintenant ouvrir la solution visual studio, le projet xcode, code b
 les makefile peuvent générer les versions debug (cf utiliser gdb ou lldb) ou les versions release, plus rapide (2 ou 3 fois, 
 interressant pour les projets avec beaucoup de calculs) :
 
-- `make shader_kit help`, affiche la liste des projets et les options disponibles,
+- `make help`, affiche la liste des projets et les options disponibles,
 
 - `make shader_kit`, compile la version debug de shader_kit,
 
-- `make shader_kit config=release64`, compile la version release de shader_kit,
+- `make shader_kit config=release64`, compile la version release, 64bits, de shader_kit,
+
+- `make shader_kit config=debug64`, compile la version debug, 64bits, de shader_kit,
 
 - `make shader_kit verbose=1`, compile la version debuf de shader_kit et affiche le détail des commandes exécutées.
 
@@ -191,7 +194,7 @@ et regénérez le projet, cf premake4 gmake / vs2013 / xcode ...
 
 # FAQ :
 
-_erreur horrible dans src/gKit/window.cpp_ : 
+## _erreur horrible dans src/gKit/window.cpp_ : 
 
 selon la version glew, le type du dernier paramètre de la fonction window.cpp/debug change, il suffit d'ajouter un `const` 
 dans la déclaration du dernier paramètre.
@@ -209,5 +212,20 @@ dans la déclaration du dernier paramètre.
 	void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char *message, 
 		const void *userParam )	//!< const 
 
+
+## _erreur lors du link / édition de liens :_
+
+par défaut les projets essayent de générer la version 32bits des applications, selon votre système, ce n'est pas possible ou obligatoire...
+
+configurations générées :
+
+- windows codeblocks : utiliser la version 32 bits, 64 bits n'existe pas (limitation de gcc pour windows ?)
+
+- windows visual studio 2013 et 2015, utilisez la version 64bits des librairies 
+(la version 32bits ne linkera pas, sauf si vous avez récupéré les librairies 32bits)...
+
+- linux codeblocks : utilisez la même version que votre système. cf panneau de configuration / details
+
+- mac os : les frameworks contiennent les 2 versions.
 
 </article>
