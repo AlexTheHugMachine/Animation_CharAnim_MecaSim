@@ -230,7 +230,7 @@ int main( int argc, char **argv )
     }
     
     // affichage de l'application
-    run(w);
+    run(w, draw);
 
     // nettoyage
     quit();
