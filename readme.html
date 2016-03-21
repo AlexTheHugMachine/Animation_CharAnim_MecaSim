@@ -54,6 +54,14 @@ votre environnement de développement : </p>
 <li><a href="http://premake.github.io/download.html">premake 4.4</a>, copiez le dans le répertoire des sources de gKit</li>
 </ul>
 
+<h3>installation rapide</h3>
+
+<p>les librairies et premake4 sont regroupées dans une archive <a href="http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/gkit2light_extern.zip">disponible ici</a>.</p>
+
+<p>il suffit de dezipper l'archive dans le répertoire de gKit. et ensuite de copier les dll que vous allez utiliser dans le répertoire de gKit. </p>
+
+<h3>installation manuelle</h3>
+
 <p>le plus simple est de créer un sous répertoire, <code>extern</code> par exemple, et d'y copier les fichiers <code>.h</code>, <code>.dll</code> et <code>.lib</code>. vous devez obtenir une structure :</p>
 
 <pre><code>gKit2light/
@@ -74,13 +82,18 @@ votre environnement de développement : </p>
             SDL2/
                 SDL.h
                 SDL_image.h
+                ...
+
             GL/
                 glew.h
+                ...
+
         lib/
             glew32.dll et lib
             SDL2.dll et lib
             SDL2_image.dll et lib
             SDL2_main.lib
+            ...
 </code></pre>
 
 <p>il faudra modifier le fichier premake4.lua avec le chemin d'accès à ce répertoire, si vous n'utilisez pas cette solution. cf section premake.</p>
@@ -143,6 +156,14 @@ votre environnement de développement : </p>
 </ul>
 
 <p>vous pouvez maintenant ouvrir la solution visual studio, le projet xcode, code blocks et compiler shader_kit ou un des tutos.</p>
+
+<p><strong>windows uniquement :</strong> copier les dll utilisées par le projet dans le répertoire du projet :</p>
+
+<ul>
+<li><p>si vous utilisez codeblocks copiez le contenu de <code>extern/mingw/lib</code></p></li>
+<li><p>si vous utilisez visual studio 2013, copiez le contenu de <code>extern/visual2013/lib</code></p></li>
+<li><p>et si vous utilisez visual studio 2015, copiez le contenu de <code>extern/visual2015/lib</code></p></li>
+</ul>
 
 <h2>utilisation des makefiles</h2>
 

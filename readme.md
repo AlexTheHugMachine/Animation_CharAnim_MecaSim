@@ -54,6 +54,12 @@ premake4 est disponible :
 
 - [premake 4.4](http://premake.github.io/download.html), copiez le dans le répertoire des sources de gKit
 
+### installation rapide
+les librairies et premake4 sont regroupées dans une archive [disponible ici](http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/gkit2light_extern.zip).
+
+il suffit de dezipper l'archive dans le répertoire de gKit. et ensuite de copier les dll que vous allez utiliser dans le répertoire de gKit. 
+
+### installation manuelle
 le plus simple est de créer un sous répertoire, `extern` par exemple, et d'y copier les fichiers `.h`, `.dll` et `.lib`. vous devez obtenir une structure :
 
 	gKit2light/
@@ -74,13 +80,18 @@ le plus simple est de créer un sous répertoire, `extern` par exemple, et d'y c
 				SDL2/
 					SDL.h
 					SDL_image.h
+					...
+					
 				GL/
 					glew.h
+					...
+					
 			lib/
 				glew32.dll et lib
 				SDL2.dll et lib
 				SDL2_image.dll et lib
 				SDL2_main.lib
+				...
 
 il faudra modifier le fichier premake4.lua avec le chemin d'accès à ce répertoire, si vous n'utilisez pas cette solution. cf section premake.
 
@@ -133,6 +144,16 @@ _rappel :_ commandes `ls` et `cd`
 	
 
 vous pouvez maintenant ouvrir la solution visual studio, le projet xcode, code blocks et compiler shader_kit ou un des tutos.
+
+__windows uniquement :__ copier les dll utilisées par le projet dans le répertoire du projet :
+
+- si vous utilisez codeblocks copiez le contenu de `extern/mingw/lib`
+
+- si vous utilisez visual studio 2013, copiez le contenu de `extern/visual2013/lib`
+
+- et si vous utilisez visual studio 2015, copiez le contenu de `extern/visual2015/lib`
+
+
 
 ## utilisation des makefiles
 
