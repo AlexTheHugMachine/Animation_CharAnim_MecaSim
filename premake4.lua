@@ -26,19 +26,21 @@ solution "gKit2light"
 	configuration { "windows" }
 		defines { "WIN32", "NVWIDGETS_EXPORTS", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
 		defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
-		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 
 	configuration { "windows", "codeblocks", "x32" }
 		includedirs { "extern/mingw/include" }
 		libdirs { "extern/mingw/lib" }
+		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
 		
 	configuration { "windows", "vs2013", "x64" }
 		includedirs { "extern/visual2013/include" }
 		libdirs { "extern/visual2013/lib" }
+		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 		
 	configuration { "windows", "vs2015", "x64" }
 		includedirs { "extern/visual2015/include" }
 		libdirs { "extern/visual2015/lib" }
+		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 		
 	configuration "macosx"
 		local frameworks= "-F /Library/Frameworks/"
