@@ -1,4 +1,6 @@
 
+#include <cstdio>
+
 #include "orbiter.h"
 
 
@@ -83,4 +85,53 @@ Point orbiter_position( const Orbiter& o )
     Transform tinv= make_inverse(t);            // l'inverse, passage camera vers monde
     
     return transform(tinv, make_point(0, 0, 0));        // la camera se trouve a l'origine, dans le repere camera...
+}
+
+
+Orbiter read_orbiter( const char *filename )
+{
+    FILE *in= fopen(filename, "rt");
+    if(in == NULL)
+    {
+        printf("[error] loading orbiter '%s'...\n", filename);
+        return make_orbiter();
+    }
+    
+    printf("loading orbiter '%s'...\n", filename);
+    
+    Orbiter o;
+    bool errors= false;
+    if(fscanf(in, "c %f %f %f \n", &o.center.x, &o.center.y, &o.center.z) != 3)
+        errors= true;
+    if(fscanf(in, "p %f %f\n", &o.position.x, &o.position.y) != 2)
+        errors= true;
+    if(fscanf(in, "r %f %f\n", &o.rotation.x, &o.rotation.y) != 2)
+        errors= true;
+    if(fscanf(in, "s %f\n", &o.size) != 1)
+        errors= true;
+    
+    fclose(in);
+    if(errors)
+    {
+        printf("[error] loading orbiter '%s'...\n", filename);
+        return make_orbiter();
+    }
+    return o;
+}
+
+int write_orbiter( const Orbiter& o, const char *filename )
+{
+    FILE *out= fopen(filename, "wt");
+    if(out == NULL)
+        return -1;
+    
+    printf("writing orbiter '%s'...\n", filename);
+    
+    fprintf(out, "c %f %f %f\n", o.center.x, o.center.y, o.center.z);
+    fprintf(out, "p %f %f\n", o.position.x, o.position.y);
+    fprintf(out, "r %f %f\n", o.rotation.x, o.rotation.y);
+    fprintf(out, "s %f\n", o.size);
+    
+    fclose(out);
+    return 0;
 }

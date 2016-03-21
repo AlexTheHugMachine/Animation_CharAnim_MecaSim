@@ -282,6 +282,17 @@ int draw( void )
         screenshot("shader_kit.png");
     }
     
+    if(key_state('c'))
+    {
+        clear_key_state('c');
+        write_orbiter(camera, "orbiter.txt");
+    }
+    if(key_state('v'))
+    {
+        clear_key_state('v');
+        camera= read_orbiter("orbiter.txt");
+    }
+    
     return 1;
 }
 

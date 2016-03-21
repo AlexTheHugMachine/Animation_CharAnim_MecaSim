@@ -44,13 +44,19 @@ Transform orbiter_projection_transform( const Orbiter&o, const float width, cons
 /*! renvoie les coorodnnees de l'origine d0 et les axes dx, dy du plan image dans le repere du monde. 
 
 permet de construire un rayon pour le pixel x, y : 
-    - sa direction : Vector d= normalize( make_vector(dO + x*dx + y*dy) );
+    - sa direction : Vector d= normalize( make_vector(d0 + x*dx + y*dy) );
     - et son origine : Point o= orbiter_position(camera);
  */
 void orbiter_image_frame( const Orbiter& o, const float width, const float height, const float fov, Point& dO, Vector& dx, Vector& dy );
 
 //! renvoie la position de la camera dans le repere du monde.
 Point orbiter_position( const Orbiter& o );
+
+//! relit la position de l'orbiter depuis un fichier texte. 
+Orbiter read_orbiter( const char *filename );
+
+//! enregistre la position de l'orbiter dans un fichier texte.
+int write_orbiter( const Orbiter& o, const char *filename );
 
 ///@}
 #endif
