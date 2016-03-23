@@ -70,7 +70,63 @@ program_uniform1f(program, "time", 12.0f);
 
 chaque surcharge est nommée explicitement, puisque seul le nom de la fonction est utilisé. selon le type de valeur à manipuler,
 les noms de fonctions sont décorés par un suffixe indiquant le nombre de paramètres (1, 2, 3, ou 4) et leur type (f pour float, 
-i pour int, u pour unsigned int, v pour un pointeur sur une valeur, etc.)
+i pour int, u pour unsigned int, v pour vector, un pointeur sur une ou plusieurs valeurs, etc.)
+
+
+## création des objets openGL
+
+pour dessiner, il faut en général créer plusieurs types d'objets openGL, la démarche est toujours la même :
+    - créer un ou plusieurs identifiants, type `GLuint`, cf la famille de fonctions glGenXXX( ),
+    - sélectionner l'objet pour le configurer.
+
+exemple, pour créer plusieurs buffers openGL, cf `glGenBuffers( )` :
+\code
+GLuint buffers[4];
+glGenBuffers(4, buffers);
+\endcode
+
+### créer un buffer 
+
+pour créer un seul buffer, il suffit de passer le pointeur sur l'identifiant :
+\code
+GLuint buffer;
+glGenBuffers(1, &buffer);
+\endcode
+
+le buffer sera ensuite sélectionné avec `glBindBuffer( )`. cf \ref tuto4GL pour plus de détails sur l'utilisation des buffers.
+
+
+### créer un vertex array object
+
+\code
+GLuint vao;
+glGenVertexArrays(1, &vao);
+\endcode
+
+le vao sera ensuite sélectionné avec `glBindVertexArray( )`. cf \ref tuto4GL pour plus de détails.
+
+
+### créer une texture
+
+\code
+GLuint texture;
+glGenTextures(1, &texture);
+\endcode
+
+la texture sera ensuite sélectionnée avec `glBindTexture( )`, cf \ref tuto5GL.
+
+
+### créer un shader, un shader program
+
+les shaders et les programs sont un peu à part, leur fonction de création ne crée qu'un seul objet à la fois :
+\code
+GLuint vertex_shader= glCreateShader(GL_VERTEX_SHADER);
+GLuint shader_program= glCreateProgram();
+\endcode
+
+le program sera sélectionné avec `glUseProgram( )`. cf \ref tuto2GL pour les détails.
+
+# documentation complète 
 
 l'api complète et sa documentation est consultable sur [opengl.org](https://www.opengl.org/sdk/docs/man/)
  */

@@ -28,6 +28,7 @@ Object *create_object( Mesh *mesh, const Transform model, Object *parent= NULL )
     object->mesh= mesh;
     object->model= model;
     object->parent= parent;
+    object->texture= 0;
     return object;
 }
 
@@ -168,7 +169,9 @@ int draw( )
         // transformation complete
         Transform model= model_transform(scene[i], local);// * make_translation( make_vector(x, y, z) );
         
-        draw(*scene[i]->mesh, model, 
+        //~ printf("draw %d, texture %u\n", i, scene[i]->texture);
+        draw(*scene[i]->mesh, 
+            model, 
             orbiter_view_transform(camera), 
             orbiter_projection_transform(camera, window_width(), window_height(), 45),
             scene[i]->texture); 

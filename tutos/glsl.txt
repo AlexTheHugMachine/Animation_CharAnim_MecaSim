@@ -111,7 +111,7 @@ void f2( in a, inout b )
 ## vertex shader et GLSL
 
 un vertex shader est composée d'une fonction principale, `void main( void )`, et doit écrire les coordonnées des sommets 
-dans une variable globale `gl_Position`. 
+dans une variable globale `vec4 gl_Position` (_rappel :_ coordonnées x, y, z et w dans le repère projectif).
 
 les attributs se déclarent en global avec le mot clé `in`, les varyings avec `out`, les constantes initialisées avec `const`.
 
@@ -126,10 +126,10 @@ exemple :
 // vertex shader de tuto3GL
 #version 330
 
-uniform vec3 positions[36];
-uniform float time;
+uniform vec3 positions[36];     // declare un uniform, un tableau de vec3
+uniform float time;             // declare un uniform, time de type float
 
-const vec3 deplace= vec3(...);
+const vec3 deplace= vec3(...);  // declare une constante
 
 void main( )
 {
@@ -145,8 +145,9 @@ un vertex array et créer des buffers, cf \ref tuto4GL) :
 // vertex shader et attributs
 #version 330
 
-in vec3 position;
-uniform mat4 mvpMatrix;
+in vec3 position;               // declare un attribut, position de type vec3
+
+uniform mat4 mvpMatrix;         // declare un uniform, mvpMatrix de type mat4
 
 void main( void )
 {
@@ -158,16 +159,16 @@ void main( void )
 ## fragment shader et GLSL
 
 le fragment shader est similaire au vertex shader, mais il ne peut pas utiliser les valeurs des attributs, ils ne sont plus
-accessibles, uniquement leurs valeurs interpolées pour le fragment (repassez dans \ref intro3d et \ref pipeline, si ce n'est 
+accessibles, uniquement leurs valeurs interpolées (repassez dans \ref intro3d et \ref pipeline, si ce n'est 
 pas clair)
 
-la couleur du fragment doit être écrite dans `gl_FragColor` ou un varying déclaré par le shader.
+la couleur du fragment doit être écrite dans `vec4 gl_FragColor` ou un varying déclaré par le shader.
 
 un fragment shader peut déclarer des uniforms et des varyings, et accéder à plusieurs variables définies par le pipeline, 
 par exemple :
-    - vec4 gl_FragCoord, les coordonnées dans le repère image du fragment,
-    - int gl_PrimitiveID, l'indice de la primitive, du triangle, traité par le shader,
-    - bool gl_FrontFacing, l'orientation de la primitive traitée par le shader, toujours vrai si les faces arrières sont éliminées 
+    - `vec4 gl_FragCoord`, les coordonnées dans le repère image du fragment,
+    - `int gl_PrimitiveID`, l'indice de la primitive, du triangle, traité par le shader,
+    - `bool gl_FrontFacing`, l'orientation de la primitive traitée par le shader, toujours vrai si les faces arrières sont éliminées 
     avant la fragmentation (cf \ref intro3d).
 
 exemple:
@@ -182,8 +183,8 @@ void main( void )
     vec3 color;
     
     // utiliser l'indice du triangle, gl_PrimitiveID, pour fabriquer une couleur "aleatoire"
-    color= vec3(1.0 - float(gl_PrimitiveID % 100) / 99.f, float(gl_PrimitiveID % 10) / 9.f, float(gl_PrimitiveID % 1000) / 999.f);
-    // glsl n'autorise pas les conversions implicites... ni les casts avec la syntaxe du C, 
+    color= vec3(1.0 - float(gl_PrimitiveID % 100) / 99.0, float(gl_PrimitiveID % 10) / 9.0, float(gl_PrimitiveID % 1000) / 999.0);
+    // glsl n'autorise pas les casts avec la syntaxe du C, 
     // donc utiliser la notation constructeur comme en C++
     
     // si le triangle est une face arriere, l'afficher d'une couleur differente, cf parametre uniform, initialise par l'application 
@@ -197,6 +198,63 @@ void main( void )
 
 ## uniforms, varyings et variables
 
-\todo rappel et exemple
+à quoi servent les différents types de variables ?
+    - les `uniform` correspondent à des valeurs fournies par l'application, elles ne changent pas de valeur pendant l'exécution des shaders, cf \ref tuto2GL,
+    
+    - les `in` sont les entrées du shader : 
+        - pour un vertex shader, ils représentent les attributs du sommet, c'est le pipeline qui affecte 
+        les valeurs en fonction du vertex array object sélectionné par l'application au moment du draw( ). cf \ref tuto4GL
+        
+        - pour les autres shaders, les fragment shaders, par exemple, ce sont des varyings, des entrées qui doivent correspondre à des sorties déclarées par 
+        les shaders précédents dans le pipeline. ces variables n'existent que pendant l'exécution du pipeline et ne sont pas accessibles par l'application.
+    
+    - les `out` sont les sorties, optionnelles, du shader.
 
+_exemple :_
+si chaque sommet est décrit par une position et une couleur, les entrées du vertex shader sont 2 attributs, déclarés avec `in` et configurés par l'application.
+
+\code
+#version 330
+// vertex shader
+
+in vec3 position;   // attribut
+in vec4 color;  // attribut
+
+void main( )
+{
+    gl_Position= ... ;  // obligatoire, affecter une position
+}
+\endcode
+
+si on veut que le fragment shader utilise la couleur des sommets pour calculer sa couleur, il faut les lui transmettre explicitement, il ne peut pas y accéder 
+tout seul. dans ce cas, la couleur est un varying, déclarée comme sortie optionnelle du vertex shader (avec `out`) et comme entrée (avec `in`) 
+du fragment shader.
+
+\code
+#version 330
+// vertex shader
+
+in vec3 position;
+in vec4 color;
+
+out vec4 vertex_color;  // sortie, varying
+void main( )
+{
+    vertex_color= color;
+    gl_Position= ... ;
+}
+\endcode
+
+\code
+#version 330
+// fragment shader
+
+in vec4 vertex_color;   // entree, varying, meme type et meme nom que dans le vertex shader
+
+void main( )
+{
+    gl_FragColor= vertex_color;
+    // le fragment shader doit ecrire une couleur dans gl_FragColor 
+}
+\endcode
  */

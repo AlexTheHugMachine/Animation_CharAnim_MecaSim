@@ -34,7 +34,7 @@ puis effacer l'image et le zbuffer au début de draw( ):
 glClear(GL_COLOR_BUFFER_BIT);   // effacer l'image
 glClear(GL_DEPTH_BUFFER_BIT);   // effacer le zbuffer, si nécessaire
 \endcode
-on peut combiner les deux, avec un OU logique :
+on peut combiner les deux, avec un OU binaire :
 \code
 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // effacer l'image et le zbuffer
 \endcode
@@ -80,7 +80,7 @@ glEnable(GL_CULL_FACE);         // activer le test
 glDisable(GL_CULL_FACE);        // desactiver le test
 \endcode
 
-le test pour éliminer les faces arrières standards s'écrit :
+le test standard s'écrit :
 \code
 glFrontFace(GL_CCW);
 glCullFace(GL_BACK);
@@ -114,10 +114,8 @@ glBindVertexArray(vao);
 
 après avoir compilé et linké un shader program, cf \ref tuto2GL, il faut le sélectionner pour configurer le pipeline :
 \code
-GLuint program= read_program("...");
-
-// glUseProgram(program);
-// deja fait par read_program( )
+GLuint program= ... ;
+glUseProgram(program);
 \endcode
 
 avant de pouvoir dessiner, il faut affecter une valeur à tous les uniforms utilisés par le shader program. l'affectation se fait en 2 étapes :

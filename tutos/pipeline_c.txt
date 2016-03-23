@@ -7,37 +7,6 @@ la solution présentée dans \ref intro3d fonctionne correctement dans les cas s
 camera. un grand triangle dont les sommets ne sont pas visibles dans l'image mais dont l'interieur est visible ne sera pas 
 dessiné... le test de visibilité du triangle n'est pas suffisant.
 
-[ a reprendre
-l'idée est de vérifier que le triangle et la zone visible dans l'image sont séparés... par exemple si tous les sommets du triangle 
-sont à gauche de la limite de l'image, on est sur que l'intérieur du triangle n'est pas visible non plus. et si on recommence pour 
-toutes directions, ca devrait etre mieux ?
-
-\code
-/* sans la division homogene !!
- */
-bool visible( const Point a, const Point b, const Point c )
-{
-	Point pmin;
-	pmin.x= std::min(a.x, std::min(b.x, c.x));
-	pmin.y= std::min(a.y, std::min(b.y, c.y));
-	pmin.z= std::min(a.z, std::min(b.z, c.z));
-	
-	Point pmax;
-	pmax.x= std::max(a.x, std::max(b.x, c.x));
-	pmax.y= std::max(a.y, std::max(b.y, c.y));
-	pmax.z= std::max(a.z, std::max(b.z, c.z));
-	
-	if(pmax.x < -1 || pmin.x > 1)	// trop a gauche ou trop a droite
-		return false;
-	if(pmax.y < -1 || pmin.y > 1)	// trop haut ou trop bas
-		return false;
-	if(pmax.z < -1 || pmin.z > 1)	// trop loin ou derriere
-		return false;
-	return true;
-}
-\endcode
-]
-
 c'est mieux, mais il y a encore un cas qui pose problème... lorsqu'un triangle est en partie derrière la caméra :
 
 \image html front.png un objet...
@@ -60,9 +29,11 @@ que le pixel se trouve du "bon" coté de chaque arête du triangle.
 
 pour le test 3d, la camera est le sommet du tetrahedre, e, et sa base est le triangle abc. le test d'inclusion du point p se transforme 
 en calcul du volume signé des tetrahedres formés par le point p et les faces abc, eba ecb, eac. s'ils sont tous du même signe, p à 
-est l'interieur du volume pabc, et le pixel fait parti du triangle. c'est le même test qu'avec l'aire, le volume sera positif si p se trouve
+est l'interieur du volume eabc, et le pixel fait parti du triangle. c'est le même test qu'avec l'aire, le volume sera positif si p se trouve
 du "bon" coté de chaque face du tetrahedre.
 
 _choix du repère :_ camera, e est l'origine, permet de simplifier les calculs.
+
+cf pipeline3d.cpp
 
  */
