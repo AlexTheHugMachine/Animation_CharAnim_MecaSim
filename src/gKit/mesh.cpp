@@ -225,7 +225,7 @@ GLuint make_mesh_program( Mesh& m, const bool use_texcoord, const bool use_norma
         definitions.append("#define USE_COLOR\n");
 
     if(definitions.size() > 0)
-        printf("[mesh program definitions]:\n%s", definitions.c_str());
+        printf("[mesh program definitions]\n%s", definitions.c_str());
     return read_program("data/shaders/mesh.glsl", definitions.c_str());
 }
 
@@ -233,8 +233,8 @@ GLuint make_mesh_program( Mesh& m, const bool use_texcoord, const bool use_norma
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, GLuint texture )
 {
     bool use_texcoord= (m.texcoords.size() == m.positions.size() && texture > 0);
-    bool use_normal= m.normals.size()== m.positions.size();
-    bool use_color= m.colors.size()== m.positions.size();
+    bool use_normal= (m.normals.size()== m.positions.size());
+    bool use_color= (m.colors.size()== m.positions.size());
     
     if(m.vao == 0)
         m.vao= make_mesh_vertex_format(m, use_texcoord, use_normal, use_color);
@@ -242,9 +242,9 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
     if(m.program == 0)
     {
         if(m.texcoords.size() > 0 && texture == 0)
-            printf("[mesh draw]: need a texture... use_texcoord= %s\n", use_texcoord ? "true" : "false");
+            printf("[mesh draw] texcoords, no texture... use_texcoord= %s\n", use_texcoord ? "true" : "false");
         if(m.texcoords.size() == 0 && texture > 0)
-            printf("[mesh draw]: need texcoords... use_texcoord= %s\n", use_texcoord ? "true" : "false");
+            printf("[mesh draw] no texcoords, texture... use_texcoord= %s\n", use_texcoord ? "true" : "false");
         
         m.program= make_mesh_program(m, use_texcoord, use_normal, use_color);
         program_print_errors(m.program);
