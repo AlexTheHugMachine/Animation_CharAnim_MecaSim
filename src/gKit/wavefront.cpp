@@ -105,7 +105,7 @@ Mesh read_mesh( const char *filename )
                     int n= (idn[k] < 0) ? (int) normals.size()   + idn[k] : idn[k] -1;
                     
                     if(t >= 0) vertex_texcoord(data, texcoords[t]);
-                    if(n >= 0) vertex_normal(data, normals[t]);
+                    if(n >= 0) vertex_normal(data, normals[n]);
                     
                     if(p < 0) break; // error
                     push_vertex(data, positions[p]);
