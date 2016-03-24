@@ -44,10 +44,35 @@ Transform orbiter_projection_transform( const Orbiter&o, const float width, cons
 /*! renvoie les coorodnnees de l'origine d0 et les axes dx, dy du plan image dans le repere du monde. 
 
 permet de construire un rayon pour le pixel x, y : 
-    - sa direction : Vector d= normalize( make_vector(d0 + x*dx + y*dy) );
-    - et son origine : Point o= orbiter_position(camera);
+    - l'extremite : un point dans le plan image avec z = 0 : 
+    \code
+        Point d0;
+        Vector dx0, dy0;
+        orbiter_image_frame(camera, width, height, 0, fov, d0, dx0, dy0);
+        Point e= d0 + x*dx0 + y*dy0;
+    \endcode
+    - l'origine : 
+    \code
+        Point o= orbiter_position(camera);
+    \endcode
+    
+ou autre solution, reproduire la projection openGL :
+    - extremite : un point dans le plan image avec z = 1 :  
+    \code
+        Point d1;
+        Vector dx1, dy1;
+        orbiter_image_frame(camera, width, height, 1, fov, d1, dx1, dy1);
+        Point e= d1 + x*dx1 + y*dy1;
+    \endcode
+    - origine : un point dans le plan image avec z = 0 :
+    \code
+        Point d0;
+        Vector dx0, dy0;
+        orbiter_image_frame(camera, width, height, 0, fov, d0, dx0, dy0);
+        Point o= d0 + x*dx0 + y*dy0;
+    \endcode
  */
-void orbiter_image_frame( const Orbiter& o, const float width, const float height, const float fov, Point& dO, Vector& dx, Vector& dy );
+void orbiter_image_frame( const Orbiter& o, const float width, const float height, const float z, const float fov, Point& dO, Vector& dx, Vector& dy );
 
 //! renvoie la position de la camera dans le repere du monde.
 Point orbiter_position( const Orbiter& o );

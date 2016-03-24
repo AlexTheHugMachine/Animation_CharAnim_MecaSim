@@ -60,7 +60,7 @@ Transform orbiter_projection_transform( const Orbiter&o, const float width, cons
     return make_perspective(fov, width / height, o.size*0.01f, o.size*2.f + o.center.z);
 }
 
-void orbiter_image_frame( const Orbiter& o, const float width, const float height, const float fov, Point& d0, Vector& dx, Vector& dy )
+void orbiter_image_frame( const Orbiter& o, const float width, const float height, const float z, const float fov, Point& d0, Vector& dx, Vector& dy )
 {
     Transform view= orbiter_view_transform(o);
     Transform projection= orbiter_projection_transform(o, width, height, fov);
@@ -69,11 +69,11 @@ void orbiter_image_frame( const Orbiter& o, const float width, const float heigh
     Transform tinv= make_inverse(t);            // l'inverse, passage image vers monde
     
     // origine du plan image
-    d0= transform(tinv, make_point(0, 0, 0));
+    d0= transform(tinv, make_point(0, 0, z));
     // axe x du plan image
-    Point d1= transform(tinv, make_point(1, 0, 0));
+    Point d1= transform(tinv, make_point(1, 0, z));
     // axe y du plan image
-    Point d2= transform(tinv, make_point(0, 1, 0));
+    Point d2= transform(tinv, make_point(0, 1, z));
     
     dx= make_vector(d0, d1);
     dy= make_vector(d0, d2);
