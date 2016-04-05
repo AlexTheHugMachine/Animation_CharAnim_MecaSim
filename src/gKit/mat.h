@@ -44,6 +44,8 @@ Transform make_scale( const float x, const float y, const float z );
 
 //! renvoie la matrice representant une translation par un vecteur.
 Transform make_translation( const Vector& v );
+//! renvoie la matrice representant une translation par un vecteur x y z.
+Transform make_translation( const float x, const float y, const float z );
 
 //! renvoie la matrice representation une rotation de angle degree autour de l'axe X.
 Transform make_rotationX( const float angle );

@@ -73,6 +73,11 @@ Transform make_translation( const Vector& v )
         0, 0, 0, 1);
 }
 
+Transform make_translation( const float x, const float y, const float z )
+{
+    return make_translation( make_vector(x, y, z) );
+}
+
 Transform make_rotationX( const float a )
 {
     float sin_t= sinf(radians(a));
