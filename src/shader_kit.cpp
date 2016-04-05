@@ -45,6 +45,7 @@ Filename mesh_filename;
 Mesh mesh;
 unsigned int vertex_count;
 GLuint vao;
+bool wireframe= false;
 
 std::vector<Filename> texture_filenames;
 std::vector<GLuint> textures;
@@ -171,6 +172,19 @@ int quit( )
 
 int draw( void )
 {
+    
+    if(wireframe)
+    {
+        glClearColor(1, 1, 1, 1);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glLineWidth(2);
+    }
+    else
+    {
+        glClearColor(0.2f, 0.2f, 0.2f, 1);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+    
     // effacer l'image
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
@@ -207,6 +221,12 @@ int draw( void )
     // affiche l'objet
     if(program_failed == false)
     {
+        if(key_state('w'))
+        {
+            clear_key_state('w');
+            wireframe= !wireframe;
+        }
+        
         // configuration minimale du pipeline
         glBindVertexArray(vao);
         glUseProgram(program);
