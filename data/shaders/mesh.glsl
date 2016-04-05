@@ -61,11 +61,13 @@ in vec3 vertex_position;
     in vec3 vertex_color;
 #endif
 
+uniform vec4 mesh_color;
+
 out vec4 fragment_color;
 
 void main( )
 {
-    vec4 color= vec4(1, 1, 1, 1);  // prevoir un uniform ?
+    vec4 color= mesh_color;
 #ifdef USE_COLOR
     color= vec4(vertex_color, 1);
 #endif

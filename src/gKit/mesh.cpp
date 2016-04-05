@@ -12,6 +12,7 @@
 Mesh create_mesh( const GLenum primitives )
 {
     Mesh m;
+    m.color= make_white();
     m.primitives= primitives;
     m.vao= 0;
     m.program= 0;
@@ -253,6 +254,8 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
     glBindVertexArray(m.vao);
     glUseProgram(m.program);
     
+    program_uniform(m.program, "mesh_color", m.color);
+    
     Transform mv= view * model;
     Transform normal= make_normal_transform(mv);
     Transform mvp= projection * view * model;
@@ -260,9 +263,10 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
     program_uniform(m.program, "mvpMatrix", mvp);
     program_uniform(m.program, "mvMatrix", mv);
     program_uniform(m.program, "normalMatrix", normal);
+    
     // utiliser une texture, elle ne sera visible que si le mesh a des texcoords...
     program_use_texture(m.program, "diffuse_color", 0, texture); 
-
+    
     if(m.indices.size() > 0)
         glDrawElements(m.primitives, m.indices.size(), GL_UNSIGNED_INT, 0);
     else

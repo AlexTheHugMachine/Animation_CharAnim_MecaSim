@@ -27,6 +27,8 @@ struct Mesh
     
     std::vector<unsigned int> indices;
     
+    Color color;
+    
     GLenum primitives;
     GLuint vao;
     GLuint program;
