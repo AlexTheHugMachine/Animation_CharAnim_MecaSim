@@ -23,6 +23,32 @@ Color make_opaque_color( const Color& color )
     return opaque;
 }
 
+Color make_black( )
+{
+    return make_color(0, 0, 0);
+}
+
+Color make_white( )
+{
+    return make_color(1, 1, 1);
+}
+
+Color make_red( )
+{
+    return make_color(1, 0, 0);
+}
+
+Color make_green( )
+{
+    return make_color(0, 1, 0);
+}
+
+Color make_blue( )
+{
+    return make_color(0, 0, 1);
+}
+
+
 Color operator+ ( const Color& a, const Color& b )
 {
     return make_alpha_color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
