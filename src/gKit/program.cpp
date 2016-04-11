@@ -38,10 +38,10 @@ std::string prepare_source( std::string file, const std::string& definitions )
     
     // recupere la ligne #version
     std::string version;
-    unsigned long int b= file.find("#version");
+    size_t b= file.find("#version");
     if(b != std::string::npos)
     {
-        unsigned long int e= file.find('\n', b);
+        size_t e = file.find( '\n', b );
         if(e != std::string::npos)
         {
             version= file.substr(0, e +1);

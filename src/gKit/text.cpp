@@ -24,7 +24,7 @@ Text create_text( )
         const unsigned int starty= 16 *7;
         const unsigned int startx= 8 *2;
         Color color= image_pixel(font, startx + x, starty + y);
-        color.a= 0.6;
+        color.a= 0.6f;
         image_set_pixel(font, startx + x, starty + y, color);
     }
     
@@ -34,7 +34,7 @@ Text create_text( )
     {
         const unsigned int starty= 16 *7;
         const unsigned int startx= 8 *1;
-        Color color= x >1 ? make_alpha_color(1, 1, 1, 0.6) : make_alpha_color(1, 1, 1, 1);
+        Color color= (x > 1) ? make_alpha_color(1, 1, 1, 0.6f) : make_alpha_color(1, 1, 1, 1);
         image_set_pixel(font, startx + x, starty + y, color);
     }
     
