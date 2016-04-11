@@ -1,6 +1,6 @@
 solution "gKit2light"
 	configurations { "debug", "release" }
-	platforms { "x32", "x64" }
+	platforms { "x64", "x32" }
 	
 	includedirs { ".", "src/gKit" }
 	
@@ -22,7 +22,11 @@ solution "gKit2light"
 		buildoptions { "-flto"}
 		linkoptions { "-flto"}
 		links { "GLEW", "SDL2", "SDL2_image", "GL" }
-	
+
+	configuration { "linux", "debug" }
+		buildoptions { "-g"}
+		linkoptions { "-g"}
+		
 	configuration { "windows" }
 		defines { "WIN32", "NVWIDGETS_EXPORTS", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
 		defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
