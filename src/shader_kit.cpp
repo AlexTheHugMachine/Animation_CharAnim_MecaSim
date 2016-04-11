@@ -302,6 +302,20 @@ int draw( void )
         screenshot("shader_kit.png");
     }
     
+    static bool video= false;
+    if(key_state(SDLK_RETURN))
+    {
+        clear_key_state(SDLK_RETURN);
+        video= !video;
+        
+        if(video) 
+            printf("start video capture...\n");
+        else 
+            printf("stop video capture.\n");
+    }
+    if(video) 
+        capture("shader_kit");
+    
     if(key_state('c'))
     {
         clear_key_state('c');

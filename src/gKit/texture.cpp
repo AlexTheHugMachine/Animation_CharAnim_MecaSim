@@ -1,5 +1,6 @@
 
 #include <cassert>
+#include <cstdio>
 
 #include "texture.h"
 
@@ -74,5 +75,19 @@ int screenshot( const char *filename )
     int code= write_image(image, filename);
     release_image(image);
     return code;
+}
+
+int capture( const char *prefix )
+{
+    static int id= 1;
+
+    char tmp[4096];
+    sprintf(tmp,"%s%04d.bmp", prefix, id);
+
+    if(id % 30 == 0)
+        printf("capture frame '%s'...\n", tmp);
+
+    id++;
+    return screenshot(tmp);
 }
 

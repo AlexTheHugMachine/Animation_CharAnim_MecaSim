@@ -20,8 +20,39 @@ GLuint make_texture( const int unit, const Image& im );
 //! cree une texture a partir d'un fichier filename. a detruire avec glDeleteTextures( ).
 GLuint read_texture( const int unit, const char *filename );
 
-//! enregistre le contenu de la fenetre dans un fichier filename nom de l'image a ecrire. doit etre de type .png.
+//! enregistre le contenu de la fenetre dans un fichier filename nom de l'image a ecrire. doit etre de type .png / .bmp
 int screenshot( const char *filename );
+
+/*! capture video. enregistre le contenu de la fenetre dans un fichier prefix%04d.bmp.
+
+pour obtenir une video 30 images par secondes, compresser avec :
+avconv -r 30 -f image2 -i prefix%04d.bmp -c:v libx264 -crf 19 video.m4v
+
+verifier que le codec x264 est installe :
+avconv -codecs | grep x264
+
+s'il n'est pas installe :
+sudo apt-get install libavcodec-extra-53 
+ou la version actuelle :
+sudo apt-get install libavcodec-extra-
+
+exemple d'utilisation : cf shader_kit.cpp
+\code
+    static bool video= false;
+    if(key_state(SDLK_RETURN))
+    {
+        clear_key_state(SDLK_RETURN);
+        video= !video;
+        
+        if(video) printf("start video capture...\n");
+        else      printf("stop video cpature.\n");
+    }
+    
+    if(video) capture("shader_kit");
+\endcode
+
+ */
+int capture( const char *prefix );
 
 ///@}
 #endif

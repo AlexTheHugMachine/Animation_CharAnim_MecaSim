@@ -213,7 +213,5 @@ int write_image( const Image& image, const char *filename )
     
     if(code < 0)
         printf("writing color image '%s'... failed\n%s\n", filename, SDL_GetError());
-    else
-        printf("writing color image '%s'...\n", filename);
     return code;
 }
