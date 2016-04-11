@@ -164,7 +164,7 @@ void label( Widgets& w, const char *format, ... )
 
 bool button( Widgets& w, const char *text, int& status )
 {
-    Rect r= place(w, strlen(text) +2);
+    Rect r= place(w, (int) strlen(text) +2);
     
     bool change= false;
     if(w.mb > 0 && overlap(r, w.mx, w.my))
@@ -180,6 +180,23 @@ bool button( Widgets& w, const char *text, int& status )
     return change;
 }
 
+bool select( Widgets& w, const char *text, const int option, int& status )
+{
+    Rect r= place(w, (int) strlen(text) +2);
+    
+    bool change= false;
+    if(w.mb > 0 && overlap(r, w.mx, w.my))
+    {
+        change= true;
+        status= option;
+    }
+
+    char tmp[128];
+    sprintf(tmp, "%c %s", (status == option) ? 4 : 3, text);  // strlen(text) + 2
+
+    print(w.console, r.x, r.y, tmp);
+    return change;
+}
 void text_area( Widgets& w, const int height, const char *text, int& begin_line )
 {
     Rect r= place(w, 128, height);

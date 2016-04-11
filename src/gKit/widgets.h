@@ -97,9 +97,14 @@ void begin_line( Widgets& widgets );
 void label( Widgets& widgets, const char *format, ... );
 
 //! cree un bouton. renvoie true si le bouton a change d'etat.
-//! \param text legende du bouton
+//! \param text legende du bouton,
 //! \param status etat du bouton, 1 selectionne, 0 non selectionne.
 bool button( Widgets& widgets, const char *text, int& status );
+//! cree un radio bouton. selectionne une seule option parmis une liste. renvoie true si le bouton a change d'etat.
+//! \param text legende du bouton,
+//! \param option position du bouton dans le groupe, 
+//! \param status option/bouton selectionne.
+bool select( Widgets& widgets, const char *text, const int option, int& status );
 
 //! cree une zone de texte scrollable.
 //! \param height nombre de lignes.
