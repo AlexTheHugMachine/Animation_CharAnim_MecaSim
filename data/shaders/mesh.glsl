@@ -63,8 +63,6 @@ in vec3 vertex_position;
 
 uniform vec4 mesh_color;
 
-out vec4 fragment_color;
-
 void main( )
 {
     vec4 color= mesh_color;
@@ -103,6 +101,6 @@ void main( )
             color= vec4(0.8, 0.4, 0, 1);
     }
     
-    fragment_color= color;
+    gl_FragColor= color;
 }
 #endif

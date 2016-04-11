@@ -188,29 +188,34 @@ GLuint make_mesh_vertex_format( Mesh& m, const bool use_texcoord, const bool use
 {
     if(m.positions.size() == 0)
         return 0;
-
-#if 1
-    if(m.texcoords.size() > 0 && m.texcoords.size() < m.positions.size() && use_texcoord)
-        printf("[error] invalid texcoords array...\n");
-    if(m.normals.size() > 0 && m.normals.size() < m.positions.size() && use_normal)
-        printf("[error] invalid normals array...\n");
-    if(m.colors.size() > 0 && m.colors.size() < m.positions.size() && use_color)
-        printf("[error] invalid colors array...\n");
-#endif
     
     // ne creer que les buffers necessaires
     GLuint vao= create_vertex_format();
     make_vertex_buffer(vao, 0,  3, GL_FLOAT, m.positions.size() * sizeof(vec3), &m.positions.front());
-    if(m.texcoords.size()== m.positions.size() && use_texcoord)
-        make_vertex_buffer(vao, 1,  2, GL_FLOAT, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());
-    if(m.normals.size() == m.positions.size() && use_normal)
-        make_vertex_buffer(vao, 2,  3, GL_FLOAT, m.normals.size() * sizeof(vec3), &m.normals.front());
-    if(m.colors.size() == m.positions.size() && use_color)
-        make_vertex_buffer(vao, 3,  3, GL_FLOAT, m.colors.size() * sizeof(vec3), &m.colors.front());
 
     if(m.indices.size() > 0)
         make_index_buffer(vao, m.indices.size() * sizeof(unsigned int), &m.indices.front());
-
+    
+    bool use_mesh_color= (m.primitives == GL_POINTS || m.primitives == GL_LINES || m.primitives == GL_LINE_STRIP || m.primitives == GL_LINE_LOOP);
+    if(!use_mesh_color)
+    {
+    #if 1
+        if(m.texcoords.size() > 0 && m.texcoords.size() < m.positions.size() && use_texcoord)
+            printf("[error] invalid texcoords array...\n");
+        if(m.normals.size() > 0 && m.normals.size() < m.positions.size() && use_normal)
+            printf("[error] invalid normals array...\n");
+        if(m.colors.size() > 0 && m.colors.size() < m.positions.size() && use_color)
+            printf("[error] invalid colors array...\n");
+    #endif
+        
+        if(m.texcoords.size()== m.positions.size() && use_texcoord)
+            make_vertex_buffer(vao, 1,  2, GL_FLOAT, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());
+        if(m.normals.size() == m.positions.size() && use_normal)
+            make_vertex_buffer(vao, 2,  3, GL_FLOAT, m.normals.size() * sizeof(vec3), &m.normals.front());
+        if(m.colors.size() == m.positions.size() && use_color)
+            make_vertex_buffer(vao, 3,  3, GL_FLOAT, m.colors.size() * sizeof(vec3), &m.colors.front());
+    }
+    
     return vao;
 }
 
@@ -218,16 +223,22 @@ GLuint make_mesh_program( Mesh& m, const bool use_texcoord, const bool use_norma
 {
     std::string definitions;
 
-    if(m.texcoords.size() > 0 && use_texcoord)
-        definitions.append("#define USE_TEXCOORD\n");
-    if(m.normals.size() > 0 && use_normal)
-        definitions.append("#define USE_NORMAL\n");
-    if(m.colors.size() > 0 && use_color)
-        definitions.append("#define USE_COLOR\n");
-
-    if(definitions.size() > 0)
-        printf("[mesh program definitions]\n%s", definitions.c_str());
-    return read_program("data/shaders/mesh.glsl", definitions.c_str());
+    bool use_mesh_color= (m.primitives == GL_POINTS || m.primitives == GL_LINES || m.primitives == GL_LINE_STRIP || m.primitives == GL_LINE_LOOP);
+    if(!use_mesh_color)
+    {
+        if(m.texcoords.size() > 0 && use_texcoord)
+            definitions.append("#define USE_TEXCOORD\n");
+        if(m.normals.size() > 0 && use_normal)
+            definitions.append("#define USE_NORMAL\n");
+        if(m.colors.size() > 0 && use_color)
+            definitions.append("#define USE_COLOR\n");
+        
+        if(definitions.size() > 0)
+            printf("[mesh program definitions]\n%s", definitions.c_str());
+        return read_program("data/shaders/mesh.glsl", definitions.c_str());
+    }
+    else
+        return read_program("data/shaders/mesh_color.glsl");
 }
 
 
@@ -268,9 +279,9 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
     program_use_texture(m.program, "diffuse_color", 0, texture); 
     
     if(m.indices.size() > 0)
-        glDrawElements(m.primitives, m.indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements( m.primitives, (GLsizei) m.indices.size(), GL_UNSIGNED_INT, 0 );
     else
-        glDrawArrays(m.primitives, 0, m.positions.size());
+        glDrawArrays( m.primitives, 0, (GLsizei) m.positions.size() );
 }
 
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection )
