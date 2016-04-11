@@ -4,18 +4,18 @@
 #include "buffer.h"
 
 
-GLuint make_buffer( const GLenum target, const size_t data_size, const void *data )
+GLuint make_buffer( const GLenum target, const size_t data_size, const void *data, const GLenum usage )
 {
     if(data_size == 0)
     {
-        printf("[error] 0B vertex buffer...\n");
+        printf("[error] 0B buffer...\n");
         return 0;
     }
 
     GLuint buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(target, buffer);
-    glBufferData(target, data_size, data, GL_STATIC_DRAW);
+    glBufferData(target, data_size, data, usage);
     return buffer;
 }
 

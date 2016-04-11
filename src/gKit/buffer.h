@@ -14,7 +14,7 @@
 //! buffers et vertex array openGL.
 
 //! cree un buffer. a detruire avec glDeleteBuffers( ).
-GLuint make_buffer( const GLenum target, const size_t data_size, const void *data );
+GLuint make_buffer( const GLenum target, const size_t data_size, const void *data, const GLenum usage= GL_STATIC_DRAW );
 
 //! cree un vertex array. a detruire avec release_vertex_format( ).
 GLuint create_vertex_format( );
