@@ -22,10 +22,10 @@ Image create_image( const int w, const int h, const int c, const Color& color )
     im.data.resize(w*h*c);
     unsigned char *data= &im.data.front();
 
-    unsigned char r= std::min(color.r * 255.f, 255.f);
-    unsigned char g= std::min(color.g * 255.f, 255.f);
-    unsigned char b= std::min(color.b * 255.f, 255.f);
-    unsigned char a= std::min(color.a * 255.f, 255.f);
+    unsigned char r= (unsigned char) std::min(color.r * 255.f, 255.f);
+    unsigned char g= (unsigned char) std::min(color.g * 255.f, 255.f);
+    unsigned char b= (unsigned char) std::min(color.b * 255.f, 255.f);
+    unsigned char a= (unsigned char) std::min(color.a * 255.f, 255.f);
 
     if(c > 3)
     {
@@ -82,18 +82,16 @@ void image_set_pixel( Image& im, const int x, const int y, const Color& color )
     int offset= im.width * y * im.channels + x * im.channels;
     unsigned char *data= &im.data.front() + offset;
 
-    data[0]= std::min(color.r * 255.f, 255.f);
-    data[1]= std::min(color.g * 255.f, 255.f);
-    data[2]= std::min(color.b * 255.f, 255.f);
+    data[0]= (unsigned char) std::min(color.r * 255.f, 255.f);
+    data[1]= (unsigned char) std::min(color.g * 255.f, 255.f);
+    data[2]= (unsigned char) std::min(color.b * 255.f, 255.f);
     if(im.channels > 3)
-        data[3]= std::min(color.a * 255.f, 255.f);
+        data[3] = (unsigned char) std::min(color.a * 255.f, 255.f);
 }
 
 
 Image read_image( const char *filename )
 {
-    printf("loading image '%s'...\n", filename);
-
     // importer le fichier en utilisant SDL_image
     SDL_Surface *surface= IMG_Load(filename);
     if(surface == NULL)
@@ -115,6 +113,8 @@ Image read_image( const char *filename )
     int width= surface->w;
     int channels= (format.BitsPerPixel == 32) ? 4 : 3;
 
+    printf("loading image '%s' %dx%d %d channels...\n", filename, width, height, channels);
+    
     Image im;
     im.data.resize(width*height*channels);
     im.width= width;
@@ -174,9 +174,9 @@ Image read_image( const char *filename )
 
 int write_image( const Image& image, const char *filename )
 {
-    if(std::string(filename).rfind(".png") == std::string::npos && std::string(filename).rfind(".PNG") == std::string::npos )
+    if(std::string(filename).rfind(".png") == std::string::npos && std::string(filename).rfind(".bmp") == std::string::npos )
     {
-        printf("writing color image '%s'... failed, not a PNG image.\n", filename);
+        printf("writing color image '%s'... failed, not a .png / .bmp image.\n", filename);
         return -1;
     }
     
@@ -202,7 +202,12 @@ int write_image( const Image& image, const char *filename )
 #endif
     );
 
-    int code= IMG_SavePNG(bmp, filename);
+    int code= 0;
+    if(std::string(filename).rfind(".png") != std::string::npos)
+        code= IMG_SavePNG(bmp, filename);
+    else if(std::string(filename).rfind(".bmp") != std::string::npos)
+        code= SDL_SaveBMP(bmp, filename);
+    
     SDL_FreeSurface(bmp);
     release_image(flip);
     
