@@ -98,23 +98,37 @@ void label( Widgets& widgets, const char *format, ... );
 
 //! cree un bouton. renvoie true si le bouton a change d'etat.
 //! \param text legende du bouton,
-//! \param status etat du bouton, 1 selectionne, 0 non selectionne.
+//! \param status etat du bouton, 1 selectionne, 0 non selectionne. doit etre initialise a 0 avant la premiere utilisation.
 bool button( Widgets& widgets, const char *text, int& status );
 //! cree un radio bouton. selectionne une seule option parmis une liste. renvoie true si le bouton a change d'etat.
 //! \param text legende du bouton,
 //! \param option position du bouton dans le groupe, 
-//! \param status option/bouton selectionne.
+//! \param status option/bouton selectionne. doit etre initialise avec l'option par defaut avant la premiere utilisation.
 bool select( Widgets& widgets, const char *text, const int option, int& status );
 
 //! cree une zone de texte scrollable.
 //! \param height nombre de lignes.
 //! \param text contenu a afficher.
-//! \param begin_line premiere ligne du texte a afficher
+//! \param begin_line premiere ligne du texte a afficher. doit etre initialise avant la premiere utilisation.
 void text_area( Widgets& w, const int height, const char *text, int& begin_line );
 
-//! cree un champ texte editable. renvoie true si le contenu a change.
-//! \param text_size taille du champ texte et de la chaine text
-//! \param text contenu du champ
+/*! cree un champ texte editable. renvoie true si le contenu a change.
+    \param text_size taille du champ texte et de la chaine text, zero inclus. si text_size fait 10 caracteres, on ne pourra saisir que 9 caracteres.
+    \param text contenu du champ, doit etre initialise avant la premiere utilisation. 
+
+\code
+char valeur[32]= "";
+
+int draw( )
+{
+    begin(widgets);
+    edit(widgets, sizeof(valeur), valeur);
+    end(widgets);
+    
+    draw(widgets, window_width(), window_height());
+}
+\endcode
+*/
 bool edit( Widgets& widgets, const int text_size, char *text );
 
 //! termine la description des elements de la ligne.

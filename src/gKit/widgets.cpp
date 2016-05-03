@@ -17,7 +17,6 @@ Widgets create_widgets( )
     w.focus= 0; w.fx= 0; w.fy= 0;
     w.mb= 0; w.mx= 0; w.my= 0;
     w.wx= 0; w.wy= 0;
-    //~ w.drop= 0; w.filename= NULL;
     return w;
 }
 
@@ -87,15 +86,6 @@ void begin( Widgets& w )
         w.key= input.text[0];
         clear_text_event();
     }
-    
-    //~ const char *filename= drop_event();
-    //~ w.drop= 0;
-    //~ w.filename= NULL;
-    //~ if(filename != NULL && filename[0] != 0)
-    //~ {
-        //~ w.drop= 1;
-        //~ w.filename= filename;
-    //~ }
 }
 
 
@@ -197,6 +187,7 @@ bool select( Widgets& w, const char *text, const int option, int& status )
     print(w.console, r.x, r.y, tmp);
     return change;
 }
+
 void text_area( Widgets& w, const int height, const char *text, int& begin_line )
 {
     Rect r= place(w, 128, height);
@@ -256,29 +247,20 @@ bool edit( Widgets& w, int text_size, char *text )
         if(overlap(r, w.mx, w.my))
         {
             w.focus= 1;
-            //~ if(w.drop > 0)
-            //~ {
-                //~ strncpy(text, w.filename, text_size);
-                //~ text[text_size -1]= 0;
-                //~ clear_drop_event();
-                //~ w.focus= 0;
-                //~ change= true;
-            //~ }
-        }
-        else
-        {
-            change= (w.focus > 0);      // click en dehors de la zone editable
-            w.focus= 0;
+            w.fx= w.mx;
+            w.fy= w.my;
+            
+            if(w.fx >= r.x + size)
+                w.fx= r.x + size;
         }
         
-        w.fx= w.mx;
-        w.fy= w.my;
-        if(w.fx >= r.x + size)
-            w.fx= r.x + size;
+        else
+            change= (w.focus > 0);      // click en dehors de la zone editable
     }
     
     // edition
-    if(w.focus > 0 && w.key > 0)
+    bool focus= overlap(r, w.fx, w.fy);
+    if(focus > 0 && w.key > 0)
     {
         int c= w.fx - r.x;
         assert(c < text_size -1);
@@ -312,9 +294,9 @@ bool edit( Widgets& w, int text_size, char *text )
             for(int i= text_size -1; i > c; i--) text[i]= text[i -1];
             text[c]= w.key;
 
-            if(size < text_size -2)
+            if(size < text_size - 2)
                 size++;
-            text[size]= 0;
+            text[size+1]= 0;
         }
         
         // verifier que le curseur reste dans la zone editable
@@ -331,7 +313,7 @@ bool edit( Widgets& w, int text_size, char *text )
     tmp[text_size -1]= 0;                       // termine avec un 0
 
     print_background(w.console, r.x, r.y, tmp);
-    if(w.focus > 0)
+    if(focus > 0)
         print_background(w.console, w.fx, w.fy, text[w.fx - r.x], 1);
     
     return change;
