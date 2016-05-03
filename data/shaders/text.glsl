@@ -16,6 +16,7 @@ void main( )
 
 uniform sampler2D font;
 uniform int offset;
+uniform vec4 default_color;
 
 layout(std140) uniform textData {
     ivec4 text[3072/4]; // 128x24 console, 8x16 font == 1024x768/2 viewport
@@ -42,8 +43,8 @@ void main( )
     
     ivec2 front_uv= pixel % ivec2(8, 16) + front_glyph * ivec2(8, 16);
     ivec2 back_uv= pixel % ivec2(8, 16) + back_glyph * ivec2(8, 16);
-    vec4 front_color= texelFetch(font, front_uv, 0);
-    vec4 back_color= texelFetch(font, back_uv, 0);
+    vec4 front_color= texelFetch(font, front_uv, 0) * default_color;
+    vec4 back_color= texelFetch(font, back_uv, 0) * default_color;
     back_color.rgb= back_color.rgb * back_color.a;
     
     // composition du caractere sur le fond

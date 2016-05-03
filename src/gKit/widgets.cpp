@@ -324,6 +324,11 @@ void end( Widgets& w )
     return;
 }
 
+void default_color( Widgets& w, const Color& color )
+{
+    default_color(w.console, color);
+}
+
 void draw( Widgets& w, const int width, const int height )
 {
     draw(w.console, width, height);

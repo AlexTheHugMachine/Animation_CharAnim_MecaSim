@@ -137,6 +137,9 @@ void end_line( Widgets& widgets );
 //! termine la description des elements de l'interface graphique.
 void end( Widgets& widgets );
 
+//! choisit une couleur par defaut pour le texte.
+void default_color( Widgets& widgets, const Color& color );
+
 //! affiche les elements decrits entre begin() et end().
 void draw( Widgets& widgets, const int width, const int height );
 

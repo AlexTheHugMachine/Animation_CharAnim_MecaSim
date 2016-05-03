@@ -4,6 +4,8 @@
 
 #include "glcore.h"
 
+#include "color.h"
+
 
 //! \addtogroup application 
 ///@{
@@ -52,6 +54,7 @@ int draw( )
 struct Text
 {
     int buffer[24][128];
+    Color color;        //!< couleur du texte.
     GLuint font;        //!< texture contenant les caracteres.
     GLuint program;     //!< shader pour afficher le texte.
     GLuint vao;         //!< vertex array object.
@@ -75,6 +78,9 @@ void print( Text& text, const int x, const int y, const char *message );
 void printf_background( Text& text, const int x, const int y, const char *format, ... );
 //! affiche un texte a la position x, y. meme utilisation que printf().
 void printf( Text& text, const int x, const int y, const char *format, ... );
+
+//! choisit une couleur par defaut pour le texte.
+void default_color( Text& text, const Color& color );
 
 //! dessine la console.
 void draw( const Text& text, const int width, const int height );

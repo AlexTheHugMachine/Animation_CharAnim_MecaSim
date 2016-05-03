@@ -41,6 +41,8 @@ Text create_text( )
     text.font= make_texture(0, font);
     release_image(font);
     
+    text.color= make_color(1, 1, 1);
+    
     // shader
     text.program= read_program("data/shaders/text.glsl");
     program_print_errors(text.program);
@@ -147,6 +149,10 @@ void printf( Text& text, const int px, const int py, const char *format, ... )
     print(text, px, py, 0, tmp);
 }
 
+void default_color( Text& text, const Color& color )
+{
+    text.color= color;
+}
 
 void draw( const Text& text, const int width, const int height )
 {
@@ -155,6 +161,7 @@ void draw( const Text& text, const int width, const int height )
     program_use_texture(text.program, "font", 0, text.font);
     
     program_uniform(text.program, "offset", height - 24*16);
+    program_uniform(text.program, "default_color", text.color);
     
     // transfere le texte dans l'uniform buffer associe au binding 0, cf create_text()
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, text.ubo);
