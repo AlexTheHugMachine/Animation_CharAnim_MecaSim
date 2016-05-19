@@ -60,6 +60,26 @@ void release_image( Image& im )
 }
 
 
+int miplevels( const int width, const int height )
+{
+    int w= width;
+    int h= height;
+    int levels= 1;
+    while(w > 1 || h > 1)
+    {
+        w= std::max(1, w / 2);
+        h= std::max(1, h / 2);
+        levels= levels + 1;
+    }
+    return levels;
+}
+
+int miplevels( const Image& im )
+{
+    return miplevels(im.width, im.height);
+}
+
+
 Color image_pixel( const Image& im, const int x, const int y )
 {
     if(im.data.size() == 0)

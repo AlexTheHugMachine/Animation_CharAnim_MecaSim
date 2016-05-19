@@ -33,6 +33,11 @@ Image create_image( const int width, const int height, const int channels, const
 //! detruit l'image.
 void release_image( Image& im );
 
+//! renvoie le nombre de mipmap d'une image.
+int miplevels( const Image& im );
+//! renvoie le nombre de mipmap d'une image width x height.
+int miplevels( const int width, const int height );
+
 //! charge une image a partir d'un fichier. renvoie une image rouge en cas d'echec. a detruire avec release_image( ).
 //! \param filemane nom de l'image a charger 
 Image read_image( const char *filename );

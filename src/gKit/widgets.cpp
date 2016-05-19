@@ -188,6 +188,47 @@ bool select( Widgets& w, const char *text, const int option, int& status )
     return change;
 }
 
+bool value( Widgets& w, const char *label, int& value, const int value_min, const int value_max, const int value_step )
+{
+    char tmp[128];
+    sprintf(tmp, "%s: %4d", label, value);
+    
+    Rect r= place(w, (int) strlen(tmp));
+
+    bool change= false;
+    if(w.mb > 0 && overlap(r, w.mx, w.my))
+        change= true;
+    if(overlap(r, w.mx, w.my))
+    {
+        if(w.wy != 0)
+            value= value + w.wy * value_step;
+        if(w.key == SDLK_UP)
+            value= value + value_step;
+        if(w.key == SDLK_PAGEUP)
+            value= value + value_step * 10;
+        if(w.key == SDLK_DOWN)
+            value= value - value_step;
+        if(w.key == SDLK_PAGEDOWN)
+            value= value - value_step * 10;
+        
+        if(value < value_min)
+            value= value_min;
+        if(value > value_max)
+            value= value_max;
+        
+        sprintf(tmp, "%s: ", label);
+        int l= (int) strlen(tmp);
+        print(w.console, r.x, r.y, tmp);
+        
+        sprintf(tmp, "%4d", value);
+        print_background(w.console, r.x + l, r.y, tmp);
+    }
+    else
+        print(w.console, r.x, r.y, tmp);
+    
+    return change;
+}
+
 void text_area( Widgets& w, const int height, const char *text, int& begin_line )
 {
     Rect r= place(w, 128, height);
@@ -260,7 +301,7 @@ bool edit( Widgets& w, int text_size, char *text )
     
     // edition
     bool focus= overlap(r, w.fx, w.fy);
-    if(focus > 0 && w.key > 0)
+    if(focus && w.key > 0)
     {
         int c= w.fx - r.x;
         assert(c < text_size -1);
@@ -313,7 +354,7 @@ bool edit( Widgets& w, int text_size, char *text )
     tmp[text_size -1]= 0;                       // termine avec un 0
 
     print_background(w.console, r.x, r.y, tmp);
-    if(focus > 0)
+    if(focus)
         print_background(w.console, w.fx, w.fy, text[w.fx - r.x], 1);
     
     return change;

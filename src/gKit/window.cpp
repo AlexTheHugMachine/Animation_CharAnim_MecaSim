@@ -210,11 +210,11 @@ Window create_window( const int w, const int h )
     const unsigned char *state= SDL_GetKeyboardState(&keys);
     key_states.assign(state, state + keys);
     
-    // conserve les dimensions de la fenetre
-    width= w;
-    height= h;
-    
     SDL_SetWindowDisplayMode(window, NULL);
+
+    // conserve les dimensions de la fenetre
+    SDL_GetWindowSize(window, &width, &height);
+    
     return window;
 }
 

@@ -92,7 +92,7 @@ void main( )
     normal= normalize(cross(t, b));
 #endif
     
-    color.rgb= color.rgb * normal.z;
+    color.rgb= color.rgb * abs(normal.zzz);
     // hachure les triangles mal orientes
     if(gl_FrontFacing == false) // if(!gl_FrontFacing) bug sur mac ?!
     {

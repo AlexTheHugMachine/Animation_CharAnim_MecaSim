@@ -18,7 +18,14 @@ int location( const GLuint program, const char *uniform )
     if(location < 0)
     {
         char error[1024]= { 0 };
+    #if 1
+        char label[1024];
+        glGetObjectLabel(GL_PROGRAM, program, sizeof(label), NULL, label);
+        
+        sprintf(error, "uniform( %s, '%s' ): not found.", label, uniform); 
+    #else
         sprintf(error, "uniform('%s'): not found.", uniform); 
+    #endif
         
         static std::set<std::string> log;
         if(log.insert(error).second == true) 
