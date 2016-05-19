@@ -1,5 +1,6 @@
 
 #include <cstdio>
+#include <cassert>
 #include <string>
 #include <algorithm>
 
@@ -16,6 +17,7 @@ Mesh create_mesh( const GLenum primitives )
     m.primitives= primitives;
     m.vao= 0;
     m.program= 0;
+    m.update_buffers= false;
     return m;
 }
 
@@ -137,6 +139,71 @@ unsigned int push_vertex( Mesh& m, const Point& position, const Vector& normal )
     return push_vertex(m, position);
 }
 
+
+void update_vertex( Mesh& m, const unsigned int id, const vec3& position )
+{
+    assert(id < m.positions.size());
+    m.update_buffers= true;
+    m.positions[id]= position;
+}
+
+void update_vertex( Mesh& m, const unsigned int id, const Point& p )
+{
+    update_vertex(m, id, make_vec3(p.x, p.y, p.z));
+}
+
+void update_vertex( Mesh& m, const unsigned int id, const float x, const float y, const float z )
+{
+    update_vertex(m, id, make_vec3(x, y, z));
+}
+
+void update_color( Mesh& m, const unsigned int id, const vec3& color )
+{
+    assert(id < m.colors.size());
+    m.update_buffers= true;
+    m.colors[id]= color;
+}
+
+void update_color( Mesh& m, const unsigned int id, const Color& c )
+{
+    update_color(m, id, make_vec3(c.r, c.g, c.b));
+}
+
+void update_color( Mesh& m, const unsigned int id, const float r, const float g, const float b )
+{
+    update_color(m, id, make_vec3(r, g, b));
+}
+
+void update_normal( Mesh& m, const unsigned int id, const vec3& normal )
+{
+    assert(id < m.normals.size());
+    m.update_buffers= true;
+    m.normals[id]= normal;
+}
+
+void update_normal( Mesh& m, const unsigned int id, const Vector& n )
+{
+    update_normal(m, id, make_vec3(n.x, n.y, n.z));
+}
+
+void update_normal( Mesh& m, const unsigned int id, const float x, const float y, const float z )
+{
+    update_normal(m, id, make_vec3(x, y, z));
+}
+
+void update_texcoord( Mesh& m, const unsigned int id, const vec2& texcoord )
+{
+    assert(id < m.texcoords.size());
+    m.update_buffers= true;
+    m.texcoords[id]= texcoord;
+}
+
+void update_texcoord( Mesh& m, const unsigned int id, const float u, const float v )
+{
+    update_texcoord(m, id, make_vec2(u, v));
+}
+
+
 void push_triangle( Mesh& m, const unsigned int a, const unsigned int b, const unsigned int c )
 {
     m.indices.push_back(a);
@@ -216,8 +283,37 @@ GLuint make_mesh_vertex_format( Mesh& m, const bool use_texcoord, const bool use
             make_vertex_buffer(vao, 3,  3, GL_FLOAT, m.colors.size() * sizeof(vec3), &m.colors.front());
     }
     
+    m.update_buffers= false;
     return vao;
 }
+
+void update_mesh_buffers( Mesh& m, const bool use_texcoord, const bool use_normal, const bool use_color )
+{
+    if(!m.update_buffers)
+        return;
+    
+    glBindVertexArray(m.vao);
+    update_vertex_buffer(m.vao, 0, m.positions.size() * sizeof(vec3), &m.positions.front());
+    
+#if 0   // ne modifier que les attributs des sommets, pas la topologie / structure du maillage
+    if(m.indices.size() > 0)
+        update_index_buffer(m.vao, m.indices.size() * sizeof(unsigned int), &m.indices.front());
+#endif
+    
+    bool use_mesh_color= (m.primitives == GL_POINTS || m.primitives == GL_LINES || m.primitives == GL_LINE_STRIP || m.primitives == GL_LINE_LOOP);
+    if(!use_mesh_color)
+    {
+        if(m.texcoords.size()== m.positions.size() && use_texcoord)
+            update_vertex_buffer(m.vao, 1, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());
+        if(m.normals.size() == m.positions.size() && use_normal)
+            update_vertex_buffer(m.vao, 2, m.normals.size() * sizeof(vec3), &m.normals.front());
+        if(m.colors.size() == m.positions.size() && use_color)
+            update_vertex_buffer(m.vao, 3, m.colors.size() * sizeof(vec3), &m.colors.front());
+    }
+    
+    m.update_buffers= false;
+}
+
 
 GLuint make_mesh_program( Mesh& m, const bool use_texcoord, const bool use_normal, const bool use_color )
 {
@@ -250,6 +346,8 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
     
     if(m.vao == 0)
         m.vao= make_mesh_vertex_format(m, use_texcoord, use_normal, use_color);
+    if(m.update_buffers)
+        update_mesh_buffers(m, use_texcoord, use_normal, use_color);
     
     if(m.program == 0)
     {

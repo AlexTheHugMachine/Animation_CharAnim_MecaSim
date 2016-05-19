@@ -32,6 +32,8 @@ struct Mesh
     GLenum primitives;
     GLuint vao;
     GLuint program;
+    
+    bool update_buffers;
 };
 
 //! construit un objet / maillage vide compose de primitives de type primitives. a detruire avec release_mesh( ).
@@ -115,6 +117,32 @@ void push_triangle_last( Mesh& m, const int a, const int b, const int c );
 
 //! demarrage un nouveau strip. a utiliser avec un objet composes de GL_TRIANGLE_STRIP, doit aussi fonctionner avec GL_TRIANGLE_FAN, GL_LINE_STRIP, GL_LINE_LOOP, etc.
 void restart_strip( Mesh& m );
+
+
+//! modifie la position du sommet d'indice id.
+void update_vertex( Mesh& m, const unsigned int id, const vec3& position );
+//! modifie la position du sommet d'indice id.
+void update_vertex( Mesh& m, const unsigned int id, const Point& position );
+//! modifie la position du sommet d'indice id.
+void update_vertex( Mesh& m, const unsigned int id, const float x, const float y, const float z );
+
+//! modifie la couleur du sommet d'indice id.
+void update_color( Mesh& m, const unsigned int id, const vec3& color );
+//! modifie la couleur du sommet d'indice id.
+void update_color( Mesh& m, const unsigned int id, const Color& color );
+//! modifie la couleur du sommet d'indice id.
+void update_color( Mesh& m, const unsigned int id, const float r, const float g, const float b );
+
+//! modifie la normale du sommet d'indice id.
+void update_normal( Mesh& m, const unsigned int id, const Vector& normal );
+//! modifie la normale du sommet d'indice id.
+void update_normal( Mesh& m, const unsigned int id, const float x, const float y, const float z );
+
+//! modifie les coordonnees de texture du sommet d'indice id.
+void update_texcoord( Mesh& m, const unsigned int id, const vec2& texcoord );
+//! modifie les coordonnees de texture du sommet d'indice id.
+void update_texcoord( Mesh& m, const unsigned int id, const float u, const float v );
+
 
 //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet.
 void mesh_bounds( const Mesh& m, Point& pmin, Point& pmax );
