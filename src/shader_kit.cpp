@@ -53,7 +53,6 @@ std::vector<GLuint> textures;
 Orbiter camera;
 Widgets widgets;
 
-
 // application
 void reload_program( )
 {
@@ -94,7 +93,6 @@ const char *option_find( std::vector<const char *>& options, const char *ext )
 int init( std::vector<const char *>& options )
 {
     widgets= create_widgets();
-    
     camera= make_orbiter();
     
     program= 0;
@@ -291,6 +289,7 @@ int draw( void )
             label(widgets, "texture%u '%s'", i, texture_filenames[i].path);
         }
     }
+    
     end(widgets);
     
     draw(widgets, window_width(), window_height());
