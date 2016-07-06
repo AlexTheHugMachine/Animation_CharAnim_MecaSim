@@ -95,10 +95,10 @@ int run( Window window, int (*draw)( void ) )
 
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
     last_drop= std::string();
-    
+
     // configure openGL
     glViewport(0, 0, width, height);
-    
+
     // run
     int stop= 0;
     while(stop == 0)
@@ -127,12 +127,12 @@ int run( Window window, int (*draw)( void ) )
                     last_drop.assign(event.drop.file);
                     SDL_free(event.drop.file);
                     break;
-                
+
                 case SDL_TEXTINPUT:
                     // conserver le dernier caractere
                     last_text= event.text;
                     break;
-                
+
                 case SDL_KEYDOWN:
                     // modifier l'etat du clavier
                     if((size_t) event.key.keysym.scancode < key_states.size())
@@ -140,12 +140,12 @@ int run( Window window, int (*draw)( void ) )
                         key_states[event.key.keysym.scancode]= 1;
                         last_key= event.key;    // conserver le dernier evenement
                     }
-                    
+
                     // fermer l'application
                     if(event.key.keysym.sym == SDLK_ESCAPE)
                         stop= 1;
                     break;
-                
+
                 case SDL_KEYUP:
                     // modifier l'etat du clavier
                     if((size_t) event.key.keysym.scancode < key_states.size())
@@ -159,11 +159,11 @@ int run( Window window, int (*draw)( void ) )
                 case SDL_MOUSEBUTTONUP:
                     last_button= event.button;
                     break;
-                
+
                 case SDL_MOUSEWHEEL:
                     last_wheel= event.wheel;
                     break;
-                
+
                 case SDL_QUIT:
                     stop= 1;            // fermer l'application
                     break;
@@ -173,7 +173,7 @@ int run( Window window, int (*draw)( void ) )
         // dessiner
         if(draw() < 1)
             stop= 1;    // fermer l'application si draw() renvoie 0 ou -1...
-        
+
         // presenter le resultat
         SDL_GL_SwapWindow(window);
     }
@@ -195,7 +195,7 @@ Window create_window( const int w, const int h )
     // enregistre le destructeur de sdl
     atexit(SDL_Quit);
 
-    // creer la fenetre 
+    // creer la fenetre
     Window window= SDL_CreateWindow("gKit",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -209,12 +209,12 @@ Window create_window( const int w, const int h )
     int keys;
     const unsigned char *state= SDL_GetKeyboardState(&keys);
     key_states.assign(state, state + keys);
-    
+
     SDL_SetWindowDisplayMode(window, NULL);
 
     // conserve les dimensions de la fenetre
     SDL_GetWindowSize(window, &width, &height);
-    
+
     return window;
 }
 
@@ -255,7 +255,7 @@ Context create_context( Window window, const int major, const int minor )
     // configure la creation du contexte opengl core profile, debug profile
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
-#ifndef GK_RELEASE    
+#ifndef GK_RELEASE
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -292,12 +292,12 @@ Context create_context( Window window, const int major, const int minor )
     {
         printf("debug output enabled...\n");
         glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-        glDebugMessageCallbackARB(debug, NULL);
+        //glDebugMessageCallbackARB(  static_cast<void (*)(unsigned int, unsigned int, unsigned int, unsigned int, int, const char*, void*)>(debug), NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
 #endif
 #endif
-    
+
     return context;
 }
 
