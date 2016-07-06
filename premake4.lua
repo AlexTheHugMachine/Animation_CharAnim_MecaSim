@@ -31,6 +31,11 @@ solution "gKit2light"
 		defines { "WIN32", "NVWIDGETS_EXPORTS", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
 		defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
 
+	configuration { "windows", "gmake", "x32" }
+		includedirs { "extern/mingw/include" }
+		libdirs { "extern/mingw/lib" }
+		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
+
 	configuration { "windows", "codeblocks", "x32" }
 		includedirs { "extern/mingw/include" }
 		libdirs { "extern/mingw/lib" }
