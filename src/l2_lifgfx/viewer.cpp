@@ -91,7 +91,7 @@ int Viewer::draw( )
 
     // on dessine l'objet du point de vue de la camera
     ::draw(cube, camera);
-    //::draw(axe, camera);
+    ::draw(axe, camera);
 
     //Transform R= make_rotationZ( 45 );
     //Transform T= make_translation( 1, 0, 0 );
