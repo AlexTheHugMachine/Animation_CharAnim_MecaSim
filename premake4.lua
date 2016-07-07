@@ -62,6 +62,15 @@ solution "gKit2light"
 local gkit_files = { "src/gKit/*.cpp", "src/gKit/*.h" }
 
  -- description des projets		
+
+project("l2_lifgfx")
+    language "C++"
+    kind "ConsoleApp"
+    targetdir "bin"
+    files ( gkit_files )
+    files { "src/l2_lifgfx/viewer.cpp", "src/l2_lifgfx/viewer.h" }
+
+ 
 local projects = {
 	"shader_kit"
 }
@@ -102,3 +111,5 @@ for i, name in ipairs(tutos) do
 		files ( gkit_files )
 		files { "tutos/" .. name..'.cpp' }
 end
+
+	

@@ -62,6 +62,7 @@ void clear_drop_event( );
 
 //! fonction principale. gestion des evenements et appel de la fonction draw de l'application.
 int run( Window window, int (*draw)( void ) );
+//int run( Window window, int (*draw)( void* ), void* data );
 
 
 ///@}

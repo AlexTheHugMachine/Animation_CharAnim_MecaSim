@@ -88,7 +88,7 @@ void clear_wheel_event( )
 
 
 //! boucle de gestion des evenements de l'application.
-int run( Window window, int (*draw)( void ) )
+int run( Window window, int (*draw)() )
 {
     // configure sdl
     SDL_StartTextInput();
@@ -181,6 +181,7 @@ int run( Window window, int (*draw)( void ) )
     SDL_StopTextInput();
     return 0;
 }
+
 
 //! creation d'une fenetre pour l'application.
 Window create_window( const int w, const int h )

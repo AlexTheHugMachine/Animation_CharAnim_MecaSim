@@ -1,228 +1,135 @@
 
-//! tutorial : exemple minimaliste opengl 3 core profile
+#include <cassert>
+
+#include "Viewer.h"
+
+#include <stdio.h>
+#include "draw.h"        // pour dessiner du point de vue d'une camera
 
 
-#include <viewer.h>
-#include <cstdio>
+Viewer* Viewer::s_singleton = NULL;
 
-using namespace std;
-
-
-int init(Viewer& v)
+Viewer::Viewer() : program(0), texture(0)
 {
-    v.camera= make_orbiter_lookat( make_vec3(0.5, 0.5, 0.5), 1 );
-
-    // etat openGL par defaut
-    glClearColor(0.2, 0.2, 0.2, 1);
-    glClearDepth(1.f);
-
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
-    glEnable(GL_CULL_FACE);
-
-    glDepthFunc(GL_LESS);
-    glEnable(GL_DEPTH_TEST);
-
-    // charger une texture
-    v.texture= read_texture(0, "data/debug2x2red.png");
-    if(v.texture == 0) return -1;
+    s_singleton=this;
+}
 
 
-#if 1
-    // charge un fichier obj
-    v.cube= read_obj("data/bigguy.obj");
-    v.cube_vao= make_mesh_vertex_format(v.cube);
+int Viewer::init()
+{
+    // Creer une camera par defaut, elle est placee en 0, 0, 5 et regarde les objets situes en 0, 0, 0
+    camera= make_orbiter();
 
-    // genere le shader permettant d'afficher le mesh
-    v.program = make_mesh_program(v.cube);
-    if(v.program == 0) return -1;
+    init_axe();
+    init_cube();
 
-#else
-#if 0
-    // creer les buffers : decrire un cube indexe.
-    float positions[][3] = {
-        {0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0},
-        {0, 0, 1}, {1, 0, 1}, {1, 1, 1}, {0, 1, 1}
-    };
-
-    float texcoords[][2] = {
-        {0, 0}, {1, 0}, {1, 1}, {0, 1},
-        {0, 0}, {1, 0}, {1, 1}, {0, 1}
-    };
-
-    unsigned int indices[] = {
-        0, 1, 2,
-        0, 2, 3,
-        4, 5, 6,
-        4, 6, 7
-    };
-
-    // creer un vertex array / vertex format
-    cube_vao= make_vertex_format();
-
-    // creer le vertex buffer, attribut position == 0
-    vertex_buffer= make_vertex_buffer(cube_vao, 0,  3, GL_FLOAT, sizeof(positions), positions);
-
-    // creer le texcoord buffer, attribut texcoord == 1
-    texcoord_buffer= make_vertex_buffer(cube_vao, 1,  2, GL_FLOAT, sizeof(texcoords), texcoords);
-
-    // creer l'index buffer
-    index_buffer= make_index_buffer(cube_vao, sizeof(indices), indices);
-
-#else
-    cube= make_mesh(GL_TRIANGLES);
-    // glBegin(GL_TRIANGLES)
-    {
-        // triangle 1
-        mesh_texcoord(cube, make_vec2(0, 0));
-        unsigned int a= mesh_push_vertex(cube, make_vec3(0, 0, 0));
-        // glTexCoord(0, 0);
-        // glVertex(0, 0, 0);
-        // comme gl, mesh_push_vertex( ) termine la description des attributs et emet le sommet
-        // et un sommet a obligatoirement une position...
-
-        mesh_texcoord(cube, make_vec2(1, 0));
-        unsigned int b= mesh_push_vertex(cube, make_vec3(1, 0, 0));
-
-        mesh_texcoord(cube, make_vec2(1, 1));
-        unsigned int c= mesh_push_vertex(cube, make_vec3(1, 1, 0));
-
-        //~ mesh_push_triangle(cube, a, b, c);
-        mesh_push_triangle_last(cube, -3, -2, -1);
-
-        // triangle 1
-        //~ mesh_texcoord(cube, make_vec2(0, 0));
-        //~ mesh_push_vertex(cube, make_vec3(0, 0, 0));
-
-        //~ mesh_texcoord(cube, make_vec2(1, 1));
-        //~ mesh_push_vertex(cube, make_vec3(1, 1, 0));
-
-        mesh_texcoord(cube, make_vec2(0, 1));
-        unsigned int d= mesh_push_vertex(cube, make_vec3(0, 1, 0));
-
-        //~ mesh_push_triangle(cube, a, c, d);
-        mesh_push_triangle_last(cube, -4, -2, -1);
-    }
-    // glEnd();
-
-    // construit les buffers necessaires et configure un vao, position==0, texcoord==1, normal==2, color==3
-    cube_vao= make_mesh_vertex_format(cube);
-
-    // genere le shader permettant d'afficher le mesh
-    program= make_mesh_program(cube);
-    if(program == 0)
-        return -1;
-#endif
-#endif
-
-
-    // nettoyage
-    glUseProgram(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
+    // etat par defaut openGL
+    glClearColor(0.5f, 0.5f, 0.9f, 1);
 
     return 0;
 }
 
-int quit(Viewer& v)
+
+void Viewer::init_axe()
 {
-    // detruit les objets openGL
-#if 0
-    glDeleteBuffers(1, &vertex_buffer);
-    glDeleteBuffers(1, &texcoord_buffer);
-    glDeleteBuffers(1, &index_buffer);
-    glDeleteVertexArrays(1, &cube_vao);
-#else
-    release_vertex_format(v.cube_vao);
-#endif
-    glDeleteTextures(1, &v.texture);
-    glDeleteProgram(v.program);
+    axe = create_mesh(GL_LINES);
+    vertex_color(axe, make_color(1, 0, 0));
+    push_vertex( axe,  0,  0, 0);
+    push_vertex( axe,  1,  0, 0);
+
+    vertex_color(axe, make_color(0, 1, 0));
+    push_vertex( axe,  0,  0, 0);
+    push_vertex( axe,  0,  1, 0);
+
+    vertex_color(axe, make_color( 0, 0, 1));
+    push_vertex( axe,  0,  0, 0);
+    push_vertex( axe,  0,  0, 1);
+}
+
+
+void Viewer::init_cube()
+{
+    cube = create_mesh(GL_QUADS);
+
+    vertex_color(cube, make_color(1, 0, 0));
+    push_vertex(cube, -0.5, -0.5, 0);
+
+    vertex_color(cube, make_color(0, 1, 0));
+    push_vertex(cube,  -0.5,  0.5, 0);
+
+    vertex_color(cube, make_color(0, 0, 1));
+    push_vertex(cube, 0.5,  0.5, 0);
+
+    vertex_color(cube, make_color(0, 1, 1));
+    push_vertex(cube, 0.5,  -0.5, 0);
+}
+
+
+int Viewer::quit( )
+{
     return 0;
 }
 
 
-
-int draw(Viewer& v)
+int Viewer::draw( )
 {
-    // effacer l'image
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    /* configuration minimale du pipeline :
-        glBindVertexArray() // association du contenu des buffers aux attributs declares dans le vertex shader
-        glUseProgram()  // indique quel shader program utiliser pour dessiner
-        { ... } // parametrer les uniforms des shaders
+    // recupere les mouvements de la souris pour deplacer la camera, cf tutos/tuto6.cpp
+    // recupere les mouvements de la souris, utilise directement SDL2
+    int mx, my;
+    unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
 
-        glDraw()    // execution du pipeline
-     */
-    glBindVertexArray(v.cube_vao);
-    glUseProgram(v.program);
+    // deplace la camera
+    if(mb & SDL_BUTTON(1))                      // le bouton gauche est enfonce
+        orbiter_rotation(camera, mx, my);       // tourne autour de l'objet
+    else if(mb & SDL_BUTTON(3))                 // le bouton droit est enfonce
+        orbiter_move(camera, mx);               // approche / eloigne l'objet
+    else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
+        orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height());         // deplace le point de rotation
 
-    // affecter les uniforms
-    int x, y;
-    unsigned int button= SDL_GetRelativeMouseState(&x, &y);
 
-    if(button & SDL_BUTTON(1))
-        orbiter_rotation(v.camera, x, y);      // orbit
-    else if(button & SDL_BUTTON(2))
-        orbiter_translation(v.camera, (float) x / (float) window_width(), (float) y / (float) window_height()); // pan
-    else if(button & SDL_BUTTON(3))
-        orbiter_move(v.camera, x);           // dolly
+    // on dessine l'objet du point de vue de la camera
+    ::draw(cube, camera);
+    //::draw(axe, camera);
 
-    // initialiser les transformations
-    mat4 model= make_identity();
-
-    mat4 view= orbiter_view_matrix(v.camera);
-    mat4 projection= orbiter_projection_matrix(v.camera, window_width(), window_height(), 45);
-
-    mat4 mv= view * model;
-    mat4 normal= make_normal_matrix(mv);
-    mat4 mvp= projection * view * model;
-
-    program_set_mat4(v.program, "mvpMatrix", mvp);
-    program_set_mat4(v.program, "mvMatrix", mv);
-    program_set_mat4(v.program, "normalMatrix", normal);
-
-    // utiliser une texture, elle ne sera visible que le mesh a des texcoords...
-    program_use_texture(v.program, "diffuse_color", 0, v.texture);
-
-    // draw
-    glDrawArrays(v.cube.primitives, 0, v.cube.count);
-    //~ glDrawElements(cube.primitives, cube.count, GL_UNSIGNED_INT, 0);
-
-    // cacher tout l'affichage dans mesh_draw( cube, model, view, projection ) ?? et la texture ??
-    // cacher tout l'affichage dans mesh_draw_texture( cube, model, view, projection, /* unit */ 0, texture ) ??
+    //Transform R= make_rotationZ( 45 );
+    //Transform T= make_translation( 1, 0, 0 );
+    //::draw(cube, T, camera);
+    //::draw(cube, camera);
 
     return 1;
 }
 
 
 
-
 int main( int argc, char **argv )
 {
-    window w= create_window(1024, 768);
-    if(w == NULL) return 1;
+    // etape 1 : creer la fenetre
+    Window window= create_window(1024, 640);
+    if(window == NULL)  return 1;       // erreur lors de la creation de la fenetre ou de l'init de sdl2
 
-    context c= create_context(w);        // cree un contexte opengl 3.3, par defaut
-    if(c == NULL) return 1;
+    // etape 2 : creer un contexte opengl pour pouvoir dessiner
+    Context context= create_context(window);
+    if(context == NULL)  return 1;       // erreur lors de la creation du contexte opengl
+
 
     Viewer v;
-    // creation des objets opengl
-    if(init(v) < 0)
+
+    // etape 3 : creation des objets
+    if(v.init() < 0)
     {
         printf("[error] init failed.\n");
         return 1;
     }
 
-    // affichage de l'application
-    run(w);
+    // etape 4 : affichage de l'application, tant que la fenetre n'est pas fermee. ou que draw() ne renvoie pas 0
+    run(window, Viewer::singleton_draw);
 
-    // nettoyage
-    quit(v);
-    release_context(c);
-    release_window(w);
+    // etape 5 : nettoyage
+    v.quit();
+
+    release_context(context);
+    release_window(window);
     return 0;
 }

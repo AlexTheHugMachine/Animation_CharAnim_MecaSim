@@ -11,7 +11,6 @@
 #include "texture.h"
 
 #include "mesh.h"
-#include "wavefront.h"
 
 #include "vec.h"
 #include "mat.h"
@@ -19,25 +18,38 @@
 
 
 
-struct Viewer
+class Viewer
 {
+public:
+    Viewer();
+
+    //! Initialise tout : compile les shaders et construit le programme + les buffers + le vertex array.
+    //! renvoie -1 en cas d'erreur.
+    int init();
+
+    //! La fonction d'affichage
+    int draw();
+
+    //! Libere tout
+    int quit();
+
+    static Viewer& singleton() { return *s_singleton; }
+    static int singleton_draw() { return singleton().draw(); }
+protected:
     GLuint program;
-    orbiter camera;
+    Orbiter camera;
+
+    Mesh axe;
+    Mesh cube;
 
     GLuint texture;
-    mesh cube;
-    GLuint cube_vao;
+
+    void init_axe();
+    void init_cube();
+
+    static Viewer* s_singleton;
 };
 
 
-//! Initialise tout : compile les shaders et construit le programme + les buffers + le vertex array.
-//! renvoie -1 en cas d'erreur.
-int init(Viewer& v);
-
-//! La fonction d'affichage
-int draw(Viewer& v);
-
-//! Libere tout
-int quit(Viewer& v);
 
 #endif
