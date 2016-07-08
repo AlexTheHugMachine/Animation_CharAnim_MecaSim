@@ -50,12 +50,29 @@ void Viewer::init_axe()
 
 void Viewer::init_cube()
 {
-    cube = create_mesh(GL_QUADS);
+    static float pt[8][3] = { {0,0,0}, {1,0,0}, {1,0,1}, {0,0,1}, {0,1,0}, {1,1,0}, {1,1,1}, {0,1,1} };
+    static int f[6][4] = { {0,1,2,3}, {5,4,7,6}, {1,5,6,2}, {0,4,7,3}, {3,2,6,7}, {0,4,5,1} };
+    static float n[6][3] = { {0,-1,0}, {0,1,0}, {1,0,0}, {-1,0,0}, {0,0,1}, {0,0,-1} };
+    static float uv[4][2] = { {0,0}, {1,0}, {1,1}, {0,1} };
+    int i,j;
 
+    cube = create_mesh(GL_TRIANGLES);
     vertex_color(cube, make_color(1, 0, 0));
-    push_vertex(cube, -0.5, -0.5, 0);
 
-    vertex_color(cube, make_color(0, 1, 0));
+    for (i=0;i<6;i++)
+    {
+        //glNormal3f( n[ i ][0], n[ i ][1], n[ i ][2] );
+        push_vertex(cube, pt[ f[i][0] ][0], pt[ f[i][0] ][1], pt[ f[i][0] ][2] );
+        push_vertex(cube, pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
+        push_vertex(cube, pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
+
+        push_vertex(cube, pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
+        push_vertex(cube, pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
+        push_vertex(cube, pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
+    }
+
+
+    push_vertex(cube, -0.5, -0.5, 0);
     push_vertex(cube,  -0.5,  0.5, 0);
 
     vertex_color(cube, make_color(0, 0, 1));
