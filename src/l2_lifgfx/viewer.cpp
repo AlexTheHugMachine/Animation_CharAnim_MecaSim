@@ -70,16 +70,6 @@ void Viewer::init_cube()
         push_vertex(cube, pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
         push_vertex(cube, pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
     }
-
-
-    push_vertex(cube, -0.5, -0.5, 0);
-    push_vertex(cube,  -0.5,  0.5, 0);
-
-    vertex_color(cube, make_color(0, 0, 1));
-    push_vertex(cube, 0.5,  0.5, 0);
-
-    vertex_color(cube, make_color(0, 1, 1));
-    push_vertex(cube, 0.5,  -0.5, 0);
 }
 
 void Viewer::init_grid()
