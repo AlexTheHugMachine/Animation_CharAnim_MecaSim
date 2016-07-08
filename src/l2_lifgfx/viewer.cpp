@@ -9,7 +9,7 @@
 
 Viewer* Viewer::s_singleton = NULL;
 
-Viewer::Viewer() : program(0), texture(0)
+Viewer::Viewer() : program(0), texture(0), b_draw_grid(true)
 {
     s_singleton=this;
 }
@@ -22,6 +22,7 @@ int Viewer::init()
 
     init_axe();
     init_cube();
+    init_grid();
 
     // etat par defaut openGL
     glClearColor(0.5f, 0.5f, 0.9f, 1);
@@ -64,6 +65,26 @@ void Viewer::init_cube()
     push_vertex(cube, 0.5,  -0.5, 0);
 }
 
+void Viewer::init_grid()
+{
+    grid = create_mesh(GL_LINES);
+
+    vertex_color(grid, make_color(1, 1, 1));
+    int i,j;
+    for(i=-5;i<=5;++i)
+        for(j=-5;j<=5;++j)
+        {
+            push_vertex(grid, -5, 0, j);
+            push_vertex(grid, 5, 0,  j);
+
+            push_vertex(grid, i, 0, -5);
+            push_vertex(grid, i, 0, 5);
+
+        }
+
+
+}
+
 
 int Viewer::quit( )
 {
@@ -76,22 +97,23 @@ int Viewer::draw( )
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // recupere les mouvements de la souris pour deplacer la camera, cf tutos/tuto6.cpp
-    // recupere les mouvements de la souris, utilise directement SDL2
     int mx, my;
     unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
-
     // deplace la camera
     if(mb & SDL_BUTTON(1))                      // le bouton gauche est enfonce
         orbiter_rotation(camera, mx, my);       // tourne autour de l'objet
     else if(mb & SDL_BUTTON(3))                 // le bouton droit est enfonce
         orbiter_move(camera, mx);               // approche / eloigne l'objet
-    else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
+    else if(mb & SDL_BUTTON(2))                 // le bouton du milieu est enfonce
         orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height());         // deplace le point de rotation
 
+    if (SDL_KEYDOWN)
 
     // on dessine l'objet du point de vue de la camera
+    if (b_draw_grid) ::draw(grid, camera);
     ::draw(cube, camera);
     ::draw(axe, camera);
+
 
     //Transform R= make_rotationZ( 45 );
     //Transform T= make_translation( 1, 0, 0 );
