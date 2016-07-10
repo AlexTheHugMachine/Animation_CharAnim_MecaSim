@@ -15,6 +15,11 @@ Viewer::Viewer() : program(0), texture(0), b_draw_grid(true)
 }
 
 
+void Viewer::help()
+{
+    printf("\th: help\n");
+}
+
 int Viewer::init()
 {
     // Creer une camera par defaut, elle est placee en 0, 0, 5 et regarde les objets situes en 0, 0, 0
@@ -33,8 +38,8 @@ int Viewer::init()
     glEnable(GL_DEPTH_TEST);
 
     glFrontFace(GL_CCW);
-    //glCullFace(GL_BACK);
-    //glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
 
     return 0;
 }
@@ -60,7 +65,7 @@ void Viewer::init_axe()
 void Viewer::init_cube()
 {
     static float pt[8][3] = { {0,0,0}, {1,0,0}, {1,0,1}, {0,0,1}, {0,1,0}, {1,1,0}, {1,1,1}, {0,1,1} };
-    static int f[6][4] = { {0,1,2,3}, {5,4,7,6}, {1,5,6,2}, {0,4,7,3}, {3,2,6,7}, {0,4,5,1} };
+    static int f[6][4] = { {0,1,2,3}, {5,4,7,6}, {1,5,6,2}, {0,3,7,4}, {3,2,6,7}, {0,4,5,1} };
     static float n[6][3] = { {0,-1,0}, {0,1,0}, {1,0,0}, {-1,0,0}, {0,0,1}, {0,0,-1} };
     static float uv[4][2] = { {0,0}, {1,0}, {1,1}, {0,1} };
     int i,j;
@@ -97,8 +102,6 @@ void Viewer::init_grid()
             push_vertex(grid, i, 0, 5);
 
         }
-
-
 }
 
 
@@ -123,17 +126,19 @@ int Viewer::draw( )
     else if(mb & SDL_BUTTON(2))                 // le bouton du milieu est enfonce
         orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height());         // deplace le point de rotation
 
-    if (SDL_KEYDOWN)
+    if (key_state(SDLK_h)) help();
+    if (key_state(SDLK_g)) { b_draw_grid = !b_draw_grid; clear_key_state(SDLK_g); }
+    if (key_state(SDLK_a)) { b_draw_axe = !b_draw_axe; clear_key_state(SDLK_a); }
+    if (key_state(SDLK_DOWN)) { orbiter_move(camera, -1); }
+    if (key_state(SDLK_UP)) { orbiter_move(camera, 1); }
+
 
     // on dessine l'objet du point de vue de la camera
     if (b_draw_grid) ::draw(grid, camera);
-    ::draw(cube, camera);
-    ::draw(axe, camera);
+    if (b_draw_axe) ::draw(axe, camera);
 
-
-    //Transform R= make_rotationZ( 45 );
-    //Transform T= make_translation( 1, 0, 0 );
-    //::draw(cube, T, camera);
+    Transform T= make_translation( 1, 1, 0 );
+    ::draw(cube, T, camera);
     //::draw(cube, camera);
 
     return 1;

@@ -33,6 +33,8 @@ public:
     //! Libere tout
     int quit();
 
+    void help();
+
     static Viewer& singleton() { assert(s_singleton); return *s_singleton; }
     static int singleton_draw() { return singleton().draw(); }
 protected:
@@ -44,6 +46,7 @@ protected:
     Mesh grid;
 
     bool b_draw_grid;
+    bool b_draw_axe;
 
     GLuint texture;
 
