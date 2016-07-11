@@ -1,6 +1,6 @@
 
 #include <cassert>
-
+#include <math.h>
 #include "Viewer.h"
 
 #include <stdio.h>
@@ -28,6 +28,8 @@ int Viewer::init()
     init_axe();
     init_cube();
     init_grid();
+    init_sphere();
+    init_cylinder();
 
     // etat par defaut openGL
     glClearColor(0.5f, 0.5f, 0.9f, 1);
@@ -64,14 +66,14 @@ void Viewer::init_axe()
 
 void Viewer::init_cube()
 {
-    static float pt[8][3] = { {0,0,0}, {1,0,0}, {1,0,1}, {0,0,1}, {0,1,0}, {1,1,0}, {1,1,1}, {0,1,1} };
+    static float pt[8][3] = { {-1,-1,-1}, {1,-1,-1}, {1,-1,1}, {-1,-1,1}, {-1,1,-1}, {1,1,-1}, {1,1,1}, {-1,1,1} };
     static int f[6][4] = { {0,1,2,3}, {5,4,7,6}, {1,5,6,2}, {0,3,7,4}, {3,2,6,7}, {0,4,5,1} };
     static float n[6][3] = { {0,-1,0}, {0,1,0}, {1,0,0}, {-1,0,0}, {0,0,1}, {0,0,-1} };
     static float uv[4][2] = { {0,0}, {1,0}, {1,1}, {0,1} };
     int i,j;
 
     cube = create_mesh(GL_TRIANGLES);
-    vertex_color(cube, make_color(1, 0, 0));
+    vertex_color(cube, make_color(1, 1, 1));
 
     for (i=0;i<6;i++)
     {
@@ -105,11 +107,111 @@ void Viewer::init_grid()
 }
 
 
+void Viewer::init_sphere()
+{
+    const int divBeta = 26;
+    const int divAlpha = divBeta/2;
+    int i,j;
+    float beta, alpha, alpha2;
+
+    sphere = create_mesh(GL_TRIANGLE_STRIP);
+
+    for(i=0;i<divAlpha;++i)
+    {
+        alpha = -0.5f*M_PI + float(i)*M_PI/divAlpha;
+        alpha2 = -0.5f*M_PI + float(i+1)*M_PI/divAlpha;
+
+        for(j=0;j<divBeta;++j)
+        {
+            beta = float(j)*2.f*M_PI/(divBeta-1);
+
+            //glTexCoord2f( beta/(2.0f*M_PI), 0.5f+alpha/M_PI );
+            //glNormal3f( cos(alpha)*cos(beta),  sin(alpha), cos(alpha)*sin(beta) );
+            //glVertex3f( cos(alpha)*cos(beta),  sin(alpha), cos(alpha)*sin(beta) );
+            push_vertex( sphere,
+                        Point(cos(alpha)*cos(beta),  sin(alpha), cos(alpha)*sin(beta)),
+                        Vector(cos(alpha)*cos(beta),  sin(alpha), cos(alpha)*sin(beta))
+                         );
+
+
+            //glTexCoord2f( beta/(2.0f*M_PI), 0.5f+alpha2/M_PI );
+            //glNormal3f( cos(alpha2)*cos(beta),  sin(alpha2), cos(alpha2)*sin(beta) );
+            //glVertex3f( cos(alpha2)*cos(beta),  sin(alpha2), cos(alpha2)*sin(beta) );
+            push_vertex( sphere,
+                        Point(cos(alpha2)*cos(beta),  sin(alpha2), cos(alpha2)*sin(beta)),
+                        Vector(cos(alpha2)*cos(beta),  sin(alpha2), cos(alpha2)*sin(beta))
+                        );
+        }
+        restart_strip(sphere);
+    }
+}
+
+
+void Viewer::init_cylinder()
+{
+    int i;
+    const int div = 25;
+    float alpha;
+    float step = 2.0*M_PI / (div);
+
+    cylinder = create_mesh(GL_TRIANGLE_STRIP);
+
+    for (i=0;i<=div;++i)
+    {
+        alpha = i*step;
+        //glNormal3f( cos(alpha),  0, sin(alpha) );
+        //glTexCoord2f( float(i)/div, 0.f );
+        //glVertex3f( cos(alpha),  0, sin(alpha) );
+        //glTexCoord2f( float(i)/div, 1.f );
+        //glVertex3f( cos(alpha),  1, sin(alpha) );
+        push_vertex( cylinder,
+                            Point(cos(alpha),  -1, sin(alpha)),
+                            Vector(cos(alpha),  0, sin(alpha)) );
+
+        push_vertex( cylinder,
+                            Point(cos(alpha),  1, sin(alpha)),
+                            Vector(cos(alpha),  0, sin(alpha)) );
+    }
+}
+
+
+void Viewer::init_terrain()
+{
+    terrain = create_mesh(GL_TRIANGLE_STRIP);
+    Image im( "data/terrain.png");
+
+
+}
+
+
 int Viewer::quit( )
 {
     return 0;
 }
 
+
+void Viewer::draw_plane(const Transform& T)
+{
+    //glMatrixMode(GL_MODELVIEW);
+
+    Transform P = T;
+    P *= make_translation(0,3,0);
+    P *= make_scale(0.1f,0.1f, 0.1f);
+
+
+    Transform F = P * make_scale(1,1,10);
+    ::draw( sphere, F, camera);
+
+    Transform W = P * make_translation(0,0,2) * make_scale(10,0.1,1);
+    ::draw( cube, W, camera);
+
+    Transform WR = P * make_translation(0,0,-8) * make_scale( 3, 0.1, 0.5);
+    ::draw( cube, WR, camera);
+
+    Transform WRV = P * make_translation(0,1.5,-8) * make_scale( 0.1, 1.5, 0.5);
+    ::draw( cube, WRV, camera);
+
+}
 
 int Viewer::draw( )
 {
@@ -137,9 +239,16 @@ int Viewer::draw( )
     if (b_draw_grid) ::draw(grid, camera);
     if (b_draw_axe) ::draw(axe, camera);
 
-    Transform T= make_translation( 1, 1, 0 );
+    Transform T= make_translation( -3, 1, 0 );
     ::draw(cube, T, camera);
-    //::draw(cube, camera);
+
+    T= make_translation( 0, 1, 0 );
+    ::draw( cylinder, T, camera);
+
+    T= make_translation( 3, 1, 0 );
+    ::draw(sphere, T, camera);
+
+    draw_plane( Transform()  );
 
     return 1;
 }

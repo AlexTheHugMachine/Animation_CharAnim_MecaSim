@@ -8,7 +8,7 @@
 //! \addtogroup math manipulations de points, vecteur, matrices, transformations
 ///@{
 
-//! \file 
+//! \file
 //! transformation de points et vecteurs
 
 //! conversion en radians.
@@ -19,6 +19,16 @@ float degrees( const float rad );
 //! representation d'une transformation, une matrice 4x4.
 struct Transform
 {
+    Transform (
+        const float t00=1.f, const float t01=0.f, const float t02=0.f, const float t03=0.f,
+        const float t10=0.f, const float t11=1.f, const float t12=0.f, const float t13=0.f,
+        const float t20=0.f, const float t21=0.f, const float t22=1.f, const float t23=0.f,
+        const float t30=0.f, const float t31=0.f, const float t32=0.f, const float t33=1.f );
+
+    Transform& transpose();
+    Transform& inverse();
+    Transform& operator*=( const Transform& t);
+
     float m[4][4];
 };
 
@@ -26,7 +36,7 @@ struct Transform
 Transform make_identity( );
 
 //! construit la transformation. utilitaire.
-Transform make_transform( 
+Transform make_transform(
     const float t00, const float t01, const float t02, const float t03,
     const float t10, const float t11, const float t12, const float t13,
     const float t20, const float t21, const float t22, const float t23,

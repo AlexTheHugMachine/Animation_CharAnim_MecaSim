@@ -5,12 +5,13 @@
 //! \addtogroup math
 ///@{
 
-//! \file 
+//! \file
 //! operations sur points et vecteurs
 
 //! representation d'un point 3d.
 struct Point
 {
+    Point(float _x=0, float _y=0, float _z=0) : x(_x), y(_y), z(_z) {}
     float x, y, z;
 };
 
@@ -26,6 +27,7 @@ Point center( const Point& a, const Point& b );
 //! representation d'un vecteur 3d.
 struct Vector
 {
+    Vector(float _x=0, float _y=0, float _z=0) : x(_x), y(_y), z(_z) {}
     float x, y, z;
 };
 
@@ -74,6 +76,7 @@ float length( const Vector& v );
 //! vecteur generique, utilitaire.
 struct vec2
 {
+    vec2(float _x=0, float _y=0) : x(_x), y(_y) {}
     float x, y;
 };
 
@@ -82,6 +85,7 @@ vec2 make_vec2( const float x, const float y );
 //! vecteur generique, utilitaire.
 struct vec3
 {
+    vec3(float _x=0, float _y=0, float _z=0) : x(_x), y(_y), z(_z) {}
     float x, y, z;
 };
 
@@ -96,6 +100,7 @@ vec3 make_vec3( const Vector& v );
 //! vecteur generique 4d, ou 3d homogene, utilitaire.
 struct vec4
 {
+    vec4(float _x=0, float _y=0, float _z=0, float _w=0) : x(_x), y(_y), z(_z), w(_w) {}
     float x, y, z, w;
 };
 

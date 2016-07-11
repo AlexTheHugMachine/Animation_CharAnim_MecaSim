@@ -10,12 +10,34 @@
 //! \addtogroup image utilitaires pour manipuler des images
 ///@{
 
-//! \file 
+//! \file
 //! manipulation d'images
 
 //! representation d'une image.
-struct Image
+class Image
 {
+public:
+    Image( const int width, const int height, const int channels, const Color& color=Color() );
+    Image( const char *filename );
+    ~Image()    { clear(); }
+    void clear()    { data.clear(); }
+
+    int write_image( const char *filename ) const;
+
+    Color operator()(const int x, const int y) const;
+    Color get_pixel(const int x, const int y ) const;
+
+    void set_pixel( const int x, const int y, const Color& color );
+
+    int miplevels() const;
+
+    bool isInit() const { return data.size()!=0; }
+    unsigned char* getData() { return data.data(); }
+    const unsigned char* getData() const { return data.data(); }
+    int getChannels() const { return channels; }
+    int getWidth() const { return width; }
+    int getHeight() const { return height; }
+protected:
     std::vector<unsigned char> data;
     int width;
     int height;
@@ -24,9 +46,9 @@ struct Image
 };
 
 //! cree une image de couleur uniforme. a detruire avec release_image( ).\n
-//! les pixels sont representes par 3 ou 4 valeurs / canaux. 
-//! \param width largeur 
-//! \param height  hauteur  
+//! les pixels sont representes par 3 ou 4 valeurs / canaux.
+//! \param width largeur
+//! \param height  hauteur
 //! \param channels 3 ou 4 nombre de canaux couleur, 3 pour des pixels opaques, 4 pour des pixels semi transparents
 //! \param color couleur initiale des pixels.
 Image create_image( const int width, const int height, const int channels, const Color& color );
@@ -39,7 +61,7 @@ int miplevels( const Image& im );
 int miplevels( const int width, const int height );
 
 //! charge une image a partir d'un fichier. renvoie une image rouge en cas d'echec. a detruire avec release_image( ).
-//! \param filemane nom de l'image a charger 
+//! \param filemane nom de l'image a charger
 Image read_image( const char *filename );
 
 //! enregistre une image dans un fichier png.
