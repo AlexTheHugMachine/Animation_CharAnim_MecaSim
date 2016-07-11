@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "draw.h"        // pour dessiner du point de vue d'une camera
 
+//#include <windows.h>
 
 Viewer* Viewer::s_singleton = NULL;
 
@@ -18,10 +19,13 @@ Viewer::Viewer() : program(0), texture(0), b_draw_grid(true)
 void Viewer::help()
 {
     printf("\th: help\n");
+    printf("\ta: (des)active l'affichage de l'axe\n");
+    printf("\tg: (des)active l'affichage de la grille\n");
 }
 
 int Viewer::init()
 {
+    //system("pwd");
     // Creer une camera par defaut, elle est placee en 0, 0, 5 et regarde les objets situes en 0, 0, 0
     camera= make_orbiter();
 
@@ -30,6 +34,7 @@ int Viewer::init()
     init_grid();
     init_sphere();
     init_cylinder();
+    init_terrain();
 
     // etat par defaut openGL
     glClearColor(0.5f, 0.5f, 0.9f, 1);
@@ -87,6 +92,7 @@ void Viewer::init_cube()
         push_vertex(cube, pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
     }
 }
+
 
 void Viewer::init_grid()
 {
@@ -178,8 +184,9 @@ void Viewer::init_cylinder()
 void Viewer::init_terrain()
 {
     terrain = create_mesh(GL_TRIANGLE_STRIP);
-    Image im( "data/terrain.png");
-
+    //system("cd");
+    Image im( "data/terrain/terrain.png");
+    printf("%d\n", im.isInit());
 
 }
 

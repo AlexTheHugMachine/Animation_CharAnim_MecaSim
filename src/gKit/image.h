@@ -22,6 +22,8 @@ public:
     ~Image()    { clear(); }
     void clear()    { data.clear(); }
 
+    void init( const int width, const int height, const int channels, const Color& color=Color() );
+
     int write_image( const char *filename ) const;
 
     Color operator()(const int x, const int y) const;
@@ -31,7 +33,7 @@ public:
 
     int miplevels() const;
 
-    bool isInit() const { return data.size()!=0; }
+    bool isInit() const { return data.size()!=0 && (data.size()==width*height*channels); }
     unsigned char* getData() { return data.data(); }
     const unsigned char* getData() const { return data.data(); }
     int getChannels() const { return channels; }

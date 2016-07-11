@@ -14,6 +14,13 @@
 
 Image::Image( const int w, const int h, const int c, const Color& color )
 {
+    init(w,h,c,color);
+}
+
+void Image::init( const int w, const int h, const int c, const Color& color )
+{
+    clear();
+
     width= w;
     height= h;
     channels= c;
@@ -51,6 +58,7 @@ Image::Image( const int w, const int h, const int c, const Color& color )
     }
 }
 
+
 Image::Image( const char *filename )
 {
     width = height = channels = 0;
@@ -74,13 +82,13 @@ Image::Image( const char *filename )
         return;
     }
 
-    int height= surface->h;
-    int width= surface->w;
-    int channels= (format.BitsPerPixel == 32) ? 4 : 3;
+    height= surface->h;
+    width= surface->w;
+    channels= (format.BitsPerPixel == 32) ? 4 : 3;
 
     printf("loading image '%s' %dx%d %d channels...\n", filename, width, height, channels);
 
-    Image im(width,height,channels);
+    init(width,height,channels);
 
     // converti les donnees en pixel rgba, et retourne l'image, openGL utilise une origine en bas a gauche.
     if(format.BitsPerPixel == 32)
@@ -88,20 +96,20 @@ Image::Image( const char *filename )
         int py= 0;
         for(int y= height -1; y >= 0; y--, py++)
         {
-            unsigned char *data= &im.data.front() + im.width * y * im.channels;
+            unsigned char *dat= &data.front() + width * y * channels;
             Uint8 *pixel= (Uint8 *) surface->pixels + py * surface->pitch;
 
-            for(int x= 0; x < width; x++, pixel+= format.BytesPerPixel, data+= 4)
+            for(int x= 0; x < width; x++, pixel+= format.BytesPerPixel, dat+= 4)
             {
                 Uint8 r= pixel[format.Rshift / 8];
                 Uint8 g= pixel[format.Gshift / 8];
                 Uint8 b= pixel[format.Bshift / 8];
                 Uint8 a= pixel[format.Ashift / 8];
 
-                data[0]= r;
-                data[1]= g;
-                data[2]= b;
-                data[3]= a;
+                dat[0]= r;
+                dat[1]= g;
+                dat[2]= b;
+                dat[3]= a;
             }
         }
     }
@@ -111,18 +119,18 @@ Image::Image( const char *filename )
         int py= 0;
         for(int y= height -1; y >= 0; y--, py++)
         {
-            unsigned char *data= &im.data.front() + im.width * y * im.channels;
+            unsigned char *dat= &data.front() + width * y * channels;
             Uint8 *pixel= (Uint8 *) surface->pixels + py * surface->pitch;
 
-            for(int x= 0; x < width; x++, pixel+= format.BytesPerPixel, data+= 3)
+            for(int x= 0; x < width; x++, pixel+= format.BytesPerPixel, dat+= 3)
             {
                 const Uint8 r= pixel[format.Rshift / 8];
                 const Uint8 g= pixel[format.Gshift / 8];
                 const Uint8 b= pixel[format.Bshift / 8];
 
-                data[0]= r;
-                data[1]= g;
-                data[2]= b;
+                dat[0]= r;
+                dat[1]= g;
+                dat[2]= b;
             }
         }
     }
