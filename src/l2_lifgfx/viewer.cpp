@@ -181,13 +181,50 @@ void Viewer::init_cylinder()
 }
 
 
+Vector terrainNormal(const Image& heightmap, const int i, const int j)
+{
+	int ip=i-1;
+	int in=i+1;
+	int jp=j-1;
+	int jn=j+1;
+
+	Vector a( ip,		heightmap.get_pixel(ip, j).r,  j );
+	Vector b( in,		heightmap.get_pixel(in, j).r,  j );
+	Vector c( i, 		heightmap.get_pixel(i, jp).r,  jp );
+	Vector d( i, 		heightmap.get_pixel(i, jn).r,  jn );
+
+	Vector e = normalize(b-a);
+	Vector f = normalize(d-c);
+	Vector g = cross(e,f);
+	return g;
+}
+
 void Viewer::init_terrain()
 {
     terrain = create_mesh(GL_TRIANGLE_STRIP);
     //system("cd");
     Image im( "data/terrain/terrain.png");
-    printf("%d\n", im.isInit());
+    //printf("%d\n", im.isInit());
+    //im.write_image("data/terrain/terrain_save.png");
 
+    int i,j;
+    for(i=1;i<im.getWidth()-1;++i)
+    {
+        for(j=1;j<im.getHeight()-1;++j)
+        {
+            push_vertex( terrain,
+                                Point(i+1, 25.f*im.get_pixel(i+1,j).r, j)
+                                , terrainNormal(im,i+1,j)
+                                );
+
+            push_vertex( terrain,
+                                Point(i, 25.f*im.get_pixel(i,j).r, j)
+                                , terrainNormal(im,i,j)
+                                );
+
+        }
+        restart_strip(terrain);
+    }
 }
 
 
@@ -217,6 +254,7 @@ void Viewer::draw_plane(const Transform& T)
 
     Transform WRV = P * make_translation(0,1.5,-8) * make_scale( 0.1, 1.5, 0.5);
     ::draw( cube, WRV, camera);
+    //cube.draw()
 
 }
 
@@ -228,12 +266,12 @@ int Viewer::draw( )
     int mx, my;
     unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
     // deplace la camera
-    if(mb & SDL_BUTTON(1))                      // le bouton gauche est enfonce
+    if((mb & SDL_BUTTON(1)) &&  (mb& SDL_BUTTON(3)))                 // le bouton du milieu est enfonce
+        orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height());         // deplace le point de rotation
+    else if(mb & SDL_BUTTON(1))                      // le bouton gauche est enfonce
         orbiter_rotation(camera, mx, my);       // tourne autour de l'objet
     else if(mb & SDL_BUTTON(3))                 // le bouton droit est enfonce
         orbiter_move(camera, mx);               // approche / eloigne l'objet
-    else if(mb & SDL_BUTTON(2))                 // le bouton du milieu est enfonce
-        orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height());         // deplace le point de rotation
 
     if (key_state(SDLK_h)) help();
     if (key_state(SDLK_g)) { b_draw_grid = !b_draw_grid; clear_key_state(SDLK_g); }
@@ -246,16 +284,19 @@ int Viewer::draw( )
     if (b_draw_grid) ::draw(grid, camera);
     if (b_draw_axe) ::draw(axe, camera);
 
-    Transform T= make_translation( -3, 1, 0 );
+    Transform T= make_translation( -3, 5, 0 );
     ::draw(cube, T, camera);
 
-    T= make_translation( 0, 1, 0 );
+    T = make_translation( 0, 5, 0 );
     ::draw( cylinder, T, camera);
 
-    T= make_translation( 3, 1, 0 );
+    T = make_translation( 3, 5, 0 );
     ::draw(sphere, T, camera);
 
-    draw_plane( Transform()  );
+    draw_plane( make_translation(0,5,0)  );
+
+    T = make_translation( -32, 0, -32 ) * make_scale(64.f/192, 0.3f, 64.f/192);
+    ::draw( terrain, T, camera);
 
     return 1;
 }
