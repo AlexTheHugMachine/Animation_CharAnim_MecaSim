@@ -83,11 +83,11 @@ int init( )
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // etape 3 : texture
-    Image image= read_image("data/debug2x2red.png");
+    Image image("data/debug2x2red.png");
 
     GLenum data_format;
     GLenum data_type= GL_UNSIGNED_BYTE;
-    if(image.channels == 3)
+    if(image.getChannels() == 3)
         data_format= GL_RGB;
     else // par defaut
         data_format= GL_RGBA;
@@ -96,8 +96,8 @@ int init( )
     glBindTexture(GL_TEXTURE_2D, texture);
 
     glTexImage2D(GL_TEXTURE_2D, 0,
-        GL_RGBA, image.width, image.height, 0,
-        data_format, data_type, &image.data.front());
+        GL_RGBA, image.getWidth(), image.getHeight(), 0,
+        data_format, data_type, image.getData());
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
