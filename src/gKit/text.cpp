@@ -31,9 +31,9 @@ Text create_text( )
     {
         const unsigned int starty= 16 *7;
         const unsigned int startx= 8 *2;
-        Color color= font.get_pixel(startx + x, starty + y);
+        Color color= font.pixel(startx + x, starty + y);
         color.a= 0.6f;
-        font.set_pixel(startx + x, starty + y, color);
+        font.pixel(startx + x, starty + y, color);
     }
 
     // cree le curseur
@@ -43,13 +43,13 @@ Text create_text( )
         const unsigned int starty= 16 *7;
         const unsigned int startx= 8 *1;
         Color color= (x > 1) ? make_alpha_color(1, 1, 1, 0.6f) : make_alpha_color(1, 1, 1, 1);
-        font.set_pixel(startx + x, starty + y, color);
+        font.pixel(startx + x, starty + y, color);
     }
 
     text.font= make_texture(0, font);
-    release_image(font);
+    //~ release_image(font);
 
-    text.color= make_color(1, 1, 1);
+    text.color= make_white();
 
     // shader
     text.program= read_program("data/shaders/text.glsl");

@@ -7,7 +7,8 @@
 
 GLuint make_texture( const int unit, const Image& im )
 {
-    if(!im.isInit())
+    //~ if(!im.isInit())
+    if(im == Image::error())
         return 0;
 
     // cree la texture openGL
@@ -18,7 +19,7 @@ GLuint make_texture( const int unit, const Image& im )
 
     // choisit la representation des pixels de la texture en fonction de l'image
     GLenum data_format= 0;
-    switch(im.getChannels())
+    switch(im.channels)
     {
         case 1: data_format= GL_RED; break;
         case 2: data_format= GL_RG; break;
@@ -35,8 +36,8 @@ GLuint make_texture( const int unit, const Image& im )
 
     // transfere les donnees dans la texture
     glTexImage2D(GL_TEXTURE_2D, 0,
-        GL_RGBA, im.getWidth(), im.getHeight(), 0,
-        data_format, GL_UNSIGNED_BYTE, im.getData());
+        GL_RGBA, im.width, im.height, 0,
+        data_format, GL_UNSIGNED_BYTE, &im.data.front());
 
     // prefiltre la texture
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -48,7 +49,7 @@ GLuint read_texture( const int unit, const char *filename )
 {
     Image im= read_image(filename);
     GLuint texture= make_texture(unit, im);
-    release_image(im);
+    //~ release_image(im);
     return texture;
 }
 
@@ -66,14 +67,15 @@ int screenshot( const char *filename )
     glGetIntegerv(GL_VIEWPORT, viewport);
 
     // cree une image pour stocker le resultat
-    Image image= create_image(viewport[2], viewport[3], 4, make_color(0, 0, 0));
+    //~ Image image= create_image(viewport[2], viewport[3], 4, make_color(0, 0, 0));
+    Image image(viewport[2], viewport[3], 4, make_black());
     // transfere les pixels
     glReadPixels(0, 0, viewport[2], viewport[3],
-        GL_RGBA, GL_UNSIGNED_BYTE, image.getData());
+        GL_RGBA, GL_UNSIGNED_BYTE, &image.data.front());
 
     // ecrit l'image
     int code= write_image(image, filename);
-    release_image(image);
+    //~ release_image(image);
     return code;
 }
 

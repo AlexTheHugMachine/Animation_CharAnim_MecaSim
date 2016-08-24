@@ -17,34 +17,46 @@
 class Image
 {
 public:
-    Image( const int width, const int height, const int channels, const Color& color=Color() );
-    Image( const char *filename );
-    ~Image()    { clear(); }
-    void clear()    { data.clear(); }
-
-    void init( const int width, const int height, const int channels, const Color& color=Color() );
-
-    int write_image( const char *filename ) const;
-
-    Color operator()(const int x, const int y) const;
-    Color get_pixel(const int x, const int y ) const;
-
-    void set_pixel( const int x, const int y, const Color& color );
-
-    int miplevels() const;
-
-    bool isInit() const { return data.size()!=0 && (data.size()==width*height*channels); }
-    unsigned char* getData() { return data.data(); }
-    const unsigned char* getData() const { return data.data(); }
-    int getChannels() const { return channels; }
-    int getWidth() const { return width; }
-    int getHeight() const { return height; }
-protected:
+//~ protected:
     std::vector<unsigned char> data;
-    int width;
-    int height;
-    int channels;
-    // levels
+
+public:
+    Image( ) : data(), width(0), height(0), channels(0) {}
+    Image( const int width, const int height, const int channels, const Color& color= make_black() );
+    ~Image( ) {}
+
+    //! renvoie la couleur d'un pixel de l'image.
+    Color pixel( const int x, const int y ) const;
+
+    //! modifie la couleur d'un pixel de l'image.
+    void pixel( const int x, const int y, const Color& color );
+
+    //! renvoie le nombre de niveaux de mipmaps de l'image, cf textures openGL.
+    int miplevels( ) const;
+    
+    int width;          //!< largeur.
+    int height;         //!< hauteur.
+    int channels;       //!< nombre de canaux couleur.
+    
+    /*! sentinelle pour la gestion d'erreur.
+    exemple :
+    \code
+        Image image= read_image("debug.png");
+        if(image == Image::error())
+            return "erreur de chargement";
+    \endcode
+     */
+    static Image& error( )
+    {
+        static Image image;
+        return image;
+    }
+    
+    //! comparaison avec la sentinelle.
+    bool operator== ( const Image& im ) const
+    {
+        return &im == &error();
+    }
 };
 
 //! cree une image de couleur uniforme. a detruire avec release_image( ).\n
