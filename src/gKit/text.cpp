@@ -9,6 +9,14 @@
 #include "texture.h"
 #include "text.h"
 
+Text::~Text( )
+{
+    release_program(program);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &ubo);
+    glDeleteTextures(1, &font);
+}
+
 
 Text create_text( )
 {

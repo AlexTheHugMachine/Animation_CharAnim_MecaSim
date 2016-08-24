@@ -25,10 +25,12 @@ struct Transform
         const float t20=0.f, const float t21=0.f, const float t22=1.f, const float t23=0.f,
         const float t30=0.f, const float t31=0.f, const float t32=0.f, const float t33=1.f );
 
+#if 0
     Transform& transpose();
     Transform& inverse();
     Transform& operator*=( const Transform& t);
-
+#endif
+    
     float m[4][4];
 };
 

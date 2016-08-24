@@ -15,6 +15,9 @@
 //! representation de la camera, type orbiter, placee sur une sphere autour du centre de l'objet.
 struct Orbiter
 {
+    Orbiter( ) : center(), position(), rotation(), size(5.f) {}
+    Orbiter( const Point& _center, const float _size ) : center(_center), position(), rotation(), size(_size) {}
+    
     Point center;
     vec2 position;
     vec2 rotation;

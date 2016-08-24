@@ -3,7 +3,6 @@
 #define _TEXTURE_H
 
 #include "glcore.h"
-
 #include "image.h"
 
 

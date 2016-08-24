@@ -2,6 +2,7 @@
 #ifndef _VEC_H
 #define _VEC_H
 
+
 //! \addtogroup math
 ///@{
 
@@ -11,7 +12,8 @@
 //! representation d'un point 3d.
 struct Point
 {
-    Point(float _x=0, float _y=0, float _z=0) : x(_x), y(_y), z(_z) {}
+    Point( const float _x= 0, const float _y= 0, const float _z= 0 ) : x(_x), y(_y), z(_z) {}
+    
     float x, y, z;
 };
 
@@ -20,6 +22,8 @@ Point make_point( const float x, const float y, const float z );
 
 //! renvoie la distance etre 2 points.
 float distance( const Point& a, const Point& b );
+//! renvoie le carre de la distance etre 2 points.
+float distance2( const Point& a, const Point& b );
 
 //! renvoie le milieu du segment ab.
 Point center( const Point& a, const Point& b );
@@ -27,7 +31,8 @@ Point center( const Point& a, const Point& b );
 //! representation d'un vecteur 3d.
 struct Vector
 {
-    Vector(float _x=0, float _y=0, float _z=0) : x(_x), y(_y), z(_z) {}
+    Vector( const float _x= 0, const float _y= 0, const float _z= 0) : x(_x), y(_y), z(_z) {}
+    
     float x, y, z;
 };
 
@@ -71,12 +76,15 @@ Vector cross( const Vector& u, const Vector& v );
 float dot( const Vector& u, const Vector& v );
 //! renvoie la longueur d'un vecteur.
 float length( const Vector& v );
+//! renvoie la carre de la longueur d'un vecteur.
+float length2( const Vector& v );
 
 
 //! vecteur generique, utilitaire.
 struct vec2
 {
-    vec2(float _x=0, float _y=0) : x(_x), y(_y) {}
+    vec2( const float _x= 0, const float _y= 0 ) : x(_x), y(_y) {}
+    
     float x, y;
 };
 
@@ -85,7 +93,8 @@ vec2 make_vec2( const float x, const float y );
 //! vecteur generique, utilitaire.
 struct vec3
 {
-    vec3(float _x=0, float _y=0, float _z=0) : x(_x), y(_y), z(_z) {}
+    vec3( const float _x= 0, const float _y= 0, const float _z= 0 ) : x(_x), y(_y), z(_z) {}
+    
     float x, y, z;
 };
 
@@ -100,7 +109,7 @@ vec3 make_vec3( const Vector& v );
 //! vecteur generique 4d, ou 3d homogene, utilitaire.
 struct vec4
 {
-    vec4(float _x=0, float _y=0, float _z=0, float _w=0) : x(_x), y(_y), z(_z), w(_w) {}
+    vec4( const float _x= 0, const float _y= 0, const float _z= 0, const float _w= 0 ) : x(_x), y(_y), z(_z), w(_w) {}
     float x, y, z, w;
 };
 

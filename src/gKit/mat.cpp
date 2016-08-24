@@ -36,10 +36,10 @@ Transform make_transform(
     const float t30, const float t31, const float t32, const float t33 )
 {
     return Transform(
-         t00,  t01,  t02,  t03,
-         t10,  t11,  t12,  t13,
-         t20,  t21,  t22,  t23,
-         t30,  t31,  t32,  t33 );
+        t00,  t01,  t02,  t03,
+        t10,  t11,  t12,  t13,
+        t20,  t21,  t22,  t23,
+        t30,  t31,  t32,  t33 );
 }
 
 Transform make_identity( )
@@ -103,10 +103,10 @@ Transform make_rotationY( const float a )
     float cos_t= cosf(radians(a));
 
     return make_transform(
-         cos_t,   0, sin_t, 0,
-             0,   1,     0, 0,
-        -sin_t,   0, cos_t, 0,
-             0,   0,     0, 1 );
+         cos_t, 0, sin_t, 0,
+             0, 1,     0, 0,
+        -sin_t, 0, cos_t, 0,
+             0, 0,     0, 1 );
 }
 
 Transform make_rotationZ( const float a )
@@ -188,11 +188,13 @@ Transform make_lookat( const Point& from, const Point& to, const Vector& up )
     return make_inverse(m);
 }
 
+#if 0
 Transform& Transform::operator*=(const Transform& b)
 {
     *this = compose_transform( *this, b);
     return *this;
 }
+#endif
 
 Transform compose_transform( const Transform& a, const Transform& b )
 {
@@ -218,11 +220,13 @@ void swapf( float& a, float& b )
     b= c;
 }
 
+#if 0
 Transform& Transform::inverse()
 {
     *this = make_inverse(*this);
     return *this;
 }
+#endif
 
 Transform make_inverse( const Transform& m )
 {

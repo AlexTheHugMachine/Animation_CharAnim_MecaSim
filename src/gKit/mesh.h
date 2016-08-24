@@ -20,6 +20,9 @@
 //! representation d'un objet / maillage.
 struct Mesh
 {
+    Mesh( ) : positions(), texcoords(), normals(), colors(), indices(), color( make_white() ), primitives(GL_POINTS), vao(0), program(0), update_buffers(false) {}
+    ~Mesh( );
+    
     std::vector<vec3> positions;
     std::vector<vec2> texcoords;
     std::vector<vec3> normals;

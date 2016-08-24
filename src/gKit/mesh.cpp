@@ -10,6 +10,14 @@
 #include "mesh.h"
 
 
+Mesh::~Mesh( ) 
+{
+    if(vao)
+        release_vertex_format(vao);
+    if(program)
+        release_program(program);
+}
+
 Mesh create_mesh( const GLenum primitives )
 {
     Mesh m;

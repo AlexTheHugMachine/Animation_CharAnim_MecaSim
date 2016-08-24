@@ -16,6 +16,11 @@ float distance( const Point& a, const Point& b )
     return length(a - b);
 }
 
+float distance2( const Point& a, const Point& b )
+{
+    return length2(a - b);
+}
+
 Point center( const Point& a, const Point& b )
 {
     return make_point((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f, (a.z + b.z) * 0.5f);
@@ -116,7 +121,12 @@ float dot( const Vector& u, const Vector& v )
 
 float length( const Vector& v )
 {
-    return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    return std::sqrt(length2(v));
+}
+
+float length2( const Vector& v )
+{
+    return v.x * v.x + v.y * v.y + v.z * v.z;
 }
 
 
