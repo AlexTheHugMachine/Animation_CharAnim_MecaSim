@@ -38,23 +38,32 @@ public:
     static Viewer& singleton() { assert(s_singleton); return *s_singleton; }
     static int singleton_draw() { return singleton().draw(); }
 protected:
+    static Viewer* s_singleton;
     GLuint program;
     Orbiter camera;
 
     Mesh axe;
     Mesh grid;
     Mesh cube;
+    GLuint cube_texture;
 
     bool b_draw_grid;
     bool b_draw_axe;
-
-    GLuint texture;
-
     void init_axe();
-    void init_cube();
     void init_grid();
+    void init_cube();
 
-    static Viewer* s_singleton;
+    /* Pour creer un nouvel objet vous devez :
+       - declarer ici le Mesh
+       - la texture si besoin
+       - une fonction init_votreObjet et l'appeller dans la fonction init du .cpp
+       - ajouter un appel a l'affichage dans la fonction draw
+    */
+    Mesh quad;
+    GLuint quad_texture;
+    void init_quad();
+
+
 };
 
 

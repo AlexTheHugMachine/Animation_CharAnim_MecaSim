@@ -9,7 +9,7 @@
 
 Viewer* Viewer::s_singleton = NULL;
 
-Viewer::Viewer() : program(0), texture(0), b_draw_grid(true)
+Viewer::Viewer() : program(0), b_draw_grid(true)
 {
     s_singleton=this;
 }
@@ -36,11 +36,13 @@ int Viewer::init()
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_TEXTURE_2D);
 
 
     init_axe();
-    init_cube();
     init_grid();
+    init_cube();
+    init_quad();
 
     return 0;
 }
@@ -63,31 +65,6 @@ void Viewer::init_axe()
 }
 
 
-void Viewer::init_cube()
-{
-    static float pt[8][3] = { {-1,-1,-1}, {1,-1,-1}, {1,-1,1}, {-1,-1,1}, {-1,1,-1}, {1,1,-1}, {1,1,1}, {-1,1,1} };
-    static int f[6][4] = { {0,1,2,3}, {5,4,7,6}, {1,5,6,2}, {0,3,7,4}, {3,2,6,7}, {0,4,5,1} };
-    static float n[6][3] = { {0,-1,0}, {0,1,0}, {1,0,0}, {-1,0,0}, {0,0,1}, {0,0,-1} };
-    static float uv[4][2] = { {0,0}, {1,0}, {1,1}, {0,1} };
-    int i,j;
-
-    cube = create_mesh(GL_TRIANGLES);
-    vertex_color(cube, make_color(1, 1, 1));
-
-    for (i=0;i<6;i++)
-    {
-        //glNormal3f( n[ i ][0], n[ i ][1], n[ i ][2] );
-        push_vertex(cube, pt[ f[i][0] ][0], pt[ f[i][0] ][1], pt[ f[i][0] ][2] );
-        push_vertex(cube, pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
-        push_vertex(cube, pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
-
-        push_vertex(cube, pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
-        push_vertex(cube, pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
-        push_vertex(cube, pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
-    }
-}
-
-
 void Viewer::init_grid()
 {
     grid = create_mesh(GL_LINES);
@@ -107,6 +84,74 @@ void Viewer::init_grid()
 }
 
 
+void Viewer::init_cube()
+{
+    static float pt[8][3] = { {-1,-1,-1}, {1,-1,-1}, {1,-1,1}, {-1,-1,1}, {-1,1,-1}, {1,1,-1}, {1,1,1}, {-1,1,1} };
+    static int f[6][4] = { {0,1,2,3}, {5,4,7,6}, {1,5,6,2}, {0,3,7,4}, {3,2,6,7}, {0,4,5,1} };
+    static float n[6][3] = { {0,-1,0}, {0,1,0}, {1,0,0}, {-1,0,0}, {0,0,1}, {0,0,-1} };
+    static float uv[4][2] = { {0,0}, {1,0}, {1,1}, {0,1} };
+    int i,j;
+
+    cube = create_mesh(GL_TRIANGLES);
+    vertex_color(cube, make_color(1, 0, 1));
+
+    cube_texture = read_texture(0, "data/debug2x2red.png");
+
+    for (i=0;i<6;i++)
+    {
+        vertex_normal(cube, vec3(n[i][0], n[i][1], n[i][2] ) );
+
+        vertex_texcoord(cube, 0,0 );
+        push_vertex(cube, pt[ f[i][0] ][0], pt[ f[i][0] ][1], pt[ f[i][0] ][2] );
+
+        vertex_texcoord(cube, 1,0);
+        push_vertex(cube, pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
+
+        vertex_texcoord(cube, 0,1);
+        push_vertex(cube, pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
+
+
+        vertex_texcoord(cube, 1,0);
+        push_vertex(cube, pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
+
+        vertex_texcoord(cube, 1,1);
+        push_vertex(cube, pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
+
+        vertex_texcoord(cube, 0,1);
+        push_vertex(cube, pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
+    }
+}
+
+
+
+void Viewer::init_quad()
+{
+    quad = create_mesh(GL_TRIANGLES);
+    vertex_color(quad, make_color(1, 1, 1));
+
+    quad_texture = read_texture(0, "data/papillon.jpg");
+
+    vertex_normal(quad, vec3( 0, 0, -1 ) );
+
+    vertex_texcoord(quad, 0,0 );
+    push_vertex(quad, -1, -1, 0 );
+
+    vertex_texcoord(quad, 1,0);
+    push_vertex(quad,  1, -1, 0 );
+
+    vertex_texcoord(quad, 0,1);
+    push_vertex(quad,  -1, 1, 0 );
+
+
+    vertex_texcoord(quad, 1,0);
+    push_vertex(quad,  1, -1, 0 );
+
+    vertex_texcoord(quad, 1,1);
+    push_vertex(quad,  1,  1, 0 );
+
+    vertex_texcoord(quad, 0,1);
+    push_vertex(quad, -1,  1, 0 );
+}
 
 
 
@@ -147,8 +192,11 @@ int Viewer::draw( )
     if (b_draw_grid) ::draw(grid, camera);
     if (b_draw_axe) ::draw(axe, camera);
 
-    Transform T= make_translation( -3, 5, 0 );
-    ::draw(cube, T, camera);
+    Transform Tc= make_translation( -3, 5, 0 );
+    ::draw(cube, Tc, camera, cube_texture);
+
+    Transform Tq= make_translation( 3, 5, 0 );
+    ::draw(quad, Tq, camera, quad_texture);
 
 
     return 1;
