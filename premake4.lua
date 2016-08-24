@@ -1,9 +1,9 @@
 solution "gKit2light"
 	configurations { "debug", "release" }
 	platforms { "x64", "x32" }
-	
+
 	includedirs { ".", "src/gKit" }
-	
+
 	configuration "debug"
 		targetdir "bin/debug"
 		defines { "DEBUG" }
@@ -26,7 +26,7 @@ solution "gKit2light"
 	configuration { "linux", "debug" }
 		buildoptions { "-g"}
 		linkoptions { "-g"}
-		
+
 	configuration { "windows" }
 		defines { "WIN32", "NVWIDGETS_EXPORTS", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
 		defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
@@ -40,17 +40,17 @@ solution "gKit2light"
 		includedirs { "extern/mingw/include" }
 		libdirs { "extern/mingw/lib" }
 		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
-		
+
 	configuration { "windows", "vs2013", "x64" }
 		includedirs { "extern/visual2013/include" }
 		libdirs { "extern/visual2013/lib" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
-		
+
 	configuration { "windows", "vs2015", "x64" }
 		includedirs { "extern/visual2015/include" }
 		libdirs { "extern/visual2015/lib" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
-		
+
 	configuration "macosx"
 		local frameworks= "-F /Library/Frameworks/"
 		defines { "GK_MACOS" }
@@ -61,7 +61,7 @@ solution "gKit2light"
  -- description des fichiers communs
 local gkit_files = { "src/gKit/*.cpp", "src/gKit/*.h" }
 
- -- description des projets		
+ -- description des projets
 
 project("l2_lifgfx")
     language "C++"
@@ -70,7 +70,14 @@ project("l2_lifgfx")
     files ( gkit_files )
     files { "src/l2_lifgfx/viewer.cpp", "src/l2_lifgfx/viewer.h" }
 
- 
+project("l2_lifgfx_corrige")
+    language "C++"
+    kind "ConsoleApp"
+    targetdir "bin"
+    files ( gkit_files )
+    files { "src/l2_lifgfx/viewer_corrige.cpp", "src/l2_lifgfx/viewer_corrige.h" }
+
+
 local projects = {
 	"shader_kit"
 }
@@ -92,7 +99,7 @@ local tutos = {
 	"tuto4",
 	"tuto5",
 	"tuto6",
-	
+
 	"tuto2GL",
 	"tuto3GL",
 	"tuto3GL_reflect",
@@ -112,4 +119,3 @@ for i, name in ipairs(tutos) do
 		files { "tutos/" .. name..'.cpp' }
 end
 
-	

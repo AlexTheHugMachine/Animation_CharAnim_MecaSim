@@ -1,12 +1,11 @@
 
 #include <cassert>
 #include <math.h>
-#include "Viewer.h"
-
 #include <stdio.h>
-#include "draw.h"        // pour dessiner du point de vue d'une camera
 
-//#include <windows.h>
+#include "draw.h"        // pour dessiner du point de vue d'une camera
+#include "viewer.h"
+
 
 Viewer* Viewer::s_singleton = NULL;
 
@@ -29,24 +28,19 @@ int Viewer::init()
     // Creer une camera par defaut, elle est placee en 0, 0, 5 et regarde les objets situes en 0, 0, 0
     camera= make_orbiter();
 
-    init_axe();
-    init_cube();
-    init_grid();
-    init_sphere();
-    init_cylinder();
-    init_terrain();
-
     // etat par defaut openGL
     glClearColor(0.5f, 0.5f, 0.9f, 1);
     glClearDepthf(1);
-    // glViewport(0, 0, window_width(), window_height()) // deja fait dans run( )
-
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
-
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
     glEnable(GL_CULL_FACE);
+
+
+    init_axe();
+    init_cube();
+    init_grid();
 
     return 0;
 }
@@ -113,119 +107,11 @@ void Viewer::init_grid()
 }
 
 
-void Viewer::init_sphere()
-{
-    const int divBeta = 26;
-    const int divAlpha = divBeta/2;
-    int i,j;
-    float beta, alpha, alpha2;
-
-    sphere = create_mesh(GL_TRIANGLE_STRIP);
-
-    for(i=0;i<divAlpha;++i)
-    {
-        alpha = -0.5f*M_PI + float(i)*M_PI/divAlpha;
-        alpha2 = -0.5f*M_PI + float(i+1)*M_PI/divAlpha;
-
-        for(j=0;j<divBeta;++j)
-        {
-            beta = float(j)*2.f*M_PI/(divBeta-1);
-
-            //glTexCoord2f( beta/(2.0f*M_PI), 0.5f+alpha/M_PI );
-            //glNormal3f( cos(alpha)*cos(beta),  sin(alpha), cos(alpha)*sin(beta) );
-            //glVertex3f( cos(alpha)*cos(beta),  sin(alpha), cos(alpha)*sin(beta) );
-            push_vertex( sphere,
-                        Point(cos(alpha)*cos(beta),  sin(alpha), cos(alpha)*sin(beta)),
-                        Vector(cos(alpha)*cos(beta),  sin(alpha), cos(alpha)*sin(beta))
-                         );
 
 
-            //glTexCoord2f( beta/(2.0f*M_PI), 0.5f+alpha2/M_PI );
-            //glNormal3f( cos(alpha2)*cos(beta),  sin(alpha2), cos(alpha2)*sin(beta) );
-            //glVertex3f( cos(alpha2)*cos(beta),  sin(alpha2), cos(alpha2)*sin(beta) );
-            push_vertex( sphere,
-                        Point(cos(alpha2)*cos(beta),  sin(alpha2), cos(alpha2)*sin(beta)),
-                        Vector(cos(alpha2)*cos(beta),  sin(alpha2), cos(alpha2)*sin(beta))
-                        );
-        }
-        restart_strip(sphere);
-    }
-}
 
 
-void Viewer::init_cylinder()
-{
-    int i;
-    const int div = 25;
-    float alpha;
-    float step = 2.0*M_PI / (div);
 
-    cylinder = create_mesh(GL_TRIANGLE_STRIP);
-
-    for (i=0;i<=div;++i)
-    {
-        alpha = i*step;
-        //glNormal3f( cos(alpha),  0, sin(alpha) );
-        //glTexCoord2f( float(i)/div, 0.f );
-        //glVertex3f( cos(alpha),  0, sin(alpha) );
-        //glTexCoord2f( float(i)/div, 1.f );
-        //glVertex3f( cos(alpha),  1, sin(alpha) );
-        push_vertex( cylinder,
-                            Point(cos(alpha),  -1, sin(alpha)),
-                            Vector(cos(alpha),  0, sin(alpha)) );
-
-        push_vertex( cylinder,
-                            Point(cos(alpha),  1, sin(alpha)),
-                            Vector(cos(alpha),  0, sin(alpha)) );
-    }
-}
-
-
-Vector terrainNormal(const Image& heightmap, const int i, const int j)
-{
-	int ip=i-1;
-	int in=i+1;
-	int jp=j-1;
-	int jn=j+1;
-
-	Vector a( ip,		heightmap.get_pixel(ip, j).r,  j );
-	Vector b( in,		heightmap.get_pixel(in, j).r,  j );
-	Vector c( i, 		heightmap.get_pixel(i, jp).r,  jp );
-	Vector d( i, 		heightmap.get_pixel(i, jn).r,  jn );
-
-	Vector e = normalize(b-a);
-	Vector f = normalize(d-c);
-	Vector g = cross(e,f);
-	return g;
-}
-
-void Viewer::init_terrain()
-{
-    terrain = create_mesh(GL_TRIANGLE_STRIP);
-    //system("cd");
-    Image im( "data/terrain/terrain.png");
-    //printf("%d\n", im.isInit());
-    //im.write_image("data/terrain/terrain_save.png");
-
-    int i,j;
-    for(i=1;i<im.getWidth()-1;++i)
-    {
-        for(j=1;j<im.getHeight()-1;++j)
-        {
-            push_vertex( terrain,
-                                Point(i+1, 25.f*im.get_pixel(i+1,j).r, j)
-                                , terrainNormal(im,i+1,j)
-                                );
-
-            push_vertex( terrain,
-                                Point(i, 25.f*im.get_pixel(i,j).r, j)
-                                , terrainNormal(im,i,j)
-                                );
-
-        }
-        restart_strip(terrain);
-    }
-}
 
 
 int Viewer::quit( )
@@ -234,29 +120,6 @@ int Viewer::quit( )
 }
 
 
-void Viewer::draw_plane(const Transform& T)
-{
-    //glMatrixMode(GL_MODELVIEW);
-
-    Transform P = T;
-    P *= make_translation(0,3,0);
-    P *= make_scale(0.1f,0.1f, 0.1f);
-
-
-    Transform F = P * make_scale(1,1,10);
-    ::draw( sphere, F, camera);
-
-    Transform W = P * make_translation(0,0,2) * make_scale(10,0.1,1);
-    ::draw( cube, W, camera);
-
-    Transform WR = P * make_translation(0,0,-8) * make_scale( 3, 0.1, 0.5);
-    ::draw( cube, WR, camera);
-
-    Transform WRV = P * make_translation(0,1.5,-8) * make_scale( 0.1, 1.5, 0.5);
-    ::draw( cube, WRV, camera);
-    //cube.draw()
-
-}
 
 int Viewer::draw( )
 {
@@ -287,16 +150,6 @@ int Viewer::draw( )
     Transform T= make_translation( -3, 5, 0 );
     ::draw(cube, T, camera);
 
-    T = make_translation( 0, 5, 0 );
-    ::draw( cylinder, T, camera);
-
-    T = make_translation( 3, 5, 0 );
-    ::draw(sphere, T, camera);
-
-    draw_plane( make_translation(0,5,0)  );
-
-    T = make_translation( -32, 0, -32 ) * make_scale(64.f/192, 0.3f, 64.f/192);
-    ::draw( terrain, T, camera);
 
     return 1;
 }

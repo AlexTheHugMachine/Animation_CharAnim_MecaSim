@@ -44,9 +44,6 @@ protected:
     Mesh axe;
     Mesh grid;
     Mesh cube;
-    Mesh sphere;
-    Mesh cylinder;
-    Mesh terrain;
 
     bool b_draw_grid;
     bool b_draw_axe;
@@ -56,11 +53,6 @@ protected:
     void init_axe();
     void init_cube();
     void init_grid();
-    void init_sphere();
-    void init_cylinder();
-    void init_terrain();
-
-    void draw_plane(const Transform& T);
 
     static Viewer* s_singleton;
 };
