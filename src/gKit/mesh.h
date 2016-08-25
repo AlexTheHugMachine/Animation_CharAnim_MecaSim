@@ -21,7 +21,7 @@
 struct Mesh
 {
     Mesh( ) : positions(), texcoords(), normals(), colors(), indices(), color( make_white() ), primitives(GL_POINTS), vao(0), program(0), update_buffers(false) {}
-    ~Mesh( );
+    Mesh( const GLenum _primitives ) : positions(), texcoords(), normals(), colors(), indices(), color( make_white() ), primitives(_primitives), vao(0), program(0), update_buffers(false) {}
     
     std::vector<vec3> positions;
     std::vector<vec2> texcoords;
@@ -37,6 +37,25 @@ struct Mesh
     GLuint program;
     
     bool update_buffers;
+    
+    /*! sentinelle pour la gestion d'erreur lors du chargement d'un fichier.
+    exemple :
+    \code
+    Mesh mesh= read_mesh("data/bigguy.obj");
+    if(mesh == Mesh::error())
+        return "erreur de chargement";
+    \endcode
+    */
+    static Mesh& error( )
+    {
+        static Mesh mesh;
+        return mesh;
+    }
+    
+    bool operator== ( const Mesh& m ) const
+    {
+        return (this == &m);
+    }
 };
 
 //! construit un objet / maillage vide compose de primitives de type primitives. a detruire avec release_mesh( ).

@@ -7,14 +7,14 @@
 
 Mesh read_mesh( const char *filename )
 {
-    Mesh data= create_mesh(GL_TRIANGLES);
-    
     FILE *in= fopen(filename, "rt");
     if(in == NULL)
     {
         printf("loading mesh '%s'... failed.\n", filename);
-        return data;
+        return Mesh::error();
     }
+    
+    Mesh data= create_mesh(GL_TRIANGLES);
     
     printf("loading mesh '%s'...\n", filename);
     
@@ -124,6 +124,8 @@ Mesh read_mesh( const char *filename )
 
 int write_mesh( const Mesh& mesh, const char *filename )
 {
+    if(mesh == Mesh::error())
+        return -1;
     if(mesh.primitives != GL_TRIANGLES)
         return -1;
     if(mesh.positions.size() == 0)
