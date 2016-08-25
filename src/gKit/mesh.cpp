@@ -10,23 +10,9 @@
 #include "mesh.h"
 
 
-Mesh::~Mesh( ) 
-{
-    if(vao)
-        release_vertex_format(vao);
-    if(program)
-        release_program(program);
-}
-
 Mesh create_mesh( const GLenum primitives )
 {
-    Mesh m;
-    m.color= make_white();
-    m.primitives= primitives;
-    m.vao= 0;
-    m.program= 0;
-    m.update_buffers= false;
-    return m;
+    return Mesh(primitives);
 }
 
 void release_mesh( Mesh& m )
@@ -270,26 +256,22 @@ GLuint make_mesh_vertex_format( Mesh& m, const bool use_texcoord, const bool use
 
     if(m.indices.size() > 0)
         make_index_buffer(vao, m.indices.size() * sizeof(unsigned int), &m.indices.front());
-    
-    bool use_mesh_color= (m.primitives == GL_POINTS || m.primitives == GL_LINES || m.primitives == GL_LINE_STRIP || m.primitives == GL_LINE_LOOP);
-    if(!use_mesh_color)
-    {
-    #if 1
-        if(m.texcoords.size() > 0 && m.texcoords.size() < m.positions.size() && use_texcoord)
-            printf("[error] invalid texcoords array...\n");
-        if(m.normals.size() > 0 && m.normals.size() < m.positions.size() && use_normal)
-            printf("[error] invalid normals array...\n");
-        if(m.colors.size() > 0 && m.colors.size() < m.positions.size() && use_color)
-            printf("[error] invalid colors array...\n");
-    #endif
-        
-        if(m.texcoords.size()== m.positions.size() && use_texcoord)
-            make_vertex_buffer(vao, 1,  2, GL_FLOAT, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());
-        if(m.normals.size() == m.positions.size() && use_normal)
-            make_vertex_buffer(vao, 2,  3, GL_FLOAT, m.normals.size() * sizeof(vec3), &m.normals.front());
-        if(m.colors.size() == m.positions.size() && use_color)
-            make_vertex_buffer(vao, 3,  3, GL_FLOAT, m.colors.size() * sizeof(vec3), &m.colors.front());
-    }
+
+#if 1
+    if(m.texcoords.size() > 0 && m.texcoords.size() < m.positions.size() && use_texcoord)
+        printf("[error] invalid texcoords array...\n");
+    if(m.normals.size() > 0 && m.normals.size() < m.positions.size() && use_normal)
+        printf("[error] invalid normals array...\n");
+    if(m.colors.size() > 0 && m.colors.size() < m.positions.size() && use_color)
+        printf("[error] invalid colors array...\n");
+#endif
+
+    if(m.texcoords.size() == m.positions.size() && use_texcoord)
+        make_vertex_buffer(vao, 1,  2, GL_FLOAT, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());
+    if(m.normals.size() == m.positions.size() && use_normal)
+        make_vertex_buffer(vao, 2,  3, GL_FLOAT, m.normals.size() * sizeof(vec3), &m.normals.front());
+    if(m.colors.size() == m.positions.size() && use_color)
+        make_vertex_buffer(vao, 3,  3, GL_FLOAT, m.colors.size() * sizeof(vec3), &m.colors.front());
     
     m.update_buffers= false;
     return vao;
@@ -297,27 +279,20 @@ GLuint make_mesh_vertex_format( Mesh& m, const bool use_texcoord, const bool use
 
 void update_mesh_buffers( Mesh& m, const bool use_texcoord, const bool use_normal, const bool use_color )
 {
+    assert(m.vao > 0);
     if(!m.update_buffers)
         return;
     
     glBindVertexArray(m.vao);
     update_vertex_buffer(m.vao, 0, m.positions.size() * sizeof(vec3), &m.positions.front());
     
-#if 0   // ne modifier que les attributs des sommets, pas la topologie / structure du maillage
-    if(m.indices.size() > 0)
-        update_index_buffer(m.vao, m.indices.size() * sizeof(unsigned int), &m.indices.front());
-#endif
-    
-    bool use_mesh_color= (m.primitives == GL_POINTS || m.primitives == GL_LINES || m.primitives == GL_LINE_STRIP || m.primitives == GL_LINE_LOOP);
-    if(!use_mesh_color)
-    {
-        if(m.texcoords.size()== m.positions.size() && use_texcoord)
-            update_vertex_buffer(m.vao, 1, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());
-        if(m.normals.size() == m.positions.size() && use_normal)
-            update_vertex_buffer(m.vao, 2, m.normals.size() * sizeof(vec3), &m.normals.front());
-        if(m.colors.size() == m.positions.size() && use_color)
-            update_vertex_buffer(m.vao, 3, m.colors.size() * sizeof(vec3), &m.colors.front());
-    }
+    // ne modifier que les attributs des sommets, pas la topologie / structure du maillage
+    if(m.texcoords.size()== m.positions.size() && use_texcoord)
+        update_vertex_buffer(m.vao, 1, m.texcoords.size() * sizeof(vec2), &m.texcoords.front());
+    if(m.normals.size() == m.positions.size() && use_normal)
+        update_vertex_buffer(m.vao, 2, m.normals.size() * sizeof(vec3), &m.normals.front());
+    if(m.colors.size() == m.positions.size() && use_color)
+        update_vertex_buffer(m.vao, 3, m.colors.size() * sizeof(vec3), &m.colors.front());
     
     m.update_buffers= false;
 }
@@ -327,22 +302,24 @@ GLuint make_mesh_program( Mesh& m, const bool use_texcoord, const bool use_norma
 {
     std::string definitions;
 
+    if(m.texcoords.size() > 0 && use_texcoord)
+        definitions.append("#define USE_TEXCOORD\n");
+    if(m.normals.size() > 0 && use_normal)
+        definitions.append("#define USE_NORMAL\n");
+    if(m.colors.size() > 0 && use_color)
+        definitions.append("#define USE_COLOR\n");
+    
     bool use_mesh_color= (m.primitives == GL_POINTS || m.primitives == GL_LINES || m.primitives == GL_LINE_STRIP || m.primitives == GL_LINE_LOOP);
     if(!use_mesh_color)
     {
-        if(m.texcoords.size() > 0 && use_texcoord)
-            definitions.append("#define USE_TEXCOORD\n");
-        if(m.normals.size() > 0 && use_normal)
-            definitions.append("#define USE_NORMAL\n");
-        if(m.colors.size() > 0 && use_color)
-            definitions.append("#define USE_COLOR\n");
-        
-        if(definitions.size() > 0)
-            printf("[mesh program definitions]\n%s", definitions.c_str());
+        //~ if(definitions.size() > 0) printf("[mesh program definitions]\n%s", definitions.c_str());
         return read_program("data/shaders/mesh.glsl", definitions.c_str());
     }
     else
-        return read_program("data/shaders/mesh_color.glsl");
+    {
+        //~ if(definitions.size() > 0) printf("[mesh color program definitions]\n%s", definitions.c_str());
+        return read_program("data/shaders/mesh_color.glsl", definitions.c_str());
+    }
 }
 
 
@@ -359,10 +336,12 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
     
     if(m.program == 0)
     {
+    #if 1
         if(m.texcoords.size() > 0 && texture == 0)
             printf("[mesh draw] texcoords, no texture... use_texcoord= %s\n", use_texcoord ? "true" : "false");
         if(m.texcoords.size() == 0 && texture > 0)
             printf("[mesh draw] no texcoords, texture... use_texcoord= %s\n", use_texcoord ? "true" : "false");
+    #endif
         
         m.program= make_mesh_program(m, use_texcoord, use_normal, use_color);
         program_print_errors(m.program);
