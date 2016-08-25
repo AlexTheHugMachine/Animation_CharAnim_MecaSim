@@ -88,6 +88,7 @@ struct vec2
     float x, y;
 };
 
+//! cree un vecteur generique de composantes x, y.
 vec2 make_vec2( const float x, const float y );
 
 //! vecteur generique, utilitaire.
@@ -98,12 +99,18 @@ struct vec3
     float x, y, z;
 };
 
+//! cree un vecteur generique de composantes x, y, z.
 vec3 make_vec3( const float x, const float y, const float z );
+//! cree un vecteur generique de composantes x, y, z
 vec3 make_vec3( const vec2& v, const float z );
 
+//! cree un point de composantes p.x, p.y, p.z.
 Point make_point( const vec3& p );
+//! cree un vecteur generique de composantes p.x, p.y, p.z.
 vec3 make_vec3( const Point& p );
+//! cree un vecteur de composantes v.x, v.y, v.z.
 Vector make_vector( const vec3& v );
+//! cree un vecteur generique de composantes v.x, v.y, v.z.
 vec3 make_vec3( const Vector& v );
 
 //! vecteur generique 4d, ou 3d homogene, utilitaire.
@@ -113,8 +120,11 @@ struct vec4
     float x, y, z, w;
 };
 
+//! cree un vecteur generique de composantes x, y, z, w.
 vec4 make_vec4( const float x, const float y, const float z, const float w );
+//! cree un vecteur generique de composantes v.x, v.y, z, w.
 vec4 make_vec4( const vec2& v, const float z, const float w );
+//! cree un vecteur generique de composantes v.x, v.y, v.z, w.
 vec4 make_vec4( const vec3& v, const float w );
 
 //! construit un point 3d homogene (x, y, z, 1).

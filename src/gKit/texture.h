@@ -40,7 +40,7 @@ avconv -codecs | grep x264
 s'il n'est pas installe :
 sudo apt-get install libavcodec-extra-53 
 ou la version actuelle :
-sudo apt-get install libavcodec-extra-
+sudo apt-get install libavcodec-extra-*
 
 exemple d'utilisation : cf shader_kit.cpp
 \code
