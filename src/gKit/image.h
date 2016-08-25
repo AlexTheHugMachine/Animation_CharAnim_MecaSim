@@ -3,6 +3,7 @@
 #define _IMAGE_H
 
 #include <vector>
+#include <cassert>
 
 #include "color.h"
 
@@ -16,46 +17,66 @@
 //! representation d'une image.
 class Image
 {
-public:
-//~ protected:
-    std::vector<unsigned char> data;
+protected:
+    std::vector<Color> data;
 
 public:
-    Image( ) : data(), width(0), height(0), channels(0) {}
-    Image( const int width, const int height, const int channels, const Color& color= make_black() );
-    ~Image( ) {}
-
-    //! renvoie la couleur d'un pixel de l'image.
-    Color pixel( const int x, const int y ) const;
-
-    //! modifie la couleur d'un pixel de l'image.
-    void pixel( const int x, const int y, const Color& color );
-
-    //! renvoie le nombre de niveaux de mipmaps de l'image, cf textures openGL.
-    int miplevels( ) const;
+    Image( ) : data(), width(0), height(0) {}
+    Image( const int w, const int h, const Color& color= make_black() ) : data(w*h, color), width(w), height(h) {}
     
-    int width;          //!< largeur.
-    int height;         //!< hauteur.
-    int channels;       //!< nombre de canaux couleur.
+    /*! renvoie une reference sur la couleur d'un pixel de l'image.
+    permet de modifier et/ou de connaitre la couleur d'un pixel :
+    \code
+    Image image(512, 512);
     
-    /*! sentinelle pour la gestion d'erreur.
+    image(10, 10)= make_red();      // le pixel (10, 10) devient rouge
+    image(0, 0)= image(10, 10);     // le pixel (0, 0) recupere la couleur du pixel (10, 10)
+    \endcode
+    */
+    Color& operator() ( const int x, const int y )
+    {
+        std::size_t offset= y * width + x;
+        assert(offset < data.size());
+        return data[offset];
+    }
+    
+    //! renvoie la couleur d'un pixel de l'image (image non modifiable).
+    Color operator() ( const int x, const int y ) const
+    {
+        std::size_t offset= y * width + x;
+        assert(offset < data.size());
+        return data[offset];
+    }
+    
+    const void * buffer( ) const
+    {
+        assert(!data.empty());
+        return &data.front();
+    }
+    
+    int width;
+    int height;
+    
+    
+    /*! sentinelle pour la gestion d'erreur lors du chargement d'un fichier.
     exemple :
     \code
-        Image image= read_image("debug.png");
-        if(image == Image::error())
-            return "erreur de chargement";
+    Image image= read_image("debug.png");
+    if(image == Image::error())
+        return "erreur de chargement";
     \endcode
-     */
+    */
     static Image& error( )
     {
         static Image image;
         return image;
     }
     
-    //! comparaison avec la sentinelle.
+    //! comparaison avec la sentinelle. \code if(image == Image::error()) { ... } \endcode
     bool operator== ( const Image& im ) const
     {
-        return &im == &error();
+        // renvoie vrai si l'image est la sentinelle
+        return (this == &im);
     }
 };
 
@@ -68,18 +89,6 @@ public:
 Image create_image( const int width, const int height, const int channels, const Color& color );
 //! detruit l'image.
 void release_image( Image& im );
-
-//! renvoie le nombre de mipmap d'une image.
-int miplevels( const Image& im );
-//! renvoie le nombre de mipmap d'une image width x height.
-int miplevels( const int width, const int height );
-
-//! charge une image a partir d'un fichier. renvoie une image rouge en cas d'echec. a detruire avec release_image( ).
-//! \param filemane nom de l'image a charger
-Image read_image( const char *filename );
-
-//! enregistre une image dans un fichier png.
-int write_image( const Image& image, const char *filename );
 
 //! renvoie la couleur d'un pixel de l'image.
 Color image_pixel( const Image& im, const int x, const int y );
