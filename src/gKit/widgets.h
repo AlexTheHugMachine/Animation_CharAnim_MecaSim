@@ -65,7 +65,6 @@ int draw( )
 struct Widgets
 {
     Widgets( ) : console(), px(0), py(0), focus(0), fx(0), fy(0), mb(0), mx(0), my(0), wx(0), wy(0), key(0), mod(0) {}
-    ~Widgets( ) {}
     
     Text console;       //!< affichage des elements de l'interface.
     int px, py;         //!< placement du prochain widget
