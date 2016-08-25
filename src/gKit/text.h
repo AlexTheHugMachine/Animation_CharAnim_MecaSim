@@ -54,7 +54,6 @@ int draw( )
 struct Text
 {
     Text( ) : color( make_white() ), font(0), program(0), vao(0), ubo(0) {}
-    ~Text( );
     
     int buffer[24][128];
     Color color;        //!< couleur du texte.

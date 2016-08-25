@@ -6,16 +6,9 @@
 #include "program.h"
 #include "uniforms.h"
 #include "image.h"
+#include "image_io.h"
 #include "texture.h"
 #include "text.h"
-
-Text::~Text( )
-{
-    release_program(program);
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &ubo);
-    glDeleteTextures(1, &font);
-}
 
 
 Text create_text( )
@@ -29,21 +22,21 @@ Text create_text( )
     for(unsigned int y= 0; y < 16; y++)
     for(unsigned int x= 0; x < 8; x++)
     {
-        const unsigned int starty= 16 *7;
-        const unsigned int startx= 8 *2;
-        Color color= font.pixel(startx + x, starty + y);
+        unsigned int starty= 16 *7;
+        unsigned int startx= 8 *2;
+        Color color= font(startx + x, starty + y);
         color.a= 0.6f;
-        font.pixel(startx + x, starty + y, color);
+        font(startx + x, starty + y)= color;
     }
 
     // cree le curseur
     for(unsigned int y= 0; y < 16; y++)
     for(unsigned int x= 0; x < 8; x++)
     {
-        const unsigned int starty= 16 *7;
-        const unsigned int startx= 8 *1;
+        unsigned int starty= 16 *7;
+        unsigned int startx= 8 *1;
         Color color= (x > 1) ? make_alpha_color(1, 1, 1, 0.6f) : make_alpha_color(1, 1, 1, 1);
-        font.pixel(startx + x, starty + y, color);
+        font(startx + x, starty + y)= color;
     }
 
     text.font= make_texture(0, font);
