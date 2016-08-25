@@ -12,7 +12,7 @@
 #include "wavefront.h"
 
 #include "orbiter.h"
-#include "image.h"
+#include "image_io.h"
 
 
 GLuint program;
@@ -109,26 +109,23 @@ int init( )
 #endif
 
     // etape 4 : texture
-    Image image= read_image("data/debug2x2red.png");
-    
-    GLenum data_format;
+    ImageData image= read_image_data("data/debug2x2red.png");
+
+    GLenum data_format= GL_RGBA;
     GLenum data_type= GL_UNSIGNED_BYTE;
     if(image.channels == 3)
         data_format= GL_RGB;
-    else // image.channels == 4, par defaut
-        data_format= GL_RGBA;
-    
+
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    
+
     glTexImage2D(GL_TEXTURE_2D, 0,
         GL_RGBA, image.width, image.height, 0,
-        data_format, data_type, &image.data.front());
-    
+        data_format, data_type, &image.data.front() );
+
     glGenerateMipmap(GL_TEXTURE_2D);
-    
+
     // nettoyage
-    release_image(image);
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
     
