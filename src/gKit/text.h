@@ -50,7 +50,13 @@ int draw( )
 \endcode    
  */
 
-//! representation d'une console texte, dimension fixe, 24 lignes de 128 colonnes.
+/*! representation d'une console texte, dimension fixe, 24 lignes de 128 colonnes.
+
+remarque : *oui*, il y a un constructeur et un destructeur par defaut, mais *non*, ils ne creent pas les objets openGL... ils sont crees / detruits par create_text() / release_text()
+
+pourquoi ? le cycle de vie des objets n'est *pas* le meme. pour creer ou detruire un objet openGL, il *faut* qu'un contexte openGL existe... \n
+d'ou la creation et desctruction des objets openGL dans les fonctions init() et quit() de l'application, a un moment ou on controle le contexte openGL.
+*/
 struct Text
 {
     Text( ) : color( make_white() ), font(0), program(0), vao(0), ubo(0) {}
@@ -67,6 +73,8 @@ struct Text
 Text create_text( );
 //! detruit une console.
 void release_text( Text& text );
+
+
 
 //! efface le contenu de la console.
 void clear( Text& text );

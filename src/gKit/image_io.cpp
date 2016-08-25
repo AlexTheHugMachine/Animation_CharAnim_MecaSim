@@ -142,26 +142,6 @@ int write_image( const Image& image, const char *filename )
 }
 
 
-void ImageData::create( const int w, const int h, const int c, const int s )
-{
-    width= w;
-    height= h;
-    channels= c;
-    size= s;
-    data.clear();
-    data.resize(w*h*c*s);
-}
-
-void ImageData::release( )
-{
-    width= 0;
-    height= 0;
-    channels= 0;
-    size= 0;
-    data.clear();
-}
-
-
 ImageData read_image_data( const char *filename )
 {
     // importer le fichier en utilisant SDL_image

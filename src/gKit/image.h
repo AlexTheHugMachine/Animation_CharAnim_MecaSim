@@ -12,7 +12,7 @@
 ///@{
 
 //! \file
-//! manipulation d'images
+//! manipulation simplifiee d'images
 
 //! representation d'une image.
 class Image
@@ -75,25 +75,10 @@ public:
     //! comparaison avec la sentinelle. \code if(image == Image::error()) { ... } \endcode
     bool operator== ( const Image& im ) const
     {
-        // renvoie vrai si l'image est la sentinelle
+        // renvoie vrai si im ou l'objet est la sentinelle
         return (this == &im);
     }
 };
-
-//! cree une image de couleur uniforme. a detruire avec release_image( ).\n
-//! les pixels sont representes par 3 ou 4 valeurs / canaux.
-//! \param width largeur
-//! \param height  hauteur
-//! \param channels 3 ou 4 nombre de canaux couleur, 3 pour des pixels opaques, 4 pour des pixels semi transparents
-//! \param color couleur initiale des pixels.
-Image create_image( const int width, const int height, const int channels, const Color& color );
-//! detruit l'image.
-void release_image( Image& im );
-
-//! renvoie la couleur d'un pixel de l'image.
-Color image_pixel( const Image& im, const int x, const int y );
-//! modife la couleur d'un pixel de l'image.
-void image_set_pixel( Image& im, const int x, const int y, const Color& color );
 
 ///@}
 #endif

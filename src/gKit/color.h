@@ -12,7 +12,7 @@
 //! representation d'une couleur (rgba) transparente ou opaque.
 struct Color
 {
-    Color( const float _r= 0.f, const float _g= 0.f, const float _b= 0.f, const float _a=1.f ) : r(_r), g(_g), b(_b), a(_a) {}
+    Color( const float _r= 0.f, const float _g= 0.f, const float _b= 0.f, const float _a= 1.f ) : r(_r), g(_g), b(_b), a(_a) {}
     
     float r, g, b, a;
 };

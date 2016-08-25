@@ -4,6 +4,7 @@
 
 #include "glcore.h"
 #include "image.h"
+#include "image_io.h"
 
 
 //! \addtogroup openGL
@@ -15,6 +16,9 @@
 
 //! cree une texture a partir d'une image im. a detruire avec glDeleteTextures( ).
 GLuint make_texture( const int unit, const Image& im );
+
+//! cree une texture a partir des donnees d'une image, cf image_io.h. a detruire avec glDeleteTextures( ).
+GLuint make_texture( const int unit, const ImageData& im );
 
 //! cree une texture a partir d'un fichier filename. a detruire avec glDeleteTextures( ).
 GLuint read_texture( const int unit, const char *filename );
