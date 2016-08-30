@@ -114,43 +114,6 @@ struct BasicPipeline : public Pipeline
 };
 
 
-struct Edge
-{
-    float a, b, c;
-    
-    Edge( const Point& pa, const Point& pb )
-    {
-        a= -(pb.y - pa.y);
-        b= pb.x - pa.x;
-        c= -pa.x * a - pa.y * b;
-    }
-    
-    // renvoie l'aire du triangle pa, pb, (x, y)
-    float eval( const float x, const float y ) const { return (a*x + b*y + c) / 2; }
-};
-
-
-bool visible( const Point a, const Point b, const Point c )
-{
-	Point pmin;
-	pmin.x= std::min(a.x, std::min(b.x, c.x));
-	pmin.y= std::min(a.y, std::min(b.y, c.y));
-	pmin.z= std::min(a.z, std::min(b.z, c.z));
-	
-	Point pmax;
-	pmax.x= std::max(a.x, std::max(b.x, c.x));
-	pmax.y= std::max(a.y, std::max(b.y, c.y));
-	pmax.z= std::max(a.z, std::max(b.z, c.z));
-	
-	if(pmax.x < -1 || pmin.x > 1)	// trop a gauche ou trop a droite
-		return false;
-	if(pmax.y < -1 || pmin.y > 1)	// trop haut ou trop bas
-		return false;
-	if(pmax.z < -1 || pmin.z > 1)	// trop loin ou derriere
-		return false;
-	return true;
-}
-
 //! cf http://geomalgorithms.com/a01-_area.html, modern triangles
 float area( const Point p, const Point a, const Point b )
 {
@@ -176,11 +139,13 @@ int draw( ) { return 0; }
 int main( void )
 {
     //~ Image color= create_image(1024, 640, 3, make_color(0.2, 0.2, 0.2));
-    Image color= create_image(512, 320, 3, make_color(0.2, 0.2, 0.2));
+    Image color(512, 320, Color(0.2, 0.2, 0.2));
     ZBuffer depth= ZBuffer(color.width, color.height);
     
     Mesh mesh= read_mesh("data/bigguy.obj");
     //~ Mesh mesh= read_mesh("data/cube.obj");
+    if(mesh == Mesh::error())
+        return 1;
     printf("  %u positions\n", (unsigned int) mesh.positions.size());
     printf("  %u indices\n", (unsigned int) mesh.indices.size());
     
@@ -192,8 +157,8 @@ int main( void )
 
     Transform model= make_identity();
     Transform view= orbiter_view_transform(camera);
-    Transform projection= orbiter_projection_transform(camera, color.width, color.height, 45);
-    Transform viewport= make_viewport(color.width, color.height);
+    Transform projection= orbiter_projection_transform(camera, color.width(), color.height(), 45);
+    Transform viewport= make_viewport(color.width(), color.height());
     
     BasicPipeline pipeline(mesh, model, view, projection);
     
@@ -252,8 +217,8 @@ int main( void )
         // solution naive, parcours tous les pixels de l'image
         // question : comment eviter de tester tous les pixels ? 
         // indice : il est sans doute possible de determiner que le triangle ne touche pas un bloc de pixels en ne testant que les coins...
-        for(int y= 0; y < color.height; y++)
-        for(int x= 0; x < color.width; x++)
+        for(int y= 0; y < color.height(); y++)
+        for(int x= 0; x < color.width(); x++)
         {
             // fragment 
             Fragment frag;
@@ -273,15 +238,21 @@ int main( void )
             frag.u= dot(make_vector(p), face_eba);      // volume p / face eba == dot(ep, cross(eb, ea))
             frag.v= dot(make_vector(p), face_ecb);      // volume p / face ecb == dot(ep, cross(ec, eb))
             frag.w= dot(make_vector(p), face_eac);      // volume p / face eac == dot(ep, cross(ea, ec))
-            
+            // ww= volume(p, a, b, c);
             if(frag.u > 0 && frag.v > 0 && frag.w > 0)
             {
-                float k= frag.u + frag.v + frag.w;
-                float t= n / k;
-                //~ // normalise les coordonnees barycentriques du fragment
-                frag.u= frag.u * t;
-                frag.v= frag.v * t;
-                frag.w= frag.w * t;
+                // t tel que ww == 0, p est sur le plan du triangle abc
+                float t= dot(make_vector(a), cross(make_vector(a, b), make_vector(a, c))) / dot(make_vector(p), cross(make_vector(a, b), make_vector(a, c)));
+                frag.u= dot(t * make_vector(p), face_eba);
+                frag.v= dot(t * make_vector(p), face_ecb);
+                frag.w= dot(t * make_vector(p), face_eac);
+                
+                // normalise les coordonnees barycentriques du fragment
+                float nabc= area(a, b, c);
+                frag.u= frag.u / nabc;
+                frag.v= frag.v / nabc;
+                frag.w= frag.w / nabc;
+                
                 // interpole z
                 frag.x= x;
                 frag.y= y;
@@ -293,7 +264,7 @@ int main( void )
                 // ztest
                 if(frag.z < depth(x, y))
                 {
-                    image_set_pixel(color, x, y, frag_color);
+                    color(x, y)= Color(frag_color, 1);
                     depth(x, y)= frag.z;
                 }
                 

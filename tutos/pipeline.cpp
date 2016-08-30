@@ -7,6 +7,7 @@
 
 #include "mesh.h"
 #include "image.h"
+#include "image_io.h"
 #include "orbiter.h"
 
 #include "wavefront.h"
@@ -18,11 +19,11 @@ struct ZBuffer
     int width;
     int height;
     
-    ZBuffer( const int w, const int h )
+    ZBuffer( const int w, const int h, const float z= 1 )
     {
         width= w;
         height= h;
-        data.assign(w * h, 1);
+        data.assign(w * h, z);
     }
     
     void clear( const float value= 1 )
@@ -32,7 +33,7 @@ struct ZBuffer
     
     float& operator() ( const int x, const int y )
     {
-        const unsigned long int offset= y * width + x;
+        std::size_t offset= y * width + x;
         return data[offset];
     }
 };
@@ -131,10 +132,12 @@ int draw( ) { return 0; }
 
 int main( void )
 {
-    Image color= create_image(1024, 640, 3, make_color(0, 0, 0));
-    ZBuffer depth= ZBuffer(color.width, color.height);
+    Image color(1024, 640);
+    ZBuffer depth(color.width(), color.height());
     
     Mesh mesh= read_mesh("data/bigguy.obj");
+    if(mesh == Mesh::error())
+        return 1;
     printf("  %u positions\n", (unsigned int) mesh.positions.size());
     printf("  %u indices\n", (unsigned int) mesh.indices.size());
     
@@ -146,9 +149,9 @@ int main( void )
     BasicPipeline pipeline( mesh, 
         make_identity(), 
         orbiter_view_transform(camera), 
-        orbiter_projection_transform(camera, color.width, color.height, 45) );
+        orbiter_projection_transform(camera, color.width(), color.height(), 45) );
     
-    Transform viewport= make_viewport(color.width, color.height);
+    Transform viewport= make_viewport(color.width(), color.height());
     
     // draw(pipeline, mesh.positions.size());
     for(unsigned int i= 0; i +2 < (unsigned int) mesh.positions.size(); i= i +3)
@@ -178,8 +181,8 @@ int main( void )
         // solution naive, parcours tous les pixels de l'image
         // question : comment eviter de tester tous les pixels ? 
         // indice : il est sans doute possible de determiner que le triangle ne touche pas un bloc de pixels en ne testant que les coins...
-        for(int y= 0; y < color.height; y++)
-        for(int x= 0; x < color.width; x++)
+        for(int y= 0; y < color.height(); y++)
+        for(int x= 0; x < color.width(); x++)
         {
             // fragment 
             Fragment frag;
@@ -200,12 +203,13 @@ int main( void )
                 frag.z= frag.u * c.z + frag.v * a.z + frag.w * b.z;
                 
                 // evalue la couleur du fragment du triangle
-                Color frag_color= pipeline.fragment_shader(i/3, frag);
+                //~ Color frag_color= pipeline.fragment_shader(i/3, frag);
                 
                 // ztest
                 if(frag.z < depth(x, y))
                 {
-                    image_set_pixel(color, x, y, frag_color);
+                    Color frag_color= pipeline.fragment_shader(i/3, frag);
+                    color(x, y)= Color(frag_color, 1);
                     depth(x, y)= frag.z;
                 }
                 
