@@ -4,23 +4,26 @@
 
 Color make_color( const float r, const float g, const float b )
 {
-    Color color;
-    color.r= r; color.g= g; color.b= b; color.a= 1;
-    return color;
+    //~ Color color;
+    //~ color.r= r; color.g= g; color.b= b; color.a= 1;
+    //~ return color;
+    return Color(r, b, g, 1.f);
 }
 
 Color make_alpha_color( const float r, const float g, const float b, const float a )
 {
-    Color color;
-    color.r= r; color.g= g; color.b= b; color.a= a;
-    return color;
+    //~ Color color;
+    //~ color.r= r; color.g= g; color.b= b; color.a= a;
+    //~ return color;
+    return Color(r, g, b, a);
 }
 
 Color make_opaque_color( const Color& color )
 {
-    Color opaque;
-    opaque.r= color.r; opaque.g= color.g; opaque.b= color.b; opaque.a= 1;
-    return opaque;
+    //~ Color opaque;
+    //~ opaque.r= color.r; opaque.g= color.g; opaque.b= color.b; opaque.a= 1;
+    //~ return opaque;
+    return Color(color, 1.f);
 }
 
 Color make_black( )
@@ -51,12 +54,14 @@ Color make_blue( )
 
 Color operator+ ( const Color& a, const Color& b )
 {
-    return make_alpha_color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
+    //~ return make_alpha_color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
+    return Color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
 }
 
 Color operator- ( const Color& c )
 {
-    return make_alpha_color(-c.r, -c.g, -c.b, -c.a);
+    //~ return make_alpha_color(-c.r, -c.g, -c.b, -c.a);
+    return Color(-c.r, -c.g, -c.b, -c.a);
 }
 
 Color operator- ( const Color& a, const Color& b )
@@ -66,12 +71,14 @@ Color operator- ( const Color& a, const Color& b )
 
 Color operator* ( const Color& a, const Color& b )
 {
-    return make_alpha_color(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a);
+    //~ return make_alpha_color(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a);
+    return Color(a.r * b.r, a.g * b.g, a.b * b.b, a.a * b.a);
 }
 
 Color operator* ( const float k, const Color& c )
 {
-    return make_alpha_color(c.r * k, c.g * k, c.b * k, c.a * k);
+    //~ return make_alpha_color(c.r * k, c.g * k, c.b * k, c.a * k);
+    return Color(c.r * k, c.g * k, c.b * k, c.a * k);
 }
 
 Color operator* ( const Color& c, const float k )
@@ -81,12 +88,14 @@ Color operator* ( const Color& c, const float k )
 
 Color operator/ ( const Color& a, const Color& b )
 {
-    return make_alpha_color(a.r / b.r, a.g / b.g, a.b / b.b, a.a / b.a);
+    //~ return make_alpha_color(a.r / b.r, a.g / b.g, a.b / b.b, a.a / b.a);
+    return Color(a.r / b.r, a.g / b.g, a.b / b.b, a.a / b.a);
 }
 
 Color operator/ ( const float k, const Color& c )
 {
-    return make_alpha_color(k / c.r, k / c.g, k / c.b, k / c.a);
+    //~ return make_alpha_color(k / c.r, k / c.g, k / c.b, k / c.a);
+    return Color(k / c.r, k / c.g, k / c.b, k / c.a);
 }
 
 Color operator/ ( const Color& c, const float k )
