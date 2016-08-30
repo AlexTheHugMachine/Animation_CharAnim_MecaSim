@@ -28,27 +28,32 @@ Color make_opaque_color( const Color& color )
 
 Color make_black( )
 {
-    return make_color(0, 0, 0);
+    //~ return make_color(0, 0, 0);
+    return Color(0, 0, 0);
 }
 
 Color make_white( )
 {
-    return make_color(1, 1, 1);
+    //~ return make_color(1, 1, 1);
+    return Color(1, 1, 1);
 }
 
 Color make_red( )
 {
-    return make_color(1, 0, 0);
+    //~ return make_color(1, 0, 0);
+    return Color(1, 0, 0);
 }
 
 Color make_green( )
 {
-    return make_color(0, 1, 0);
+    //~ return make_color(0, 1, 0);
+    return Color(0, 1, 0);
 }
 
 Color make_blue( )
 {
-    return make_color(0, 0, 1);
+    //~ return make_color(0, 0, 1);
+    return Color(0, 0, 1);
 }
 
 
