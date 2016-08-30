@@ -40,7 +40,7 @@ GLuint make_texture( const int unit, const Image& im )
 
     // transfere les donnees dans la texture
     glTexImage2D(GL_TEXTURE_2D, 0,
-        GL_RGBA, im.width, im.height, 0,
+        GL_RGBA, im.width(), im.height(), 0,
         GL_RGBA, GL_FLOAT, im.buffer());
     
     // prefiltre la texture

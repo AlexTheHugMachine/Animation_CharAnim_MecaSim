@@ -18,11 +18,13 @@
 class Image
 {
 protected:
-    std::vector<Color> data;
+    std::vector<Color> m_data;
+    int m_width;
+    int m_height;
 
 public:
-    Image( ) : data(), width(0), height(0) {}
-    Image( const int w, const int h, const Color& color= make_black() ) : data(w*h, color), width(w), height(h) {}
+    Image( ) : m_data(), m_width(0), m_height(0) {}
+    Image( const int w, const int h, const Color& color= make_black() ) : m_data(w*h, color), m_width(w), m_height(h) {}
     
     /*! renvoie une reference sur la couleur d'un pixel de l'image.
     permet de modifier et/ou de connaitre la couleur d'un pixel :
@@ -35,28 +37,32 @@ public:
     */
     Color& operator() ( const int x, const int y )
     {
-        std::size_t offset= y * width + x;
-        assert(offset < data.size());
-        return data[offset];
+        std::size_t offset= y * m_width + x;
+        assert(offset < m_data.size());
+        return m_data[offset];
     }
     
     //! renvoie la couleur d'un pixel de l'image (image non modifiable).
     Color operator() ( const int x, const int y ) const
     {
-        std::size_t offset= y * width + x;
-        assert(offset < data.size());
-        return data[offset];
+        std::size_t offset= y * m_width + x;
+        assert(offset < m_data.size());
+        return m_data[offset];
     }
     
+    //! renvoie un pointeur sur le stockage des couleurs des pixels.
     const void * buffer( ) const
     {
-        assert(!data.empty());
-        return &data.front();
+        assert(!m_data.empty());
+        return &m_data.front();
     }
     
-    int width;
-    int height;
-    
+    //! renvoie la largeur de l'image.
+    int width( ) const { return m_width; }
+    //! renvoie la hauteur de l'image.
+    int height( ) const { return m_height; }
+    //! renvoie le nombre de pixels de l'image.
+    std::size_t size( ) const { return m_width * m_height; }
     
     /*! sentinelle pour la gestion d'erreur lors du chargement d'un fichier.
     exemple :

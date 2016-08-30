@@ -95,13 +95,13 @@ int write_image( const Image& image, const char *filename )
     }
 
     // flip de l'image : Y inverse entre GL et BMP
-    std::vector<Uint8> flip(image.width * image.height * 4);
+    std::vector<Uint8> flip(image.width() * image.height() * 4);
     
     int p= 0;
-    for(int y= 0; y < image.height; y++)
-    for(int x= 0; x < image.width; x++)
+    for(int y= 0; y < image.height(); y++)
+    for(int x= 0; x < image.width(); x++)
     {
-        Color color= image(x, image.height - y -1);
+        Color color= image(x, image.height() - y -1);
         Uint8 r= (Uint8) std::min(std::floor(color.r * 255.f), 255.f);
         Uint8 g= (Uint8) std::min(std::floor(color.g * 255.f), 255.f);
         Uint8 b= (Uint8) std::min(std::floor(color.b * 255.f), 255.f);
@@ -114,8 +114,8 @@ int write_image( const Image& image, const char *filename )
         p= p + 4;
     }
     
-    SDL_Surface *surface= SDL_CreateRGBSurfaceFrom((void *) &flip.front(), image.width, image.height,
-        32, image.width * 4,
+    SDL_Surface *surface= SDL_CreateRGBSurfaceFrom((void *) &flip.front(), image.width(), image.height(),
+        32, image.width() * 4,
 #if 0
         0xFF000000,
         0x00FF0000,
