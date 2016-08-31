@@ -43,6 +43,8 @@ bool program_failed;
 
 Filename mesh_filename;
 Mesh mesh;
+Point mesh_pmin;
+Point mesh_pmax;
 unsigned int vertex_count;
 GLuint vao;
 bool wireframe= false;
@@ -93,7 +95,7 @@ const char *option_find( std::vector<const char *>& options, const char *ext )
 int init( std::vector<const char *>& options )
 {
     widgets= create_widgets();
-    camera= make_orbiter();
+    camera= Orbiter();
     
     program= 0;
     const char *option;
@@ -118,9 +120,8 @@ int init( std::vector<const char *>& options )
             vao= make_mesh_vertex_format(mesh);
             vertex_count= (unsigned int) mesh.positions.size();
             
-            Point pmin, pmax;
-            mesh_bounds(mesh, pmin, pmax);
-            orbiter_lookat(camera, center(pmin, pmax), distance(pmin, pmax));
+            mesh_bounds(mesh, mesh_pmin, mesh_pmax);
+            camera.lookat(mesh_pmin, mesh_pmax);
         }
     }
     
@@ -200,16 +201,16 @@ int draw( void )
     
     // deplace la camera
     if(mb & SDL_BUTTON(1))
-        orbiter_rotation(camera, mx, my);      // tourne autour de l'objet
+        camera.rotation(mx, my);      // tourne autour de l'objet
     else if(mb & SDL_BUTTON(2))
-        orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height()); // deplace le point de rotation
+        camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height()); // deplace le point de rotation
     else if(mb & SDL_BUTTON(3))
-        orbiter_move(camera, mx);           // approche / eloigne l'objet
+        camera.move(mx);           // approche / eloigne l'objet
     
     // recupere les transformations
     Transform model= make_identity();
-    Transform view= orbiter_view_transform(camera);
-    Transform projection= orbiter_projection_transform(camera, window_width(), window_height(), 45);
+    Transform view= camera.view_transform();
+    Transform projection= camera.projection_transform(window_width(), window_height(), 45);
     Transform viewport= make_viewport(window_width(), window_height());
     
     Transform mvp= projection * view * model;
@@ -318,12 +319,13 @@ int draw( void )
     if(key_state('c'))
     {
         clear_key_state('c');
-        write_orbiter(camera, "orbiter.txt");
+        camera.write_orbiter("orbiter.txt");
     }
     if(key_state('v'))
     {
         clear_key_state('v');
-        camera= read_orbiter("orbiter.txt");
+        if(camera.read_orbiter("orbiter.txt") < 0)
+            camera= Orbiter(mesh_pmin, mesh_pmax);
     }
     
     return 1;
