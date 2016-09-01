@@ -126,10 +126,10 @@ int write_mesh( const Mesh& mesh, const char *filename )
 {
     if(mesh == Mesh::error())
         return -1;
-#if 0
-    if(mesh.primitives != GL_TRIANGLES)
+
+    if(mesh.primitives() != GL_TRIANGLES)
         return -1;
-    if(mesh.positions.size() == 0)
+    if(mesh.positions().size() == 0)
         return -1;
     if(filename == NULL)
         return -1;
@@ -140,29 +140,32 @@ int write_mesh( const Mesh& mesh, const char *filename )
     
     printf("writing mesh '%s'...\n", filename);
     
-    for(unsigned int i= 0; i < (unsigned int) mesh.positions.size(); i++)
-        fprintf(out, "v %f %f %f\n", mesh.positions[i].x, mesh.positions[i].y, mesh.positions[i].z);
+    const std::vector<vec3>& positions= mesh.positions();
+    for(unsigned int i= 0; i < (unsigned int) positions.size(); i++)
+        fprintf(out, "v %f %f %f\n", positions[i].x, positions[i].y, positions[i].z);
     fprintf(out, "\n");
     
-    bool has_texcoords= (mesh.texcoords.size() == mesh.positions.size());
-    for(unsigned int i= 0; i < (unsigned int) mesh.texcoords.size(); i++)
-        fprintf(out, "vt %f %f\n", mesh.texcoords[i].x, mesh.texcoords[i].y);
+    const std::vector<vec2>& texcoords= mesh.texcoords();
+    bool has_texcoords= (texcoords.size() == positions.size());
+    for(unsigned int i= 0; i < (unsigned int) texcoords.size(); i++)
+        fprintf(out, "vt %f %f\n", texcoords[i].x, texcoords[i].y);
     fprintf(out, "\n");
     
-    bool has_normals= (mesh.normals.size() == mesh.positions.size());
-    for(unsigned int i= 0; i < (unsigned int) mesh.normals.size(); i++)
-        fprintf(out, "vn %f %f %f\n", mesh.normals[i].x, mesh.normals[i].y, mesh.normals[i].z);
+    const std::vector<vec3>& normals= mesh.normals();
+    bool has_normals= (normals.size() == positions.size());
+    for(unsigned int i= 0; i < (unsigned int) normals.size(); i++)
+        fprintf(out, "vn %f %f %f\n", normals[i].x, normals[i].y, normals[i].z);
     fprintf(out, "\n");
     
-    bool has_indices= (mesh.indices.size() > 0);
-    unsigned int n= has_indices ? (unsigned int) mesh.indices.size() : (unsigned int) mesh.positions.size();
-    
+    const std::vector<unsigned int>& indices= mesh.indices();
+    bool has_indices= (indices.size() > 0);
+    unsigned int n= has_indices ? (unsigned int) indices.size() : (unsigned int) positions.size();
     for(unsigned int i= 0; i +2 < n; i+= 3)
     {
         fprintf(out, "f");
         for(unsigned int k= 0; k < 3; k++)
         {
-            unsigned int id= has_indices ? mesh.indices[i+k] +1 : i+k +1;
+            unsigned int id= has_indices ? indices[i+k] +1 : i+k +1;
             fprintf(out, " %u", id);
             if(has_texcoords && has_normals)
                 fprintf(out, "/%u/%u", id, id);
@@ -175,6 +178,5 @@ int write_mesh( const Mesh& mesh, const char *filename )
     }
     
     fclose(out);
-#endif
     return 0;
 }

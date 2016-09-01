@@ -84,15 +84,16 @@ m.triangle(a, c, d);
 */
 
 //! representation d'un objet / maillage.
-struct Mesh
+class Mesh
 {
+public:
     //! constructeur par defaut.
     Mesh( ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
-        m_color( White() ), m_primitives(GL_POINTS), m_vao(0), m_program(0), m_update_buffers(false) {}
+        m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_program(0), m_update_buffers(false) {}
     
     //! constructeur.
     Mesh( const GLenum primitives ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
-        m_color( White() ), m_primitives(primitives), m_vao(0), m_program(0), m_update_buffers(false) {}
+        m_color(White()), m_primitives(primitives), m_vao(0), m_program(0), m_update_buffers(false) {}
     
     //! construit les objets openGL.
     int create( );
@@ -232,6 +233,14 @@ struct Mesh
     //! renvoie la taille (en octets) d'un attribut.
     std::size_t attribute_buffer_size( const unsigned int id ) const;
     
+    //
+    const std::vector<vec3>& positions( ) const { return m_positions; }
+    const std::vector<vec2>& texcoords( ) const { return m_texcoords; }
+    const std::vector<vec3>& normals( ) const { return m_normals; }
+    const std::vector<vec4>& colors( ) const { return m_colors; }
+    const std::vector<unsigned int>& indices( ) const { return m_indices; }
+    GLenum primitives( ) const { return m_primitives; }
+    
     /*! sentinelle pour la gestion d'erreur lors du chargement d'un fichier.
     exemple :
     \code
@@ -261,7 +270,7 @@ struct Mesh
     Mesh mesh= { ... };
     Orbiter camera= { ... };
     
-    mesh.create_vertex_format(false, false, false);
+    mesh.create_buffers(false, false, false);
     mesh.create_program(false, false, false);
 
     // dessine uniquement la geometrie... sans couleurs, sans normales, sans textures
@@ -296,7 +305,7 @@ protected:
 //! dessine l'objet avec les transformations model, vue et projection.
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection );
 //! applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet. 
-void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, GLuint texture );
+void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, const GLuint texture );
 
 ///@}
 #endif
