@@ -14,8 +14,8 @@ struct Color
 {
     //! constructeur par defaut.
     Color( const float _r= 0.f, const float _g= 0.f, const float _b= 0.f, const float _a= 1.f ) : r(_r), g(_g), b(_b), a(_a) {}
-    //! cree une couleur avec les memes composantes que c, mais remplace sa composante alpha.
-    Color( const Color& c, const float _a ) : r(c.r), g(c.g), b(c.b), a(_a) {}  // remplace alpha.
+    //! cree une couleur avec les memes composantes que c, mais remplace sa composante alpha (color.r, color.g, color.b, alpha).
+    Color( const Color& color, const float alpha ) : r(color.r), g(color.g), b(color.b), a(alpha) {}  // remplace alpha.
     
     float r, g, b, a;
 };
@@ -28,15 +28,24 @@ Color make_alpha_color( const float r, const float g, const float b, const float
 Color make_opaque_color( const Color& color );
 
 //! utilitaire. renvoie une couleur noire.
-Color make_black( );
+Color Black( );
+inline Color make_black( ) { return Black(); }
+
 //! utilitaire. renvoie une couleur blanche.
-Color make_white( );
+Color White( );
+inline Color make_white( ) { return White(); }
+
 //! utilitaire. renvoie une couleur rouge.
-Color make_red( );
+Color Red( );
+inline Color make_red( ) { return Red(); }
+
 //! utilitaire. renvoie une couleur verte.
-Color make_green( );
+Color Green( );
+inline Color make_green( ) { return Green(); }
+
 //! utilitaire. renvoie une couleur bleue.
-Color make_blue( );
+Color Blue( );
+inline Color make_blue( ) { return Blue(); }
 
 
 Color operator+ ( const Color& a, const Color& b );
