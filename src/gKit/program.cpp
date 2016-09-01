@@ -114,8 +114,10 @@ int reload_program( GLuint program, const char *filename, const char *definition
         }
     }
 
+#ifdef GL_VERSION_4_3
     glObjectLabel(GL_PROGRAM, program, -1, filename);
-
+#endif
+    
     // prepare les sources
     std::string common_source= read(filename);
     std::string vertex_source= prepare_source(common_source, std::string(definitions).append("#define VERTEX_SHADER\n"));
