@@ -27,10 +27,10 @@ int init( )
     // etape 2 : creer une camera pour observer l'objet
     // construit l'englobant de l'objet, les extremites de sa boite englobante
     Point pmin, pmax;
-    mesh_bounds(objet, pmin, pmax);
+    objet.bounds(pmin, pmax);
 
     // regle le point de vue de la camera pour observer l'objet
-    camera= make_orbiter_lookat( center(pmin, pmax), distance(pmin, pmax) );
+    camera.lookat(pmin, pmax);
 
     // etape 3 : charger une texture a aprtir d'un fichier .bmp, .jpg, .png, .tga, etc, utilise read_image( ) et sdl_image
 /*
@@ -68,25 +68,24 @@ int draw( )
     // deplace la camera
     if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
         // tourne autour de l'objet
-        orbiter_rotation(camera, mx, my);
+        camera.rotation(mx, my);
 
     else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
         // approche / eloigne l'objet
-        orbiter_move(camera, mx);
+        camera.move(mx);
 
     else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
         // deplace le point de rotation
-        orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height());
-
+        camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
+    
     draw(objet, camera, texture);
-
     return 1;
 }
 
 int quit( )
 {
     // etape 3 : detruire la description de l'objet
-    release_mesh(objet);
+    objet.release();
     // et la texture
     glDeleteTextures(1, &texture);
 

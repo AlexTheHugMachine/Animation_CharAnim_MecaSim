@@ -17,16 +17,16 @@ int init( )
     // etape 1 : decrire le triangle, les coordonnees des 3 sommets.
 
     // creer un mesh pour stocker les coordonnees des sommets du triangle
-    triangle= create_mesh(GL_TRIANGLES);
+    triangle= Mesh(GL_TRIANGLES);
+    
+    triangle.color(Color(1, 0, 0));
+    triangle.vertex(-0.5, -0.5, 0);
 
-    vertex_color(triangle, make_color(1, 0, 0));
-    push_vertex(triangle, -0.5, -0.5, 0);
+    triangle.color(Color(0, 1, 0));
+    triangle.vertex(0.5,  0.5, 0);
 
-    vertex_color(triangle, make_color(0, 1, 0));
-    push_vertex(triangle,  0.5,  0.5, 0);
-
-    vertex_color(triangle, make_color(0, 0, 1));
-    push_vertex(triangle, -0.5,  0.5, 0);
+    triangle.color(Color(0, 0, 1));
+    triangle.vertex(-0.5,  0.5, 0);
 
     return 0;   // ras, pas d'erreur
 }
@@ -67,7 +67,7 @@ int draw( )
 int quit( )
 {
     // etape 3 : detruire la description du triangle
-    release_mesh(triangle);
+    triangle.release();
     return 0;   // ras, pas d'erreur
 }
 
