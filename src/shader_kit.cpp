@@ -13,6 +13,7 @@
 #include "texture.h"
 #include "mesh.h"
 #include "wavefront.h"
+#include "buffer.h"
 
 #include "vec.h"
 #include "mat.h"
@@ -160,11 +161,10 @@ int init( std::vector<const char *>& options )
 
 int quit( )
 {
-    mesh.release();
+    // detruit les objets openGL
     release_widgets(widgets);
     release_program(program);
-    // detruit les objets openGL
-    glDeleteVertexArrays(1, &vao);
+    release_vertex_format(vao);
     for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
         glDeleteTextures(1, &textures[i]);
     return 0;
@@ -280,10 +280,8 @@ int draw( void )
         if(mesh_filename[0] != 0)
         {
             begin_line(widgets);
-            label(widgets, "mesh '%s', %d positions, %d texcoords, %d normals", mesh_filename.path, 
-                mesh.vertex_count(), 0, 0);
-                //~ (unsigned int) mesh.texcoords.size(),
-                //~ (unsigned int) mesh.normals.size());
+            label(widgets, "mesh '%s', %d vertices %s %s", mesh_filename.path, mesh.vertex_count(),
+                mesh.texcoord_buffer_size() ? "texcoords" : "", mesh.normal_buffer_size() ? "normals" : "");
         }
         for(unsigned int i= 0; i < (unsigned int) texture_filenames.size(); i++)
         {
