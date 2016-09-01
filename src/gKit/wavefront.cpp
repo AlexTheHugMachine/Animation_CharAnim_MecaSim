@@ -14,7 +14,7 @@ Mesh read_mesh( const char *filename )
         return Mesh::error();
     }
     
-    Mesh data= create_mesh(GL_TRIANGLES);
+    Mesh data(GL_TRIANGLES);
     
     printf("loading mesh '%s'...\n", filename);
     
@@ -52,19 +52,19 @@ Mesh read_mesh( const char *filename )
             {
                 if(sscanf(line, "v %f %f %f", &x, &y, &z) != 3)
                     break;
-                positions.push_back( make_vec3(x, y, z) );
+                positions.push_back( vec3(x, y, z) );
             }
             else if(line[1] == 'n')     // normal x y z
             {
                 if(sscanf(line, "vn %f %f %f", &x, &y, &z) != 3)
                     break;
-                normals.push_back( make_vec3(x, y, z) );
+                normals.push_back( vec3(x, y, z) );
             }
             else if(line[1] == 't')     // texcoord x y
             {
                 if(sscanf(line, "vt %f %f", &x, &y) != 2)
                     break;
-                texcoords.push_back( make_vec2(x, y) );
+                texcoords.push_back( vec2(x, y) );
             }
         }
         
@@ -104,11 +104,11 @@ Mesh read_mesh( const char *filename )
                     int t= (idt[k] < 0) ? (int) texcoords.size() + idt[k] : idt[k] -1;
                     int n= (idn[k] < 0) ? (int) normals.size()   + idn[k] : idn[k] -1;
                     
-                    if(t >= 0) vertex_texcoord(data, texcoords[t]);
-                    if(n >= 0) vertex_normal(data, normals[n]);
+                    if(t >= 0) data.texcoord(texcoords[t]);
+                    if(n >= 0) data.normal(normals[n]);
                     
                     if(p < 0) break; // error
-                    push_vertex(data, positions[p]);
+                    data.vertex(positions[p]);
                 }
             }
         }        
@@ -126,6 +126,7 @@ int write_mesh( const Mesh& mesh, const char *filename )
 {
     if(mesh == Mesh::error())
         return -1;
+#if 0
     if(mesh.primitives != GL_TRIANGLES)
         return -1;
     if(mesh.positions.size() == 0)
@@ -174,5 +175,6 @@ int write_mesh( const Mesh& mesh, const char *filename )
     }
     
     fclose(out);
+#endif
     return 0;
 }

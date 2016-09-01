@@ -113,14 +113,14 @@ int init( std::vector<const char *>& options )
     if(option != NULL)
     {
         mesh= read_mesh(option);
-        if(mesh.positions.size() > 0)
+        if(mesh.vertex_buffer_size() > 0)
         {
             mesh_filename= Filename(option);
             
-            vao= make_mesh_vertex_format(mesh);
-            vertex_count= (unsigned int) mesh.positions.size();
+            vao= mesh.create_buffers();
+            vertex_count= mesh.vertex_count();
             
-            mesh_bounds(mesh, mesh_pmin, mesh_pmax);
+            mesh.bounds(mesh_pmin, mesh_pmax);
             camera.lookat(mesh_pmin, mesh_pmax);
         }
     }
@@ -160,6 +160,7 @@ int init( std::vector<const char *>& options )
 
 int quit( )
 {
+    mesh.release();
     release_widgets(widgets);
     release_program(program);
     // detruit les objets openGL
@@ -279,10 +280,10 @@ int draw( void )
         if(mesh_filename[0] != 0)
         {
             begin_line(widgets);
-            label(widgets, "mesh '%s', %u positions, %u texcoords, %u normals", mesh_filename.path, 
-                (unsigned int) mesh.positions.size(),
-                (unsigned int) mesh.texcoords.size(),
-                (unsigned int) mesh.normals.size());
+            label(widgets, "mesh '%s', %d positions, %d texcoords, %d normals", mesh_filename.path, 
+                mesh.vertex_count(), 0, 0);
+                //~ (unsigned int) mesh.texcoords.size(),
+                //~ (unsigned int) mesh.normals.size());
         }
         for(unsigned int i= 0; i < (unsigned int) texture_filenames.size(); i++)
         {
