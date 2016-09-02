@@ -46,7 +46,7 @@ Filename mesh_filename;
 Mesh mesh;
 Point mesh_pmin;
 Point mesh_pmax;
-unsigned int vertex_count;
+int vertex_count;
 GLuint vao;
 bool wireframe= false;
 
@@ -210,8 +210,8 @@ int draw( void )
     
     // recupere les transformations
     Transform model= make_identity();
-    Transform view= camera.view_transform();
-    Transform projection= camera.projection_transform(window_width(), window_height(), 45);
+    Transform view= camera.view();
+    Transform projection= camera.projection(window_width(), window_height(), 45);
     Transform viewport= make_viewport(window_width(), window_height());
     
     Transform mvp= projection * view * model;
@@ -249,10 +249,10 @@ int draw( void )
         program_uniform(program, "normalMatrix", make_normal_transform(mv));
         
         // interactions
-        program_uniform(program, "viewport", make_vec2(window_width(), window_height()));
+        program_uniform(program, "viewport", vec2(window_width(), window_height()));
         program_uniform(program, "time", (float) SDL_GetTicks());
-        program_uniform(program, "motion", make_vec3(mx, my, mb & SDL_BUTTON(1)));
-        program_uniform(program, "mouse", make_vec3(mousex, mousey, mb & SDL_BUTTON(1)));
+        program_uniform(program, "motion", vec3(mx, my, mb & SDL_BUTTON(1)));
+        program_uniform(program, "mouse", vec3(mousex, mousey, mb & SDL_BUTTON(1)));
         
         // textures
         for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
