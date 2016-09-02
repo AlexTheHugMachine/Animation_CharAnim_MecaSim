@@ -26,7 +26,7 @@ int Viewer::init()
 {
     //system("pwd");
     // Creer une camera par defaut, elle est placee en 0, 0, 5 et regarde les objets situes en 0, 0, 0
-    camera= make_orbiter();
+    //camera= make_orbiter();
 
     // etat par defaut openGL
     glClearColor(0.5f, 0.5f, 0.9f, 1);
