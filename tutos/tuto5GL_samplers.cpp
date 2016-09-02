@@ -185,7 +185,7 @@ int draw( )
     glUseProgram(program);
     
     // recupere le point de vue et la projection de la camera 
-    Transform model= make_identity();
+    Transform model= Identity();
     Transform view= camera.view();
     Transform projection= camera.projection(window_width(), window_height(), 45);
     
@@ -207,7 +207,7 @@ int draw( )
 #if 1
     for(int i= 0; i <4; i++)
     {
-        Transform model= make_translation( Vector(-1.5, 0, - i*1.5) );
+        Transform model= Translation( -1.5, 0, - i*1.5 );
         Transform view= camera.view();
         Transform projection= camera.projection(window_width(), window_height(), 45);
         
@@ -226,7 +226,7 @@ int draw( )
     
     for(int i= 0; i <4; i++)
     {
-        Transform model= make_translation( Vector(1.5, 0, - i*1.5) );
+        Transform model= Translation( 1.5, 0, - i*1.5 );
         Transform view= camera.view();
         Transform projection= camera.projection(window_width(), window_height(), 45);
         

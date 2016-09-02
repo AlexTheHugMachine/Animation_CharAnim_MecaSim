@@ -302,10 +302,5 @@ protected:
     bool m_update_buffers;
 };
 
-//! dessine l'objet avec les transformations model, vue et projection.
-void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection );
-//! applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet. 
-void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, const GLuint texture );
-
 ///@}
 #endif

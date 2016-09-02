@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "window.h"
 #include "mesh.h"
+#include "draw.h"
 
 /* par defaut, openGL dessine les objets qui se trouvent entre -1 et 1 sur x, y et z.
  */
@@ -51,7 +52,7 @@ int draw( )
     glClear(GL_COLOR_BUFFER_BIT);
 
     // on dessine le triangle sans changer les transformations.
-    draw(triangle, make_identity(), make_identity(), make_identity());
+    draw(triangle, Identity(), Identity(), Identity());
 
     return 1;   // on continue, renvoyer 0 pour sortir de l'application
 }

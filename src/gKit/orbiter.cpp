@@ -37,30 +37,30 @@ void Orbiter::move( const float z )
 
 Transform Orbiter::view( ) const
 {
-    return make_translation( - Vector(m_position.x, m_position.y, m_size) ) 
-        * make_rotationX(m_rotation.x) * make_rotationY(m_rotation.y) 
-        * make_translation( - Vector(m_center) ); 
+    return Translation( -m_position.x, -m_position.y, -m_size ) 
+        * RotationX(m_rotation.x) * RotationY(m_rotation.y) 
+        * Translation( - Vector(m_center) ); 
 }
 
 Transform Orbiter::projection( const float width, const float height, const float fov ) const
 {
-    return make_perspective(fov, width / height, m_size*0.01f, m_size*2.f + m_center.z);
+    return Perspective(fov, width / height, m_size*0.01f, m_size*2.f + m_center.z);
 }
 
 void Orbiter::frame( const float width, const float height, const float z, const float fov, Point& dO, Vector& dx, Vector& dy ) const
 {
     Transform v= view();
     Transform p= projection(width, height, fov);
-    Transform viewport= make_viewport(width, height);
+    Transform viewport= Viewport(width, height);
     Transform t= viewport * p * v;              // passage monde vers image
-    Transform tinv= make_inverse(t);            // l'inverse, passage image vers monde
+    Transform tinv= t.inverse();                // l'inverse, passage image vers monde
     
     // origine du plan image
-    dO= transform(tinv, Point(0, 0, z));
+    dO= tinv(Point(0, 0, z));
     // axe x du plan image
-    Point d1= transform(tinv, Point(1, 0, z));
+    Point d1= tinv(Point(1, 0, z));
     // axe y du plan image
-    Point d2= transform(tinv, Point(0, 1, z));
+    Point d2= tinv(Point(0, 1, z));
     
     dx= Vector(dO, d1);
     dy= Vector(dO, d2);
@@ -69,9 +69,9 @@ void Orbiter::frame( const float width, const float height, const float z, const
 Point Orbiter::position( )
 {
     Transform t= view();     // passage monde vers camera
-    Transform tinv= make_inverse(t);            // l'inverse, passage camera vers monde
+    Transform tinv= t.inverse();            // l'inverse, passage camera vers monde
     
-    return transform(tinv, Point(0, 0, 0));        // la camera se trouve a l'origine, dans le repere camera...
+    return tinv(Point(0, 0, 0));        // la camera se trouve a l'origine, dans le repere camera...
 }
 
 int Orbiter::read_orbiter( const char *filename )

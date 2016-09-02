@@ -189,7 +189,7 @@ int draw( )
     glUseProgram(program);
 
     // recupere le point de vue et la projection de la camera
-    Transform model= make_identity();
+    Transform model= Identity();
     Transform view= camera.view();
     Transform projection= camera.projection(window_width(), window_height(), 45);
 
@@ -202,9 +202,9 @@ int draw( )
     glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
 
     // les normales ne subissent pas tout a fait la meme transformation que les sommets
-    program_uniform(program, "mvMatrix", make_normal_transform(mv));
+    program_uniform(program, "mvMatrix", mv.normal());
 
-    program_uniform(program, "color", make_vec3(1, 0.5, 0.));
+    program_uniform(program, "color", vec3(1, 0.5, 0.));
 
     glDrawArrays(GL_TRIANGLES, 0, vertex_count);
 

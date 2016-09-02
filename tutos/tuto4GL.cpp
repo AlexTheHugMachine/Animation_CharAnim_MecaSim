@@ -153,7 +153,7 @@ int draw( )
     glUseProgram(program);
 
     // recupere le point de vue et la projection de la camera
-    Transform model= make_identity();
+    Transform model= Identity();
     Transform view= camera.view();
     Transform projection= camera.projection(window_width(), window_height(), 45);
 

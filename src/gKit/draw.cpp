@@ -3,7 +3,17 @@
 #include "window.h"
 
 
-void draw( Mesh& m, const Transform& model, const Orbiter& camera, GLuint texture )
+void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, const GLuint texture )
+{
+    m.draw(model, view, projection, texture);
+}
+
+void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection )
+{
+    m.draw(model, view, projection, 0);
+}
+
+void draw( Mesh& m, const Transform& model, const Orbiter& camera, const GLuint texture )
 {
     // recupere les transformations
     Transform view= camera.view();
@@ -13,14 +23,14 @@ void draw( Mesh& m, const Transform& model, const Orbiter& camera, GLuint textur
     draw(m, model, view, projection, texture);
 }
 
-void draw( Mesh& m, const Orbiter& camera, GLuint texture )
+void draw( Mesh& m, const Orbiter& camera, const GLuint texture )
 {
-    draw(m, make_identity(), camera, texture);
+    draw(m, Identity(), camera, texture);
 }
 
 void draw( Mesh& m, const Orbiter& camera )
 {
-    draw(m, make_identity(), camera, 0);
+    draw(m, Identity(), camera, 0);
 }
 
 void draw( Mesh& m, const Transform& model, const Orbiter& camera )

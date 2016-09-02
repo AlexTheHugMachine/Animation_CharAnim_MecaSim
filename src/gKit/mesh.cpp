@@ -295,7 +295,7 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     program_uniform(m_program, "mesh_color", default_color());
     
     Transform mv= view * model;
-    Transform normal= make_normal_transform(mv);
+    Transform normal= mv.normal();
     Transform mvp= projection * view * model;
     
     program_uniform(m_program, "mvpMatrix", mvp);
@@ -309,15 +309,4 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
         glDrawElements( m_primitives, (GLsizei) m_indices.size(), GL_UNSIGNED_INT, 0 );
     else
         glDrawArrays( m_primitives, 0, (GLsizei) m_positions.size() );
-}
-
-
-void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, const GLuint texture )
-{
-    m.draw(model, view, projection, texture);
-}
-
-void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection )
-{
-    m.draw(model, view, projection, 0);
 }

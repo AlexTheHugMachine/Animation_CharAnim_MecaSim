@@ -209,13 +209,13 @@ int draw( void )
         camera.move(mx);           // approche / eloigne l'objet
     
     // recupere les transformations
-    Transform model= make_identity();
+    Transform model= Identity();
     Transform view= camera.view();
     Transform projection= camera.projection(window_width(), window_height(), 45);
-    Transform viewport= make_viewport(window_width(), window_height());
+    Transform viewport= Viewport(window_width(), window_height());
     
     Transform mvp= projection * view * model;
-    Transform mvpInv= make_inverse(mvp);
+    Transform mvpInv= mvp.inverse();
     Transform mv= model * view;
     
     // affiche l'objet
@@ -234,19 +234,19 @@ int draw( void )
         // affecte une valeur aux uniforms
         // transformations standards
         program_uniform(program, "modelMatrix", model);
-        program_uniform(program, "modelInvMatrix", make_inverse(model));
+        program_uniform(program, "modelInvMatrix", model.inverse());
         program_uniform(program, "viewMatrix", view);
-        program_uniform(program, "viewInvMatrix", make_inverse(view));
+        program_uniform(program, "viewInvMatrix", view.inverse());
         program_uniform(program, "projectionMatrix", projection);
-        program_uniform(program, "projectionInvMatrix", make_inverse(projection));
+        program_uniform(program, "projectionInvMatrix", projection.inverse());
         program_uniform(program, "viewportMatrix", viewport);
-        program_uniform(program, "viewportInvMatrix", make_inverse(viewport));
+        program_uniform(program, "viewportInvMatrix", viewport.inverse());
         
         program_uniform(program, "mvpMatrix", mvp);
         program_uniform(program, "mvpInvMatrix", mvpInv);
         
         program_uniform(program, "mvMatrix", mv);
-        program_uniform(program, "normalMatrix", make_normal_transform(mv));
+        program_uniform(program, "normalMatrix", mv.normal());
         
         // interactions
         program_uniform(program, "viewport", vec2(window_width(), window_height()));
