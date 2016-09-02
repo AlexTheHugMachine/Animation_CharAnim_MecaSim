@@ -17,6 +17,7 @@ Viewer::Viewer() : program(0), b_draw_grid(true)
 
 void Viewer::help()
 {
+    printf("HELP:\n");
     printf("\th: help\n");
     printf("\ta: (des)active l'affichage de l'axe\n");
     printf("\tg: (des)active l'affichage de la grille\n");
