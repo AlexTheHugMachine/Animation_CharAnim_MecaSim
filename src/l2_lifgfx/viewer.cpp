@@ -2,14 +2,16 @@
 #include <cassert>
 #include <math.h>
 #include <stdio.h>
+#include <iostream>
 
 #include "draw.h"        // pour dessiner du point de vue d'une camera
 #include "viewer.h"
 
+using namespace std;
 
 Viewer* Viewer::s_singleton = NULL;
 
-Viewer::Viewer() : program(0), b_draw_grid(true)
+Viewer::Viewer() : program(0), b_draw_grid(true), b_draw_axe(true)
 {
     s_singleton=this;
 }
@@ -181,9 +183,9 @@ int Viewer::draw( )
     else if(mb & SDL_BUTTON(3))                 // le bouton droit est enfonce
         camera.move( mx);               // approche / eloigne l'objet
 
-    if (key_state(SDLK_h)) help();
-    if (key_state(SDLK_g)) { b_draw_grid = !b_draw_grid; clear_key_state(SDLK_g); }
-    if (key_state(SDLK_a)) { b_draw_axe = !b_draw_axe; clear_key_state(SDLK_a); }
+    if (key_state('h')) help();
+    if (key_state('g')) { b_draw_grid = !b_draw_grid; clear_key_state('g'); }
+    if (key_state('a')) { b_draw_axe = !b_draw_axe; clear_key_state('a'); }
     if (key_state(SDLK_DOWN)) { camera.move( -1); }
     if (key_state(SDLK_UP)) { camera.move( 1); }
 
