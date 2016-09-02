@@ -96,13 +96,13 @@ public:
         m_color(White()), m_primitives(primitives), m_vao(0), m_program(0), m_update_buffers(false) {}
     
     //! construit les objets openGL.
-    int create( );
+    int create( const GLenum primitives );
     //! detruit les objets openGL.
     void release( );
     
-    //! renvoie la couleur par defaut du mesh.
+    //! renvoie la couleur par defaut du mesh, utilisee si les sommets n'ont pas de couleur associee.
     Color default_color( ) const { return m_color; }
-    //! modifie la couleur par defaut.
+    //! modifie la couleur par defaut, utilisee si les sommets n'ont pas de couleur associee.
     Mesh& default_color( const Color& color );
     
     //! definit la couleur du prochain sommet.
@@ -194,22 +194,22 @@ public:
     int index_count( ) const { return m_indices.size(); }
     
     //! renvoie l'adresse de la position du premier sommet. permet de construire les vertex buffers openGL. par convention, la position est un vec3, 3 GL_FLOAT.
-    const void *vertex_buffer( ) const { return &m_positions.front(); }
+    const float *vertex_buffer( ) const { return &m_positions.front().x; }
     //! renvoie la longueur (en octets) du vertex buffer.
     std::size_t vertex_buffer_size( ) const { return m_positions.size() * sizeof(vec3); }
 
     //! renvoie l'adresse de la normale du premier sommet. par convention, la normale est un vec3, 3 GL_FLOAT.
-    const void *normal_buffer( ) const { return &m_normals.front(); }
+    const float *normal_buffer( ) const { return &m_normals.front().x; }
     //! renvoie la longueur (en octets) du normal buffer.
     std::size_t normal_buffer_size( ) const { return m_normals.size() * sizeof(vec3); }
     
     //! renvoie l'adresse des coordonnees de textures du premier sommet. par convention, c'est un vec2, 2 GL_FLOAT.
-    const void *texcoord_buffer( ) const { return &m_texcoords.front(); }
+    const float *texcoord_buffer( ) const { return &m_texcoords.front().x; }
     //! renvoie la taille (en octets) du texcoord buffer.
     std::size_t texcoord_buffer_size( ) const { return m_texcoords.size() * sizeof(vec2); }
     
     //! renvoie l'adresse de la couleur du premier sommet. par convention, la couleur est un vec4, 4 GL_FLOAT.
-    const void *color_buffer( ) const { return &m_colors.front(); }
+    const float *color_buffer( ) const { return &m_colors.front().x; }
     //! renvoie la taille (en octets) du color buffer.
     std::size_t color_buffer_size( ) const { return m_colors.size() * sizeof(vec4); }
     

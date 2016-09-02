@@ -36,10 +36,10 @@ public:
     void move( const float z );
     
     //! renvoie la transformation vue.
-    Transform view_transform( ) const;
+    Transform view( ) const;
     
     //! renvoie la projection reglee pour une image d'aspect width / height, et une ouverture de fov degres.
-    Transform projection_transform( const float width, const float height, const float fov ) const;
+    Transform projection( const float width, const float height, const float fov ) const;
     
     /*! renvoie les coorodnnees de l'origine d0 et les axes dx, dy du plan image dans le repere du monde. 
     permet de construire un rayon pour le pixel x, y : 

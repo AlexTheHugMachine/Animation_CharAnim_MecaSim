@@ -10,7 +10,11 @@
 #include "mesh.h"
 
 
-int Mesh::create( ) { return 0; }
+int Mesh::create( const GLenum primitives )
+{
+    m_primitives= primitives; 
+    return 0; 
+}
 
 void Mesh::release( )
 {

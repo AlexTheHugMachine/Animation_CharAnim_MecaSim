@@ -6,8 +6,8 @@
 void draw( Mesh& m, const Transform& model, const Orbiter& camera, GLuint texture )
 {
     // recupere les transformations
-    Transform view= camera.view_transform();
-    Transform projection= camera.projection_transform((float) window_width(), (float) window_height(), 45);
+    Transform view= camera.view();
+    Transform projection= camera.projection((float) window_width(), (float) window_height(), 45);
     
     // affiche l'objet
     draw(m, model, view, projection, texture);

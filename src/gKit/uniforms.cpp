@@ -98,7 +98,7 @@ void program_uniform( const GLuint program, const char *uniform, const Color& c 
 
 void program_uniform( const GLuint program, const char *uniform, const Transform& v )
 {
-    glUniformMatrix4fv( location(program, uniform), 1, GL_TRUE, &v.m[0][0] );
+    glUniformMatrix4fv( location(program, uniform), 1, GL_TRUE, v.buffer() );
 }
 
 void program_use_texture( const GLuint program, const char *uniform, const int unit, const GLuint texture, const GLuint sampler )

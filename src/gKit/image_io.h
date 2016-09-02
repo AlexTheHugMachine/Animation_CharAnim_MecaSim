@@ -26,6 +26,7 @@ struct ImageData
     ImageData( const int w, const int h, const int c, const int s= 1 ) : data(w*h*c*s), width(w), height(h), channels(c), size(s) {}
     
     std::size_t offset( const int x, const int y ) { return y * width * channels * size + x * channels * size; }
+    const void *buffer( ) { return &data.front(); }
     
     std::vector<unsigned char> data;
     

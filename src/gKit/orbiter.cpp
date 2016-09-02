@@ -35,24 +35,24 @@ void Orbiter::move( const float z )
         m_size= 0.01f;
 }
 
-Transform Orbiter::view_transform( ) const
+Transform Orbiter::view( ) const
 {
     return make_translation( - Vector(m_position.x, m_position.y, m_size) ) 
         * make_rotationX(m_rotation.x) * make_rotationY(m_rotation.y) 
         * make_translation( - Vector(m_center) ); 
 }
 
-Transform Orbiter::projection_transform( const float width, const float height, const float fov ) const
+Transform Orbiter::projection( const float width, const float height, const float fov ) const
 {
     return make_perspective(fov, width / height, m_size*0.01f, m_size*2.f + m_center.z);
 }
 
 void Orbiter::frame( const float width, const float height, const float z, const float fov, Point& dO, Vector& dx, Vector& dy ) const
 {
-    Transform view= view_transform();
-    Transform projection= projection_transform(width, height, fov);
+    Transform v= view();
+    Transform p= projection(width, height, fov);
     Transform viewport= make_viewport(width, height);
-    Transform t= viewport * projection * view;  // passage monde vers image
+    Transform t= viewport * p * v;              // passage monde vers image
     Transform tinv= make_inverse(t);            // l'inverse, passage image vers monde
     
     // origine du plan image
@@ -68,7 +68,7 @@ void Orbiter::frame( const float width, const float height, const float z, const
 
 Point Orbiter::position( )
 {
-    Transform t= view_transform();     // passage monde vers camera
+    Transform t= view();     // passage monde vers camera
     Transform tinv= make_inverse(t);            // l'inverse, passage camera vers monde
     
     return transform(tinv, Point(0, 0, 0));        // la camera se trouve a l'origine, dans le repere camera...

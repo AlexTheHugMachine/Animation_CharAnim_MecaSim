@@ -31,6 +31,8 @@ struct Transform
     Transform& operator*=( const Transform& t);
 #endif
     
+    const float *buffer( ) const { return &m[0][0]; }
+    
     float m[4][4];
 };
 
