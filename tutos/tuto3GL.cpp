@@ -19,7 +19,7 @@ int init( )
 {
     // charge 12 triangles, soit un cube...
     Mesh cube= read_mesh("data/flat_bbox.obj");
-    printf("  %u positions\n", (unsigned int) cube.positions.size());
+    printf("  %d positions\n", cube.vertex_count());
 
     // compile le shader program, le program est selectionne
     program= read_program("tutos/tuto3GL.glsl");
@@ -28,10 +28,10 @@ int init( )
     // etape 1 : recuperer l'identifiant de l'uniform
     GLint location= glGetUniformLocation(program, "positions"); // uniform vec3 positions[36];
     // etape 2 : modifier sa valeur
-    glUniform3fv(location, cube.positions.size(), &cube.positions.front().x);
+    glUniform3fv(location, cube.vertex_count(), cube.vertex_buffer());
 
     // mesh n'est plus necessaire
-    release_mesh(cube);
+    cube.release();
 
     // creer un vertex array object
     glGenVertexArrays(1, &vao);

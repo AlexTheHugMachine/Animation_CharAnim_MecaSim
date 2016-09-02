@@ -1,9 +1,10 @@
 
 //! \file tuto3.cpp utiliser mesh pour dessiner un triangle avec une rotation
 
+#include <cstdio>
+
 #include "window.h"
 #include "mesh.h"
-#include <stdio.h>
 
 /*
     par defaut, openGL dessine les objets qui se trouvent entre -1 et 1 sur x, y et z.
@@ -43,7 +44,7 @@ int draw( )
         openGL utilise un repere droit, x vers la droite, y vers le haut et z devant (vers l'observateur)
         donc une rotation autour de l'axe Z permet de faire tourner le triangle dans l'image.
      */
-    Transform T= make_rotationZ( 45 );
+    Transform T= make_rotationZ(45);
     draw(triangle, T, make_identity(), make_identity());
 
     return 1;   // on continue, renvoyer 0 pour sortir de l'application
@@ -55,7 +56,7 @@ int draw( )
         angle= angle + 1;
     if(key_state('k'))
         angle= angle - 1;
-
+    
     Transform T= make_rotationZ( angle );
     draw(triangle, T, make_identity(), make_identity());
 

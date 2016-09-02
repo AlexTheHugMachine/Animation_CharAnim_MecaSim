@@ -19,7 +19,7 @@ GLuint program;
 // vertex array object
 GLuint vao;
 GLuint vertex_buffer;
-unsigned int vertex_count;
+int vertex_count;
 
 // camera
 Orbiter camera;
@@ -33,13 +33,12 @@ int init( )
 
     // charge un objet
     Mesh mesh= read_mesh("data/bigguy.obj");
-    vertex_count= (unsigned int) mesh.positions.size();
+    vertex_count= mesh.vertex_count();
 
     // camera
     Point pmin, pmax;
-    mesh_bounds(mesh, pmin, pmax);
-
-    camera= make_orbiter_lookat(center(pmin, pmax), distance(pmin, pmax));
+    mesh.bounds(pmin, pmax);
+    camera.lookat(pmin, pmax);
 
 /*  creation du vertex buffer :
         en plusieurs etapes : creer le buffer, allouer un espace de stockage et transferer des donnees
@@ -53,8 +52,8 @@ int init( )
 
     // dimensionne le buffer actif sur array_buffer, l'alloue et l'initialise avec les positions des sommets de l'objet
     glBufferData(GL_ARRAY_BUFFER,
-        /* length */    sizeof(vec3) * mesh.positions.size(),
-        /* data */      &mesh.positions.front(),
+        /* length */    mesh.vertex_buffer_size(),
+        /* data */      mesh.vertex_buffer(),
         /* usage */     GL_STATIC_DRAW);
     // GL_STATIC_DRAW decrit l'utilisation du contenu du buffer. dans ce cas, utilisation par draw, sans modifications
 
@@ -133,15 +132,15 @@ int draw( )
     // deplace la camera
     if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
         // tourne autour de l'objet
-        orbiter_rotation(camera, mx, my);
+        camera.rotation(mx, my);
 
     else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
         // approche / eloigne l'objet
-        orbiter_move(camera, mx);
+        camera.move(mx);
 
     else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
         // deplace le point de rotation
-        orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height());
+        camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
 
 
 /*  configuration minimale du pipeline
@@ -155,15 +154,15 @@ int draw( )
 
     // recupere le point de vue et la projection de la camera
     Transform model= make_identity();
-    Transform view= orbiter_view_transform(camera);
-    Transform projection= orbiter_projection_transform(camera, window_width(), window_height(), 45);
+    Transform view= camera.view();
+    Transform projection= camera.projection(window_width(), window_height(), 45);
 
     // compose les matrices pour passer du repere local de l'objet au repere projectif
     Transform mvp= projection * view * model;
 
     GLuint location;
     location= glGetUniformLocation(program, "mvpMatrix");
-    glUniformMatrix4fv(location, 1, GL_TRUE, &mvp.m[0][0]);
+    glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
 
 /*  plus direct :
     #include "uniforms.h"

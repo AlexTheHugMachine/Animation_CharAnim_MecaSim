@@ -38,16 +38,14 @@ int init( )
 
     // etape 2 : charger un mesh, (avec des texcoords), vao + vertex buffer
     Mesh mesh= read_mesh("data/cube.obj");
-    if(mesh.positions.size() == 0)
+    if(mesh.vertex_count() == 0)
         return -1;      // gros probleme, pas de sommets...
-    if(mesh.texcoords.size() != mesh.positions.size())
-        return -1;      // probleme, pas le meme nombre de texcoords que de sommets...
 
-    vertex_count= (unsigned int) mesh.positions.size();
+    vertex_count= mesh.vertex_count();
 
     Point pmin, pmax;
-    mesh_bounds(mesh, pmin, pmax);
-    camera= make_orbiter_lookat(center(pmin, pmax), distance(pmin, pmax));
+    mesh.bounds(pmin, pmax);
+    camera.lookat(pmin, pmax);
 
     // vertex format : position + texcoord,
     // cf tuto4GL_normals.cpp
@@ -57,7 +55,7 @@ int init( )
     // vertex buffer
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * mesh.positions.size(), &mesh.positions.front(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, mesh.vertex_buffer_size(), mesh.vertex_buffer(), GL_STATIC_DRAW);
 
     // configurer l'attribut position
     GLint position= glGetAttribLocation(program, "position");
@@ -69,7 +67,7 @@ int init( )
     // texcoord buffer
     glGenBuffers(1, &texcoord_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, texcoord_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * mesh.texcoords.size(), &mesh.texcoords.front(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, mesh.texcoord_buffer_size(), mesh.texcoord_buffer(), GL_STATIC_DRAW);
 
     // configurer l'attribut texcoord
     GLint texcoord= glGetAttribLocation(program, "texcoord");
@@ -79,7 +77,7 @@ int init( )
     glEnableVertexAttribArray(texcoord);
 
     // nettoyage
-    release_mesh(mesh);
+    mesh.release();
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -104,7 +102,7 @@ int init( )
 
     glTexImage2D(GL_TEXTURE_2D, 0,
         GL_RGBA, image.width, image.height, 0,
-        data_format, data_type, &image.data.front() );
+        data_format, data_type, image.buffer() );
 
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -147,15 +145,15 @@ int draw( )
     // deplace la camera
     if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
         // tourne autour de l'objet
-        orbiter_rotation(camera, mx, my);
+        camera.rotation(mx, my);
 
     else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
         // approche / eloigne l'objet
-        orbiter_move(camera, mx);
+        camera.move(mx);
 
     else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
         // deplace le point de rotation
-        orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height());
+        camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
 
 
     /*  config pipeline
@@ -171,8 +169,8 @@ int draw( )
 
     // recupere le point de vue et la projection de la camera
     Transform model= make_identity();
-    Transform view= orbiter_view_transform(camera);
-    Transform projection= orbiter_projection_transform(camera, window_width(), window_height(), 45);
+    Transform view= camera.view();
+    Transform projection= camera.projection(window_width(), window_height(), 45);
 
     // compose les matrices pour passer du repere local de l'objet au repere projectif
     Transform mvp= projection * view * model;
