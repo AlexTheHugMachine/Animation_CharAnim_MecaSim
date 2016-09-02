@@ -56,7 +56,7 @@ Image read_image( const char *filename )
                 Uint8 b= pixel[format.Bshift / 8];
                 Uint8 a= pixel[format.Ashift / 8];
                 
-                image(x, y)= make_alpha_color((float) r / 255.f, (float) g / 255.f, (float) b / 255.f, (float) a / 255.f);
+                image(x, y)= Color((float) r / 255.f, (float) g / 255.f, (float) b / 255.f, (float) a / 255.f);
                 pixel= pixel + format.BytesPerPixel;
             }
         }
@@ -75,7 +75,7 @@ Image read_image( const char *filename )
                 const Uint8 g= pixel[format.Gshift / 8];
                 const Uint8 b= pixel[format.Bshift / 8];
 
-                image(x, y)= make_color((float) r / 255.f, (float) g / 255.f, (float) b / 255.f);
+                image(x, y)= Color((float) r / 255.f, (float) g / 255.f, (float) b / 255.f);
                 pixel= pixel + format.BytesPerPixel;
             }
         }

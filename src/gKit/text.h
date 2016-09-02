@@ -59,7 +59,7 @@ d'ou la creation et desctruction des objets openGL dans les fonctions init() et 
 */
 struct Text
 {
-    Text( ) : color( make_white() ), font(0), program(0), vao(0), ubo(0) {}
+    Text( ) : color( White() ), font(0), program(0), vao(0), ubo(0) {}
     
     int buffer[24][128];
     Color color;        //!< couleur du texte.

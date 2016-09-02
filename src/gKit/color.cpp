@@ -2,21 +2,6 @@
 #include "color.h"
 
 
-Color make_color( const float r, const float g, const float b )
-{
-    return Color(r, b, g, 1.f);
-}
-
-Color make_alpha_color( const float r, const float g, const float b, const float a )
-{
-    return Color(r, g, b, a);
-}
-
-Color make_opaque_color( const Color& color )
-{
-    return Color(color, 1.f);
-}
-
 Color Black( )
 {
     return Color(0, 0, 0);

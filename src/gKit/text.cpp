@@ -35,14 +35,14 @@ Text create_text( )
     {
         unsigned int starty= 16 *7;
         unsigned int startx= 8 *1;
-        Color color= (x > 1) ? make_alpha_color(1, 1, 1, 0.6f) : make_alpha_color(1, 1, 1, 1);
+        Color color= (x > 1) ? Color(1, 1, 1, 0.6f) : Color(1, 1, 1, 1);
         font(startx + x, starty + y)= color;
     }
 
     text.font= make_texture(0, font);
     //~ release_image(font);
 
-    text.color= make_white();
+    text.color= White();
 
     // shader
     text.program= read_program("data/shaders/text.glsl");
