@@ -27,9 +27,6 @@ struct Point
     float x, y, z;
 };
 
-//! cree un point de composantes x, y, z.
-Point make_point( const float x, const float y, const float z );
-
 //! renvoie la distance etre 2 points.
 float distance( const Point& a, const Point& b );
 //! renvoie le carre de la distance etre 2 points.
@@ -37,6 +34,7 @@ float distance2( const Point& a, const Point& b );
 
 //! renvoie le milieu du segment ab.
 Point center( const Point& a, const Point& b );
+
 
 //! representation d'un vecteur 3d.
 struct Vector
@@ -52,16 +50,19 @@ struct Vector
     float x, y, z;
 };
 
-//! cree un vecteur de composantes x, y, z.
-Vector make_vector( const float x, const float y, const float z );
+//! renvoie un vecteur unitaire / longueur == 1.
+Vector normalize( const Vector& v );
+//! renvoie le produit vectoriel de 2 vecteurs.
+Vector cross( const Vector& u, const Vector& v );
+//! renvoie le produit scalaire de 2 vecteurs.
+float dot( const Vector& u, const Vector& v );
+//! renvoie la longueur d'un vecteur.
+float length( const Vector& v );
+//! renvoie la carre de la longueur d'un vecteur.
+float length2( const Vector& v );
 
-//! renvoie le vecteur ab.
-Vector make_vector( const Point& a, const Point& b );
-//! renvoie le vecteur 0a.
-Vector make_vector( const Point& a );
 //! renvoie le vecteur ab, b - a
 Vector operator- ( const Point& a, const Point& b );
-
 //! renvoie le vecteur -v.
 Vector operator- ( const Vector& v );
 
@@ -84,17 +85,6 @@ Vector operator* ( const Vector& v, const float k );
 //! renvoie le vecteur v/k;
 Vector operator/ ( const Vector& v, const float k );
 
-//! renvoie un vecteur unitaire / longueur == 1.
-Vector normalize( const Vector& v );
-//! renvoie le produit vectoriel de 2 vecteurs.
-Vector cross( const Vector& u, const Vector& v );
-//! renvoie le produit scalaire de 2 vecteurs.
-float dot( const Vector& u, const Vector& v );
-//! renvoie la longueur d'un vecteur.
-float length( const Vector& v );
-//! renvoie la carre de la longueur d'un vecteur.
-float length2( const Vector& v );
-
 
 //! vecteur generique, utilitaire.
 struct vec2
@@ -105,8 +95,6 @@ struct vec2
     float x, y;
 };
 
-//! cree un vecteur generique de composantes x, y.
-vec2 make_vec2( const float x, const float y );
 
 //! vecteur generique, utilitaire.
 struct vec3
@@ -124,19 +112,6 @@ struct vec3
     float x, y, z;
 };
 
-//! cree un vecteur generique de composantes x, y, z.
-vec3 make_vec3( const float x, const float y, const float z );
-//! cree un vecteur generique de composantes x, y, z
-vec3 make_vec3( const vec2& v, const float z );
-
-//! cree un point de composantes p.x, p.y, p.z.
-Point make_point( const vec3& p );
-//! cree un vecteur generique de composantes p.x, p.y, p.z.
-vec3 make_vec3( const Point& p );
-//! cree un vecteur de composantes v.x, v.y, v.z.
-Vector make_vector( const vec3& v );
-//! cree un vecteur generique de composantes v.x, v.y, v.z.
-vec3 make_vec3( const Vector& v );
 
 //! vecteur generique 4d, ou 3d homogene, utilitaire.
 struct vec4
@@ -156,17 +131,6 @@ struct vec4
     float x, y, z, w;
 };
 
-//! cree un vecteur generique de composantes x, y, z, w.
-vec4 make_vec4( const float x, const float y, const float z, const float w );
-//! cree un vecteur generique de composantes v.x, v.y, z, w.
-vec4 make_vec4( const vec2& v, const float z, const float w );
-//! cree un vecteur generique de composantes v.x, v.y, v.z, w.
-vec4 make_vec4( const vec3& v, const float w );
-
-//! construit un point 3d homogene (x, y, z, 1).
-vec4 make_vec4( const Point& a );
-//! construit un vecteur 3d homogene (x, y, z, 0).
-vec4 make_vec4( const Vector& v );
 
 // implementation des constructeurs explicites.
 inline Point::Point( const vec3& v ) : x(v.x), y(v.y), z(v.z) {}
