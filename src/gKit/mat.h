@@ -27,18 +27,18 @@ struct Transform
         const float t30=0.f, const float t31=0.f, const float t32=0.f, const float t33=1.f );
     
     //! renvoie le point transforme.
-    Point operator() ( const Point& p );
+    Point operator() ( const Point& p ) const;
     //! renvoie le vecteur transforme.
-    Vector operator() ( const Vector& v );
+    Vector operator() ( const Vector& v ) const;
     //! renvoie le point/vecteur homogene transforme.
-    vec4 operator() ( const vec4& v );
+    vec4 operator() ( const vec4& v ) const;
     
     //! renvoie la transposee de la matrice.
-    Transform transpose( );
+    Transform transpose( ) const;
     //! renvoie l'inverse de la matrice.
-    Transform inverse( );
+    Transform inverse( ) const;
     //! renvoie la transformation a appliquer aux normales d'un objet transforme par la matrice m.
-    Transform normal( );
+    Transform normal( ) const;  
     
     //! renvoie l'adresse de la premiere valeur de la matrice.
     const float *buffer( ) const { return &m[0][0]; }

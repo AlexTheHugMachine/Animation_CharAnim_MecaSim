@@ -21,7 +21,9 @@ struct Point
     //! constructeur par defaut.
     Point( const float _x= 0, const float _y= 0, const float _z= 0 ) : x(_x), y(_y), z(_z) {}
     
+    //! cree un point a partir des coordonnees du vecteur generique (v.x, v.y, v.z).
     explicit Point( const vec3& v );   // l'implementation se trouve en fin de fichier, la structure vec3 n'est pas encore connue.
+    //! cree un point a partir des coordonnes du vecteur (v.x, v.y, v.z).
     explicit Point( const Vector& v );   // l'implementation se trouve en fin de fichier, la structure vector n'est pas encore connue.
     
     float x, y, z;
@@ -44,7 +46,9 @@ struct Vector
     //! cree le vecteur ab.        
     Vector( const Point& a, const Point& b ) : x(b.x - a.x), y(b.y - a.y), z(b.z - a.z) {}
     
+    //! cree un vecteur a partir des coordonnees du vecteur generique (v.x, v.y, v.z).
     explicit Vector( const vec3& v );   // l'implementation se trouve en fin de fichier, la structure vec3 n'est pas encore connue.
+    //! cree un vecteur a partir des coordonnes du vecteur (v.x, v.y, v.z).
     explicit Vector( const Point& a );   // l'implementation se trouve en fin de fichier.
     
     float x, y, z;
@@ -61,7 +65,7 @@ float length( const Vector& v );
 //! renvoie la carre de la longueur d'un vecteur.
 float length2( const Vector& v );
 
-//! renvoie le vecteur ab, b - a
+//! renvoie le vecteur a - b.
 Vector operator- ( const Point& a, const Point& b );
 //! renvoie le vecteur -v.
 Vector operator- ( const Vector& v );

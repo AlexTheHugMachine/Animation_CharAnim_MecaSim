@@ -77,23 +77,23 @@ struct BasicPipeline : public Pipeline
         : Pipeline(), mesh(_mesh), model(_model), view(_view), projection(_projection) 
     {
         mvp= projection * view * model;
-        mv= make_normal_transform(view * model);
+        mv= (view * model).normal();
     }
     
     Point vertex_shader( const int vertex_id ) const
     {
         // recupere la position du sommet
-        Point p= make_point( mesh.positions[vertex_id] );
+        Point p= Point( mesh.positions().at(vertex_id) );
         // renvoie les coordonnees dans le repere projectif
-        return transform(mvp, p);
+        return mvp(p);
     }
     
     Color fragment_shader( const int primitive_id, const Fragment fragment ) const
     {
         // recuperer les normales des sommets de la primitive
-        Vector a= transform(mv, make_vector( mesh.normals[primitive_id * 3] ));
-        Vector b= transform(mv, make_vector( mesh.normals[primitive_id * 3 +1] ));
-        Vector c= transform(mv, make_vector( mesh.normals[primitive_id * 3 +2] ));
+        Vector a= mv( Vector( mesh.normals().at(primitive_id * 3) ));
+        Vector b= mv( Vector( mesh.normals().at(primitive_id * 3 +1) ));
+        Vector c= mv( Vector( mesh.normals().at(primitive_id * 3 +2) ));
         
         // interpoler la normale
         Vector n= fragment.u * c + fragment.v * a + fragment.w * b;
@@ -101,10 +101,10 @@ struct BasicPipeline : public Pipeline
         n= normalize(n);
         
         // calcule une couleur qui depend de l'orientation de la primitive par rapport a la camera
-        return make_color(1, 1, 1) * std::abs(n.z);
+        return White() * std::abs(n.z);
         
         // on peut faire autre chose, par exemple, afficher la normale...
-        // return make_color(std::abs(n.x), std::abs(n.y), std::abs(n.z));
+        // return Color(std::abs(n.x), std::abs(n.y), std::abs(n.z));
     }
 };
 
@@ -112,8 +112,8 @@ struct BasicPipeline : public Pipeline
 // cf http://geomalgorithms.com/a01-_area.html, section modern triangles
 float area( const Point p, const Point a, const Point b )
 {
-    Vector pa= make_vector(p, a); pa.z= 0;
-    Vector pb= make_vector(p, b); pb.z= 0;
+    Vector pa= Vector(p, a); pa.z= 0;
+    Vector pb= Vector(p, b); pb.z= 0;
     return cross(pa, pb).z;
 }
 
@@ -138,23 +138,23 @@ int main( void )
     Mesh mesh= read_mesh("data/bigguy.obj");
     if(mesh == Mesh::error())
         return 1;
-    printf("  %u positions\n", (unsigned int) mesh.positions.size());
-    printf("  %u indices\n", (unsigned int) mesh.indices.size());
+    printf("  %d positions\n", (unsigned int) mesh.vertex_count());
+    printf("  %d indices\n", (unsigned int) mesh.index_count());
     
     // regle le point de vue de la camera pour observer l'objet
     Point pmin, pmax;
-    mesh_bounds(mesh, pmin, pmax);
-    Orbiter camera= make_orbiter_lookat(center(pmin, pmax), distance(pmin, pmax));
+    mesh.bounds(pmin, pmax);
+    Orbiter camera(pmin, pmax);
 
     BasicPipeline pipeline( mesh, 
-        make_identity(), 
-        orbiter_view_transform(camera), 
-        orbiter_projection_transform(camera, color.width(), color.height(), 45) );
+        Identity(), 
+        camera.view(), 
+        camera.projection(color.width(), color.height(), 45) );
     
-    Transform viewport= make_viewport(color.width(), color.height());
+    Transform viewport= Viewport(color.width(), color.height());
     
-    // draw(pipeline, mesh.positions.size());
-    for(unsigned int i= 0; i +2 < (unsigned int) mesh.positions.size(); i= i +3)
+    // draw(pipeline, mesh.vertex_count());
+    for(unsigned int i= 0; i +2 < (unsigned int) mesh.vertex_count(); i= i +3)
     {
         // transforme les 3 sommets du triangle
         Point a= pipeline.vertex_shader(i);
@@ -167,9 +167,9 @@ int main( void )
         // faux dans certains cas...
         
         // passage dans le repere image
-        a= transform(viewport, a);
-        b= transform(viewport, b);
-        c= transform(viewport, c);
+        a= viewport(a);
+        b= viewport(b);
+        c= viewport(c);
         
         // question: comment ne pas dessiner le triangle s'il est mal oriente ?
         // aire du triangle abc
@@ -186,9 +186,9 @@ int main( void )
         {
             // fragment 
             Fragment frag;
-            frag.u= area(make_point(x, y, 0), a, b);      // distance c / ab
-            frag.v= area(make_point(x, y, 0), b, c);      // distance a / bc
-            frag.w= area(make_point(x, y, 0), c, a);      // distance b / ac
+            frag.u= area(Point(x, y, 0), a, b);      // distance c / ab
+            frag.v= area(Point(x, y, 0), b, c);      // distance a / bc
+            frag.w= area(Point(x, y, 0), c, a);      // distance b / ac
             
             if(frag.u > 0 && frag.v > 0 && frag.w > 0)
             {

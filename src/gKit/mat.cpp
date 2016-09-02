@@ -35,7 +35,7 @@ Transform Identity( )
 }
 
 //! renvoie le point transforme.
-Point Transform::operator() ( const Point& p )
+Point Transform::operator() ( const Point& p ) const
 {
     float x= p.x;
     float y= p.y;
@@ -55,7 +55,7 @@ Point Transform::operator() ( const Point& p )
 }
 
 //! renvoie le vecteur transforme.
-Vector Transform::operator() ( const Vector& v )
+Vector Transform::operator() ( const Vector& v ) const
 {
     float x= v.x;
     float y= v.y;
@@ -70,7 +70,7 @@ Vector Transform::operator() ( const Vector& v )
 }
 
 //! renvoie le point/vecteur homogene transforme.
-vec4 Transform::operator() ( const vec4& v )
+vec4 Transform::operator() ( const vec4& v ) const
 {
     float x= v.x;
     float y= v.y;
@@ -86,7 +86,7 @@ vec4 Transform::operator() ( const vec4& v )
 }
 
 //! renvoie la transposee de la matrice.
-Transform Transform::transpose( )
+Transform Transform::transpose( ) const
 {
     return Transform(
         m[0][0], m[1][0], m[2][0], m[3][0],
@@ -96,7 +96,7 @@ Transform Transform::transpose( )
 }
 
 //! renvoie la transformation a appliquer aux normales d'un objet transforme par la matrice m.
-Transform Transform::normal( )
+Transform Transform::normal( ) const
 {
     return inverse().transpose();
 }
@@ -241,7 +241,7 @@ Transform operator* ( const Transform& a, const Transform& b )
     return compose_transform(a, b);
 }
 
-Transform Transform::inverse( )
+Transform Transform::inverse( ) const
 {
     Transform minv= *this;
     

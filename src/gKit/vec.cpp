@@ -22,7 +22,7 @@ Point center( const Point& a, const Point& b )
 Vector operator- ( const Point& a, const Point& b )
 {
     //~ return make_vector(a.x - b.x, a.y - b.y, a.z - b.z);
-    return Vector(b, a);        //!< \bug argh !! calcule le vecteur oppose... reprendre tous les tutos... !!
+    return Vector(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
 Vector operator- ( const Vector& v )
