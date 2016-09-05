@@ -28,7 +28,7 @@ votre environnement de développement :
 - makefile ou xcode pour mac os.
 	
 
-c'est l'outil premake4 qui permet de créer les projets, et les makefiles, cf section premake.
+c'est l'outil premake qui permet de créer les projets, et les makefiles, cf section premake.
 
 ## linux
 
@@ -50,12 +50,16 @@ les librairies sont disponibles :
 - [sdl2_image](https://www.libsdl.org/projects/SDL_image/), section development libraries
 	
 	
-premake4 est disponible :
+plusieurs versions premake sont disponibles :
 
-- [premake 4.4](http://premake.github.io/download.html), copiez le dans le répertoire des sources de gKit
+- pour générer des projets Visual Studio 2013 :
+[premake 4.4](http://premake.github.io/download.html), copiez le dans le répertoire des sources de gKit
+
+- pour générer des projets Visual Studio 2015 :
+[premake 5](http://premake.github.io/download.html), copiez le dans le répertoire des sources de gKit
 
 ### installation rapide
-les librairies et premake4 sont regroupées dans une archive [disponible ici](http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/gkit2light_extern.zip).
+les librairies et premake4/5 sont regroupées dans une archive [disponible ici](http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/gkit2light_extern.zip).
 
 il suffit de dezipper l'archive dans le répertoire de gKit. et ensuite de copier les dll que vous allez utiliser dans le répertoire de gKit. 
 
@@ -63,7 +67,7 @@ il suffit de dezipper l'archive dans le répertoire de gKit. et ensuite de copie
 le plus simple est de créer un sous répertoire, `extern` par exemple, et d'y copier les fichiers `.h`, `.dll` et `.lib`. vous devez obtenir une structure :
 
 	gKit2light/
-		premake4
+		premake4/5
 		premake4.lua
 		data/
 			shaders/
@@ -132,6 +136,7 @@ _rappel :_ commandes `ls` et `cd`
 
 - si vous voulez générer un projet visual studio, il suffit de choisir la bonne version,
 	- `./premake4 vs2013`
+	- `./premake5 vs2015`
 	
 - pour code blocks...
 	- `./premake4 codeblocks`

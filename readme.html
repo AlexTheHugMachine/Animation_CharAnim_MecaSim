@@ -27,7 +27,7 @@ votre environnement de développement : </p>
 <li><p>makefile ou xcode pour mac os.</p></li>
 </ul>
 
-<p>c'est l'outil premake4 qui permet de créer les projets, et les makefiles, cf section premake.</p>
+<p>c'est l'outil premake qui permet de créer les projets, et les makefiles, cf section premake.</p>
 
 <h2>linux</h2>
 
@@ -48,15 +48,18 @@ votre environnement de développement : </p>
 <li><p><a href="https://www.libsdl.org/projects/SDL_image/">sdl2_image</a>, section development libraries</p></li>
 </ul>
 
-<p>premake4 est disponible :</p>
+<p>plusieurs versions premake sont disponibles :</p>
 
 <ul>
-<li><a href="http://premake.github.io/download.html">premake 4.4</a>, copiez le dans le répertoire des sources de gKit</li>
+<li><p>pour générer des projets Visual Studio 2013 :
+<a href="http://premake.github.io/download.html">premake 4.4</a>, copiez le dans le répertoire des sources de gKit</p></li>
+<li><p>pour générer des projets Visual Studio 2015 :
+<a href="http://premake.github.io/download.html">premake 5</a>, copiez le dans le répertoire des sources de gKit</p></li>
 </ul>
 
 <h3>installation rapide</h3>
 
-<p>les librairies et premake4 sont regroupées dans une archive <a href="http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/gkit2light_extern.zip">disponible ici</a>.</p>
+<p>les librairies et premake4/5 sont regroupées dans une archive <a href="http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/gkit2light_extern.zip">disponible ici</a>.</p>
 
 <p>il suffit de dezipper l'archive dans le répertoire de gKit. et ensuite de copier les dll que vous allez utiliser dans le répertoire de gKit. </p>
 
@@ -65,7 +68,7 @@ votre environnement de développement : </p>
 <p>le plus simple est de créer un sous répertoire, <code>extern</code> par exemple, et d'y copier les fichiers <code>.h</code>, <code>.dll</code> et <code>.lib</code>. vous devez obtenir une structure :</p>
 
 <pre><code>gKit2light/
-    premake4
+    premake4/5
     premake4.lua
     data/
         shaders/
@@ -137,6 +140,7 @@ votre environnement de développement : </p>
 
 <ul>
 <li><code>./premake4 vs2013</code></li>
+<li><code>./premake5 vs2015</code></li>
 </ul></li>
 <li><p>pour code blocks...</p>
 
