@@ -62,6 +62,7 @@ int draw( )
 */
 
 //! representation d'une interface graphique minimaliste.
+//! \todo interface c++
 struct Widgets
 {
     Widgets( ) : console(), px(0), py(0), focus(0), fx(0), fy(0), mb(0), mx(0), my(0), wx(0), wy(0), key(0), mod(0) {}
@@ -78,9 +79,6 @@ struct Widgets
     
     int key;            //!< touche
     unsigned int mod;   //!< touches supplementaires, alt, ctrl, etc.
-    
-    //~ int drop;
-    //~ const char *filename;
 };
 
 

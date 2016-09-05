@@ -57,6 +57,7 @@ remarque : *oui*, il y a un constructeur et un destructeur par defaut, mais *non
 pourquoi ? le cycle de vie des objets n'est *pas* le meme. pour creer ou detruire un objet openGL, il *faut* qu'un contexte openGL existe... \n
 d'ou la creation et desctruction des objets openGL dans les fonctions init() et quit() de l'application, a un moment ou on controle le contexte openGL.
 */
+//! \todo interface c++
 struct Text
 {
     Text( ) : color( White() ), font(0), program(0), vao(0), ubo(0) {}
