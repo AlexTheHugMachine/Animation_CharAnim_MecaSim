@@ -83,17 +83,17 @@ si la ligne `glTexParameter(.... GL_TEXTURE_MAX_LEVEL ...)` n'est pas présente,
 _remarque :_ il y plusieurs solutions pour régler ce problème, le plus simple est de continuer à lire le tuto...
 
 en pratique, on charge l'image en utilisant une librairie et selon le type des pixels de l'image, il faut configurer correctement le format des données transmises à openGL. 
-gKit utilise SDL2_image pour charger les images et renvoie une structure simplifiée qui contient : largeur, hauteur, nombre de canaux couleurs et les données, cf la classe Image 
-dans image.h.
+gKit utilise SDL2_image pour charger les images et renvoie une structure simplifiée qui contient : largeur, hauteur, nombre de canaux couleurs et les données, cf la classe ImageData 
+dans image_io.h.
 
 du coup, un code pour charger une texture avec gKit ressemble à ça :
 \code
-#include "image.h"
+#include "image_io.h"
 
 int init( )
 {
 	...
-	Image image= read_image("toto.png");
+	ImageData image= read_image_data("toto.png");
 	
 	// format des données de l'image, couleurs avec 3 canaux, ou 4
 	GLenum data_format;
@@ -111,12 +111,9 @@ int init( )
 		GL_RGBA,
 		image.width, image.height, 0,
 		data_format, data_type,
-		&image.data.front());
+		image.buffer());
 	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-
-	// plus la peine de garder image en memoire
-	release_image(image);
 	...
 \endcode
 
@@ -137,7 +134,7 @@ int init( )
 	GLuint texcoord_buffer;
 	glGenBuffers(1, &texcoord_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * mesh.texcoords.size(), &mesh.texcoords.front(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, mesh.texcoord_buffer_size(), mesh.texcoord_buffer(), GL_STATIC_DRAW);
 	...
 \endcode
 
@@ -148,6 +145,7 @@ int init( )
 	...
 	GLuint vao= { ... };
 	GLuint program= { ... };
+	GLuint texcoord_buffer= { ... };
 
 	// selectionner le vertex array object, si necessaire
 	// glBindVertexArray(vao);
@@ -164,7 +162,10 @@ int init( )
 	...
 \endcode
 
-_remarque :_ les coordonnées dans la texture sont en 2d, comme on peut s'y attendre, cf 2, GL_FLOAT et vec2 pour les représenter.
+_remarque :_ les coordonnées dans la texture sont en 2d, comme on peut s'y attendre, cf 2, GL_FLOAT pour openGL et vec2 pour GLSL (les shaders) pour les représenter.
+
+_attention :_ l'api openGL et le langage des shaders, GLSL, n'appellent pas les types de la même manière, un vec2 GLSL est décrit comme 2, GL_FLOAT dans l'application pour l'api openGL.
+un vec3 GLSL, est décrit par 3, GL_FLOAT, etc.
 
 ### écrire le fragment shader (et le vertex shader)
 
@@ -335,7 +336,7 @@ et choisir la bonne taille de bloc qui contient la moyenne précalculée. openGL
 pour décrire complètement une texture à openGL, il faut donner toutes ces versions pré-calculées de l'image, donc plusieurs levels pour une résolution de base. 
 pour une image 1024x1024, il faudra les versions 512x512, 256x256, 128x128, etc. jusqu'a 1x1. c'est un peu long à écrire, mais pas difficile :
 \code
-	Image image= read_image( "..." );
+	ImageData image= read_image_data( "..." );
 
 	GLenum data_type= GL_UNSIGNED_BYTE;	
 	GLenum data_format= GL_RGBA;
@@ -348,18 +349,17 @@ pour une image 1024x1024, il faudra les versions 512x512, 256x256, 128x128, etc.
 	
 	// determine le nombre de niveaux en fonction des dimensions de l'image	
 	int levels= miplevels(image.width, image.height);	
+	
 	// calculer les versions pre filtrées d'une texture 
 	for(int i= 0; i < levels; i++)
 	{
 		// calcule le niveau i de l'image
-		Image level= make_miplevel(image, i);
+		ImageData level= make_miplevel(image, i);
 		
 		// transmet la version pre filtree
 		glTexImage2D(GL_TEXTURE_2D, i,
 			GL_RGBA, level.width, level.height, 0,
-			data_format, data_type, &level.data.front());
-			
-		release_image(level);
+			data_format, data_type, levelbuffer());
 	}
 	
 	// nombre de mipmaps initialisés
@@ -394,12 +394,12 @@ int miplevels( const int width, const int height )
 }
 \endcode
 
-_exercice :_ ecrivez la fonction `make_miplevel( const Image& image, const int level )`.
+_exercice :_ ecrivez la fonction `make_miplevel( const ImageData& image, const int level )`.
 
 
 mais il y a encore plus simple, il suffit de demander à openGL de faire les pré-calculs ! cf glGenerateMipmap( ) :
 \code
-	Image image= read_image( "..." );
+	ImageData image= read_image_data( "..." );
 	
 	GLenum data_type= GL_UNSIGNED_BYTE;	
 	GLenum data_format= GL_RGBA;
@@ -413,7 +413,7 @@ mais il y a encore plus simple, il suffit de demander à openGL de faire les pr�
 	// transmet uniquement l'image pleine resolution, level 0
 	glTexImage2D(GL_TEXTURE_2D, 0,
 		GL_RGBA, image.width, image.height, 0,
-		data_format, data_type, &image.data.front());
+		data_format, data_type, image.buffer());
 	
 	// precalcule les autres nvieaux 
 	glGenerateMipmap(GL_TEXTURE_2D);

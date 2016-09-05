@@ -47,12 +47,12 @@ public:
         \code
             Point d0;
             Vector dx0, dy0;
-            orbiter_image_frame(camera, width, height, 0, fov, d0, dx0, dy0);
+            camera.frame(width, height, 0, fov, d0, dx0, dy0);
             Point e= d0 + x*dx0 + y*dy0;
         \endcode
         - l'origine : 
         \code
-            Point o= orbiter_position(camera);
+            Point o= camera.position();
         \endcode
         
     ou autre solution, reproduire la projection openGL :
@@ -60,14 +60,14 @@ public:
         \code
             Point d1;
             Vector dx1, dy1;
-            orbiter_image_frame(camera, width, height, 1, fov, d1, dx1, dy1);
+            camera.frame( width, height, 1, fov, d1, dx1, dy1);
             Point e= d1 + x*dx1 + y*dy1;
         \endcode
         - origine : un point dans le plan image avec z = 0 :
         \code
             Point d0;
             Vector dx0, dy0;
-            orbiter_image_frame(camera, width, height, 0, fov, d0, dx0, dy0);
+            camera.frame(width, height, 0, fov, d0, dx0, dy0);
             Point o= d0 + x*dx0 + y*dy0;
         \endcode
      */

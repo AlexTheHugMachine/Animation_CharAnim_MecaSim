@@ -86,7 +86,7 @@ GLuint make_texture( const int unit, const ImageData& im )
     // transfere les donnees dans la texture
     glTexImage2D(GL_TEXTURE_2D, 0,
         GL_RGBA, im.width, im.height, 0,
-        format, type, &im.data.front());
+        format, type, im.buffer());
     
     // prefiltre la texture
     glGenerateMipmap(GL_TEXTURE_2D);

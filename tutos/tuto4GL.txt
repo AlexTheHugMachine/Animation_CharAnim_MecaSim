@@ -145,7 +145,7 @@ pour pouvoir manipuler un buffer, il faut le sélectionner, comme les autres obj
 	- les vertex buffers sont sélectionnés sur GL_ARRAY_BUFFER,
 	- les index buffers, sur GL_ELEMENT_BUFFER.
 
-exemple : créer un vertex buffer pour stocker les positions d'un mesh
+exemple : créer un vertex buffer pour stocker les positions d'un mesh, cf Mesh::vertex_buffer() et Mesh::vertex_buffer_size(), pour récupérer les infos nécessaires :
 \code
 	Mesh mesh= ... ;
 
@@ -157,7 +157,7 @@ exemple : créer un vertex buffer pour stocker les positions d'un mesh
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
 	
 	// dimensionner et intialiser le buffer selectionne sur array_buffer
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * mesh.positions.size(), &mesh.positions.front(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, mesh.vertex_buffer_size(), mesh.vertex_buffer(), GL_STATIC_DRAW);
 \endcode
 
 exemple : créer un vertex buffer, le dimensionner et changer son contenu
@@ -175,7 +175,7 @@ int init( )
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
 	
 	// dimensionner le buffer selectionne sur array_buffer
-	buffer_size= sizeof(vec3) * mesh.positions.size();
+	buffer_size= mesh.vertex_buffer_size();
 	glBufferData(GL_ARRAY_BUFFER, buffer_size, /* data */ NULL, GL_STATIC_DRAW);
 	// pas de donnees pour initialiser le contenu du buffer...
 	...
