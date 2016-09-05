@@ -89,15 +89,14 @@ int init( )
     glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, /* stride */ 0, /* offset */ 0);  // in vec3 normal;
     glEnableVertexAttribArray(attribute);
 
-    //! \todo portage 
 /*  autre solution pour le meme resultat :
 
     #include "buffer.h"
 
     GLuint vao= make_vertex_format();
 
-    vertex_buffer= make_vertex_buffer(vao, glGetAttribLocation(program, "position"), 3, GL_FLOAT);
-    normal_buffer= make_vertex_buffer(vao, glGetAttribLocation(program, "normal"), 3, GL_FLOAT);
+    vertex_buffer= make_vertex_buffer(vao, glGetAttribLocation(program, "position"), 3, GL_FLOAT, mesh.vertex_buffer_size(), mesh.vertex_buffer());
+    normal_buffer= make_vertex_buffer(vao, glGetAttribLocation(program, "normal"), 3, GL_FLOAT, mesh.normal_buffer_size(), mesh.normal_buffer());
  */
 
 
