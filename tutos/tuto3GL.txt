@@ -166,17 +166,17 @@ ou encore
 \code
 #include "color.h"
 
-Color data= make_color(1, 1, 1);
+Color data= Color(1, 1, 1);
 GLint location= glGetUniformLocation(program, "color");
 glUniform4fv(location, 1, &data);
 \endcode
 
-\ref program.h définit plusieurs surcharges de la famille glUniform() pour les types les plus courants.
+\ref uniforms.h définit plusieurs surcharges de la famille glUniform() pour les types les plus courants.
 \code
-#include "program.h"
+#include "uniforms.h"
 
 program_uniform(program, "time", 12);
-program_uniform(program, "color", make_color(1, 1, 1));
+program_uniform(program, "color", Color(1, 1, 1));
 \endcode
 
 ## glDraw( )
