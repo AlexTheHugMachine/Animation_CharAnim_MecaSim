@@ -215,7 +215,7 @@ int draw( void )
     Transform viewport= Viewport(window_width(), window_height());
     
     Transform mvp= projection * view * model;
-    Transform mvpInv= mvp.inverse();
+    Transform mvpInv= Inverse(mvp);
     Transform mv= model * view;
     
     // affiche l'objet

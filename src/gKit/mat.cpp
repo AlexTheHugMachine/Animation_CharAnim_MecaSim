@@ -29,11 +29,6 @@ Transform::Transform (
     m[3][0]= t30; m[3][1]= t31; m[3][2]= t32; m[3][3]= t33;
 }
 
-Transform Identity( )
-{
-    return Transform();
-}
-
 //! renvoie le point transforme.
 Point Transform::operator() ( const Point& p ) const
 {
@@ -99,6 +94,27 @@ Transform Transform::transpose( ) const
 Transform Transform::normal( ) const
 {
     return inverse().transpose();
+}
+
+
+Transform Identity( )
+{
+    return Transform();
+}
+
+Transform Transpose( const Transform& m )
+{
+    return m.transpose();
+}
+
+Transform Inverse( const Transform& m )
+{
+    return m.inverse();
+}
+
+Transform Normal( const Transform& m )
+{
+    return m.normal();
 }
 
 Transform Scale( const float x, const float y, const float z )

@@ -77,7 +77,7 @@ struct BasicPipeline : public Pipeline
         : Pipeline(), mesh(_mesh), model(_model), view(_view), projection(_projection) 
     {
         mvp= projection * view * model;
-        mv= (view * model).normal();
+        mv= Normal(view * model);
     }
     
     Point vertex_shader( const int vertex_id ) const
@@ -103,7 +103,7 @@ struct BasicPipeline : public Pipeline
         // calcule une couleur qui depend de l'orientation de la primitive par rapport a la camera
         return White() * std::abs(n.z);
         
-        // on peut faire autre chose, par exemple, afficher la normale...
+        // on peut faire autre chose, par exemple, afficher directement la normale...
         // return Color(std::abs(n.x), std::abs(n.y), std::abs(n.z));
     }
 };
@@ -132,7 +132,7 @@ int draw( ) { return 0; }
 
 int main( void )
 {
-    Image color(1024, 640);
+    Image color(640, 320);
     ZBuffer depth(color.width(), color.height());
     
     Mesh mesh= read_mesh("data/bigguy.obj");
@@ -203,12 +203,11 @@ int main( void )
                 frag.z= frag.u * c.z + frag.v * a.z + frag.w * b.z;
                 
                 // evalue la couleur du fragment du triangle
-                //~ Color frag_color= pipeline.fragment_shader(i/3, frag);
+                Color frag_color= pipeline.fragment_shader(i/3, frag);
                 
                 // ztest
                 if(frag.z < depth(x, y))
                 {
-                    Color frag_color= pipeline.fragment_shader(i/3, frag);
                     color(x, y)= Color(frag_color, 1);
                     depth(x, y)= frag.z;
                 }

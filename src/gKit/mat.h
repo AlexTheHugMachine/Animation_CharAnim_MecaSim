@@ -49,6 +49,13 @@ struct Transform
 //! construit la transformation identite.
 Transform Identity( );
 
+//! renvoie la transposee de la matrice.
+Transform Transpose( const Transform& m );
+//! renvoie l'inverse de la matrice.
+Transform Inverse( const Transform& m );
+//! renvoie la transformation a appliquer aux normales d'un objet transforme par la matrice m.
+Transform Normal( const Transform& m );
+
 //! renvoie la matrice representant une mise a l'echelle / etirement.
 Transform Scale( const float x, const float y, const float z );
 
