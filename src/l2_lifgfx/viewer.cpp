@@ -1,15 +1,17 @@
 
 #include <cassert>
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
+#include <iostream>
 
 #include "draw.h"        // pour dessiner du point de vue d'une camera
 #include "viewer.h"
 
+using namespace std;
 
 Viewer* Viewer::s_singleton = NULL;
 
-Viewer::Viewer() : program(0), b_draw_grid(true)
+Viewer::Viewer() : program(0), b_draw_grid(true), b_draw_axe(true)
 {
     s_singleton=this;
 }
@@ -17,6 +19,7 @@ Viewer::Viewer() : program(0), b_draw_grid(true)
 
 void Viewer::help()
 {
+    printf("HELP:\n");
     printf("\th: help\n");
     printf("\ta: (des)active l'affichage de l'axe\n");
     printf("\tg: (des)active l'affichage de la grille\n");
@@ -26,7 +29,7 @@ int Viewer::init()
 {
     //system("pwd");
     // Creer une camera par defaut, elle est placee en 0, 0, 5 et regarde les objets situes en 0, 0, 0
-    camera= make_orbiter();
+    //camera= make_orbiter();
 
     // etat par defaut openGL
     glClearColor(0.5f, 0.5f, 0.9f, 1);
@@ -50,35 +53,35 @@ int Viewer::init()
 
 void Viewer::init_axe()
 {
-    axe = create_mesh(GL_LINES);
-    vertex_color(axe, make_color(1, 0, 0));
-    push_vertex( axe,  0,  0, 0);
-    push_vertex( axe,  1,  0, 0);
+    axe = Mesh(GL_LINES);
+    axe.color( Color(1, 0, 0));
+    axe.vertex( 0,  0, 0);
+    axe.vertex( 1,  0, 0);
 
-    vertex_color(axe, make_color(0, 1, 0));
-    push_vertex( axe,  0,  0, 0);
-    push_vertex( axe,  0,  1, 0);
+    axe.color( Color(0, 1, 0));
+    axe.vertex( 0,  0, 0);
+    axe.vertex( 0,  1, 0);
 
-    vertex_color(axe, make_color( 0, 0, 1));
-    push_vertex( axe,  0,  0, 0);
-    push_vertex( axe,  0,  0, 1);
+    axe.color( Color( 0, 0, 1));
+    axe.vertex( 0,  0, 0);
+    axe.vertex( 0,  0, 1);
 }
 
 
 void Viewer::init_grid()
 {
-    grid = create_mesh(GL_LINES);
+    grid = Mesh(GL_LINES);
 
-    vertex_color(grid, make_color(1, 1, 1));
+    grid.color( Color(1, 1, 1));
     int i,j;
     for(i=-5;i<=5;++i)
         for(j=-5;j<=5;++j)
         {
-            push_vertex(grid, -5, 0, j);
-            push_vertex(grid, 5, 0,  j);
+            grid.vertex( -5, 0, j);
+            grid.vertex( 5, 0,  j);
 
-            push_vertex(grid, i, 0, -5);
-            push_vertex(grid, i, 0, 5);
+            grid.vertex( i, 0, -5);
+            grid.vertex( i, 0, 5);
 
         }
 }
@@ -92,33 +95,32 @@ void Viewer::init_cube()
     static float uv[4][2] = { {0,0}, {1,0}, {1,1}, {0,1} };
     int i,j;
 
-    cube = create_mesh(GL_TRIANGLES);
-    vertex_color(cube, make_color(1, 0, 1));
+    cube = Mesh(GL_TRIANGLES);
+    cube.color( Color(1, 0, 1) );
 
     cube_texture = read_texture(0, "data/debug2x2red.png");
 
     for (i=0;i<6;i++)
     {
-        vertex_normal(cube, vec3(n[i][0], n[i][1], n[i][2] ) );
+        cube.normal(  n[i][0], n[i][1], n[i][2] );
 
-        vertex_texcoord(cube, 0,0 );
-        push_vertex(cube, pt[ f[i][0] ][0], pt[ f[i][0] ][1], pt[ f[i][0] ][2] );
+        cube.texcoord( 0,0 );
+        cube.vertex( pt[ f[i][0] ][0], pt[ f[i][0] ][1], pt[ f[i][0] ][2] );
 
-        vertex_texcoord(cube, 1,0);
-        push_vertex(cube, pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
+        cube.texcoord( 1,0);
+        cube.vertex( pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
 
-        vertex_texcoord(cube, 0,1);
-        push_vertex(cube, pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
+        cube.texcoord(0,1);
+        cube.vertex(pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
 
+        cube.texcoord(1,0);
+        cube.vertex( pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
 
-        vertex_texcoord(cube, 1,0);
-        push_vertex(cube, pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
+        cube.texcoord(1,1);
+        cube.vertex( pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
 
-        vertex_texcoord(cube, 1,1);
-        push_vertex(cube, pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
-
-        vertex_texcoord(cube, 0,1);
-        push_vertex(cube, pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
+        cube.texcoord(0,1);
+        cube.vertex( pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
     }
 }
 
@@ -126,31 +128,31 @@ void Viewer::init_cube()
 
 void Viewer::init_quad()
 {
-    quad = create_mesh(GL_TRIANGLES);
-    vertex_color(quad, make_color(1, 1, 1));
+    quad = Mesh(GL_TRIANGLES);
+    quad.color( Color(1, 1, 1));
 
     quad_texture = read_texture(0, "data/papillon.jpg");
 
-    vertex_normal(quad, vec3( 0, 0, -1 ) );
+    quad.normal(  0, 0, -1 );
 
-    vertex_texcoord(quad, 0,0 );
-    push_vertex(quad, -1, -1, 0 );
+    quad.texcoord(0,0 );
+    quad.vertex(-1, -1, 0 );
 
-    vertex_texcoord(quad, 1,0);
-    push_vertex(quad,  1, -1, 0 );
+    quad.texcoord(1,0);
+    quad.vertex(  1, -1, 0 );
 
-    vertex_texcoord(quad, 0,1);
-    push_vertex(quad,  -1, 1, 0 );
+    quad.texcoord(0,1);
+    quad.vertex( -1, 1, 0 );
 
 
-    vertex_texcoord(quad, 1,0);
-    push_vertex(quad,  1, -1, 0 );
+    quad.texcoord(1,0);
+    quad.vertex( 1, -1, 0 );
 
-    vertex_texcoord(quad, 1,1);
-    push_vertex(quad,  1,  1, 0 );
+    quad.texcoord( 1,1);
+    quad.vertex(  1,  1, 0 );
 
-    vertex_texcoord(quad, 0,1);
-    push_vertex(quad, -1,  1, 0 );
+    quad.texcoord( 0,1);
+    quad.vertex(-1,  1, 0 );
 }
 
 
@@ -175,27 +177,27 @@ int Viewer::draw( )
     unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
     // deplace la camera
     if((mb & SDL_BUTTON(1)) &&  (mb& SDL_BUTTON(3)))                 // le bouton du milieu est enfonce
-        orbiter_translation(camera, (float) mx / (float) window_width(), (float) my / (float) window_height());         // deplace le point de rotation
+        camera.translation( (float) mx / (float) window_width(), (float) my / (float) window_height());         // deplace le point de rotation
     else if(mb & SDL_BUTTON(1))                      // le bouton gauche est enfonce
-        orbiter_rotation(camera, mx, my);       // tourne autour de l'objet
+        camera.rotation( mx, my);       // tourne autour de l'objet
     else if(mb & SDL_BUTTON(3))                 // le bouton droit est enfonce
-        orbiter_move(camera, mx);               // approche / eloigne l'objet
+        camera.move( mx);               // approche / eloigne l'objet
 
-    if (key_state(SDLK_h)) help();
-    if (key_state(SDLK_g)) { b_draw_grid = !b_draw_grid; clear_key_state(SDLK_g); }
-    if (key_state(SDLK_a)) { b_draw_axe = !b_draw_axe; clear_key_state(SDLK_a); }
-    if (key_state(SDLK_DOWN)) { orbiter_move(camera, -1); }
-    if (key_state(SDLK_UP)) { orbiter_move(camera, 1); }
+    if (key_state('h')) help();
+    if (key_state('g')) { b_draw_grid = !b_draw_grid; clear_key_state('g'); }
+    if (key_state('a')) { b_draw_axe = !b_draw_axe; clear_key_state('a'); }
+    if (key_state(SDLK_DOWN)) { camera.move( -1); }
+    if (key_state(SDLK_UP)) { camera.move( 1); }
 
 
     // on dessine l'objet du point de vue de la camera
     if (b_draw_grid) ::draw(grid, camera);
     if (b_draw_axe) ::draw(axe, camera);
 
-    Transform Tc= make_translation( -3, 5, 0 );
+    Transform Tc= Translation( -3, 5, 0 );
     ::draw(cube, Tc, camera, cube_texture);
 
-    Transform Tq= make_translation( 3, 5, 0 );
+    Transform Tq= Translation( 3, 5, 0 );
     ::draw(quad, Tq, camera, quad_texture);
 
 
