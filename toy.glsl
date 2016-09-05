@@ -27,9 +27,15 @@ float sphere( const vec3 p, const float radius )
     return length(p) - radius;
 }
 
-float box( vec3 p, vec3 b, float r )
+float rbox( vec3 p, vec3 b, float r )
 {
   return length(max(abs(p) - b, 0.0)) - r;
+}
+
+float box( vec3 p, vec3 b )
+{
+  vec3 d = abs(p) - b;
+  return min(max(d.x,max(d.y,d.z)),0.0) + length(max(d, 0.0));
 }
 
 float displace( const vec3 p )
@@ -39,12 +45,14 @@ float displace( const vec3 p )
 
 float object( const vec3 p )
 {
-    //~ float d1= sphere(p, 0.75);
-    float d1= box(p, vec3(0.5, 0.5, 0.5), 0.1);
+    float d1= sphere(p, 0.75);
+    //~ float d2= rbox(p, vec3(0.5, 0.5, 0.5), 0.1);
+    float d2= box(p, vec3(0.6, 0.6, 0.6));
     //~ float d2= displace(p);
-    float d2= 0;
+    //~ float d2= 0;
     
-    return d1+d2;
+    return max(-d1,d2);
+    //~ return d2;
 }
 
 
@@ -68,7 +76,7 @@ void main( )
     float t= 0.0;
     float distance= 0.0;
     vec3 p;
-    for(int i= 0; i < 64; i++)
+    for(int i= 0; i < 128; i++)
     {
         p= o + t * d;
         
@@ -79,7 +87,7 @@ void main( )
     vec4 q= mvMatrix * vec4(p, 1);
     q/= q.w;
     vec3 n= cross(normalize(dFdx(q.xyz)), normalize(dFdy(q.xyz)));
-    fragment_color= vec4(abs(n), 1);
+    fragment_color= vec4(abs(n.zzz), 1);
 }
 
 #endif

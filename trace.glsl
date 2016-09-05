@@ -67,7 +67,7 @@ float plane( const in vec3 o, const in vec3 d, const in vec3 anchor, const in ve
 }
 
 
-bool object( const in vec3 o, const in vec3 d, out float t, out vec3 n )
+bool object( const in vec3 o, const in vec3 d, out float t, out vec3 n, out vec3 c )
 {
     vec3 center= vec3(0, 0, 0) + vec3(cos(time / 1000), sin(time / 4000) /2, sin(time / 1000));
     float radius= 0.6;
@@ -78,12 +78,38 @@ bool object( const in vec3 o, const in vec3 d, out float t, out vec3 n )
     {
         n= normalize(o + t1*d - center); 
         t= t1;
+        //~ // couleur constante
+        c= vec3(1, 0.2, 0.6);
+        
+        // miroir
+        vec3 mo= o + t1*d + 0.001 * n;
+        vec3 md= reflect(d, n);
+        vec3 mc;
+        float mt= plane(mo, md, vec3(0, -0.5, 0), vec3(0, 1, 0));
+        if(mt < inf)
+        {
+            vec3 mp= mo + mt*md;
+            float dd= length(mp - (floor(mp) + 0.5));
+            float r0= 0.8;
+            float r= r0 + (1.0 - r0) * pow(1.0 + dot(n, md), 5);
+            
+            c= vec3(abs(md)*dd) * 4 * c * r;
+
+            //~ c= vec3(0.6, 0.2, 1) * c * r;
+        }
         return true;
     }
     else if(t2 < inf && t2 < t1)
     {
         n= vec3(0, 1, 0);
         t= t2;
+        //~ // couleur constante
+        //~ c= vec3(1, 0.9, 0.9);
+        // damier
+        vec3 p= o + t2*d;
+        float dd= length(p - (floor(p) + 0.5));
+        c= vec3(abs(d)*dd) * 4;
+        //~ c= vec3(abs(normalize(d)));
         return true;
     }
     
@@ -111,16 +137,18 @@ void main( )
     d= normalize(d);
     
     vec3 n;
+    vec3 c;
     float t;
-    if(object(o, d, t, n))
+    if(object(o, d, t, n, c))
     {
         vec3 p= o + t*d;
         vec3 light= normalize(vec3(2, 1, 0));
         vec3 shadown;
+        vec3 shadowc;
         float shadow;
-        bool hit= object(p + n * 0.001, light, shadow, shadown);
+        bool hit= object(p + n * 0.001, light, shadow, shadown, shadowc);
         
-        vec3 color= vec3(1, 0.9, 0.9) * abs(dot(n, light));
+        vec3 color= c * max(0, dot(n, light));
         if(hit) color= color*0.3;
         fragment_color= vec4(color, 1);
     }
