@@ -171,6 +171,7 @@ int release_program( const GLuint program )
         glDeleteShader(shaders[i]);
     }
     
+    glDeleteProgram(program);
     return 0;
 }
 
