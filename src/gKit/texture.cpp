@@ -1,6 +1,7 @@
 
 #include <cassert>
 #include <cstdio>
+#include <algorithm>
 
 #include "texture.h"
 #include "image_io.h"
@@ -116,7 +117,7 @@ int screenshot( const char *filename )
     // transfere les pixels
     ImageData image(viewport[2], viewport[3], 4);
     glReadPixels(0, 0, image.width, image.height,
-        GL_RGBA, GL_UNSIGNED_BYTE, &image.data.front());
+        GL_RGBA, GL_UNSIGNED_BYTE, image.buffer());
 
     // ecrit l'image
     return write_image_data(image, filename);
