@@ -20,7 +20,6 @@ Image read_image( const char *filename )
     if(surface == NULL)
     {
         printf("loading image '%s'... sdl_image failed.\n", filename);
-        //~ return create_image(2, 2, make_red());
         return Image::error();
     }
 
@@ -30,7 +29,6 @@ Image read_image( const char *filename )
     {
         printf("loading image '%s'... format failed. (bpp %d)\n", filename, format.BitsPerPixel);
         SDL_FreeSurface(surface);
-        //~ return create_image(2, 2, make_red());
         return Image::error();
     }
     

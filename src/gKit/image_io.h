@@ -11,7 +11,7 @@
 //! \file
 //! manipulation directe d'images
 
-//! charge une image a partir d'un fichier. renvoie Image::error() en cas d'echec. a detruire avec release_image( ).
+//! charge une image a partir d'un fichier. renvoie Image::error() en cas d'echec. a detruire avec image::release( ).
 //! \param filemane nom de l'image a charger
 Image read_image( const char *filename );
 
