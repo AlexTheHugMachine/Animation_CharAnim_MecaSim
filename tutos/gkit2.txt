@@ -3,7 +3,10 @@
 
 gKit2light est une base de code permettant d'écrire des applications utilisant openGL.
 
-elle est composée de plusieurs utilitaires :
+pour l'utiliser, il faut installer quelques dépendances, selon le système que vous utilisez :
+    - \ref installation
+
+gKit2light est composé de plusieurs utilitaires :
     - window.h fournit un squelette d'application, 
     - mesh.h permet de décrire et d'afficher des objets 3d,
     - image.h et color.h permettent de charger, d'enregistrer et de manipuler des images, pixel par pixel,
@@ -32,6 +35,6 @@ plus ceux dédiés à openGL :
     - \ref shader_reflect,
     - \ref tuto5GL
     
-et un utilitaire pour jouer avec les shaders, shader_kit, décrit dans \ref tuto2GL.
+et un utilitaire pour jouer avec les shaders, shader_kit, décrit dans \ref tuto2GL
 
  */

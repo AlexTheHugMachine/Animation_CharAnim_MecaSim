@@ -42,4 +42,6 @@ ImageData read_image_data( const char *filename );
 //! enregistre des donnees dans un fichier png.
 int write_image_data( ImageData& image, const char *filename );
 
+///@}
+
 #endif
