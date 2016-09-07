@@ -262,7 +262,7 @@ public:
         eventuellement applique une texture sur la surface de l'objet. 
     
         \param use_light si vrai light et light_color doivent etre definis,
-        \param use_texture, si vrai texture doit est l'identifiant d'une texture openGL.
+        \param use_texture si vrai texture doit est l'identifiant d'une texture openGL.
     */
     void draw( const Transform& model, const Transform& view, const Transform& projection, 
         const bool use_light, const Point& light, const Color& light_color, 
@@ -272,7 +272,7 @@ public:
     //! exemple, cf create_program( )
     GLuint create_buffers( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
 
-    //! construit le shader program configure pour dessiner l'objet avec openGL. utilitaire. detruit par release_mesh( ).\n
+    //! construit le shader program configure pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).\n
     /*! exemple :
     \code
     Mesh mesh= { ... };
