@@ -16,8 +16,8 @@ out vec3 vertex_position;
 #endif
 
 #ifdef USE_COLOR
-    layout(location= 3) in vec3 color;
-    out vec3 vertex_color;
+    layout(location= 3) in vec4 color;
+    out vec4 vertex_color;
 #endif
 
 uniform mat4 mvpMatrix;
@@ -58,7 +58,12 @@ in vec3 vertex_position;
 #endif
 
 #ifdef USE_COLOR
-    in vec3 vertex_color;
+    in vec4 vertex_color;
+#endif
+
+#ifdef USE_LIGHT
+uniform vec3 light;
+uniform vec4 light_color;
 #endif
 
 uniform vec4 mesh_color;
@@ -67,7 +72,7 @@ void main( )
 {
     vec4 color= mesh_color;
 #ifdef USE_COLOR
-    color= vec4(vertex_color, 1);
+    color= vertex_color;
 #endif
 
 #ifdef USE_TEXCOORD
@@ -92,7 +97,16 @@ void main( )
     normal= normalize(cross(t, b));
 #endif
     
-    color.rgb= color.rgb * abs(normal.zzz);
+    float cos_theta;
+#ifdef USE_LIGHT
+    //~ cos_theta= abs(dot(normal, normalize(light - vertex_position)));
+    cos_theta= max(0, dot(normal, normalize(light - vertex_position)));
+    color= color * light_color;
+#else
+    cos_theta= abs(normal.z);
+#endif
+
+    color= color * cos_theta;
     // hachure les triangles mal orientes
     if(gl_FrontFacing == false) // if(!gl_FrontFacing) bug sur mac ?!
     {
@@ -101,6 +115,6 @@ void main( )
             color= vec4(0.8, 0.4, 0, 1);
     }
     
-    gl_FragColor= color;
+    gl_FragColor= vec4(color.rgb, 1);
 }
 #endif

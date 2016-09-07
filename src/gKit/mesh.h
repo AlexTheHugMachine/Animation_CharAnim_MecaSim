@@ -157,37 +157,34 @@ public:
     Mesh& restart_strip( );
     
     //! modifie la couleur du sommet d'indice id.
-    Mesh& update_color( const unsigned int id, const vec4& color );
+    Mesh& color( const unsigned int id, const vec4& c );
     //! modifie la couleur du sommet d'indice id.
-    Mesh& update_color( const unsigned int id, const Color& color ) { return update_color(id, vec4(color.r, color.g, color.b, color.a)); }
+    Mesh& color( const unsigned int id, const Color& c ) { return color(id, vec4(c.r, c.g, c.b, c.a)); }
     //! modifie la couleur du sommet d'indice id.
-    Mesh& update_color( const unsigned int id, const float r, const float g, const float b, const float a= 1) { return update_color(id, Color(r, g, b, a)); }
+    Mesh& color( const unsigned int id, const float r, const float g, const float b, const float a= 1) { return color(id, vec4(r, g, b, a)); }
 
     //! modifie la normale du sommet d'indice id.
-    Mesh& update_normal( const unsigned int id, const vec3& normal );
+    Mesh& normal( const unsigned int id, const vec3& n );
     //! modifie la normale du sommet d'indice id.
-    Mesh& update_normal( const unsigned int id, const Vector& normal ) { return update_normal(id, vec3(normal)); }
+    Mesh& normal( const unsigned int id, const Vector& n ) { return normal(id, vec3(n)); }
     //! modifie la normale du sommet d'indice id.
-    Mesh& update_normal( const unsigned int id, const float x, const float y, const float z ) { return update_normal(id, vec3(x, y, z)); }
+    Mesh& normal( const unsigned int id, const float x, const float y, const float z ) { return normal(id, vec3(x, y, z)); }
     
     //! modifie les coordonnees du sommet d'indice id.
-    Mesh& update_texcoord( const unsigned int id, const vec2& uv );
+    Mesh& texcoord( const unsigned int id, const vec2& uv );
     //! modifie les coordonnees du sommet d'indice id.
-    Mesh& update_texcoord( const unsigned int id, const float x, const float y ) { return update_texcoord(id, vec2(x, y)); }
+    Mesh& texcoord( const unsigned int id, const float x, const float y ) { return texcoord(id, vec2(x, y)); }
     
     //! modifie la position du sommet d'indice id.
-    void update_vertex( const unsigned int id, const vec3& p );
+    void vertex( const unsigned int id, const vec3& p );
     //! modifie la position du sommet d'indice id.
-    void update_vertex( const unsigned int id, const Point& p ) { update_vertex(id, vec3(p)); }
+    void vertex( const unsigned int id, const Point& p ) { vertex(id, vec3(p)); }
     //! modifie la position du sommet d'indice id.
-    void update_vertex( const unsigned int id, const float x, const float y, const float z ) { update_vertex(id, vec3(x, y, z)); }
+    void vertex( const unsigned int id, const float x, const float y, const float z ) { vertex(id, vec3(x, y, z)); }
     
     //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet (boite englobante alignee sur les axes, aabb).
     void bounds( Point& pmin, Point& pmax );
     
-    //! dessine l'objet avec les transformations model, vue et projection.
-    void draw( const Transform& model, const Transform& view, const Transform& projection, const GLuint texture );
-
     //! renvoie le nombre de sommets.
     int vertex_count( ) const { return m_positions.size(); }
     //! renvoie le nombre d'indices de sommets.
@@ -260,6 +257,17 @@ public:
         return (this == &m);
     }
     
+    /*! dessine l'objet avec les transformations model, vue et projection.\n
+        eventuellement eclaire l'objet avec une source de lumiere.\n
+        eventuellement applique une texture sur la surface de l'objet. 
+    
+        \param use_light si vrai light et light_color doivent etre definis,
+        \param use_texture, si vrai texture doit est l'identifiant d'une texture openGL.
+    */
+    void draw( const Transform& model, const Transform& view, const Transform& projection, 
+        const bool use_light, const Point& light, const Color& light_color, 
+        const bool use_texture, const GLuint texture );
+    
     //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).\n
     //! exemple, cf create_program( )
     GLuint create_buffers( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
@@ -276,13 +284,13 @@ public:
     // dessine uniquement la geometrie... sans couleurs, sans normales, sans textures
     draw(mesh, camera);
     \endcode
+
+    \param use_texcoord force l'utilisation des coordonnees de texture
+    \param use_normal force l'utilisation des normales
+    \param use_color force l'utilisation des couleurs 
      */
-
-    //! \param use_texcoord force l'utilisation des coordonnees de texture
-    //! \param use_normal force l'utilisation des normales
-    //! \param use_color force l'utilisation des couleurs 
-    GLuint create_program( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
-
+    GLuint create_program( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true, const bool use_light= false );
+    
     int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color );
     
 protected:    

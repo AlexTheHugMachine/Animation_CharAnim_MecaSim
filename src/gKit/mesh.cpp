@@ -78,23 +78,23 @@ unsigned int Mesh::vertex( const vec3& position )
     return index;
 }
 
-Mesh& Mesh::update_color( const unsigned int id, const vec4& color )
+Mesh& Mesh::color( const unsigned int id, const vec4& c )
 {
     assert(id < m_colors.size());
     m_update_buffers= true;
-    m_colors[id]= color;
+    m_colors[id]= c;
     return *this;
 }
 
-Mesh& Mesh::update_normal( const unsigned int id, const vec3& normal )
+Mesh& Mesh::normal( const unsigned int id, const vec3& n )
 {
     assert(id < m_normals.size());
     m_update_buffers= true;
-    m_normals[id]= normal;
+    m_normals[id]= n;
     return *this;
 }
 
-Mesh& Mesh::update_texcoord( const unsigned int id, const vec2& uv )
+Mesh& Mesh::texcoord( const unsigned int id, const vec2& uv )
 {
     assert(id < m_texcoords.size());
     m_update_buffers= true;
@@ -102,11 +102,11 @@ Mesh& Mesh::update_texcoord( const unsigned int id, const vec2& uv )
     return *this;
 }
 
-void Mesh::update_vertex( const unsigned int id, const vec3& position )
+void Mesh::vertex( const unsigned int id, const vec3& p )
 {
     assert(id < m_positions.size());
     m_update_buffers= true;
-    m_positions[id]= position;
+    m_positions[id]= p;
 }
 
 Mesh& Mesh::triangle( const unsigned int a, const unsigned int b, const unsigned int c )
@@ -240,7 +240,7 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
 }
 
 
-GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, const bool use_color )
+GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light )
 {
     std::string definitions;
 
@@ -250,11 +250,13 @@ GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, con
         definitions.append("#define USE_NORMAL\n");
     if(m_colors.size() > 0 && use_color)
         definitions.append("#define USE_COLOR\n");
+    if(use_light)
+        definitions.append("#define USE_LIGHT\n");
     
     bool use_mesh_color= (m_primitives == GL_POINTS || m_primitives == GL_LINES || m_primitives == GL_LINE_STRIP || m_primitives == GL_LINE_LOOP);
     if(!use_mesh_color)
     {
-        //~ if(definitions.size() > 0) printf("[mesh program definitions]\n%s", definitions.c_str());
+        if(definitions.size() > 0) printf("[mesh program definitions]\n%s", definitions.c_str());
         return read_program("data/shaders/mesh.glsl", definitions.c_str());
     }
     else
@@ -265,7 +267,9 @@ GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, con
 }
 
 
-void Mesh::draw( const Transform& model, const Transform& view, const Transform& projection, const GLuint texture )
+void Mesh::draw( const Transform& model, const Transform& view, const Transform& projection, 
+    const bool use_light, const Point& light, const Color& light_color, 
+    const bool use_texture, const GLuint texture )
 {
     bool use_texcoord= (m_texcoords.size() == m_positions.size() && texture > 0);
     bool use_normal= (m_normals.size() == m_positions.size());
@@ -285,7 +289,7 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
             printf("[mesh draw] no texcoords, texture... use_texcoord= %s\n", use_texcoord ? "true" : "false");
     #endif
         
-        m_program= create_program(use_texcoord, use_normal, use_color);
+        m_program= create_program(use_texcoord, use_normal, use_color, use_light);
         program_print_errors(m_program);
     }
     
@@ -303,10 +307,18 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     program_uniform(m_program, "normalMatrix", normal);
     
     // utiliser une texture, elle ne sera visible que si le mesh a des texcoords...
-    program_use_texture(m_program, "diffuse_color", 0, texture); 
+    if(use_texcoord && use_texture)
+        program_use_texture(m_program, "diffuse_color", 0, texture); 
+    
+    if(use_light)
+    {
+        program_uniform(m_program, "light", view(light));       // transforme la position de la source dans le repere camera, comme les normales
+        program_uniform(m_program, "light_color", light_color);
+    }
     
     if(m_indices.size() > 0)
         glDrawElements( m_primitives, (GLsizei) m_indices.size(), GL_UNSIGNED_INT, 0 );
     else
         glDrawArrays( m_primitives, 0, (GLsizei) m_positions.size() );
 }
+
