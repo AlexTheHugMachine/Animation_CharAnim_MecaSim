@@ -3,15 +3,10 @@
 
 cf pipeline.cpp
 
-la solution présentée dans \ref intro3d fonctionne correctement dans les cas simples lorsqe tous les triangles sont devant la 
+la solution présentée dans \ref intro3d fonctionne correctement dans les cas simples lorsque tous les triangles sont devant la 
 camera. un grand triangle dont les sommets ne sont pas visibles dans l'image mais dont l'interieur est visible ne sera pas 
 dessiné... le test de visibilité du triangle n'est pas suffisant.
 
-c'est mieux, mais il y a encore un cas qui pose problème... lorsqu'un triangle est en partie derrière la caméra :
-
-\image html front.png un objet...
-\image html back.png si on avance la camera, certains triangles passent derrière la camera
-\image html back_failed.png et la solution présentée est plutot... fausse !
 
 sans rentrer dans les détails, la projection utilisée est _juste_ une transformation comme une autre, et les points derrière
 la caméra se projettent aussi sur l'image... il faut donc trouver une approche différente qui ne fait pas de projection.
@@ -31,9 +26,5 @@ pour le test 3d, la camera est le sommet du tetrahedre, e, et sa base est le tri
 en calcul du volume signé des tetrahedres formés par le point p et les faces abc, eba ecb, eac. s'ils sont tous du même signe, p à 
 est l'interieur du volume eabc, et le pixel fait parti du triangle. c'est le même test qu'avec l'aire, le volume sera positif si p se trouve
 du "bon" coté de chaque face du tetrahedre.
-
-_choix du repère :_ camera, e est l'origine, permet de simplifier les calculs.
-
-cf pipeline3d.cpp
 
  */

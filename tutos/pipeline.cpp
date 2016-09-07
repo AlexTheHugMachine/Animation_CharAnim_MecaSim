@@ -19,17 +19,9 @@ struct ZBuffer
     int width;
     int height;
     
-    ZBuffer( const int w, const int h, const float z= 1 )
-    {
-        width= w;
-        height= h;
-        data.assign(w * h, z);
-    }
+    ZBuffer( const int w, const int h, const float z= 1 ) : data(w*h, z), width(w), height(h) {}
     
-    void clear( const float value= 1 )
-    {
-        data.assign(width * height, value);
-    }
+    void clear( const float value= 1 ) { data.assign(width * height, value); }
     
     float& operator() ( const int x, const int y )
     {
@@ -127,9 +119,6 @@ bool visible( const Point p )
 }
 
 
-// juste pour linker avec window.cpp
-int draw( ) { return 0; }
-
 int main( void )
 {
     Image color(640, 320);
@@ -138,15 +127,16 @@ int main( void )
     Mesh mesh= read_mesh("data/bigguy.obj");
     if(mesh == Mesh::error())
         return 1;
-    printf("  %d positions\n", (unsigned int) mesh.vertex_count());
-    printf("  %d indices\n", (unsigned int) mesh.index_count());
+    printf("  %d positions\n", mesh.vertex_count());
+    printf("  %d indices\n", mesh.index_count());
     
     // regle le point de vue de la camera pour observer l'objet
     Point pmin, pmax;
     mesh.bounds(pmin, pmax);
     Orbiter camera(pmin, pmax);
 
-    BasicPipeline pipeline( mesh, 
+    BasicPipeline pipeline( 
+        mesh, 
         Identity(), 
         camera.view(), 
         camera.projection(color.width(), color.height(), 45) );
@@ -164,7 +154,10 @@ int main( void )
         // visibilite
         if(visible(a) == false && visible(b) == false && visible(c) == false)
             continue;
-        // faux dans certains cas...
+        // faux dans pas mal de cas...
+        // question : comment faire un test correct ?
+        // indication : si tous les sommets sont du meme cote d'une face de la region observee par la camera, on est sur que le triangle n'est pas visible.
+        // comment definir la region observee par la camera ? quelle est sa forme (dans quel repere) ? les coordonnees de ses sommets ?
         
         // passage dans le repere image
         a= viewport(a);
@@ -180,7 +173,9 @@ int main( void )
         // dessiner le triangle
         // solution naive, parcours tous les pixels de l'image
         // question : comment eviter de tester tous les pixels ? 
-        // indice : il est sans doute possible de determiner que le triangle ne touche pas un bloc de pixels en ne testant que les coins...
+        // indice : il est sans doute possible de determiner que le triangle ne touche pas un bloc de pixels en ne testant que les 4 coins du bloc...
+        // question : dessiner de tout petits triangles est tres long. comment gagner du temps en determinant qu'un triangle est suffisament petit/etire pour "passer" entre les pixels ?
+        // (remarque: oui, ca arrive tout le temps...)
         for(int y= 0; y < color.height(); y++)
         for(int x= 0; x < color.width(); x++)
         {

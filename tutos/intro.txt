@@ -422,7 +422,7 @@ contrairement à l'intuition, le repère image n'est pas un carre en 2d. la prof
 le triangle avec le plus petit z, pour chaque pixel de l'image. le repère image est donc un cube en 3d, de dimensions [0 largeur]x[0 hauteur]x[0 1], la profondeur 
 est normalisée entre 0 et 1. la camera n'observe qu'une région de la scène, les triangles trop proches, ainsi que ceux qui sont trop loin,
 ne sont pas dessinés. ces paramètres sont fournis lors de la construction de la transformation _projection_. cf les paramètres znear 
-et zfar de make_perspective( ).
+et zfar de Perspective( ).
 
 il y a quand même un problème à régler, le pipeline connait les coordonnées des sommets de chaque triangle, mais il faut calculer 
 les coordonnées de chaque fragment, c'est à dire la coordonnée z pour chaque pixel x, y occuppé par le triangle dans l'image.
@@ -538,7 +538,7 @@ au fragment shader.
 
 le pipeline pourrait interpoler automatiquement toutes les informations définies par sommet du triangle et les donner au fragment shader,
 mais cette solution n'est pas assez souple. par exemple, on peut tres bien _calculer_ les coordonnées de texture d'un sommet sans quelles 
-fassent partie des informations associées au sommet.
+soient fournies par l'application.
 
 il faut donc un "mécanisme" plus souple : les shaders peuvent déclarer un nouveau type de variable, des _varyings_ qui sont calculés par un shader
 et récupérés par le shader suivant dans le pipeline. (_remarque :_ cet exemple n'utilise que des vertex et des fragment shaders, mais il y a 5 types
