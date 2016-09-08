@@ -11,6 +11,8 @@ layout(location= 0) in vec3 position;
 
 uniform mat4 mvpMatrix;
 
+out vec4 fragment_color;
+
 void main( )
 {
     gl_Position= mvpMatrix * vec4(position, 1);
@@ -28,13 +30,15 @@ void main( )
 
 uniform vec4 mesh_color;
 
+out vec4 fragment_color;
+
 void main( )
 {
     vec4 color= mesh_color;
 #ifdef USE_COLOR
-    color= vec4(vertex_color, 1);
+    color= vertex_color;
 #endif
-
-    gl_FragColor= color;
+    
+    fragment_color= color;
 }
 #endif

@@ -68,6 +68,8 @@ uniform vec4 light_color;
 
 uniform vec4 mesh_color;
 
+out vec4 fragment_color;
+
 void main( )
 {
     vec4 color= mesh_color;
@@ -115,6 +117,6 @@ void main( )
             color= vec4(0.8, 0.4, 0, 1);
     }
     
-    gl_FragColor= vec4(color.rgb, 1);
+    fragment_color= vec4(color.rgb, 1);
 }
 #endif
