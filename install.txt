@@ -179,9 +179,12 @@ ajoutez la description de votre projet :
 		kind "ConsoleApp"
 		targetdir "bin"
 		files ( gkit_files )
-		files { ""tp1_main.cpp", "tp1_scene.cpp", "tp1_render.cpp" }
+		files { "tp1_main.cpp", "tp1_scene.cpp", "tp1_render.cpp" }
 
-et regénérez le projet, cf premake4 gmake / vs2013 / xcode ...
+## regénérez le projet, 
+
+cf premake4 gmake / vs2013 / xcode ...
+
 
 # FAQ :
 
