@@ -73,7 +73,7 @@ public:
         return 0;
     }
     
-    int draw( )
+    int render( )
     {
         // etape 2 : dessiner l'objet avec opengl
         
@@ -98,7 +98,7 @@ public:
             // deplace le point de rotation
             m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
         
-        ::draw(m_objet, m_model, m_camera, m_texture);
+        draw(m_objet, m_model, m_camera, m_texture);
         
         return 0;
     }

@@ -21,7 +21,7 @@ public:
     //! a deriver et redefinir pour animer les objets en fonction du temps.
     virtual int update( const float time, const float delta ) { return 0; }
     //! a deriver pour afficher les objets.
-    virtual int draw( ) = 0;
+    virtual int render( ) = 0;
     
     //! execution de l'application.
     int run( );

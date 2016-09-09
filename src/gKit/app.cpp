@@ -32,7 +32,7 @@ int App::run( )
         unsigned int delta= SDL_GetTicks() - base;
         if(update((float) base, (float) delta) < 0)
             break;
-        if(draw() < 0)
+        if(render() < 0)
             break;
         
         base= SDL_GetTicks();
