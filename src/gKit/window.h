@@ -55,15 +55,11 @@ SDL_TextInputEvent text_event( );
 //! desactive l'evenement.
 void clear_text_event( );
 
-//! renvoie le dernier fichier lache sur la fenetre
-const char *drop_event( );
-//! desactive l'evenement.
-void clear_drop_event( );
-
 //! fonction principale. gestion des evenements et appel de la fonction draw de l'application.
 int run( Window window, int (*draw)( void ) );
-//int run( Window window, int (*draw)( void* ), void* data );
 
+//! fonction interne de gestion d'evenements.
+int events( Window window );
 
 ///@}
 #endif

@@ -104,6 +104,7 @@ local tutos = {
 	"tuto4",
 	"tuto5",
 	"tuto6",
+	"tuto7",
 	
 	"tuto2GL",
 	"tuto3GL",
@@ -115,11 +116,11 @@ local tutos = {
 	"tuto5GL_samplers",
 	"tuto5GL_multi",
 	
-	"ray_tuto1",
-	"ray_tuto2",
-	"ray_tuto3",
-	
-	"pipeline"
+--~ 	"ray_tuto1",
+--~ 	"ray_tuto2",
+--~ 	"ray_tuto3",
+--~ 	
+--~ 	"pipeline"
 }
 
 for i, name in ipairs(tutos) do

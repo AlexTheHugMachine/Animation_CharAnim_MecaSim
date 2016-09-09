@@ -9,8 +9,8 @@
 #include "window.h"
 
 
-static int width;
-static int height;
+static int width= 0;
+static int height= 0;
 int window_width( )
 {
     return width;
@@ -87,89 +87,18 @@ void clear_wheel_event( )
 }
 
 
+// etat de l'application.
+static int stop= 0;
+
 //! boucle de gestion des evenements de l'application.
 int run( Window window, int (*draw)() )
 {
-    // configure sdl
-    SDL_StartTextInput();
-
-    SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-    last_drop= std::string();
-
     // configure openGL
     glViewport(0, 0, width, height);
 
     // run
-    int stop= 0;
-    while(stop == 0)
+    while(events(window))
     {
-        // gestion des evenements
-        SDL_Event event;
-        while(SDL_PollEvent(&event))
-        {
-            switch(event.type)
-            {
-                case SDL_WINDOWEVENT:
-                    // redimensionner la fenetre...
-                    if(event.window.event == SDL_WINDOWEVENT_RESIZED)
-                    {
-                        // conserve les dimensions de la fenetre
-                        width= event.window.data1;
-                        height= event.window.data2;
-                        SDL_SetWindowSize(window, width, height);
-
-                        // ... et le viewport opengl
-                        glViewport(0, 0, width, height);
-                    }
-                    break;
-
-                case SDL_DROPFILE:
-                    last_drop.assign(event.drop.file);
-                    SDL_free(event.drop.file);
-                    break;
-
-                case SDL_TEXTINPUT:
-                    // conserver le dernier caractere
-                    last_text= event.text;
-                    break;
-
-                case SDL_KEYDOWN:
-                    // modifier l'etat du clavier
-                    if((size_t) event.key.keysym.scancode < key_states.size())
-                    {
-                        key_states[event.key.keysym.scancode]= 1;
-                        last_key= event.key;    // conserver le dernier evenement
-                    }
-
-                    // fermer l'application
-                    if(event.key.keysym.sym == SDLK_ESCAPE)
-                        stop= 1;
-                    break;
-
-                case SDL_KEYUP:
-                    // modifier l'etat du clavier
-                    if((size_t) event.key.keysym.scancode < key_states.size())
-                    {
-                        key_states[event.key.keysym.scancode]= 0;
-                        last_key= event.key;    // conserver le dernier evenement
-                    }
-                    break;
-
-                case SDL_MOUSEBUTTONDOWN:
-                case SDL_MOUSEBUTTONUP:
-                    last_button= event.button;
-                    break;
-
-                case SDL_MOUSEWHEEL:
-                    last_wheel= event.wheel;
-                    break;
-
-                case SDL_QUIT:
-                    stop= 1;            // fermer l'application
-                    break;
-            }
-        }
-
         // dessiner
         if(draw() < 1)
             stop= 1;    // fermer l'application si draw() renvoie 0 ou -1...
@@ -177,9 +106,80 @@ int run( Window window, int (*draw)() )
         // presenter le resultat
         SDL_GL_SwapWindow(window);
     }
-
-    SDL_StopTextInput();
+    
     return 0;
+}
+
+int events( Window window )
+{
+    // gestion des evenements
+    SDL_Event event;
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+            case SDL_WINDOWEVENT:
+                // redimensionner la fenetre...
+                if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    // conserve les dimensions de la fenetre
+                    width= event.window.data1;
+                    height= event.window.data2;
+                    SDL_SetWindowSize(window, width, height);
+
+                    // ... et le viewport opengl
+                    glViewport(0, 0, width, height);
+                }
+                break;
+
+            case SDL_DROPFILE:
+                last_drop.assign(event.drop.file);
+                SDL_free(event.drop.file);
+                break;
+
+            case SDL_TEXTINPUT:
+                // conserver le dernier caractere
+                last_text= event.text;
+                break;
+
+            case SDL_KEYDOWN:
+                // modifier l'etat du clavier
+                if((size_t) event.key.keysym.scancode < key_states.size())
+                {
+                    key_states[event.key.keysym.scancode]= 1;
+                    last_key= event.key;    // conserver le dernier evenement
+                }
+
+                // fermer l'application
+                if(event.key.keysym.sym == SDLK_ESCAPE)
+                    stop= 1;
+                break;
+
+            case SDL_KEYUP:
+                // modifier l'etat du clavier
+                if((size_t) event.key.keysym.scancode < key_states.size())
+                {
+                    key_states[event.key.keysym.scancode]= 0;
+                    last_key= event.key;    // conserver le dernier evenement
+                }
+                break;
+
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+                last_button= event.button;
+                break;
+
+            case SDL_MOUSEWHEEL:
+                last_wheel= event.wheel;
+                break;
+
+            case SDL_QUIT:
+                stop= 1;            // fermer l'application
+                break;
+        }
+    }
+    
+    return 1 - stop;
 }
 
 
@@ -212,6 +212,7 @@ Window create_window( const int w, const int h )
     key_states.assign(state, state + keys);
 
     SDL_SetWindowDisplayMode(window, NULL);
+    SDL_StartTextInput();
 
     // conserve les dimensions de la fenetre
     SDL_GetWindowSize(window, &width, &height);
@@ -221,6 +222,7 @@ Window create_window( const int w, const int h )
 
 void release_window( Window window )
 {
+    SDL_StopTextInput();
     SDL_DestroyWindow(window);
 }
 
