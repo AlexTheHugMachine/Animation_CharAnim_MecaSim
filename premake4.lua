@@ -105,6 +105,7 @@ local tutos = {
 	"tuto5",
 	"tuto6",
 	"tuto7",
+	"tuto8",
 	
 	"tuto2GL",
 	"tuto3GL",
