@@ -11,7 +11,7 @@ using namespace std;
 
 Viewer* Viewer::s_singleton = NULL;
 
-Viewer::Viewer() : program(0), b_draw_grid(true), b_draw_axe(true)
+Viewer::Viewer() : b_draw_grid(true), b_draw_axe(true)
 {
     s_singleton=this;
 }
@@ -41,6 +41,8 @@ int Viewer::init()
     glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
 
+    //camera.move( -50 );
+    camera.lookat( Point(0,0,0), 30 );
 
     init_axe();
     init_grid();
@@ -190,16 +192,16 @@ int Viewer::draw( )
     if (key_state(SDLK_UP)) { camera.move( 1); }
 
 
+
     // on dessine l'objet du point de vue de la camera
     if (b_draw_grid) ::draw(grid, camera);
     if (b_draw_axe) ::draw(axe, camera);
 
-    Transform Tc= Translation( -3, 5, 0 );
-    ::draw(cube, Tc, camera, cube_texture);
-
     Transform Tq= Translation( 3, 5, 0 );
     ::draw(quad, Tq, camera, quad_texture);
 
+    Transform Tc= Translation( -3, 5, 0 );
+    ::draw(cube, Tc, camera, cube_texture);
 
     return 1;
 }
