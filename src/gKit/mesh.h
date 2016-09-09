@@ -186,9 +186,9 @@ public:
     void bounds( Point& pmin, Point& pmax );
     
     //! renvoie le nombre de sommets.
-    int vertex_count( ) const { return m_positions.size(); }
+    int vertex_count( ) const { return (int) m_positions.size(); }
     //! renvoie le nombre d'indices de sommets.
-    int index_count( ) const { return m_indices.size(); }
+    int index_count( ) const { return (int) m_indices.size(); }
     
     //! renvoie l'adresse de la position du premier sommet. permet de construire les vertex buffers openGL. par convention, la position est un vec3, 3 GL_FLOAT.
     const float *vertex_buffer( ) const { return &m_positions.front().x; }

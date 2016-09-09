@@ -24,6 +24,7 @@ void Mesh::release( )
         release_program(m_program);
 }
 
+// definit les attributs du prochain sommet
 Mesh& Mesh::default_color( const Color& color ) 
 {
     m_color= color; 
@@ -48,6 +49,7 @@ Mesh& Mesh::texcoord( const vec2& uv )
     return *this;
 }
 
+// insere un nouveau sommet
 unsigned int Mesh::vertex( const vec3& position )
 {
     m_positions.push_back(position);
@@ -78,6 +80,7 @@ unsigned int Mesh::vertex( const vec3& position )
     return index;
 }
 
+// update attributes
 Mesh& Mesh::color( const unsigned int id, const vec4& c )
 {
     assert(id < m_colors.size());
@@ -109,6 +112,7 @@ void Mesh::vertex( const unsigned int id, const vec3& p )
     m_positions[id]= p;
 }
 
+//
 Mesh& Mesh::triangle( const unsigned int a, const unsigned int b, const unsigned int c )
 {
     assert(a < m_positions.size());
@@ -307,7 +311,7 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     program_uniform(m_program, "normalMatrix", normal); // transforme les normales dans le repere camera.
     
     // utiliser une texture, elle ne sera visible que si le mesh a des texcoords...
-    if(use_texcoord && use_texture)
+    if(texture && use_texcoord && use_texture)
         program_use_texture(m_program, "diffuse_color", 0, texture); 
     
     if(use_light)
@@ -317,8 +321,8 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     }
     
     if(m_indices.size() > 0)
-        glDrawElements( m_primitives, (GLsizei) m_indices.size(), GL_UNSIGNED_INT, 0 );
+        glDrawElements(m_primitives, (GLsizei) m_indices.size(), GL_UNSIGNED_INT, 0);
     else
-        glDrawArrays( m_primitives, 0, (GLsizei) m_positions.size() );
+        glDrawArrays(m_primitives, 0, (GLsizei) m_positions.size());
 }
 

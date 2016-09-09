@@ -45,7 +45,7 @@ void draw( Mesh& m, const Transform& model, const Orbiter& camera, const GLuint 
     \code
     DrawParam().light(Point(0, 20, 0), Red()).model(m).camera(orbiter).draw(objet);
     \endcode
-    les parametres peuvent etre decrits dans un ordre quelconque, mais DrawParam::draw() doit etre appele a la fin.
+    les parametres peuvent etre decrits dans un ordre quelconque, mais DrawParam::draw() doit etre appele en dernier.
  */
 class DrawParam
 {

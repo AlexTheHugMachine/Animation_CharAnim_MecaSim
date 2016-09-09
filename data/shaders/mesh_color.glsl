@@ -5,13 +5,11 @@
 layout(location= 0) in vec3 position;
 
 #ifdef USE_COLOR
-    layout(location= 3) in vec3 color;
-    out vec3 vertex_color;
+    layout(location= 3) in vec4 color;
+    out vec4 vertex_color;
 #endif
 
 uniform mat4 mvpMatrix;
-
-out vec4 fragment_color;
 
 void main( )
 {
@@ -25,7 +23,7 @@ void main( )
 #ifdef FRAGMENT_SHADER
 
 #ifdef USE_COLOR
-    in vec3 vertex_color;
+    in vec4 vertex_color;
 #endif
 
 uniform vec4 mesh_color;
