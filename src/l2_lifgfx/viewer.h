@@ -37,10 +37,11 @@ public:
 
     static Viewer& singleton() { assert(s_singleton); return *s_singleton; }
     static int singleton_draw() { return singleton().draw(); }
-    
+
 protected:
     static Viewer* s_singleton;
-    GLuint program;
+
+
     Orbiter camera;
 
     Mesh axe;
