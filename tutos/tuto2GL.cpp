@@ -16,7 +16,7 @@
     3. 3 fonctions : 
         init( ) pour creer les objets que l'on veut dessiner, 
         draw( ) pour les afficher / dessiner
-        quit( ) pour detruire les objets openGL crees dans init( )
+        quit( ) pour detruire les objets openGL crees dans init( ), a la fermeture de l'application
         
     ces 3 fonctions sont appelees dans le main.
     

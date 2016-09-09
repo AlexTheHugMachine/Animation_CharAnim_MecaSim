@@ -23,6 +23,10 @@ int init( )
 
     // compile le shader program, le program est selectionne
     program= read_program("tutos/tuto3GL.glsl");
+    
+    /* affiche les erreurs de compilation des shaders
+    program_print_errors(program);
+    */
 
     // transfere les 36 positions dans le tableau declare par le vertex shader
     // etape 1 : recuperer l'identifiant de l'uniform

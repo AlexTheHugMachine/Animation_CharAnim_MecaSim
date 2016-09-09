@@ -1,4 +1,4 @@
-# Doxyfile 1.8.6
+Doxyfile 1.8.6
 
 # This file describes the settings to be used by the documentation system
 # doxygen (www.doxygen.org) for a project.
@@ -778,7 +778,7 @@ RECURSIVE              = NO
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = tutos/ray_tuto1.cpp tutos/scene_tuto1.cpp 
+EXCLUDE                = src/gKit/bvh* src/gKit/bbox* src/gKit/ray* tutos/ray_tuto1.cpp tutos/scene_tuto1.cpp 
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

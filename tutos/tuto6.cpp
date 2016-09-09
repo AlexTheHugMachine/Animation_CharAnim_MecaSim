@@ -23,7 +23,7 @@ int init( )
 {
     // etape 1 : charger un objet
     objet= read_mesh("data/cube.obj");
-
+    
     // etape 2 : creer une camera pour observer l'objet
     // construit l'englobant de l'objet, les extremites de sa boite englobante
     Point pmin, pmax;
