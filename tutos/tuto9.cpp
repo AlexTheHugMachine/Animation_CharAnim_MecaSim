@@ -1,5 +1,5 @@
 
-//! \file tuto8.cpp exemple d'animation en derivant App::update()
+//! \file tuto9.cpp mesure du temps d'execution par le cpu et le gpu (utilise une requete / query openGL)
 
 #include <cstdio>
 
