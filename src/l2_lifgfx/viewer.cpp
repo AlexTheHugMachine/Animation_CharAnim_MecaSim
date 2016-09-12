@@ -9,11 +9,9 @@
 
 using namespace std;
 
-Viewer* Viewer::s_singleton = NULL;
 
-Viewer::Viewer() : b_draw_grid(true), b_draw_axe(true)
+Viewer::Viewer() : App(1024, 640), b_draw_grid(true), b_draw_axe(true)
 {
-    s_singleton=this;
 }
 
 
@@ -43,6 +41,7 @@ int Viewer::init()
 
     //camera.move( -50 );
     camera.lookat( Point(0,0,0), 30 );
+    draw_param.light( Point(0, 20, 0), White() );
 
     init_axe();
     init_grid();
@@ -98,7 +97,7 @@ void Viewer::init_cube()
     int i,j;
 
     cube = Mesh(GL_TRIANGLES);
-    cube.color( Color(1, 0, 1) );
+    cube.color( Color(1, 1, 1) );
 
     cube_texture = read_texture(0, "data/debug2x2red.png");
 
@@ -170,7 +169,7 @@ int Viewer::quit( )
 
 
 
-int Viewer::draw( )
+int Viewer::render( )
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -197,8 +196,11 @@ int Viewer::draw( )
     if (b_draw_grid) ::draw(grid, camera);
     if (b_draw_axe) ::draw(axe, camera);
 
+     // LIGHT
+    ::draw(cube, Translation( Vector( draw_param.light())), camera);
+
     Transform Tq= Translation( 3, 5, 0 );
-    ::draw(quad, Tq, camera, quad_texture);
+    draw_param.camera(camera).texture(quad_texture).draw(quad);
 
     Transform Tc= Translation( -3, 5, 0 );
     ::draw(cube, Tc, camera, cube_texture);
@@ -210,31 +212,7 @@ int Viewer::draw( )
 
 int main( int argc, char **argv )
 {
-    // etape 1 : creer la fenetre
-    Window window= create_window(1024, 640);
-    if(window == NULL)  return 1;       // erreur lors de la creation de la fenetre ou de l'init de sdl2
-
-    // etape 2 : creer un contexte opengl pour pouvoir dessiner
-    Context context= create_context(window);
-    if(context == NULL)  return 1;       // erreur lors de la creation du contexte opengl
-
-
     Viewer v;
-
-    // etape 3 : creation des objets
-    if(v.init() < 0)
-    {
-        printf("[error] init failed.\n");
-        return 1;
-    }
-
-    // etape 4 : affichage de l'application, tant que la fenetre n'est pas fermee. ou que draw() ne renvoie pas 0
-    run(window, Viewer::singleton_draw);
-
-    // etape 5 : nettoyage
-    v.quit();
-
-    release_context(context);
-    release_window(window);
+    v.run();
     return 0;
 }

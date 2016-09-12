@@ -10,12 +10,12 @@
 //! \addtogroup objet3D
 ///@{
 
-//! \file 
+//! \file
 //! dessine un objet du point de vue d'une camera
 
 //! dessine l'objet avec les transformations model, vue et projection.
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection );
-//! applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet. 
+//! applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, const GLuint texture );
 
 //! dessine l'objet avec les transformations vue et projection, definies par la camera. model est la transformation identite.
@@ -23,24 +23,24 @@ void draw( Mesh& m, const Orbiter& camera );
 //! dessine l'objet avec une transformation model. les transformations vue et projection sont celles de la camera
 void draw( Mesh& m, const Transform& model, const Orbiter& camera );
 
-//! dessine l'objet avec les transformations vue et projection. model est l'identite. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet. 
+//! dessine l'objet avec les transformations vue et projection. model est l'identite. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
 void draw( Mesh& m, const Orbiter& camera, const GLuint texture );
-//! dessine l'objet avec une transformation model. les transformations vue et projection sont celles de la camera. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet. 
+//! dessine l'objet avec une transformation model. les transformations vue et projection sont celles de la camera. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
 void draw( Mesh& m, const Transform& model, const Orbiter& camera, const GLuint texture );
 
 /*! representation des options / parametres d'un draw.
     permet de donner tous les parametres d'un draw de maniere flexible.
-    
+
     exemple :
     \code
     Mesh objet= { ... };
-    
+
     DrawParam param;
     param.light(Point(0, 20, 0), Red());
     param.camera(orbiter);
     param.draw(objet);
     \endcode
-    
+
     ou de maniere encore plus compacte :
     \code
     DrawParam().light(Point(0, 20, 0), Red()).model(m).camera(orbiter).draw(objet);
@@ -52,14 +52,14 @@ class DrawParam
 public:
     //! constructeur par defaut.
     DrawParam( ) : m_model(), m_view(), m_projection(), m_use_light(false), m_light(), m_light_color(), m_use_texture(false), m_texture(0) {}
-    
+
     //! modifie la transformation model utilisee pour afficher l'objet.
     DrawParam& model( const Transform& m ) { m_model= m; return *this; }
     //! modifie la transformation view utilisee pour afficher l'objet.
     DrawParam& view( const Transform& m ) { m_view= m; return *this; }
     //! modifie la transformation projection utilisee pour afficher l'objet.
     DrawParam& projection( const Transform& m ) { m_projection= m; return *this; }
-    
+
     //! utilise les transformations view et projection definies par une camera.
     DrawParam& camera( const Orbiter& o ) { m_view= o.view(); m_projection= o.projection(window_width(), window_height(), 45); return *this; }
     //! utilise les transformations view et projection definies par une camera. parametres explicites de la projection.
@@ -68,19 +68,22 @@ public:
     DrawParam& light( const Point& p, const Color& c= White() ) { m_use_light= true; m_light= p; m_light_color=c; return *this; }
     //! plaque une texture a la surface de l'objet.
     DrawParam& texture( const GLuint t ) { m_use_texture= true; m_texture= t; return *this; }
-    
+
     //! dessine l'objet avec l'ensemble des parametres definis.
     void draw( Mesh& mesh ) const;
+
+    //! renvoie la position de la lumière
+    const Point& light() const { return m_light; }
 
 protected:
     Transform m_model;
     Transform m_view;
     Transform m_projection;
-    
+
     bool m_use_light;
     Point m_light;
     Color m_light_color;
-    
+
     bool m_use_texture;
     GLuint m_texture;
 };

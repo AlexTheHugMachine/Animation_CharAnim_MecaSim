@@ -15,10 +15,11 @@
 #include "vec.h"
 #include "mat.h"
 #include "orbiter.h"
+#include "app.h"        // classe Application a deriver
 
 
 
-class Viewer
+class Viewer : public App
 {
 public:
     Viewer();
@@ -28,21 +29,18 @@ public:
     int init();
 
     //! La fonction d'affichage
-    int draw();
+    int render();
 
     //! Libere tout
     int quit();
 
     void help();
 
-    static Viewer& singleton() { assert(s_singleton); return *s_singleton; }
-    static int singleton_draw() { return singleton().draw(); }
 
 protected:
-    static Viewer* s_singleton;
-
 
     Orbiter camera;
+    DrawParam draw_param;
 
     Mesh axe;
     Mesh grid;
@@ -54,6 +52,7 @@ protected:
     void init_axe();
     void init_grid();
     void init_cube();
+
 
     /* Pour creer un nouvel objet vous devez :
        - declarer ici le Mesh
