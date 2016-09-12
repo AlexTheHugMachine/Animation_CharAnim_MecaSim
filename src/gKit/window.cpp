@@ -89,7 +89,6 @@ void clear_wheel_event( )
 
 // etat de l'application.
 static int stop= 0;
-
 //! boucle de gestion des evenements de l'application.
 int run( Window window, int (*draw)() )
 {
