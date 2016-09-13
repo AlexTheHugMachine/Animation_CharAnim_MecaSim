@@ -13,6 +13,8 @@ une application openGL est composée de plusieurs éléments :
     
 ces 3 fonctions sont appelées dans le main.
 
+La classe App permet également d'écrire une application avec une conception légèrement différente mais avec les mêmes fonctionnalités. cf tuto7.cpp pour un exemple.
+
 ## création de la fenêtre et du contexte openGL :
 
 \code
