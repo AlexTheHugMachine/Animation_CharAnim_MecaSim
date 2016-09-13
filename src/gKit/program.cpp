@@ -283,7 +283,7 @@ int program_format_errors( const GLuint program, std::string& errors )
         glGetShaderiv(shaders[i], GL_COMPILE_STATUS, &value);
         if(value == GL_FALSE)
         {
-            // recupere les erreurs
+            // recupere les erreurs de compilation des shaders
             glGetShaderiv(shaders[i], GL_INFO_LOG_LENGTH, &value);
             std::vector<char>log(value+1, 0);
             glGetShaderInfoLog(shaders[i], log.size(), NULL, &log.front());
@@ -306,6 +306,17 @@ int program_format_errors( const GLuint program, std::string& errors )
             int last_error= print_errors(errors, &log.front(), &source.front());
             first_error= std::min(first_error, last_error);
         }
+    }
+    
+    // recupere les erreurs de link du program
+    {
+        GLint value= 0;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &value);
+        
+        std::vector<char>log(value+1, 0);
+        glGetProgramInfoLog(program, log.size(), NULL, &log.front());
+        
+        errors.append("[error] linking program...\n").append(log.begin(), log.end());
     }
     
     return first_error;
