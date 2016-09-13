@@ -33,7 +33,7 @@ int App::run( )
         m_delta= SDL_GetTicks() - m_time;
         if(update(global_time(), delta_time()) < 0)
             break;
-        if(render() < 0)
+        if(render() < 1)
             break;
         
         m_time= SDL_GetTicks();

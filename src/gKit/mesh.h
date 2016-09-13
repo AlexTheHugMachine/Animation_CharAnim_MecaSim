@@ -20,7 +20,7 @@
 Mesh propose plusieurs manieres de decrire un maillage.
 par exemple, un triangle :
 \code
-Mesh m= create_mesh(GL_TRIANGLES);
+Mesh m(GL_TRIANGLES);
 
 // coordonnnees des 3 sommets d'un triangle
 Point a= { ... }
@@ -34,7 +34,7 @@ m.vertex( c );
 il est aussi possible de definir d'autres attributs : la couleur du sommet, sa normale, ses coordonnees de texture, ce sont les fonctions Mesh::color(), Mesh::normal() et Mesh::texcoord().
 on peut decrire ces informations de maniere assez compacte :
 \code
-Mesh m= create_mesh(GL_TRIANGLES);
+Mesh m(GL_TRIANGLES);
 
 m.color(Red()).vertex(a);
 m.color(Green()).vertex(b);
@@ -42,7 +42,7 @@ m.color(Blue()).vertex(c);
 \endcode
 et :
 \code
-Mesh m= create_mesh(GL_TRIANGLES);
+Mesh m(GL_TRIANGLES);
 
 m.color(Red()).normal(na).vertex(a);
 m.color(Green()).normal(nb).vertex(b);
@@ -52,7 +52,7 @@ m.color(Blue()).normal(nc).vertex(c);
 vertex() doit etre utilise en dernier. 
 pour permettre de decrire un triangle de couleur uniforme, par exemple, au lieu d'ecrire :
 \code
-Mesh m= create_mesh(GL_TRIANGLES);
+Mesh m(GL_TRIANGLES);
 
 m.color(Red()).vertex(a);
 m.color(Red()).vertex(b);
@@ -60,7 +60,7 @@ m.color(Red()).vertex(c);
 \endcode
 il est plus simple d'ecrire :
 \code
-Mesh m= create_mesh(GL_TRIANGLES);
+Mesh m(GL_TRIANGLES);
 
 m.color(Red());
 m.vertex(a);
@@ -69,7 +69,7 @@ m.vertex(c);
 \endcode
 et cette solution permet aussi de decrire plusieurs triangles partageant leurs sommets, par exemple :
 \code
-Mesh m= create_mesh(GL_TRIANGLE);
+Mesh m(GL_TRIANGLE);
 
 // insere 4 sommets dans le maillage et conserve leurs indices
 unsigned int a= m.vertex(Point(...));
@@ -133,7 +133,7 @@ public:
 
     /*! insere un triangle.  a, b, c sont les indices des sommets deja inseres dans l'objet. ne fonctionne pas avec les strips et les fans.
     \code
-    Mesh m= create_mesh(GL_TRIANGLES);
+    Mesh m(GL_TRIANGLES);
     unsigned int a= m.vertex( Point(ax, ay, az) );
     unsigned int b= m.vertex( Point(bx, by, bz) );
     unsigned int c= m.vertex( Point(cx, cy, cz) );
@@ -144,7 +144,7 @@ public:
     
     /*! insere un triangle, a, b, c sont les indices des sommets deja inseres dans l'objet, en comptant en partant du dernier. ne fonctionne pas avec les strips et les fans.
     \code
-    Mesh m= create_mesh(GL_TRIANGLES);
+    Mesh m(GL_TRIANGLES);
     m.vertex( Point(ax, ay, az) );
     m.vertex( Point(bx, by, bz) );
     m.vertex( Point(cx, cy, cz) );
