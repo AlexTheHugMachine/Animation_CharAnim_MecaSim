@@ -41,7 +41,7 @@ int Viewer::init()
 
     //camera.move( -50 );
     camera.lookat( Point(0,0,0), 30 );
-    draw_param.light( Point(0, 20, 0), White() );
+    draw_param.light( Point(0, 20, 20), White() );
 
     init_axe();
     init_grid();
@@ -134,7 +134,7 @@ void Viewer::init_quad()
 
     quad_texture = read_texture(0, "data/papillon.jpg");
 
-    quad.normal(  0, 0, -1 );
+    quad.normal(  0, 0, 1 );
 
     quad.texcoord(0,0 );
     quad.vertex(-1, -1, 0 );
@@ -184,23 +184,35 @@ int Viewer::render( )
     else if(mb & SDL_BUTTON(3))                 // le bouton droit est enfonce
         camera.move( mx);               // approche / eloigne l'objet
 
+    const float step = 0.1f;
+    if (key_state(SDLK_RIGHT) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(step,0,0)); }
+    if (key_state(SDLK_LEFT) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(-step,0,0)); }
+    if (key_state(SDLK_UP) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,step,0)); }
+    if (key_state(SDLK_DOWN) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,-step,0)); }
+    if (key_state(SDLK_PAGEUP) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,0,step)); }
+    if (key_state(SDLK_PAGEDOWN) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,0, -step)); }
+    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL))) { camera.move( -1); }
+    if (key_state(SDLK_UP) && (!key_state(SDLK_LCTRL))) { camera.move( 1); }
+
+
     if (key_state('h')) help();
     if (key_state('g')) { b_draw_grid = !b_draw_grid; clear_key_state('g'); }
     if (key_state('a')) { b_draw_axe = !b_draw_axe; clear_key_state('a'); }
-    if (key_state(SDLK_DOWN)) { camera.move( -1); }
-    if (key_state(SDLK_UP)) { camera.move( 1); }
 
+
+    Transform Tq= Translation( 3, 5, 0 );
+    draw_param.texture(quad_texture).camera(camera).draw(quad);
+    //::draw(quad, Tq, camera, quad_texture);
 
 
     // on dessine l'objet du point de vue de la camera
     if (b_draw_grid) ::draw(grid, camera);
     if (b_draw_axe) ::draw(axe, camera);
 
-     // LIGHT
-    ::draw(cube, Translation( Vector( draw_param.light())), camera);
 
-    Transform Tq= Translation( 3, 5, 0 );
-    draw_param.camera(camera).texture(quad_texture).draw(quad);
+     // LIGHT
+    ::draw(cube, Translation( Vector( draw_param.light()))*Scale(0.3, 0.3, 0.3), camera);
+
 
     Transform Tc= Translation( -3, 5, 0 );
     ::draw(cube, Tc, camera, cube_texture);

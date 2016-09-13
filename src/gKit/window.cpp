@@ -105,7 +105,7 @@ int run( Window window, int (*draw)() )
         // presenter le resultat
         SDL_GL_SwapWindow(window);
     }
-    
+
     return 0;
 }
 
@@ -177,7 +177,7 @@ int events( Window window )
                 break;
         }
     }
-    
+
     return 1 - stop;
 }
 
@@ -294,7 +294,7 @@ Context create_context( Window window, const int major, const int minor )
     {
         printf("debug output enabled...\n");
         glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-        glDebugMessageCallbackARB(debug, NULL);
+//        glDebugMessageCallbackARB(debug, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
 #endif
