@@ -3,6 +3,7 @@
 #define _MESH_H
 
 #include <vector>
+#include <unordered_map>
 
 #include "glcore.h"
 
@@ -300,7 +301,10 @@ protected:
     std::vector<vec4> m_colors;
     
     std::vector<unsigned int> m_indices;
-    
+
+    std::unordered_map<unsigned int, GLuint> m_state_map;
+    unsigned int m_state;
+
     Color m_color;
     
     GLenum m_primitives;

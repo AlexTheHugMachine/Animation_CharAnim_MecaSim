@@ -248,26 +248,20 @@ GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, con
 {
     std::string definitions;
 
-    if(m_texcoords.size() > 0 && use_texcoord)
+    if(m_texcoords.size() == m_positions.size() && use_texcoord)
         definitions.append("#define USE_TEXCOORD\n");
-    if(m_normals.size() > 0 && use_normal)
+    if(m_normals.size() == m_positions.size() && use_normal)
         definitions.append("#define USE_NORMAL\n");
-    if(m_colors.size() > 0 && use_color)
+    if(m_colors.size() == m_positions.size() && use_color)
         definitions.append("#define USE_COLOR\n");
     if(use_light)
         definitions.append("#define USE_LIGHT\n");
     
     bool use_mesh_color= (m_primitives == GL_POINTS || m_primitives == GL_LINES || m_primitives == GL_LINE_STRIP || m_primitives == GL_LINE_LOOP);
     if(!use_mesh_color)
-    {
-        //~ if(definitions.size() > 0) printf("[mesh program definitions]\n%s", definitions.c_str());
         return read_program("data/shaders/mesh.glsl", definitions.c_str());
-    }
     else
-    {
-        //~ if(definitions.size() > 0) printf("[mesh color program definitions]\n%s", definitions.c_str());
         return read_program("data/shaders/mesh_color.glsl", definitions.c_str());
-    }
 }
 
 
@@ -280,22 +274,34 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     bool use_color= (m_colors.size() == m_positions.size());
     
     if(m_vao == 0)
-        m_vao= create_buffers(use_texcoord, use_normal, use_color);
+        // force la creation de tous les buffers 
+        m_vao= create_buffers(true, true, true);
     if(m_update_buffers)
-        update_buffers(use_texcoord, use_normal, use_color);
+        update_buffers(true, true, true);
+    
+    unsigned int key= 0;
+    if(use_texcoord) key= key | 1;
+    if(use_normal) key= key | 2;
+    if(use_color) key= key | 4;
+    if(use_texture) key= key | 8;
+    if(use_light) key= key | 16;    
+    
+    if(m_state != key)
+        // recherche un shader deja compile pour ce type de draw
+        m_program= m_state_map[key];
     
     if(m_program == 0)
     {
-    #if 1
-        if(m_texcoords.size() > 0 && texture == 0)
-            printf("[mesh draw] texcoords, no texture... use_texcoord= %s\n", use_texcoord ? "true" : "false");
-        if(m_texcoords.size() == 0 && texture > 0)
-            printf("[mesh draw] no texcoords, texture... use_texcoord= %s\n", use_texcoord ? "true" : "false");
-    #endif
-        
+        // pas de shader pour ce type de draw
         m_program= create_program(use_texcoord, use_normal, use_color, use_light);
         program_print_errors(m_program);
+        
+        // conserver le shader
+        m_state_map[key]= m_program;
     }
+    
+    // conserve la config du shader selectionne.
+    m_state= key;
     
     glBindVertexArray(m_vao);
     glUseProgram(m_program);
