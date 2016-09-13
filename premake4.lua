@@ -106,7 +106,6 @@ local tutos = {
 	"tuto6",
 	"tuto7",
 	"tuto8",
-	"tuto9",
 	
 	"tuto2GL",
 	"tuto3GL",
@@ -132,4 +131,20 @@ for i, name in ipairs(tutos) do
 		targetdir "bin"
 		files ( gkit_files )
 		files { "tutos/" .. name..'.cpp' }
+end
+
+
+-- description des tutos openGL avances / M2
+local tutosM2 = {
+	"tuto_time",
+	"tuto_mdi"
+}
+
+for i, name in ipairs(tutosM2) do
+	project(name)
+		language "C++"
+		kind "ConsoleApp"
+		targetdir "bin"
+		files ( gkit_files )
+		files { "tutos/M2/" .. name..'.cpp' }
 end
