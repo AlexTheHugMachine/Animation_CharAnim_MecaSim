@@ -2,35 +2,34 @@
 #ifndef _ANIMATION_H_
 #define _ANIMATION_H_
 
-/*
+#include "vec.h"
+#include "mat.h"
+#include "mesh.h"
+#include "orbiter.h"
+
 
 //! un tableau dynamique contenant les points d'une courbe d'animation
-struct Animation
+class AnimationCurve
 {
+public:
+    AnimationCurve() : m_P(nullptr), m_nbp(0) {}
+
+    //! initialise la courbe d'animation avec une liste de points de C du fichier "nom_fichier"
+    void init(const char* nom_fichier);
+
+    void draw(const Orbiter& camera);
+
+    const Point& operator[]( const int i) { assert(i>=0); assert(i<m_nbp);  return m_P[i]; }
+
+protected:
     //! Les points de la trajectoire/courbe d'animation que va suivre la fusée
-    Point* P;
+    Point* m_P;
     //! Nombre de point
-    int nbp;
+    int m_nbp;
+
+    Mesh m_curve;
+
+    Vector Bezier(const Vector& p0, const Vector& p1, const Vector& p2, const Vector& p3, const float t);
 };
 
-
-//! renvoie le temps passé depuis le demarrage
-float temps();
-
-//! initialise la courbe d'animation avec une liste de points de C du fichier "nom_fichier"
-void animInit(Animation& a, const char* nom_fichier);
-
-//! dessine la coure d'animation
-void animDraw(const Animation& a);
-
-
-	// VOICI un exemple de comment animer un objet : ceci est à mettre dans la fonction sceneDraw(...)
-	//
-	// glPushMatrix();
-	// int n = int(temps())%sc.anim.nbp;
-	// glTranslatef( sc.anim.P[n].x, sc.anim.P[n].y, sc.anim.P[n].z );
-	// draw_cube();
-	// glPopMatrix();
-
-	*/
 #endif
