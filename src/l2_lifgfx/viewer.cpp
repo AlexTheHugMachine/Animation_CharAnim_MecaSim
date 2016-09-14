@@ -25,10 +25,6 @@ void Viewer::help()
 
 int Viewer::init()
 {
-    //system("pwd");
-    // Creer une camera par defaut, elle est placee en 0, 0, 5 et regarde les objets situes en 0, 0, 0
-    //camera= make_orbiter();
-
     // etat par defaut openGL
     glClearColor(0.5f, 0.5f, 0.9f, 1);
     glClearDepthf(1);
@@ -39,9 +35,8 @@ int Viewer::init()
     glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
 
-    //camera.move( -50 );
     camera.lookat( Point(0,0,0), 30 );
-    draw_param.light( Point(0, 20, 0), White() );
+    draw_param.light( Point(0, 20, 20), White() );
 
     init_axe();
     init_grid();
@@ -134,7 +129,7 @@ void Viewer::init_quad()
 
     quad_texture = read_texture(0, "data/papillon.jpg");
 
-    quad.normal(  0, 0, -1 );
+    quad.normal(  0, 0, 1 );
 
     quad.texcoord(0,0 );
     quad.vertex(-1, -1, 0 );
@@ -171,6 +166,7 @@ int Viewer::quit( )
 
 int Viewer::render( )
 {
+    // Afface l'ecran
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // recupere les mouvements de la souris pour deplacer la camera, cf tutos/tuto6.cpp
@@ -184,26 +180,35 @@ int Viewer::render( )
     else if(mb & SDL_BUTTON(3))                 // le bouton droit est enfonce
         camera.move( mx);               // approche / eloigne l'objet
 
+    // Deplace la lumiere
+    const float step = 0.1f;
+    if (key_state(SDLK_RIGHT) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(step,0,0)); }
+    if (key_state(SDLK_LEFT) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(-step,0,0)); }
+    if (key_state(SDLK_UP) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,step,0)); }
+    if (key_state(SDLK_DOWN) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,-step,0)); }
+    if (key_state(SDLK_PAGEUP) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,0,step)); }
+    if (key_state(SDLK_PAGEDOWN) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,0, -step)); }
+    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL))) { camera.move( -1); }
+    if (key_state(SDLK_UP) && (!key_state(SDLK_LCTRL))) { camera.move( 1); }
+
+
+    // (De)Active la grille / les axes
     if (key_state('h')) help();
     if (key_state('g')) { b_draw_grid = !b_draw_grid; clear_key_state('g'); }
     if (key_state('a')) { b_draw_axe = !b_draw_axe; clear_key_state('a'); }
-    if (key_state(SDLK_DOWN)) { camera.move( -1); }
-    if (key_state(SDLK_UP)) { camera.move( 1); }
 
-
-
-    // on dessine l'objet du point de vue de la camera
-    if (b_draw_grid) ::draw(grid, camera);
-    if (b_draw_axe) ::draw(axe, camera);
 
      // LIGHT
-    ::draw(cube, Translation( Vector( draw_param.light())), camera);
+    draw(cube, Translation( Vector( draw_param.light()))*Scale(0.3, 0.3, 0.3), camera);
 
-    Transform Tq= Translation( 3, 5, 0 );
-    draw_param.camera(camera).texture(quad_texture).draw(quad);
+    // AXE et GRILLE
+    if (b_draw_grid) draw(grid, camera);
+    if (b_draw_axe) draw(axe, camera);
 
-    Transform Tc= Translation( -3, 5, 0 );
-    ::draw(cube, Tc, camera, cube_texture);
+
+    draw_param.texture(quad_texture).camera(camera).model(Translation( 3, 5, 0 )).draw(quad);
+
+    draw_param.texture(cube_texture).camera(camera).model(Translation( -3, 5, 0 )).draw(cube);
 
     return 1;
 }

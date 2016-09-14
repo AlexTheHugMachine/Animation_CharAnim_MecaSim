@@ -59,6 +59,7 @@ solution "gKit2light"
 		
 	configuration "macosx"
 		local frameworks= "-F /Library/Frameworks/"
+		buildoptions { "-std=c++11" }
 		defines { "GK_MACOS" }
 		buildoptions { frameworks }
 		linkoptions { frameworks .. " -framework OpenGL -framework SDL2 -framework SDL2_image" }
@@ -74,7 +75,7 @@ project("l2_lifgfx")
     kind "ConsoleApp"
     targetdir "bin"
     files ( gkit_files )
-    files { "src/l2_lifgfx/viewer.cpp", "src/l2_lifgfx/viewer.h" }
+    files { "src/l2_lifgfx/viewer.cpp", "src/l2_lifgfx/viewer.h", "src/l2_lifgfx/animation.cpp", "src/l2_lifgfx/animtion.h" }
 
 --~ project("l2_lifgfx_corrige")
 --~     language "C++"
