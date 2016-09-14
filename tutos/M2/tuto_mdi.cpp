@@ -42,19 +42,23 @@ public:
         glGenBuffers(1, &m_indirect_buffer);
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect_buffer);
         // dimensionne le buffer
-        glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(unsigned int) * 4 * 25, NULL, GL_STREAM_DRAW);
+        //~ glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(unsigned int) * 4 * 25, NULL, GL_STREAM_DRAW);
         // remarque : usage == stream draw, le contenu du buffer va etre modifie regulierement.
+        
+        // todo comparer avec glBufferStorage
 
         glGenBuffers(1, &m_model_buffer);
+    #if 1
         glBindBuffer(GL_UNIFORM_BUFFER, m_model_buffer);
        // dimensionne le buffer        
         glBufferData(GL_UNIFORM_BUFFER, sizeof(Transform) * 25, NULL, GL_STREAM_DRAW);
         // remarque : usage == stream draw, le contenu du buffer va etre modifie regulierement.
-
+    #endif
+    
         // creation des vertex buffer
         m_vao= m_objet.create_buffers(false, false, false);
         // et du shader program
-        m_program= read_program("tutos/indirect.glsl");
+        m_program= read_program("tutos/M2/indirect.glsl");
         program_print_errors(m_program);
 
         // etat openGL par defaut
@@ -107,7 +111,7 @@ public:
         glBeginQuery(GL_TIME_ELAPSED, m_time_query);    // pour le gpu
         std::chrono::high_resolution_clock::time_point cpu_start= std::chrono::high_resolution_clock::now();    // pour le cpu
         
-    #if 0
+    #if 1
         // dessine 25 fois l'objet avec 25 draw
         for(int y= -2; y <= 2; y++)
         for(int x= -2; x <= 2; x++)
@@ -145,20 +149,28 @@ public:
             indirect.push_back( IndirectParam(m_objet.vertex_count()) );
         }
         
+        //
+        glBindVertexArray(m_vao);
+        glUseProgram(m_program);
+        
         // transfere les donnees des draws dans un buffer
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect_buffer);
         glInvalidateBufferData(GL_DRAW_INDIRECT_BUFFER);   // detruit le contenu du buffer
         //~ glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectParam) * indirect.size(), NULL, GL_STREAM_DRAW);   // detruit le contenu du buffer
         glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(IndirectParam) * indirect.size(), &indirect.front());
 
-        // transfere les transformations dans un buffer
+    #if 1
+        // transfere les transformations dans un uniform buffer
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_model_buffer);
         glInvalidateBufferData(GL_UNIFORM_BUFFER);   // detruit le contenu du buffer
         //~ glBufferData(GL_UNIFORM_BUFFER, sizeof(Transform) * model.size(), NULL, GL_STREAM_DRAW);    // detruit le contenu du buffer
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Transform) * model.size(), &model.front());
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Transform) * model.size(), model.front().buffer());
+    #else
         
-        glBindVertexArray(m_vao);
-        glUseProgram(m_program);
+        // transfere les transformations dans un tableau d'uniform "classique"
+        GLint location= glGetUniformLocation(m_program, "model");
+        glUniformMatrix4fv(location, model.size(), GL_TRUE, model.front().buffer());
+    #endif
         
         program_uniform(m_program, "vpMatrix", m_camera.projection(window_width(), window_height(), 45) * m_camera.view());
         program_uniform(m_program, "viewMatrix", m_camera.view());
