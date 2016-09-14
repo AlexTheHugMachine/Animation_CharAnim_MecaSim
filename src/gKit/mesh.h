@@ -273,22 +273,20 @@ public:
     //! exemple, cf create_program( )
     GLuint create_buffers( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
 
-    //! construit le shader program configure pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).\n
+    //! construit un shader program configure.
     /*! exemple :
     \code
     Mesh mesh= { ... };
     Orbiter camera= { ... };
     
-    mesh.create_buffers(false, false, false);
-    mesh.create_program(false, false, false);
-
-    // dessine uniquement la geometrie... sans couleurs, sans normales, sans textures
-    draw(mesh, camera);
+    GLuint vao= mesh.create_buffers(false, false, false);
+    GLuint program= mesh.create_program(false, false, false);
     \endcode
 
     \param use_texcoord force l'utilisation des coordonnees de texture
     \param use_normal force l'utilisation des normales
     \param use_color force l'utilisation des couleurs 
+    \param use_light force l'utilisation d'un source de lumiere 
      */
     GLuint create_program( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true, const bool use_light= false );
     
