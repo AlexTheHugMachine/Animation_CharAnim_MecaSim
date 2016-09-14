@@ -48,7 +48,6 @@ void AnimationCurve::init(const char* nom_fichier)
     FILE* f;
 
     f = fopen( nom_fichier, "r");
-    //assert( f );
     if (f==nullptr)
     {
         printf("ERREUR: ouverture impossible du fichier %s\n", nom_fichier);
@@ -64,7 +63,8 @@ void AnimationCurve::init(const char* nom_fichier)
         fgets( txt,taille,f);
     }
     while( txt[0]=='#' );
-    assert( sscanf( txt, "%d\n", &NBPC)==1 );
+    int err = sscanf( txt, "%d\n", &NBPC);
+    assert( err==1 );
     m_nbp = (NBPC/4)*NBPB;	// Nombre de points en tout
 
     PC = new Point[NBPC];
@@ -77,7 +77,8 @@ void AnimationCurve::init(const char* nom_fichier)
             fgets( txt,taille,f);
         }
         while( txt[0]=='#' );
-        assert( sscanf( txt, "%f %f %f\n", &PC[i].x, &PC[i].y, &PC[i].z)==3 );
+        err = sscanf( txt, "%f %f %f\n", &PC[i].x, &PC[i].y, &PC[i].z);
+        assert( err==3 );
     }
 
     printf("Animation: %d PdC et %d P en tout\n", NBPC, m_nbp);
