@@ -17,6 +17,7 @@
 #include "orbiter.h"
 #include "app.h"        // classe Application a deriver
 
+#include "animation.h"
 
 
 class Viewer : public App
@@ -40,7 +41,8 @@ public:
 protected:
 
     Orbiter camera;
-    DrawParam draw_param;
+    DrawParam gl;
+    AnimationCurve m_anim;
 
     Mesh axe;
     Mesh grid;
@@ -49,6 +51,7 @@ protected:
 
     bool b_draw_grid;
     bool b_draw_axe;
+    bool b_draw_animation;
     void init_axe();
     void init_grid();
     void init_cube();

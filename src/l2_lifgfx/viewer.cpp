@@ -10,7 +10,7 @@
 using namespace std;
 
 
-Viewer::Viewer() : App(1024, 640), b_draw_grid(true), b_draw_axe(true)
+Viewer::Viewer() : App(1024, 768), b_draw_grid(true), b_draw_axe(true), b_draw_animation(false)
 {
 }
 
@@ -21,6 +21,10 @@ void Viewer::help()
     printf("\th: help\n");
     printf("\ta: (des)active l'affichage de l'axe\n");
     printf("\tg: (des)active l'affichage de la grille\n");
+    printf("\tz: (des)active l'affichage de la courbe d'animation\n");
+    printf("\tCtrl+fleche/pageUp/pageDown: bouge la source de lumière\n");
+    printf("\tSouris+bouton gauche: rotation\n");
+    printf("\tSouris mouvement horizontal+bouton droit: (de)zoom\n");
 }
 
 int Viewer::init()
@@ -35,8 +39,10 @@ int Viewer::init()
     glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
 
+    m_anim.init( "data/animation/anim1.ani");
+
     camera.lookat( Point(0,0,0), 30 );
-    draw_param.light( Point(0, 20, 20), White() );
+    gl.light( Point(0, 20, 20), White() );
 
     init_axe();
     init_grid();
@@ -179,36 +185,52 @@ int Viewer::render( )
         camera.rotation( mx, my);       // tourne autour de l'objet
     else if(mb & SDL_BUTTON(3))                 // le bouton droit est enfonce
         camera.move( mx);               // approche / eloigne l'objet
+    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL))) { camera.move( -1); }
+    if (key_state(SDLK_UP) && (!key_state(SDLK_LCTRL))) { camera.move( 1); }
+
 
     // Deplace la lumiere
     const float step = 0.1f;
-    if (key_state(SDLK_RIGHT) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(step,0,0)); }
-    if (key_state(SDLK_LEFT) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(-step,0,0)); }
-    if (key_state(SDLK_UP) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,step,0)); }
-    if (key_state(SDLK_DOWN) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,-step,0)); }
-    if (key_state(SDLK_PAGEUP) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,0,step)); }
-    if (key_state(SDLK_PAGEDOWN) && key_state(SDLK_LCTRL)) { draw_param.light( draw_param.light()+Vector(0,0, -step)); }
-    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL))) { camera.move( -1); }
-    if (key_state(SDLK_UP) && (!key_state(SDLK_LCTRL))) { camera.move( 1); }
+    if (key_state(SDLK_RIGHT) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(step,0,0)); }
+    if (key_state(SDLK_LEFT) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(-step,0,0)); }
+    if (key_state(SDLK_UP) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,step,0)); }
+    if (key_state(SDLK_DOWN) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,-step,0)); }
+    if (key_state(SDLK_PAGEUP) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,0,step)); }
+    if (key_state(SDLK_PAGEDOWN) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,0, -step)); }
+
 
 
     // (De)Active la grille / les axes
     if (key_state('h')) help();
     if (key_state('g')) { b_draw_grid = !b_draw_grid; clear_key_state('g'); }
     if (key_state('a')) { b_draw_axe = !b_draw_axe; clear_key_state('a'); }
+    if (key_state('z')) { b_draw_animation=!b_draw_animation; clear_key_state('z');}
 
 
-     // LIGHT
-    draw(cube, Translation( Vector( draw_param.light()))*Scale(0.3, 0.3, 0.3), camera);
+    gl.camera(camera);
+    //draw(cube, Translation( Vector( gl.light()))*Scale(0.3, 0.3, 0.3), camera);
+    //draw_param.texture(quad_texture).camera(camera).model(Translation( 3, 5, 0 )).draw(quad);
 
     // AXE et GRILLE
-    if (b_draw_grid) draw(grid, camera);
-    if (b_draw_axe) draw(axe, camera);
+    gl.model( Identity() );
+    if (b_draw_grid) gl.draw(grid);
+    if (b_draw_axe) gl.draw(axe);
+    if (b_draw_animation) m_anim.draw(camera);
+
+     // LIGHT
+    gl.texture( 0 );
+    gl.model( Translation( Vector( gl.light()))*Scale(0.3, 0.3, 0.3) );
+    gl.draw(cube);
 
 
-    draw_param.texture(quad_texture).camera(camera).model(Translation( 3, 5, 0 )).draw(quad);
 
-    draw_param.texture(cube_texture).camera(camera).model(Translation( -3, 5, 0 )).draw(cube);
+    gl.texture(quad_texture);
+    gl.model(Translation( 3, 5, 0 ));
+    gl.draw(quad);
+
+    gl.texture(cube_texture);
+    gl.model(Translation( -3, 5, 0 ));
+    gl.draw(cube);
 
     return 1;
 }
