@@ -66,7 +66,7 @@ uniform vec3 light;
 uniform vec4 light_color;
 #endif
 
-uniform vec4 mesh_color;
+uniform vec4 mesh_color= vec4(1, 1, 1, 0);
 
 out vec4 fragment_color;
 
@@ -109,10 +109,11 @@ void main( )
 #endif
 
     color= color * cos_theta;
+    
     // hachure les triangles mal orientes
     if(gl_FrontFacing == false) // if(!gl_FrontFacing) bug sur mac ?!
     {
-        ivec2 pixel= ivec2(gl_FragCoord.xy) % ivec2(4, 4);
+        ivec2 pixel= ivec2(gl_FragCoord.xy / 4) % ivec2(2, 2);
         if((pixel.x ^ pixel.y) == 0)
             color= vec4(0.8, 0.4, 0, 1);
     }
