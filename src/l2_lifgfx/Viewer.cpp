@@ -171,7 +171,6 @@ int Viewer::quit( )
 
 void Viewer::manageCameraLight()
 {
-
     // recupere les mouvements de la souris pour deplacer la camera, cf tutos/tuto6.cpp
     int mx, my;
     unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
@@ -244,9 +243,3 @@ int Viewer::render( )
 
 
 
-int main( int argc, char **argv )
-{
-    Viewer v;
-    v.run();
-    return 0;
-}
