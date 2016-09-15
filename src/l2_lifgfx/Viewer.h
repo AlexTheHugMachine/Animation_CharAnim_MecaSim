@@ -20,7 +20,7 @@
 #include "AnimationCurve.h"
 #include "Viewer.h"
 
-class Viewer : public BasicViewer
+class Viewer : public App
 {
 public:
     Viewer();

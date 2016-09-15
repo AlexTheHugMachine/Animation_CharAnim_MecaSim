@@ -20,8 +20,11 @@ void Mesh::release( )
 {
     if(m_vao)
         release_vertex_format(m_vao);
-    if(m_program)
-        release_program(m_program);
+
+    // detruit tous les shaders crees...
+    for(std::unordered_map<unsigned int, GLuint>::iterator it= m_state_map.begin(); it != m_state_map.end(); ++it)
+        if(it->second > 0)
+            release_program(it->second);
 }
 
 // definit les attributs du prochain sommet
