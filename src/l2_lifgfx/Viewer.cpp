@@ -169,12 +169,8 @@ int Viewer::quit( )
 }
 
 
-
-int Viewer::render( )
+void Viewer::manageCameraLight()
 {
-    // Afface l'ecran
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     // recupere les mouvements de la souris pour deplacer la camera, cf tutos/tuto6.cpp
     int mx, my;
     unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
@@ -206,7 +202,6 @@ int Viewer::render( )
     if (key_state('a')) { b_draw_axe = !b_draw_axe; clear_key_state('a'); }
     if (key_state('z')) { b_draw_animation=!b_draw_animation; clear_key_state('z');}
 
-
     gl.camera(camera);
     //draw(cube, Translation( Vector( gl.light()))*Scale(0.3, 0.3, 0.3), camera);
     //draw_param.texture(quad_texture).camera(camera).model(Translation( 3, 5, 0 )).draw(quad);
@@ -223,6 +218,17 @@ int Viewer::render( )
     gl.draw(cube);
 
 
+}
+
+
+int Viewer::render( )
+{
+    // Afface l'ecran
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    manageCameraLight();
+
+    gl.camera(camera);
 
     gl.texture(quad_texture);
     gl.model(Translation( 3, 5, 0 ));
@@ -237,9 +243,3 @@ int Viewer::render( )
 
 
 
-int main( int argc, char **argv )
-{
-    Viewer v;
-    v.run();
-    return 0;
-}
