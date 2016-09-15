@@ -18,9 +18,9 @@
 #include "app.h"        // classe Application a deriver
 
 #include "AnimationCurve.h"
+#include "Viewer.h"
 
-
-class Viewer : public App
+class Viewer : public BasicViewer
 {
 public:
     Viewer();
@@ -40,20 +40,9 @@ public:
 
 protected:
 
-    Orbiter camera;
-    DrawParam gl;
-    AnimationCurve m_anim;
-
-    Mesh axe;
-    Mesh grid;
     Mesh cube;
     GLuint cube_texture;
 
-    bool b_draw_grid;
-    bool b_draw_axe;
-    bool b_draw_animation;
-    void init_axe();
-    void init_grid();
     void init_cube();
 
 
