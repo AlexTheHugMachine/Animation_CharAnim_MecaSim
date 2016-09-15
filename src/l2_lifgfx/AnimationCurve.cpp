@@ -4,7 +4,7 @@
 
 #include "draw.h"        // pour dessiner du point de vue d'une camera
 
-#include "animation.h"
+#include "AnimationCurve.h"
 
 
 const int NBPB=10;              // NomBre de Points de Bezier (entre 2 points de Contr il y aura NPB points)

@@ -17,7 +17,7 @@
 #include "orbiter.h"
 #include "app.h"        // classe Application a deriver
 
-#include "animation.h"
+#include "AnimationCurve.h"
 
 
 class Viewer : public App
@@ -66,6 +66,8 @@ protected:
     Mesh quad;
     GLuint quad_texture;
     void init_quad();
+
+    void manageCameraLight();
 };
 
 
