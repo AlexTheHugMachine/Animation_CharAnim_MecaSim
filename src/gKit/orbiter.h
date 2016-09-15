@@ -17,9 +17,9 @@ class Orbiter
 {
 public:
     //! cree une camera par defaut. observe le centre (0, 0, 0) a une distance 5.
-    Orbiter( ) : m_center(), m_position(), m_rotation(), m_size(5.f) {}
+    Orbiter( ) : m_center(), m_position(), m_rotation(), m_size(5.f), m_radius(5.f) {}
     //! cree une camera. observe le point center a une distance size.
-    Orbiter( const Point& center, const float size ) : m_center(center), m_position(), m_rotation(), m_size(size) {}
+    Orbiter( const Point& center, const float size ) : m_center(center), m_position(), m_rotation(), m_size(size), m_radius(size) {}
     //! cree une camera. observe une boite alignee sur les axes.
     Orbiter( const Point& pmin, const Point& pmax ) : m_center(center(pmin, pmax)), m_position(), m_rotation(), m_size(distance(pmin, pmax)) {}
     
@@ -87,6 +87,7 @@ protected:
     vec2 m_position;
     vec2 m_rotation;
     float m_size;
+    float m_radius;
 };
 
 ///@}

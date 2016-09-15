@@ -1,5 +1,6 @@
 
 #include <cstdio>
+#include <algorithm>
 
 #include "orbiter.h"
 
@@ -9,6 +10,7 @@ void Orbiter::lookat( const Point& center, const float size )
     m_position= vec2(0, 0);
     m_rotation= vec2(0, 0);
     m_size= size;
+    m_radius= size;
 }
 
 void Orbiter::lookat( const Point& pmin, const Point& pmax )
@@ -44,7 +46,13 @@ Transform Orbiter::view( ) const
 
 Transform Orbiter::projection( const float width, const float height, const float fov ) const
 {
-    return Perspective(fov, width / height, m_size*0.01f, m_size*2.f + m_center.z);
+    //~ return Perspective(fov, width / height, m_size*0.01f, m_size*2.f + m_center.z);
+    
+    // calcule la distance entre le centre de l'objet et la camera
+    Transform t= view();
+    Point c= t(m_center);
+    // regle near et far en fonction du centre et du rayon englobant l'objet 
+    return Perspective(fov, width / height, std::max(0.1f, -c.z - m_radius), std::max(1.f, -c.z + m_radius));
 }
 
 void Orbiter::frame( const float width, const float height, const float z, const float fov, Point& dO, Vector& dx, Vector& dy ) const
