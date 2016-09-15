@@ -4,17 +4,20 @@
 #include <cmath>
 #include <algorithm>
 
+//#define _USE_MATH_DEFINES
 #include "mat.h"
 
 
 float radians( const float deg )
 {
-    return ((float) M_PI / 180.f) * deg;
+    const float pi = 3.1415926535;
+    return (pi  / 180.f) * deg;
 }
 
 float degrees( const float rad )
 {
-    return (180.f / (float) M_PI) * rad;
+    const float pi = 3.1415926535;
+    return (180.f / pi) * rad;
 }
 
 Transform::Transform (
@@ -60,7 +63,7 @@ Vector Transform::operator() ( const Vector& v ) const
     float yt= m[1][0] * x + m[1][1] * y + m[1][2] * z;                  // dot(vec4(m[1]), vec4(v, 0))
     float zt= m[2][0] * x + m[2][1] * y + m[2][2] * z;                  // dot(vec4(m[2]), vec4(v, 0))
     // dot(vec4(m[3]), vec4(v, 0)) == dot(vec4(0, 0, 0, 1), vec4(v, 0)) == 0 par definition
-    
+
     return Vector(xt, yt, zt);
 }
 
@@ -87,7 +90,7 @@ Transform Transform::transpose( ) const
         m[0][0], m[1][0], m[2][0], m[3][0],
         m[0][1], m[1][1], m[2][1], m[3][1],
         m[0][2], m[1][2], m[2][2], m[3][2],
-        m[0][3], m[1][3], m[2][3], m[3][3]);    
+        m[0][3], m[1][3], m[2][3], m[3][3]);
 }
 
 //! renvoie la transformation a appliquer aux normales d'un objet transforme par la matrice m.
@@ -260,7 +263,7 @@ Transform operator* ( const Transform& a, const Transform& b )
 Transform Transform::inverse( ) const
 {
     Transform minv= *this;
-    
+
     int indxc[4], indxr[4];
     int ipiv[4] = { 0, 0, 0, 0 };
 
