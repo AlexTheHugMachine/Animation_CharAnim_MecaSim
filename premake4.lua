@@ -108,6 +108,8 @@ local tutos = {
 	"tuto7",
 	"tuto8",
 	
+	"tuto_transform",
+	
 	"tuto2GL",
 	"tuto3GL",
 	"tuto3GL_reflect",
