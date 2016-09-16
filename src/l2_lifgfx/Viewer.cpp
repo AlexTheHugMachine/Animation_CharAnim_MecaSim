@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "draw.h"        // pour dessiner du point de vue d'une camera
-#include "viewer.h"
+#include "Viewer.h"
 
 using namespace std;
 
