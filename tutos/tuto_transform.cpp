@@ -9,6 +9,43 @@
 #include "app.h"
 
 
+// renvoie vrai si la boite englobante est au moins partiellement visible
+bool visible( const Transform& mvp, const Point& pmin, const Point& pmax )
+{
+    int planes[6] = { };
+    
+    // enumere les 8 sommets de la boite englobante
+    for(unsigned int i= 0; i < 8; i++)
+    {
+        Point p= pmin;
+        if(i & 1) p.x= pmax.x;
+        if(i & 2) p.y= pmax.y;
+        if(i & 4) p.z= pmax.z;
+        
+        // transformation du point homogene (x, y, z, w= 1)
+        vec4 h= mvp(vec4(p));
+        
+        // teste la position du point homogene par rapport aux 6 faces de la region visible
+        if(h.x < -h.w) planes[0]++;     // trop a gauche
+        if(h.x > h.w) planes[1]++;      // trop a droite
+        
+        if(h.y < -h.w) planes[2]++;     // trop bas
+        if(h.y > h.w) planes[3]++;      // trop haut
+        
+        if(h.z < -h.w) planes[4]++;     // trop pres
+        if(h.z > h.w) planes[5]++;      // trop loin
+    }
+    
+    // verifie si tous les sommets sont du "mauvais cote" d'une seule face, planes[i] == 8
+    for(unsigned int i= 0; i < 6; i++)
+        if(planes[i] == 8)
+            return false;       // la boite englobante n'est pas visible
+    
+    // l'objet doit etre visible
+    return true;
+}
+
+
 class TP : public App
 {
 public:
@@ -36,12 +73,12 @@ public:
             m_grid.vertex(4.5f, 0, pz); 
         }
         
-        // charge uin objet a afficher
+        // charge un objet a afficher
         m_objet= read_mesh("data/bigguy.obj");
 
-        Point pmin, pmax;
-        m_objet.bounds(pmin, pmax);
-        m_camera.lookat(pmin, pmax);
+        // conserve (les extremites de) sa boite englobante
+        m_objet.bounds(m_pmin, m_pmax);
+        m_camera.lookat(m_pmin, m_pmax);
         //~ m_camera.lookat(Point(), 10);
         
         m_objet.default_color(Green());
@@ -106,10 +143,17 @@ public:
             else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
                 m_observer.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
         }
-    
+        
+        // affiche l'objet en rouge, si sa boite englobante n'est pas visible pour la camera.
+        if(visible(m_camera.projection(window_width(), window_height(), 45) * m_camera.view() * m_model, m_pmin, m_pmax))
+            m_objet.default_color(Green());
+        else
+            m_objet.default_color(Red());
+        
+        
         Transform view= m_observer.view();
         Transform projection= Perspective(45, (float) window_width() / (float) window_height(), .1f, 1000.f);
-
+        
         static bool wireframe= false;
         if(key_state(' '))
         {
@@ -149,6 +193,8 @@ protected:
     GLuint m_texture;
     Orbiter m_camera;
     Orbiter m_observer;
+
+    Point m_pmin, m_pmax;
 };
 
 int main( )
