@@ -203,7 +203,12 @@ void print_line( std::string& errors, const char *source, const int begin_id, co
         }
         
         if(line >= begin_id && line <= line_id)
-            errors.push_back(source[i]);
+        {
+            if(source[i] == '\t')
+                errors.append("    ");
+            else
+                errors.push_back(source[i]);
+        }
         last= source[i];
     }
 }
