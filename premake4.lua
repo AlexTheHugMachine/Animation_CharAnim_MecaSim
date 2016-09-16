@@ -1,5 +1,6 @@
 solution "gKit2light"
 	configurations { "debug", "release" }
+
 	platforms { "x64", "x32" }
 	
 	includedirs { ".", "src/gKit" }
@@ -51,6 +52,7 @@ solution "gKit2light"
 		includedirs { "extern/visual2013/include" }
 		libdirs { "extern/visual2013/lib" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
+
 		
 	configuration { "windows", "vs2015", "x64" }
 		includedirs { "extern/visual2015/include" }

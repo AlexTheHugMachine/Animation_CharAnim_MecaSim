@@ -30,7 +30,7 @@ public:
         m_objet.bounds(pmin, pmax);
         m_camera.lookat(pmin - Vector(20, 20,  0), pmax + Vector(20, 20, 0));
 
-        m_texture= read_texture(0, "data/debug2x2red.png");
+        m_texture = read_texture(0, "data/debug2x2red.png");
 
         // affichage du temps de glDraw
         m_console= create_text();
@@ -156,14 +156,14 @@ public:
         // transfere les donnees des draws dans un buffer
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect_buffer);
         glInvalidateBufferData(GL_DRAW_INDIRECT_BUFFER);   // detruit le contenu du buffer
-        //~ glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectParam) * indirect.size(), NULL, GL_STREAM_DRAW);   // detruit le contenu du buffer
+        // glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectParam) * indirect.size(), NULL, GL_STREAM_DRAW);   // detruit le contenu du buffer
         glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(IndirectParam) * indirect.size(), &indirect.front());
 
     #if 1
         // transfere les transformations dans un uniform buffer
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_model_buffer);
         glInvalidateBufferData(GL_UNIFORM_BUFFER);   // detruit le contenu du buffer
-        //~ glBufferData(GL_UNIFORM_BUFFER, sizeof(Transform) * model.size(), NULL, GL_STREAM_DRAW);    // detruit le contenu du buffer
+        // glBufferData(GL_UNIFORM_BUFFER, sizeof(Transform) * model.size(), NULL, GL_STREAM_DRAW);    // detruit le contenu du buffer
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Transform) * model.size(), model.front().buffer());
     #else
         

@@ -145,7 +145,7 @@ public:
         }
         
         // affiche l'objet en rouge, si sa boite englobante n'est pas visible pour la camera.
-        if(visible(m_camera.projection(window_width(), window_height(), 45) * m_camera.view() * m_model, m_pmin, m_pmax))
+        if(visible(m_camera.projection((float) window_width(), (float)window_height(), 45) * m_camera.view() * m_model, m_pmin, m_pmax))
             m_objet.default_color(Green());
         else
             m_objet.default_color(Red());
@@ -179,7 +179,7 @@ public:
         #if 1
             // afficher le volume visible de la camera dans le repere monde
             draw(m_grid, Identity(), view, projection);
-            draw(m_frustum, Inverse(m_camera.projection(window_width(), window_height(), 45) * m_camera.view()), view, projection);
+            draw(m_frustum, Inverse(m_camera.projection((float) window_width(), (float) window_height(), 45) * m_camera.view()), view, projection);
             draw(m_objet, m_model, view, projection);
             
         #else

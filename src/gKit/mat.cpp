@@ -10,13 +10,13 @@
 
 float radians( const float deg )
 {
-    const float pi = 3.1415926535;
+    const float pi = 3.1415926535f;
     return (pi  / 180.f) * deg;
 }
 
 float degrees( const float rad )
 {
-    const float pi = 3.1415926535;
+    const float pi = 3.1415926535f;
     return (180.f / pi) * rad;
 }
 

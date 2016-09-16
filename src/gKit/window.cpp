@@ -231,7 +231,7 @@ void release_window( Window window )
 //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
 static
 void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
-    const char *message, void *userParam )
+    const char *message, const void *userParam )
 {
     static std::set<std::string> log;
     if(log.insert(message).second == false)
