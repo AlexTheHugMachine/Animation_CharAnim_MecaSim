@@ -46,13 +46,14 @@ Transform Orbiter::view( ) const
 
 Transform Orbiter::projection( const float width, const float height, const float fov ) const
 {
-    //~ return Perspective(fov, width / height, m_size*0.01f, m_size*2.f + m_center.z);
-    
     // calcule la distance entre le centre de l'objet et la camera
-    Transform t= view();
-    Point c= t(m_center);
+    //~ Transform t= view();
+    //~ Point c= t(m_center);
+    //~ float d= -c.z;
+    float d= distance(m_center, Point(m_position.x, m_position.y, m_size));     // meme resultat plus rapide a calculer
+    
     // regle near et far en fonction du centre et du rayon englobant l'objet 
-    return Perspective(fov, width / height, std::max(0.1f, -c.z - m_radius), std::max(1.f, -c.z + m_radius));
+    return Perspective(fov, width / height, std::max(0.1f, d - m_radius), std::max(1.f, d + m_radius));
 }
 
 void Orbiter::frame( const float width, const float height, const float z, const float fov, Point& dO, Vector& dx, Vector& dy ) const
