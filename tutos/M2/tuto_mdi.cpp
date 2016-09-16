@@ -1,5 +1,5 @@
 
-//! \file tuto9.cpp mesure du temps d'execution par le cpu et le gpu (utilise une requete / query openGL)
+//! \file tuto_mdi.cpp affichage de plusieurs objets avec glMultiDrawIndirect() + mesure du temps d'execution par le cpu et le gpu (utilise une requete / query openGL)
 
 #include <chrono>
 
@@ -28,7 +28,7 @@ public:
         m_objet= read_mesh("data/bigguy.obj");
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
-        m_camera.lookat(pmin, pmax);
+        m_camera.lookat(pmin - Vector(20, 20,  0), pmax + Vector(20, 20, 0));
 
         m_texture= read_texture(0, "data/debug2x2red.png");
 
@@ -42,7 +42,7 @@ public:
         glGenBuffers(1, &m_indirect_buffer);
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect_buffer);
         // dimensionne le buffer
-        //~ glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(unsigned int) * 4 * 25, NULL, GL_STREAM_DRAW);
+        glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(unsigned int) * 4 * 25, NULL, GL_STREAM_DRAW);
         // remarque : usage == stream draw, le contenu du buffer va etre modifie regulierement.
         
         // todo comparer avec glBufferStorage
@@ -111,7 +111,7 @@ public:
         glBeginQuery(GL_TIME_ELAPSED, m_time_query);    // pour le gpu
         std::chrono::high_resolution_clock::time_point cpu_start= std::chrono::high_resolution_clock::now();    // pour le cpu
         
-    #if 1
+    #if 0
         // dessine 25 fois l'objet avec 25 draw
         for(int y= -2; y <= 2; y++)
         for(int x= -2; x <= 2; x++)

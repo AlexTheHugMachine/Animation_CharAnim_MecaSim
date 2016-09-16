@@ -1,5 +1,5 @@
 
-//! \file tuto9.cpp mesure du temps d'execution par le cpu et le gpu (utilise une requete / query openGL)
+//! \file tuto_time.cpp mesure du temps d'execution par le cpu et le gpu (utilise une requete / query openGL) + std::chrono pour le cpu
 
 #include <chrono>
 
@@ -130,7 +130,7 @@ public:
 protected:
     GLuint m_time_query;
     Text m_console;
-
+    
     Transform m_model;
     Mesh m_objet;
     GLuint m_texture;
