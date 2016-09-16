@@ -214,7 +214,8 @@ protected:
     Orbiter m_camera;
 };
 
-int main( )
+
+int main( int argc, char **argv )
 {
     TP tp;
     tp.run();

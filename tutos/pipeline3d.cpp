@@ -136,7 +136,7 @@ float volume( const Point p, const Point a, const Point b, const Point c )
 int draw( ) { return 0; }
 
 
-int main( void )
+int main( int argc, char **argv )
 {
     //~ Image color= create_image(1024, 640, 3, make_color(0.2, 0.2, 0.2));
     Image color(512, 320, Color(0.2, 0.2, 0.2));

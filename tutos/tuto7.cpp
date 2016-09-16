@@ -71,7 +71,8 @@ protected:
     Orbiter m_camera;
 };
 
-int main( )
+
+int main( int argc, char **argv )
 {
     // il ne reste plus qu'a creer un objet application et la lancer 
     TP tp;

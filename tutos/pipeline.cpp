@@ -119,7 +119,7 @@ bool visible( const Point p )
 }
 
 
-int main( void )
+int main( int argc, char **argv )
 {
     Image color(640, 320);
     ZBuffer depth(color.width(), color.height());
