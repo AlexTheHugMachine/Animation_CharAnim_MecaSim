@@ -41,7 +41,7 @@ bool visible( const Transform& mvp, const Point& pmin, const Point& pmax )
         if(planes[i] == 8)
             return false;       // la boite englobante n'est pas visible
     
-    // l'objet doit etre visible
+    // l'objet doit etre visible, ou pas, il faut aussi le test dans l'autre sens... 
     return true;
 }
 
@@ -176,10 +176,19 @@ public:
             else
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             
-            // afficher le volume visible de la camera
+        #if 1
+            // afficher le volume visible de la camera dans le repere monde
             draw(m_grid, Identity(), view, projection);
             draw(m_frustum, Inverse(m_camera.projection(window_width(), window_height(), 45) * m_camera.view()), view, projection);
             draw(m_objet, m_model, view, projection);
+            
+        #else
+            // afficher dans le repere image 
+            draw(m_grid, m_camera.projection(window_width(), window_height(), 45) * m_camera.view(), view, projection);
+            draw(m_frustum, m_camera.projection(window_width(), window_height(), 45) * m_camera.view() * Inverse(m_camera.projection(window_width(), window_height(), 45) * m_camera.view()), view, projection);
+            // remarque : ca se simplifie non ??
+            draw(m_objet, m_camera.projection(window_width(), window_height(), 45) * m_camera.view() * m_model, view, projection);
+        #endif
         }
         
         return 1;
