@@ -72,21 +72,6 @@ local gkit_files = { "src/gKit/*.cpp", "src/gKit/*.h" }
 
  -- description des projets		
 
-project("l2_lifgfx")
-    language "C++"
-    kind "ConsoleApp"
-    targetdir "bin"
-    files ( gkit_files )
-    files { "src/l2_lifgfx/main.cpp",
-			"src/l2_lifgfx/Viewer.cpp", "src/l2_lifgfx/Viewer.h", 
-			"src/l2_lifgfx/AnimationCurve.cpp", "src/l2_lifgfx/AnimtionCurve.h" }
-
---~ project("l2_lifgfx_corrige")
---~     language "C++"
---~     kind "ConsoleApp"
---~     targetdir "bin"
---~     files ( gkit_files )
---~     files { "src/l2_lifgfx/viewer_corrige.cpp", "src/l2_lifgfx/viewer_corrige.h" }
     
 local projects = {
 	"shader_kit"
@@ -154,4 +139,43 @@ for i, name in ipairs(tutosM2) do
 		targetdir "bin"
 		files ( gkit_files )
 		files { "tutos/M2/" .. name..'.cpp' }
+end
+
+
+
+
+ 
+project("l2_lifgfx")
+    language "C++"
+    kind "ConsoleApp"
+    targetdir "bin"
+    files ( gkit_files )
+    files { "src/l2_lifgfx/main.cpp",
+			"src/l2_lifgfx/Viewer.cpp", "src/l2_lifgfx/Viewer.h", 
+			"src/l2_lifgfx/AnimationCurve.cpp", "src/l2_lifgfx/AnimtionCurve.h" }
+
+newoption {
+   trigger     = "corrige",
+   value       = "cor",
+   description = "Choose a particular sub-list of projects",
+   allowed = {
+      { "off",	"Pas de corrige" },
+      { "on",  	"Avec corrige" },
+   }
+}
+
+			
+if not _OPTIONS["corrige"] then
+   _OPTIONS["corrige"] = "off"
+end
+
+if _OPTIONS["corrige"] == "on" then
+project("l2_lifgfx_corrige")
+    language "C++"
+    kind "ConsoleApp"
+    targetdir "bin"
+    files ( gkit_files )
+    files { "src/l2_lifgfx/main.cpp",
+			"src/l2_lifgfx/Viewer_corrige.cpp", "src/l2_lifgfx/Viewer_corrige.h", 
+			"src/l2_lifgfx/AnimationCurve.cpp", "src/l2_lifgfx/AnimtionCurve.h" }
 end

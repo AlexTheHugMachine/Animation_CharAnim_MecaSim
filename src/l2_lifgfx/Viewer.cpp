@@ -97,7 +97,7 @@ void Viewer::init_cube()
     static float uv[4][2] = { {0,0}, {1,0}, {1,1}, {0,1} };
     int i,j;
 
-    cube = Mesh(GL_TRIANGLES);
+    cube = Mesh(GL_TRIANGLE_STRIP);
     cube.color( Color(1, 1, 1) );
 
     cube_texture = read_texture(0, "data/debug2x2red.png");
@@ -115,14 +115,8 @@ void Viewer::init_cube()
         cube.texcoord(0,1);
         cube.vertex(pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
 
-        cube.texcoord(1,0);
-        cube.vertex( pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
-
         cube.texcoord(1,1);
         cube.vertex( pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
-
-        cube.texcoord(0,1);
-        cube.vertex( pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
     }
 }
 
@@ -130,7 +124,7 @@ void Viewer::init_cube()
 
 void Viewer::init_quad()
 {
-    quad = Mesh(GL_TRIANGLES);
+    quad = Mesh(GL_TRIANGLE_STRIP);
     quad.color( Color(1, 1, 1));
 
     quad_texture = read_texture(0, "data/papillon.jpg");
@@ -146,15 +140,8 @@ void Viewer::init_quad()
     quad.texcoord(0,1);
     quad.vertex( -1, 1, 0 );
 
-
-    quad.texcoord(1,0);
-    quad.vertex( 1, -1, 0 );
-
     quad.texcoord( 1,1);
     quad.vertex(  1,  1, 0 );
-
-    quad.texcoord( 0,1);
-    quad.vertex(-1,  1, 0 );
 }
 
 
