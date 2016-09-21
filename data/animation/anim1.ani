@@ -6,11 +6,11 @@
 #   - les PdC sont regroupés par paquet de 4, le 4e PdC doit être identique au 5e, le 8e identique au 9e, le 12e identique au 13e, etc.
 #   - pas de ligne vide
 8
--4  3  0
--8  3  -4
-0  3  -6
-2  3  -3
-2  3  -3
-4  3  0
-0  3  4
--4  3  0
+-12  12  0
+-24  12  -12
+0  12  -18
+6  12  -9
+6  12  -9
+12  12  0
+0  12  12
+-12  12  0

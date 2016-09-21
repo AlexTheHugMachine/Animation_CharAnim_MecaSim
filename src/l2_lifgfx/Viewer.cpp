@@ -48,7 +48,7 @@ int Viewer::init()
 
     m_anim.init( "data/animation/anim1.ani");
 
-    camera.lookat( Point(0,0,0), 30 );
+    m_camera.lookat( Point(0,0,0), 30 );
     gl.light( Point(0, 20, 20), White() );
 
     init_axe();
@@ -62,35 +62,35 @@ int Viewer::init()
 
 void Viewer::init_axe()
 {
-    axe = Mesh(GL_LINES);
-    axe.color( Color(1, 0, 0));
-    axe.vertex( 0,  0, 0);
-    axe.vertex( 1,  0, 0);
+    m_axe = Mesh(GL_LINES);
+    m_axe.color( Color(1, 0, 0));
+    m_axe.vertex( 0,  0, 0);
+    m_axe.vertex( 1,  0, 0);
 
-    axe.color( Color(0, 1, 0));
-    axe.vertex( 0,  0, 0);
-    axe.vertex( 0,  1, 0);
+    m_axe.color( Color(0, 1, 0));
+    m_axe.vertex( 0,  0, 0);
+    m_axe.vertex( 0,  1, 0);
 
-    axe.color( Color( 0, 0, 1));
-    axe.vertex( 0,  0, 0);
-    axe.vertex( 0,  0, 1);
+    m_axe.color( Color( 0, 0, 1));
+    m_axe.vertex( 0,  0, 0);
+    m_axe.vertex( 0,  0, 1);
 }
 
 
 void Viewer::init_grid()
 {
-    grid = Mesh(GL_LINES);
+    m_grid = Mesh(GL_LINES);
 
-    grid.color( Color(1, 1, 1));
+    m_grid.color( Color(1, 1, 1));
     int i,j;
     for(i=-5;i<=5;++i)
         for(j=-5;j<=5;++j)
         {
-            grid.vertex( -5, 0, j);
-            grid.vertex( 5, 0,  j);
+            m_grid.vertex( -5, 0, j);
+            m_grid.vertex( 5, 0,  j);
 
-            grid.vertex( i, 0, -5);
-            grid.vertex( i, 0, 5);
+            m_grid.vertex( i, 0, -5);
+            m_grid.vertex( i, 0, 5);
 
         }
 }
@@ -104,28 +104,28 @@ void Viewer::init_cube()
     static float n[6][3] = { {0,-1,0}, {0,1,0}, {1,0,0}, {-1,0,0}, {0,0,1}, {0,0,-1} };
     int i,j;
 
-    cube = Mesh(GL_TRIANGLE_STRIP);
-    cube.color( Color(1, 1, 1) );
+    m_cube = Mesh(GL_TRIANGLE_STRIP);
+    m_cube.color( Color(1, 1, 1) );
 
-    cube_texture = read_texture(0, "data/debug2x2red.png");
+    m_cube_texture = read_texture(0, "data/debug2x2red.png");
 
     for (i=0;i<6;i++)
     {
-        cube.normal(  n[i][0], n[i][1], n[i][2] );
+        m_cube.normal(  n[i][0], n[i][1], n[i][2] );
 
-        cube.texcoord( 0,0 );
-        cube.vertex( pt[ f[i][0] ][0], pt[ f[i][0] ][1], pt[ f[i][0] ][2] );
+        m_cube.texcoord( 0,0 );
+        m_cube.vertex( pt[ f[i][0] ][0], pt[ f[i][0] ][1], pt[ f[i][0] ][2] );
 
-        cube.texcoord( 1,0);
-        cube.vertex( pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
+        m_cube.texcoord( 1,0);
+        m_cube.vertex( pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
 
-        cube.texcoord(0,1);
-        cube.vertex(pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
+        m_cube.texcoord(0,1);
+        m_cube.vertex(pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
 
-        cube.texcoord(1,1);
-        cube.vertex( pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
+        m_cube.texcoord(1,1);
+        m_cube.vertex( pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
 
-        cube.restart_strip();
+        m_cube.restart_strip();
     }
 }
 
@@ -133,24 +133,24 @@ void Viewer::init_cube()
 
 void Viewer::init_quad()
 {
-    quad = Mesh(GL_TRIANGLE_STRIP);
-    quad.color( Color(1, 1, 1));
+    m_quad = Mesh(GL_TRIANGLE_STRIP);
+    m_quad.color( Color(1, 1, 1));
 
-    quad_texture = read_texture(0, "data/papillon.jpg");
+    m_quad_texture = read_texture(0, "data/papillon.jpg");
 
-    quad.normal(  0, 0, 1 );
+    m_quad.normal(  0, 0, 1 );
 
-    quad.texcoord(0,0 );
-    quad.vertex(-1, -1, 0 );
+    m_quad.texcoord(0,0 );
+    m_quad.vertex(-1, -1, 0 );
 
-    quad.texcoord(1,0);
-    quad.vertex(  1, -1, 0 );
+    m_quad.texcoord(1,0);
+    m_quad.vertex(  1, -1, 0 );
 
-    quad.texcoord(0,1);
-    quad.vertex( -1, 1, 0 );
+    m_quad.texcoord(0,1);
+    m_quad.vertex( -1, 1, 0 );
 
-    quad.texcoord( 1,1);
-    quad.vertex(  1,  1, 0 );
+    m_quad.texcoord( 1,1);
+    m_quad.vertex(  1,  1, 0 );
 }
 
 
@@ -172,17 +172,17 @@ void Viewer::manageCameraLight()
     unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
     // deplace la camera
     if((mb & SDL_BUTTON(1)) &&  (mb& SDL_BUTTON(3)))                 // le bouton du milieu est enfonce
-        camera.translation( (float) mx / (float) window_width(), (float) my / (float) window_height());         // deplace le point de rotation
+        m_camera.translation( (float) mx / (float) window_width(), (float) my / (float) window_height());         // deplace le point de rotation
     else if(mb & SDL_BUTTON(1))                      // le bouton gauche est enfonce
-        camera.rotation( mx, my);       // tourne autour de l'objet
+        m_camera.rotation( mx, my);       // tourne autour de l'objet
     else if(mb & SDL_BUTTON(3))                 // le bouton droit est enfonce
-        camera.move( my);               // approche / eloigne l'objet
-    if (key_state(SDLK_PAGEUP) && (!key_state(SDLK_LCTRL))) { camera.translation( 0,0.01); }
-    if (key_state(SDLK_PAGEDOWN) && (!key_state(SDLK_LCTRL))) { camera.translation( 0,-0.01); }
-    if (key_state(SDLK_LEFT) && (!key_state(SDLK_LCTRL))) { camera.translation(  0.01,0); }
-    if (key_state(SDLK_RIGHT) && (!key_state(SDLK_LCTRL))) { camera.translation( -0.01,0); }
-    if (key_state(SDLK_UP) && (!key_state(SDLK_LCTRL))) { camera.move( 1); }
-    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL))) { camera.move( -1); }
+        m_camera.move( my);               // approche / eloigne l'objet
+    if (key_state(SDLK_PAGEUP) && (!key_state(SDLK_LCTRL))) { m_camera.translation( 0,0.01); }
+    if (key_state(SDLK_PAGEDOWN) && (!key_state(SDLK_LCTRL))) { m_camera.translation( 0,-0.01); }
+    if (key_state(SDLK_LEFT) && (!key_state(SDLK_LCTRL))) { m_camera.translation(  0.01,0); }
+    if (key_state(SDLK_RIGHT) && (!key_state(SDLK_LCTRL))) { m_camera.translation( -0.01,0); }
+    if (key_state(SDLK_UP) && (!key_state(SDLK_LCTRL))) { m_camera.move( 1); }
+    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL))) { m_camera.move( -1); }
 
 
     // Deplace la lumiere
@@ -204,20 +204,20 @@ void Viewer::manageCameraLight()
     if (key_state('a')) { b_draw_axe = !b_draw_axe; clear_key_state('a'); }
     if (key_state('z')) { b_draw_animation=!b_draw_animation; clear_key_state('z');}
 
-    gl.camera(camera);
+    gl.camera(m_camera);
     //draw(cube, Translation( Vector( gl.light()))*Scale(0.3, 0.3, 0.3), camera);
     //draw_param.texture(quad_texture).camera(camera).model(Translation( 3, 5, 0 )).draw(quad);
 
     // AXE et GRILLE
     gl.model( Identity() );
-    if (b_draw_grid) gl.draw(grid);
-    if (b_draw_axe) gl.draw(axe);
-    if (b_draw_animation) m_anim.draw(camera);
+    if (b_draw_grid) gl.draw(m_grid);
+    if (b_draw_axe) gl.draw(m_axe);
+    if (b_draw_animation) m_anim.draw(m_camera);
 
      // LIGHT
     gl.texture( 0 );
     gl.model( Translation( Vector( gl.light()))*Scale(0.3, 0.3, 0.3) );
-    gl.draw(cube);
+    gl.draw(m_cube);
 
 
 }
@@ -230,15 +230,15 @@ int Viewer::render( )
 
     manageCameraLight();
 
-    gl.camera(camera);
+    gl.camera(m_camera);
 
-    gl.texture(quad_texture);
+    gl.texture(m_quad_texture);
     gl.model(Translation( 3, 5, 0 ));
-    gl.draw(quad);
+    gl.draw(m_quad);
 
-    gl.texture(cube_texture);
+    gl.texture(m_cube_texture);
     gl.model(Translation( -3, 5, 0 ));
-    gl.draw(cube);
+    gl.draw(m_cube);
 
     return 1;
 }

@@ -2,6 +2,8 @@
 #ifndef _ANIMATION_H_
 #define _ANIMATION_H_
 
+#include <iostream>
+
 #include "vec.h"
 #include "mat.h"
 #include "mesh.h"
@@ -20,6 +22,7 @@ public:
     void draw(const Orbiter& camera);
 
     const Point& operator[]( const int i) { assert(i>=0); assert(i<m_nbp);  return m_P[i]; }
+    int nb_points() const { return m_nbp; }
 
 protected:
     //! Les points de la trajectoire/courbe d'animation que va suivre la fusée
@@ -31,5 +34,7 @@ protected:
 
     Vector Bezier(const Vector& p0, const Vector& p1, const Vector& p2, const Vector& p3, const float t);
 };
+
+
 
 #endif
