@@ -155,14 +155,40 @@ void Viewer::init_quad()
 
 
 
-
-
-
-
-int Viewer::quit( )
+int Viewer::render( )
 {
-    return 0;
+    // Efface l'ecran
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Deplace la camera, lumiere, etc.
+    manageCameraLight();
+
+    // donne notre camera au shader
+    gl.camera(m_camera);
+
+    gl.texture(m_quad_texture);
+    gl.model(Translation( 3, 5, 0 ));
+    gl.draw(m_quad);
+
+    gl.texture(m_cube_texture);
+    gl.model(Translation( -3, 5, 0 ));
+    gl.draw(m_cube);
+
+    return 1;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 void Viewer::manageCameraLight()
@@ -218,30 +244,9 @@ void Viewer::manageCameraLight()
     gl.texture( 0 );
     gl.model( Translation( Vector( gl.light()))*Scale(0.3, 0.3, 0.3) );
     gl.draw(m_cube);
-
-
 }
 
-
-int Viewer::render( )
+int Viewer::quit( )
 {
-    // Afface l'ecran
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    manageCameraLight();
-
-    gl.camera(m_camera);
-
-    gl.texture(m_quad_texture);
-    gl.model(Translation( 3, 5, 0 ));
-    gl.draw(m_quad);
-
-    gl.texture(m_cube_texture);
-    gl.model(Translation( -3, 5, 0 ));
-    gl.draw(m_cube);
-
-    return 1;
+    return 0;
 }
-
-
-
