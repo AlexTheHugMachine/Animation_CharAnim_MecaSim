@@ -42,6 +42,8 @@ protected:
     Orbiter camera;
     DrawParam gl;
     AnimationCurve m_anim;
+    bool mb_cullface;
+    bool mb_wireframe;
 
     Mesh axe;
     Mesh grid;

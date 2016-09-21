@@ -1,4 +1,7 @@
 
+#ifndef _APP_H
+#define _APP_H
+
 #include "window.h"
 
 
@@ -6,9 +9,9 @@
 ///@{
 
 //! \file
-/*! squelette d'application: creation d'une fenetre, d'un contexte openGL et gestion des evenements. 
-    tuto7.cpp et tuto8.cpp presentent un exemple simple d'utilisation. 
-    
+/*! squelette d'application: creation d'une fenetre, d'un contexte openGL et gestion des evenements.
+    tuto7.cpp et tuto8.cpp presentent un exemple simple d'utilisation.
+
     la class App expose les fonctionnalites de window.h, elles sont juste presentees differemment.
     les fonctions globales de window.h sont toujours utilisables (a part run() qui est remplace par App::run()).
 */
@@ -30,10 +33,10 @@ public:
     virtual int update( const float time, const float delta ) { return 0; }
     //! a deriver pour afficher les objets.
     virtual int render( ) = 0;
-    
+
     //! execution de l'application.
     int run( );
-    
+
     //! renvoie le temps ecoule depuis le lancement de l'application, en millisecondes.
     float global_time( );
     //! renvoie le temps ecoule depuis la derniere frame, en millisecondes.
@@ -47,3 +50,5 @@ protected:
     unsigned int m_delta;
 };
 
+
+#endif // _APP_H

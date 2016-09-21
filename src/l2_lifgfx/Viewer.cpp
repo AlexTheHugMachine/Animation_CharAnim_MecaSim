@@ -10,7 +10,7 @@
 using namespace std;
 
 
-Viewer::Viewer() : App(1024, 768), b_draw_grid(true), b_draw_axe(true), b_draw_animation(false)
+Viewer::Viewer() : App(1024, 768), mb_cullface(true), mb_wireframe(false), b_draw_grid(true), b_draw_axe(true), b_draw_animation(false)
 {
 }
 
@@ -19,12 +19,15 @@ void Viewer::help()
 {
     printf("HELP:\n");
     printf("\th: help\n");
+    printf("\tc: (des)active GL_CULL_FACE\n");
+    printf("\tw: (des)active wireframe\n");
     printf("\ta: (des)active l'affichage de l'axe\n");
     printf("\tg: (des)active l'affichage de la grille\n");
     printf("\tz: (des)active l'affichage de la courbe d'animation\n");
+    printf("\tfleches/pageUp/pageDown: bouge la caméra\n");
     printf("\tCtrl+fleche/pageUp/pageDown: bouge la source de lumière\n");
     printf("\tSouris+bouton gauche: rotation\n");
-    printf("\tSouris mouvement horizontal+bouton droit: (de)zoom\n");
+    printf("\tSouris mouvement vertical+bouton droit: (de)zoom\n");
 }
 
 int Viewer::init()
@@ -36,7 +39,11 @@ int Viewer::init()
     glEnable(GL_DEPTH_TEST);
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
-    glEnable(GL_CULL_FACE);
+
+    if (mb_cullface)
+        glEnable(GL_CULL_FACE);
+    else
+        glDisable(GL_CULL_FACE);        // good for debug
     glEnable(GL_TEXTURE_2D);
 
     m_anim.init( "data/animation/anim1.ani");
@@ -91,10 +98,10 @@ void Viewer::init_grid()
 
 void Viewer::init_cube()
 {
+    //                          0           1           2       3           4           5       6           7
     static float pt[8][3] = { {-1,-1,-1}, {1,-1,-1}, {1,-1,1}, {-1,-1,1}, {-1,1,-1}, {1,1,-1}, {1,1,1}, {-1,1,1} };
-    static int f[6][4] = { {0,1,2,3}, {5,4,7,6}, {1,5,6,2}, {0,3,7,4}, {3,2,6,7}, {0,4,5,1} };
+    static int f[6][4] = {    {0,1,2,3}, {5,4,7,6}, {2,1,5,6}, {0,3,7,4}, {3,2,6,7}, {1,0,4,5} };
     static float n[6][3] = { {0,-1,0}, {0,1,0}, {1,0,0}, {-1,0,0}, {0,0,1}, {0,0,-1} };
-    static float uv[4][2] = { {0,0}, {1,0}, {1,1}, {0,1} };
     int i,j;
 
     cube = Mesh(GL_TRIANGLE_STRIP);
@@ -117,6 +124,8 @@ void Viewer::init_cube()
 
         cube.texcoord(1,1);
         cube.vertex( pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
+
+        cube.restart_strip();
     }
 }
 
@@ -167,24 +176,30 @@ void Viewer::manageCameraLight()
     else if(mb & SDL_BUTTON(1))                      // le bouton gauche est enfonce
         camera.rotation( mx, my);       // tourne autour de l'objet
     else if(mb & SDL_BUTTON(3))                 // le bouton droit est enfonce
-        camera.move( mx);               // approche / eloigne l'objet
-    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL))) { camera.move( -1); }
+        camera.move( my);               // approche / eloigne l'objet
+    if (key_state(SDLK_PAGEUP) && (!key_state(SDLK_LCTRL))) { camera.translation( 0,0.01); }
+    if (key_state(SDLK_PAGEDOWN) && (!key_state(SDLK_LCTRL))) { camera.translation( 0,-0.01); }
+    if (key_state(SDLK_LEFT) && (!key_state(SDLK_LCTRL))) { camera.translation(  0.01,0); }
+    if (key_state(SDLK_RIGHT) && (!key_state(SDLK_LCTRL))) { camera.translation( -0.01,0); }
     if (key_state(SDLK_UP) && (!key_state(SDLK_LCTRL))) { camera.move( 1); }
+    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL))) { camera.move( -1); }
 
 
     // Deplace la lumiere
     const float step = 0.1f;
     if (key_state(SDLK_RIGHT) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(step,0,0)); }
     if (key_state(SDLK_LEFT) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(-step,0,0)); }
-    if (key_state(SDLK_UP) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,step,0)); }
-    if (key_state(SDLK_DOWN) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,-step,0)); }
-    if (key_state(SDLK_PAGEUP) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,0,step)); }
-    if (key_state(SDLK_PAGEDOWN) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,0, -step)); }
+    if (key_state(SDLK_UP) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,0,-step)); }
+    if (key_state(SDLK_DOWN) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,0,step)); }
+    if (key_state(SDLK_PAGEUP) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,step,0)); }
+    if (key_state(SDLK_PAGEDOWN) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,-step,0)); }
 
 
 
     // (De)Active la grille / les axes
     if (key_state('h')) help();
+    if (key_state('c')) { clear_key_state('c'); mb_cullface=!mb_cullface; if (mb_cullface) glEnable(GL_CULL_FACE);else glDisable(GL_CULL_FACE); }
+    if (key_state('w')) { clear_key_state('w'); mb_wireframe=!mb_wireframe; if (mb_wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
     if (key_state('g')) { b_draw_grid = !b_draw_grid; clear_key_state('g'); }
     if (key_state('a')) { b_draw_axe = !b_draw_axe; clear_key_state('a'); }
     if (key_state('z')) { b_draw_animation=!b_draw_animation; clear_key_state('z');}
