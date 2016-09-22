@@ -312,12 +312,11 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     program_uniform(m_program, "mesh_color", default_color());
     
     Transform mv= view * model;
-    Transform normal= mv.normal();
     Transform mvp= projection * view * model;
     
     program_uniform(m_program, "mvpMatrix", mvp);
     program_uniform(m_program, "mvMatrix", mv);
-    program_uniform(m_program, "normalMatrix", normal); // transforme les normales dans le repere camera.
+    program_uniform(m_program, "normalMatrix", mv.normal()); // transforme les normales dans le repere camera.
     
     // utiliser une texture, elle ne sera visible que si le mesh a des texcoords...
     if(texture && use_texcoord && use_texture)

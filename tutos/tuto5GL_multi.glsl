@@ -24,11 +24,13 @@ in vec2 vertex_texcoord;
 uniform sampler2D base_texture;
 uniform sampler2D detail_texture;
 
+out vec4 fragment_color;
+
 void main( )
 {
     vec4 color= texture(base_texture, vertex_texcoord);
     color= color * 0.5 + texture(detail_texture, vertex_texcoord) * 0.5;
     
-    gl_FragColor= color;
+    fragment_color= color;
 }
 #endif

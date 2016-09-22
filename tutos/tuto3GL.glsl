@@ -28,9 +28,12 @@ void main( )
 #ifdef FRAGMENT_SHADER
 
 uniform vec4 color;
+
+out vec4 fragment_color;
+
 void main( )
 {
     // remplir le triangle avec une couleur uniforme
-    gl_FragColor= vec4(color.rgb, 1);
+    fragment_color= vec4(color.rgb, 1);
 }
 #endif

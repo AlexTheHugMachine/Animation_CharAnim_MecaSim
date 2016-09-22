@@ -23,10 +23,12 @@ in vec2 vertex_texcoord;
 
 uniform sampler2D texture0;
 
+out vec4 fragment_color;
+
 void main( )
 {
     vec4 color= texture(texture0, vertex_texcoord);
     
-    gl_FragColor= color;
+    fragment_color= color;
 }
 #endif

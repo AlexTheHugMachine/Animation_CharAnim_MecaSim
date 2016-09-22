@@ -9,7 +9,7 @@ const float dz= 0;
 
 /*  vec3 et vec4 sont des types de base, ils sont equivalents a :
     
-    struct vec3 { float x, y, z; };
+    struct vec3 { float x, y, z; };
     struct vec4 { float x, y, z, w; };
  */
 
@@ -36,9 +36,11 @@ void main( )
 
 #ifdef FRAGMENT_SHADER
 
+out vec4 fragment_color;
+
 void main( )
 {
     // remplir le triangle avec une couleur uniforme
-    gl_FragColor= vec4(0.8, 0.4, 0, 1);
+    framgent_color= vec4(0.8, 0.4, 0, 1);
 }
 #endif

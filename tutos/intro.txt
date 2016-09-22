@@ -229,7 +229,7 @@ void draw( const int count )
 
 le plus simple est de le tester.
 
-compilez shader_kit et jouez un peu avec le shader intro1.glsl
+compilez shader_kit.cpp et jouez un peu avec le shader intro1.glsl
 \code
 ./bin/shader_kit tutos/intro1.glsl
 \endcode

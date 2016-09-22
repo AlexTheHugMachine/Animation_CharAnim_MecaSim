@@ -35,9 +35,9 @@ plusieurs versions de premake pour visual studio sont disponibles :
     [premake 5](http://premake.github.io/download.html), copiez le dans le répertoire des sources de gKit
 
 ### installation rapide
-les librairies et premake4/5 sont regroupées dans une archive [disponible ici](http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/gkit2light_extern.zip).
+les librairies et premake4/5 sont regroupées dans une archive [disponible ici](http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/gkit2light_extern_vs_mingw.zip).
 
-il suffit de dezipper l'archive dans le répertoire de gKit. __et ensuite de copier les dll et la version de premake__ que vous allez utiliser dans le répertoire de gKit :
+il suffit de dezipper l'archive dans le répertoire de gKit, __et ensuite de copier les dll et la version de premake__ que vous allez utiliser dans le répertoire de gKit :
     - pour utiliser codeblocks : copiez le contenu de `extern/mingw/lib` et `extern/mingw/bin/premake4.exe`
     - pour utiliser visual studio 2013 : copiez le contenu de `extern/visual2013/lib` et `extern/visual2013/bin/premake4.exe`
     - pour utiliser visual studio 2015 : copiez le contenu de `extern/visual2015/lib` et `extern/visual2015/bin/premake5.exe`

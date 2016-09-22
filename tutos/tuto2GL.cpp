@@ -5,10 +5,10 @@
 #include <sstream>
 #include <string>
 
-#define GLEW_NO_GLU
-#include "GL/glew.h"
+#include "glcore.h"
 
 #include "window.h"
+
 
 /* une application opengl est composee de plusieurs composants :
     1. une fenetre pour voir ce que l'on dessine

@@ -27,8 +27,10 @@ uniform vec3 color;
 in vec3 view_normal;
 // rappel: interpolation en fonction de la position du fragment dans le triangle
 
+out vec4 fragment_color;
+
 void main( )
 {
-    gl_FragColor= vec4(color * abs(view_normal.z), 1);
+    fragment_color= vec4(color * abs(view_normal.z), 1);
 }
 #endif

@@ -15,8 +15,10 @@ void main( )
 #ifdef FRAGMENT_SHADER
 uniform vec3 color;
 
+out vec4 fragment_color;
+
 void main( )
 {
-    gl_FragColor= vec4(color, 1);
+    fragment_color= vec4(color, 1);
 }
 #endif

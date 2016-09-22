@@ -179,7 +179,7 @@ public:
     #endif
         
         std::chrono::high_resolution_clock::time_point cpu_stop= std::chrono::high_resolution_clock::now();
-        long long int cpu_time= std::chrono::duration_cast<std::chrono::microseconds>(cpu_stop - cpu_start).count() * 1000;     // nano secondes...
+        long long int cpu_time= std::chrono::duration_cast<std::chrono::nanoseconds>(cpu_stop - cpu_start).count();
         
         glEndQuery(GL_TIME_ELAPSED);
         
