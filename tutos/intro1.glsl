@@ -36,9 +36,11 @@ void main( )
 
 #ifdef FRAGMENT_SHADER
 
+out vec4 fragment_color;
+
 void main( )
 {
     // remplir le triangle avec une couleur uniforme
-    gl_FragColor= vec4(0.8, 0.4, 0, 1);
+    framgent_color= vec4(0.8, 0.4, 0, 1);
 }
 #endif
