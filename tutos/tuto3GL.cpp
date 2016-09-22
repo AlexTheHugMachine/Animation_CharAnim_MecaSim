@@ -73,7 +73,7 @@ int draw( )
     // modifier les valeurs des parametres uniforms du shader program
     GLint location;
     location= glGetUniformLocation(program, "color");   // declare dans le fragment shader
-    glUniform4f(location, 1, 0.5, 0, 1);                // vec4 color;
+    glUniform4f(location, 1, 0.5, 0, 1);                // cf fragment shader vec4 color;
 
 /*
     modifiez la valeur de time, declare dans le vertex shader pour modifier la position du cube dans le repere du monde,
