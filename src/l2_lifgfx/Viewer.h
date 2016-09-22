@@ -2,8 +2,8 @@
 #ifndef VIEWER_H
 #define VIEWER_H
 
-#define GLEW_NO_GLU
-#include <GL/glew.h>
+
+#include "glcore.h"
 
 #include "window.h"
 #include "program.h"
@@ -67,6 +67,9 @@ protected:
     Mesh m_quad;
     GLuint m_quad_texture;
     void init_quad();
+
+    Mesh voiture;
+    void init_voiture();
 
     void manageCameraLight();
 };

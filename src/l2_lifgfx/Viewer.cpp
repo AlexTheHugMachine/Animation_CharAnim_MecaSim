@@ -55,9 +55,22 @@ int Viewer::init()
     init_grid();
     init_cube();
     init_quad();
+    init_voiture();
 
     return 0;
 }
+
+void Viewer::init_voiture()
+{
+    voiture = Mesh( GL_TRIANGLE_STRIP);
+
+    voiture.vertex(  0, 0, 0);
+    voiture.vertex(  10, 0, 0);
+    voiture.vertex(  0, 10, 0);
+
+}
+
+
 
 
 void Viewer::init_axe()
@@ -173,6 +186,9 @@ int Viewer::render( )
     gl.texture(m_cube_texture);
     gl.model(Translation( -3, 5, 0 ));
     gl.draw(m_cube);
+
+    gl.model( Rotation( Vector(1,0,0), 90) );
+    gl.draw( voiture );
 
     return 1;
 }
