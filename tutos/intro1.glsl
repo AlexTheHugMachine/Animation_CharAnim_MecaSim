@@ -9,7 +9,7 @@ const float dz= 0;
 
 /*  vec3 et vec4 sont des types de base, ils sont equivalents a :
     
-    struct vec3 { float x, y, z; };
+    struct vec3 { float x, y, z; };
     struct vec4 { float x, y, z, w; };
  */
 
