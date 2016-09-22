@@ -175,7 +175,7 @@ project("l2_lifgfx_corrige")
     kind "ConsoleApp"
     targetdir "bin"
     files ( gkit_files )
-    files { "src/l2_lifgfx/main.cpp",
+    files { "src/l2_lifgfx/Viewer.cpp", "src/l2_lifgfx/Viewer.h", 
 			"src/l2_lifgfx/Viewer_corrige.cpp", "src/l2_lifgfx/Viewer_corrige.h", 
 			"src/l2_lifgfx/AnimationCurve.cpp", "src/l2_lifgfx/AnimtionCurve.h" }
 end

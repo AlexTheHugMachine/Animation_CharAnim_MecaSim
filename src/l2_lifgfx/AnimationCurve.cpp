@@ -7,13 +7,13 @@
 #include "AnimationCurve.h"
 
 
-const int NBPB=10;              // NomBre de Points de Bezier (entre 2 points de Contr il y aura NPB points)
+const int NBPB=20;              // NomBre de Points de Bezier (entre 2 points de Contr il y aura NPB points)
 
 
-float temps()
-{
-    return float(clock())/CLOCKS_PER_SEC;
-}
+//float temps()
+//{
+//    return float(clock())/CLOCKS_PER_SEC;
+//}
 
 
 // Fonction de calcul

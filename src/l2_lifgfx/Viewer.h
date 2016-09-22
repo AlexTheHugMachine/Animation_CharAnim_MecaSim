@@ -39,14 +39,16 @@ public:
 
 protected:
 
-    Orbiter camera;
+    Orbiter m_camera;
     DrawParam gl;
     AnimationCurve m_anim;
+    bool mb_cullface;
+    bool mb_wireframe;
 
-    Mesh axe;
-    Mesh grid;
-    Mesh cube;
-    GLuint cube_texture;
+    Mesh m_axe;
+    Mesh m_grid;
+    Mesh m_cube;
+    GLuint m_cube_texture;
 
     bool b_draw_grid;
     bool b_draw_axe;
@@ -62,8 +64,8 @@ protected:
        - une fonction init_votreObjet et l'appeller dans la fonction init du .cpp
        - ajouter un appel a l'affichage dans la fonction draw
     */
-    Mesh quad;
-    GLuint quad_texture;
+    Mesh m_quad;
+    GLuint m_quad_texture;
     void init_quad();
 
     void manageCameraLight();
