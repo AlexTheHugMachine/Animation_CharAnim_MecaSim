@@ -36,6 +36,7 @@ public:
 
     void help();
 
+    int update( const float time, const float delta );
 
 protected:
 
@@ -68,8 +69,6 @@ protected:
     GLuint m_quad_texture;
     void init_quad();
 
-    Mesh voiture;
-    void init_voiture();
 
     void manageCameraLight();
 };

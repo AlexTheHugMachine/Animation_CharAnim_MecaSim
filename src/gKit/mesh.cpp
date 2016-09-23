@@ -12,8 +12,8 @@
 
 int Mesh::create( const GLenum primitives )
 {
-    m_primitives= primitives; 
-    return 0; 
+    m_primitives= primitives;
+    return 0;
 }
 
 void Mesh::release( )
@@ -28,10 +28,10 @@ void Mesh::release( )
 }
 
 // definit les attributs du prochain sommet
-Mesh& Mesh::default_color( const Color& color ) 
+Mesh& Mesh::default_color( const Color& color )
 {
-    m_color= color; 
-    return *this; 
+    m_color= color;
+    return *this;
 }
 
 Mesh& Mesh::color( const vec4& color )
@@ -64,7 +64,7 @@ unsigned int Mesh::vertex( const vec3& position )
         m_normals.push_back(m_normals.back());
     if(m_colors.size() > 0 && m_colors.size() != m_positions.size())
         m_colors.push_back(m_colors.back());
-    
+
     unsigned int index= (unsigned int) m_positions.size() -1;
     // construction de l'index buffer pour les strip
     switch(m_primitives)
@@ -78,7 +78,7 @@ unsigned int Mesh::vertex( const vec3& position )
         default:
             break;
     }
-    
+
     // renvoie l'indice du sommet
     return index;
 }
@@ -154,10 +154,10 @@ void Mesh::bounds( Point& pmin, Point& pmax )
 {
     if(m_positions.size() < 1)
         return;
-    
+
     pmin= Point(m_positions[0]);
-    pmax= pmin; 
-    
+    pmax= pmin;
+
     for(unsigned int i= 1; i < (unsigned int) m_positions.size(); i++)
     {
         vec3 p= m_positions[i];
@@ -166,7 +166,7 @@ void Mesh::bounds( Point& pmin, Point& pmax )
     }
 }
 
-const void *Mesh::attribute_buffer( const unsigned int id ) const 
+const void *Mesh::attribute_buffer( const unsigned int id ) const
 {
     assert(id < 4);
     switch(id)
@@ -179,7 +179,7 @@ const void *Mesh::attribute_buffer( const unsigned int id ) const
     }
 }
 
-std::size_t Mesh::attribute_buffer_size( const unsigned int id ) const 
+std::size_t Mesh::attribute_buffer_size( const unsigned int id ) const
 {
     assert(id < 4);
     switch(id)
@@ -197,7 +197,7 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
 {
     if(m_positions.size() == 0)
         return 0;
-    
+
     // ne creer que les buffers necessaires
     GLuint vao= create_vertex_format();
     make_vertex_buffer(vao, 0,  3, GL_FLOAT, vertex_buffer_size(), vertex_buffer());
@@ -220,7 +220,7 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
         make_vertex_buffer(vao, 2,  3, GL_FLOAT, normal_buffer_size(), normal_buffer());
     if(m_colors.size() == m_positions.size() && use_color)
         make_vertex_buffer(vao, 3,  4, GL_FLOAT, color_buffer_size(), color_buffer());
-    
+
     m_update_buffers= false;
     return vao;
 }
@@ -230,10 +230,10 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
     assert(m_vao > 0);
     if(!m_update_buffers)
         return 0;
-    
+
     glBindVertexArray(m_vao);
     update_vertex_buffer(m_vao, 0, vertex_buffer_size(), vertex_buffer());
-    
+
     // ne modifier que les attributs des sommets, pas la topologie / structure du maillage
     if(m_texcoords.size() == m_positions.size() && use_texcoord)
         update_vertex_buffer(m_vao, 1, texcoord_buffer_size(), texcoord_buffer());
@@ -241,7 +241,7 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
         update_vertex_buffer(m_vao, 2, normal_buffer_size(), normal_buffer());
     if(m_colors.size() == m_positions.size() && use_color)
         update_vertex_buffer(m_vao, 3, color_buffer_size(), color_buffer());
-    
+
     m_update_buffers= false;
     return 1;
 }
@@ -259,7 +259,7 @@ GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, con
         definitions.append("#define USE_COLOR\n");
     if(use_light)
         definitions.append("#define USE_LIGHT\n");
-    
+
     bool use_mesh_color= (m_primitives == GL_POINTS || m_primitives == GL_LINES || m_primitives == GL_LINE_STRIP || m_primitives == GL_LINE_LOOP);
     if(!use_mesh_color)
         return read_program("data/shaders/mesh.glsl", definitions.c_str());
@@ -268,66 +268,66 @@ GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, con
 }
 
 
-void Mesh::draw( const Transform& model, const Transform& view, const Transform& projection, 
-    const bool use_light, const Point& light, const Color& light_color, 
+void Mesh::draw( const Transform& model, const Transform& view, const Transform& projection,
+    const bool use_light, const Point& light, const Color& light_color,
     const bool use_texture, const GLuint texture )
 {
     bool use_texcoord= (m_texcoords.size() == m_positions.size() && texture > 0);
     bool use_normal= (m_normals.size() == m_positions.size());
     bool use_color= (m_colors.size() == m_positions.size());
-    
+
     if(m_vao == 0)
-        // force la creation de tous les buffers 
+        // force la creation de tous les buffers
         m_vao= create_buffers(true, true, true);
     if(m_update_buffers)
         update_buffers(true, true, true);
-    
+
     unsigned int key= 0;
     if(use_texcoord) key= key | 1;
     if(use_normal) key= key | 2;
     if(use_color) key= key | 4;
     if(use_texture) key= key | 8;
-    if(use_light) key= key | 16;    
-    
+    if(use_light) key= key | 16;
+
     if(m_state != key)
         // recherche un shader deja compile pour ce type de draw
         m_program= m_state_map[key];
-    
+
     if(m_program == 0)
     {
         // pas de shader pour ce type de draw
         m_program= create_program(use_texcoord, use_normal, use_color, use_light);
         program_print_errors(m_program);
-        
+
         // conserver le shader
         m_state_map[key]= m_program;
     }
-    
+
     // conserve la config du shader selectionne.
     m_state= key;
-    
+
     glBindVertexArray(m_vao);
     glUseProgram(m_program);
-    
+
     program_uniform(m_program, "mesh_color", default_color());
-    
+
     Transform mv= view * model;
     Transform mvp= projection * view * model;
-    
+
     program_uniform(m_program, "mvpMatrix", mvp);
     program_uniform(m_program, "mvMatrix", mv);
     program_uniform(m_program, "normalMatrix", mv.normal()); // transforme les normales dans le repere camera.
-    
+
     // utiliser une texture, elle ne sera visible que si le mesh a des texcoords...
     if(texture && use_texcoord && use_texture)
-        program_use_texture(m_program, "diffuse_color", 0, texture); 
-    
+        program_use_texture(m_program, "diffuse_color", 0, texture);
+
     if(use_light)
     {
         program_uniform(m_program, "light", view(light));       // transforme la position de la source dans le repere camera, comme les normales
         program_uniform(m_program, "light_color", light_color);
     }
-    
+
     if(m_indices.size() > 0)
         glDrawElements(m_primitives, (GLsizei) m_indices.size(), GL_UNSIGNED_INT, 0);
     else

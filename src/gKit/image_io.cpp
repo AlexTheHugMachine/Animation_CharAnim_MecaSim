@@ -31,11 +31,11 @@ Image read_image( const char *filename )
         SDL_FreeSurface(surface);
         return Image::error();
     }
-    
+
     int width= surface->w;
     int height= surface->h;
     int channels= (format.BitsPerPixel == 32) ? 4 : 3;
-    
+
     Image image(surface->w, surface->h);
 
     printf("loading image '%s' %dx%d %d channels...\n", filename, width, height, channels);
@@ -54,7 +54,7 @@ Image read_image( const char *filename )
                 Uint8 g= pixel[format.Gshift / 8];
                 Uint8 b= pixel[format.Bshift / 8];
                 Uint8 a= pixel[format.Ashift / 8];
-                
+
                 image(x, y)= Color((float) r / 255.f, (float) g / 255.f, (float) b / 255.f, (float) a / 255.f);
                 pixel= pixel + format.BytesPerPixel;
             }
@@ -95,7 +95,7 @@ int write_image( const Image& image, const char *filename )
 
     // flip de l'image : Y inverse entre GL et BMP
     std::vector<Uint8> flip(image.width() * image.height() * 4);
-    
+
     int p= 0;
     for(int y= 0; y < image.height(); y++)
     for(int x= 0; x < image.width(); x++)
@@ -105,14 +105,14 @@ int write_image( const Image& image, const char *filename )
         Uint8 g= (Uint8) std::min(std::floor(color.g * 255.f), 255.f);
         Uint8 b= (Uint8) std::min(std::floor(color.b * 255.f), 255.f);
         Uint8 a= (Uint8) std::min(std::floor(color.a * 255.f), 255.f);
-        
+
         flip[p]= r;
         flip[p +1]= g;
         flip[p +2]= b;
         flip[p +3]= a;
         p= p + 4;
     }
-    
+
     SDL_Surface *surface= SDL_CreateRGBSurfaceFrom((void *) &flip.front(), image.width(), image.height(),
         32, image.width() * 4,
 #if 0
@@ -159,11 +159,11 @@ ImageData read_image_data( const char *filename )
         SDL_FreeSurface(surface);
         return ImageData();
     }
-    
+
     int width= surface->w;
     int height= surface->h;
     int channels= (format.BitsPerPixel == 32) ? 4 : 3;
-    
+
     ImageData image(width, height, channels);
 
     printf("loading image '%s' %dx%d %d channels...\n", filename, width, height, channels);
@@ -182,7 +182,7 @@ ImageData read_image_data( const char *filename )
                 Uint8 g= pixel[format.Gshift / 8];
                 Uint8 b= pixel[format.Bshift / 8];
                 Uint8 a= pixel[format.Ashift / 8];
-                
+
                 std::size_t offset= image.offset(x, y);
                 image.data[offset]= r;
                 image.data[offset +1]= g;
@@ -226,16 +226,16 @@ int write_image_data( ImageData& image, const char *filename )
         printf("writing color image '%s'... failed, not a .png / .bmp image.\n", filename);
         return -1;
     }
-    
+
     if(image.size != 1)
     {
         printf("writing color image '%s'... failed, not an 8 bits image.\n", filename);
         return -1;
     }
-    
+
     // flip de l'image : origine en bas a gauche
     std::vector<Uint8> flip(image.width * image.height * 4);
-    
+
     int p= 0;
     for(int y= 0; y < image.height; y++)
     for(int x= 0; x < image.width; x++)
@@ -247,14 +247,14 @@ int write_image_data( ImageData& image, const char *filename )
         Uint8 a= 255;
         if(image.channels > 3)
             a= image.data[offset +3];
-        
+
         flip[p]= r;
         flip[p +1]= g;
         flip[p +2]= b;
         flip[p +3]= a;
         p= p + 4;
     }
-    
+
     // construit la surface sdl
     SDL_Surface *surface= SDL_CreateRGBSurfaceFrom((void *) &flip.front(), image.width, image.height,
         32, image.width * 4,
@@ -270,14 +270,14 @@ int write_image_data( ImageData& image, const char *filename )
         0xFF000000
 #endif
     );
-    
+
     // enregistre le fichier
     int code= -1;
     if(std::string(filename).rfind(".png") != std::string::npos)
         code= IMG_SavePNG(surface, filename);
     else if(std::string(filename).rfind(".bmp") != std::string::npos)
         code= SDL_SaveBMP(surface, filename);
-    
+
     SDL_FreeSurface(surface);
     if(code < 0)
         printf("writing color image '%s'... failed\n%s\n", filename, SDL_GetError());

@@ -28,15 +28,15 @@ void main( )
 {
     gl_Position= mvpMatrix * vec4(position, 1);
     vertex_position= vec3(mvMatrix * vec4(position, 1));
-    
+
 #ifdef USE_TEXCOORD
     vertex_texcoord= texcoord;
 #endif
-    
+
 #ifdef USE_NORMAL
     vertex_normal= mat3(normalMatrix) * normal;
 #endif
-    
+
 #ifdef USE_COLOR
     vertex_color= color;
 #endif
@@ -79,8 +79,8 @@ void main( )
 
 #ifdef USE_TEXCOORD
     color= color * texture(diffuse_color, vertex_texcoord);
-    
-    if(color.r + color.g + color.b == 0)    // noir 
+
+    if(color.r + color.g + color.b == 0)    // noir
     {
         // fixer une couleur debug pour indiquer qu'il faut utiliser une texture avec cet objet
         vec3 p= vertex_position * 8;
@@ -89,7 +89,7 @@ void main( )
         color=  vec4(d*0.8*2, d*0.4*2, 0, 1);
     }
 #endif
-    
+
     vec3 normal;
 #ifdef USE_NORMAL
     normal= normalize(vertex_normal);
@@ -98,7 +98,7 @@ void main( )
     vec3 b= normalize(dFdy(vertex_position));
     normal= normalize(cross(t, b));
 #endif
-    
+
     float cos_theta;
 #ifdef USE_LIGHT
     //~ cos_theta= abs(dot(normal, normalize(light - vertex_position)));
@@ -108,8 +108,8 @@ void main( )
     cos_theta= abs(normal.z);
 #endif
 
-    color= color * cos_theta;
-    
+    color.rgb= color.rgb * cos_theta;
+
     // hachure les triangles mal orientes
     if(gl_FrontFacing == false) // if(!gl_FrontFacing) bug sur mac ?!
     {
@@ -117,7 +117,8 @@ void main( )
         if((pixel.x ^ pixel.y) == 0)
             color= vec4(0.8, 0.4, 0, 1);
     }
-    
-    fragment_color= vec4(color.rgb, 1);
+
+    //fragment_color= vec4(color.rgb, 1);
+    fragment_color= vec4(color);
 }
 #endif

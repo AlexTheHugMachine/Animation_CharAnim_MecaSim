@@ -46,6 +46,11 @@ int Viewer::init()
         glDisable(GL_CULL_FACE);        // good for debug
     glEnable(GL_TEXTURE_2D);
 
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glAlphaFunc(GL_GREATER, 0.5);
+    //glEnable(GL_ALPHA_TEST);
+
     m_anim.init( "data/animation/anim1.ani");
 
     m_camera.lookat( Point(0,0,0), 30 );
@@ -55,20 +60,10 @@ int Viewer::init()
     init_grid();
     init_cube();
     init_quad();
-    init_voiture();
 
     return 0;
 }
 
-void Viewer::init_voiture()
-{
-    voiture = Mesh( GL_TRIANGLE_STRIP);
-
-    voiture.vertex(  0, 0, 0);
-    voiture.vertex(  10, 0, 0);
-    voiture.vertex(  0, 10, 0);
-
-}
 
 
 
@@ -149,7 +144,8 @@ void Viewer::init_quad()
     m_quad = Mesh(GL_TRIANGLE_STRIP);
     m_quad.color( Color(1, 1, 1));
 
-    m_quad_texture = read_texture(0, "data/papillon.jpg");
+    //m_quad_texture = read_texture(0, "data/papillon.jpg");
+    m_quad_texture = read_texture(0, "data/billboard/arbre.png");
 
     m_quad.normal(  0, 0, 1 );
 
@@ -187,14 +183,16 @@ int Viewer::render( )
     gl.model(Translation( -3, 5, 0 ));
     gl.draw(m_cube);
 
-    gl.model( Rotation( Vector(1,0,0), 90) );
-    gl.draw( voiture );
 
     return 1;
 }
 
 
 
+int Viewer::update( const float time, const float delta )
+{
+
+}
 
 
 
