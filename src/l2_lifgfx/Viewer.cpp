@@ -144,8 +144,7 @@ void Viewer::init_quad()
     m_quad = Mesh(GL_TRIANGLE_STRIP);
     m_quad.color( Color(1, 1, 1));
 
-    //m_quad_texture = read_texture(0, "data/papillon.jpg");
-    m_quad_texture = read_texture(0, "data/billboard/arbre.png");
+    m_quad_texture = read_texture(0, "data/papillon.png");
 
     m_quad.normal(  0, 0, 1 );
 
@@ -176,7 +175,7 @@ int Viewer::render( )
     gl.camera(m_camera);
 
     gl.texture(m_quad_texture);
-    gl.model(Translation( 3, 5, 0 ));
+    gl.model( Tquad );
     gl.draw(m_quad);
 
     gl.texture(m_cube_texture);
@@ -191,7 +190,7 @@ int Viewer::render( )
 
 int Viewer::update( const float time, const float delta )
 {
-
+    Tquad = Translation( 3, 5, 0 ) * Rotation( Vector(0,0,1), 0.1f*time);
 }
 
 

@@ -68,6 +68,7 @@ protected:
     Mesh m_quad;
     GLuint m_quad_texture;
     void init_quad();
+    Transform Tquad;
 
 
     void manageCameraLight();
