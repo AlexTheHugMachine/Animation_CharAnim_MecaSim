@@ -60,10 +60,12 @@ protected:
 
 
     /* Pour creer un nouvel objet vous devez :
-       - declarer ici le Mesh
-       - la texture si besoin
-       - une fonction init_votreObjet et l'appeller dans la fonction init du .cpp
-       - ajouter un appel a l'affichage dans la fonction draw
+       1. declarer ici
+                le Mesh,
+                la texture si besoin,
+                une fonction 'init_votreObjet'
+        2. Appeller la fonction 'init_votreObjet' dans la fonction 'init' du .cpp
+        3. Pour l'affichage, ajouter un appel  gl.draw(votreMesh); dans la fonction 'render' du .cpp
     */
     Mesh m_quad;
     GLuint m_quad_texture;
