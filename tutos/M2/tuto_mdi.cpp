@@ -111,7 +111,7 @@ public:
         glBeginQuery(GL_TIME_ELAPSED, m_time_query);    // pour le gpu
         std::chrono::high_resolution_clock::time_point cpu_start= std::chrono::high_resolution_clock::now();    // pour le cpu
         
-    #if 0
+    #if 1
         // dessine 25 fois l'objet avec 25 draw
         for(int y= -2; y <= 2; y++)
         for(int x= -2; x <= 2; x++)
@@ -155,15 +155,15 @@ public:
         
         // transfere les donnees des draws dans un buffer
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect_buffer);
-        glInvalidateBufferData(GL_DRAW_INDIRECT_BUFFER);   // detruit le contenu du buffer
-        // glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectParam) * indirect.size(), NULL, GL_STREAM_DRAW);   // detruit le contenu du buffer
+        //~ glInvalidateBufferData(GL_DRAW_INDIRECT_BUFFER);   // detruit le contenu du buffer
+        glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectParam) * indirect.size(), NULL, GL_STREAM_DRAW);   // detruit le contenu du buffer
         glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(IndirectParam) * indirect.size(), &indirect.front());
 
     #if 1
         // transfere les transformations dans un uniform buffer
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_model_buffer);
-        glInvalidateBufferData(GL_UNIFORM_BUFFER);   // detruit le contenu du buffer
-        // glBufferData(GL_UNIFORM_BUFFER, sizeof(Transform) * model.size(), NULL, GL_STREAM_DRAW);    // detruit le contenu du buffer
+        //~ glInvalidateBufferData(GL_UNIFORM_BUFFER);   // detruit le contenu du buffer
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(Transform) * model.size(), NULL, GL_STREAM_DRAW);    // detruit le contenu du buffer
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Transform) * model.size(), model.front().buffer());
     #else
         
@@ -195,6 +195,9 @@ public:
         // affiche le texte
         draw(m_console, window_width(), window_height());
         
+        printf("cpu  %02dms %03dus    ", (int) (cpu_time / 1000000), (int) ((cpu_time / 1000) % 1000));
+        printf("gpu  %02dms %03dus\n", (int) (gpu_time / 1000000), (int) ((gpu_time / 1000) % 1000));
+
         return 1;
     }
     

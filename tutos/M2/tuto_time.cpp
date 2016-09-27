@@ -85,7 +85,7 @@ public:
         // utilise std::chrono pour mesurer le temps cpu 
         std::chrono::high_resolution_clock::time_point cpu_start= std::chrono::high_resolution_clock::now();
         
-    #if 1
+    #if 0
         // dessine 1 objet
         draw(m_objet, m_model, m_camera, m_texture);
         
