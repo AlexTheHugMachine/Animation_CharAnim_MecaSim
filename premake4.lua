@@ -141,7 +141,12 @@ for i, name in ipairs(tutosM2) do
 		files { "tutos/M2/" .. name..'.cpp' }
 end
 
-
+project("tp2")
+	language "C++"
+	kind "ConsoleApp"
+	targetdir "bin"
+	files ( gkit_files )
+	files { "opengl_tp2/tp2.cpp" }
 
 
  
