@@ -111,7 +111,7 @@ public:
         glBeginQuery(GL_TIME_ELAPSED, m_time_query);    // pour le gpu
         std::chrono::high_resolution_clock::time_point cpu_start= std::chrono::high_resolution_clock::now();    // pour le cpu
         
-    #if 1
+    #if 0
         // dessine 25 fois l'objet avec 25 draw
         for(int y= -2; y <= 2; y++)
         for(int x= -2; x <= 2; x++)

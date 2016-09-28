@@ -51,8 +51,9 @@ __remarque :__ std::high_resolution_time est buggé sur visual studio avant la v
 
 ## mesure temps gpu
 
-Pour mesurer le temps gpu, il faut demander à openGL de le faire et de transmettre le résultat. C'est un objet "query" qui permet de stocker ces mesures 
-et glBeginQuery() / glEndQuery() qui permettent de faire la mesure. L'utilisation est très proche de la version cpu, mais il faut bien sur créer un objet query avant toute chose :
+Pour mesurer le temps gpu, il faut demander à openGL de le faire et de transmettre le résultat. C'est un objet "query" qui permet de stocker 
+ces mesures et glBeginQuery() / glEndQuery() qui permettent de faire la mesure. L'utilisation est très proche de la version cpu, mais il faut 
+bien sur créer un objet query avant toute chose :
 
 \code
 GLuint time;
@@ -80,11 +81,11 @@ int draw( )
 }
 \endcode
 
-Les requêtes GL_TIME_ELAPSED mesurent directement la durée entre BeginQuery et EndQuery. Il est aussi possible de recupérer le temps courant avec glQueryCounter( ), 
-mais il faut qu'une requête GL_TIME_ELAPSED soit en cours...
+Les requêtes GL_TIME_ELAPSED mesurent directement la durée entre BeginQuery et EndQuery. Il est aussi possible de recupérer le temps 
+courant avec glQueryCounter( ), mais il faut qu'une requête GL_TIME_ELAPSED soit en cours...
 
-Il ne reste plus qu'à récupérer le résultat avec glGetQueryObject( ). openGL mesure le temps en nanosecondes et renvoie le resultat comme un entier 64 bits, 
-il faut donc utiliser un GLint64 pour récupérer le résultat ;
+Il ne reste plus qu'à récupérer le résultat avec glGetQueryObject( ). openGL mesure le temps en nanosecondes et renvoie le resultat comme 
+un entier 64 bits, il faut donc utiliser un GLint64 pour récupérer le résultat ;
 
 \code
     GLint64 gpu_time= 0;
@@ -99,7 +100,26 @@ et il n'y a plus qu'à convertir la durée dans une unité un peu plus "lisible"
 \endcode
 
 
-__attention :__ il faut attendre que le gpu ait fini de dessiner pour connaitre la durée, et cette attente bloque le cpu ! en pratique ca ne pose pas de problème, si glGetQueryObject( ) est
-utilisé après avoir tout dessiné.  tuto_time.cpp mesure aussi ce temps d'attente cpu. pour l'affichage d'une scène simple, il est de l'ordre de 16 millisecondes.
+__attention :__ il faut attendre que le gpu ait fini de dessiner pour connaitre la durée, et cette attente bloque le cpu ! en pratique ca ne pose pas 
+de problème, si glGetQueryObject( ) est utilisé après avoir tout dessiné.  tuto_time.cpp mesure aussi ce temps d'attente cpu. pour l'affichage 
+d'une scène simple, il est de l'ordre de 16 millisecondes.
+
+
+## et alors ?
+
+tuto_time.cpp affiche un objet "normalement" et compare ensuite les temps de rendu cpu/gpu pour 2 manières différentes d'afficher 25 objets 
+(identiques) disposés sur une grille 5x5 :
+    - mode 1 : affiche 25 fois l'objet en modifiant sa transformation model, pour placer les 25 copies sur une grille,
+    - mode 2 : utilise glDrawArraysInstanced( ) pour faire la même chose mais avec un seul draw... le travail pour le gpu est le meme : 
+    25 fois plus de sommets à transformer et de triangles à dessiner, mais c'est le vertex shader qui calcule la position de chaque copie.
+    
+bilan : 
+    - mode 0 : 1 draw, temps cpu 50us, gpu 6us
+    - mode 1 : devrait prendre 25 fois plus de temps ? temps cpu 500us, gpu 100us
+    - mode 2 : ?? temps cpu 40us, gpu 80us
+
+que peut on en déduire ? premièrement que faire 25 appels à glDrawArrays() (cf mode 1) est très couteux pour le cpu, plus que pour le gpu !! 
+selon les performances de la machine, ce sera soit le cpu soit le gpu qui limitera le nombre d'objets que l'on peut dessiner. et que le gpu peut 
+faire l'equivalent de manière plus efficace (mode 2 plus performant que mode 1, pour le cpu bien sur, mais egalement pour le gpu).
 
 */
