@@ -191,6 +191,7 @@ int Viewer::render( )
 int Viewer::update( const float time, const float delta )
 {
     Tquad = Translation( 3, 5, 0 ) * Rotation( Vector(0,0,1), 0.1f*time);
+    return 1;
 }
 
 
