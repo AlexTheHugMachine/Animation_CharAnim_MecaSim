@@ -95,11 +95,88 @@ exemple complet : \ref tuto4GL_normals.cpp
 pour récupérer la liste des attributs déclarés par le vertex shader et vérifier qu'ils sont bien associés à un buffer, 
 cf \ref shader_reflect
 
+## et si un attribut n'existe plus dans le vertex shader ?? ( glGetAttribLocation( ) < 0 )
+
+le compilateur et linker des shaders sont capables de déterminer qu'un attribut n'est pas nécessaire pour exécuter un shader. par exemple :
+
+\code
+// vertex shader
+in vec3 position;
+in vec3 normal;
+
+uniform mat4 mvpMatrix;
+uniform mat4 mvMatrix;
+
+// normal est un attribut du vertex shader, il n'est pas disponible dans le fragment shader, donc :
+out vec3 view_normal;
+// il faut declarer un varying, un resultat du vertex shader
+
+void main( )
+{
+    gl_Position= mvpMatrix * vec4(position, 1);
+    view_normal= mat3(mvMatrix) * normal;   // uniquement une rotation, mat3 suffit 
+    
+}
+\endcode
+
+\code
+// recupere la normale calculee par le vertex shader, meme type, meme nom, mais in au lieu de out
+in vec3 view_normal;
+// rappel: interpolation en fonction de la position du fragment dans le triangle
+
+out vec4 fragment_color;
+
+void main( )
+{
+    fragment_color= vec4(color, 1);
+}
+#endif
+\endcode
+
+la couleur des fragments est constante, elle ne depend pas de la normale calculée par le vertex shader, et glGetAttibLocation( ... "normal" ) renvoie -1 
+dans ce cas, alors que l'attribut normal est correctement déclaré. 
+
+si le fragment shader est modifié pour utiliser la normale :
+
+\code
+in vec3 view_normal;
+out vec4 fragment_color;
+
+void main( )
+{
+    fragment_color= vec4(color * normalize(view_normal).z, 1);
+}
+#endif
+\endcode
+
+glGetAttribLocation( ... "normal" ) renverra bien un identifiant valide dans ce cas. il faut prévoir les 2 cas dans le programme, il y a 2 manières de le gérer,
+	- soit faire le test, et ne configurer le vertex array object que si l'attribut est utilisé / nécessaire
+		\code
+		// recuperer l'attribut
+		GLint attribute= glGetAttribLocation(program, "normal");
+		if(attribute >= 0)
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, buffer);
+			glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(attribute);
+		}
+		\endcode
+	
+	- soit ne pas faire le test et toujours configurer le vertex array, le shader n'utilisera que ce qui est nécessaire...
+		\code
+		// recuperer l'attribut
+		GLint attribute= glGetAttribLocation(program, "normal");
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glVertexAttribPointer(attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(attribute);
+		\endcode
+	
+
 ## et si les attributs sont dans le même vertex buffer ?
 
-les paramètres stride et offset permettent d'organiser les données assez librement :
+les paramètres stride et offset de glVertexAttribPointer( ) permettent d'organiser les données assez librement :
 	- offset donne la position de la première valeur dans le buffer (en octets),
-	- stride donne la distance de la valeur suivante (en octets),
+	- stride donne la distance à la laquelle se trouve la valeur suivante (en octets),
 ce qui permet d'itérer sur tous les attributs sans problèmes.
 
 _remarque :_ stride = 0 est interprété comme l'organisation par défaut, les valeurs se suivent, 
@@ -122,7 +199,6 @@ exemple : alterner les donnees, position + normale sommet 0, position + normale 
 	offset(normal)= sizeof(vec3);					// la premiere normale se trouve apres la premiere position
 	stride(normal)= sizeof(vec3) + sizeof(vec3);
 \endcode
-
 
 
 \section buffers vertex buffers et index buffer
@@ -193,6 +269,68 @@ int draw( )
 	// offset et length permettent de ne modifier qu'une partie du buffer
 	...
 }
+\endcode
+
+
+# exemple : utiliser un seul buffer pour stocker les attributs et configurer le vao
+
+le buffer est remplit avec toutes les positions, suivies de toutes les texcoords, et enfin toutes les normales :
+\code
+	Mesh mesh= read_mesh( ... );
+	GLuint vao;
+	GLuint buffer;
+
+	// creer et selectionner le vao
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	// creer, initialiser le buffer : positions + normals + texcoords du mesh
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+
+	// taille totale du buffer
+	size_t size= mesh.vertex_buffer_size() + mesh.texcoord_buffer_size() + mesh.normal_buffer_size();
+	glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_STATIC_DRAW);
+
+	// transfere les positions des sommets
+	size_t offset= 0;
+	size= mesh.vertex_buffer_size();
+	glBufferSubData(GL_ARRAY_BUFFER, offset, size, mesh.vertex_buffer());
+	// et configure l'attribut 0, vec3 position
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, /* stride */ 0, (const GLvoid *) offset);
+	glEnableVertexAttribArray(0);
+
+	// transfere les texcoords des sommets
+	offset= offset + size;
+	size= mesh.texcoord_buffer_size();
+	glBufferSubData(GL_ARRAY_BUFFER, offset, size, mesh.texcoord_buffer());
+	// et configure l'attribut 1, vec2 texcoord
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, /* stride */ 0, (const GLvoid *) offset);
+	glEnableVertexAttribArray(1);
+
+	// transfere les normales des sommets
+	offset= offset + size;
+	size= mesh.normal_buffer_size();
+	glBufferSubData(GL_ARRAY_BUFFER, offset, size, mesh.normal_buffer());
+	// et configure l'attribut 2, vec3 normal
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, /* stride */ 0, (const GLvoid *) offset);
+	glEnableVertexAttribArray(2);
+\endcode
+
+
+# et sans utiliser glGetAttribLocation( ) ?
+
+il suffit de donner l'identifiant directement dans le source du vertex shader avec :
+\code
+layout(location= 0) in vec3 position;
+\endcode
+
+l'exemple de création de buffer / configuration de vao précédent suppose que position est l'attribut 0, texcoord est l'attribut 1 et normal est l'attribut 2, 
+ce qui se déclare comme ça :
+\code
+layout(location= 0) in vec3 position;
+layout(location= 1) in vec2 texcoord;
+layout(location= 2) in vec3 normal;
 \endcode
 
  */
