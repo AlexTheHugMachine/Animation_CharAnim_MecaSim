@@ -1,0 +1,66 @@
+
+/*! \addtogroup draw glDraw( ) et la famille
+
+cf \ref tuto6GL.cpp
+
+glDraw( ) est une famille de fonctions, et selon la description du maillage (sommets partagés, ou pas) il faut utiliser :
+    - glDrawElements( ) : lorsque le maillage est décrit par des sommets partagés / indexés, les triangles sont décrits par des triplets d'indices,
+    - glDrawArrays( ) : lorsque le maillage est décrit uniquement par les coordonnées de ses sommets, les triangles sont décrits par des triplets de positions.
+
+la classe Mesh peut stocker les 2 types de maillages : il suffit de vérifier qu'un index buffer existe (cf Mesh::index_buffer_size()) pour savoir qu'il faut utiliser 
+glDrawElements( ) plutot que glDrawArrays( ).
+
+__remarque :__ read_mesh( ) ne construit pas, pour l'instant, d'index buffer, donc un objet chargé par read_mesh( ) peut etre affiché directement par glDrawArrays().
+
+en consultant la doc d'openGL, d'autres fonctions existent, à quoi servent-elles ? 
+- glDrawArraysInstanced( ), glDrawElementsInstanced( ) : permettent de dessiner plusieurs copies du même objet,
+- glDrawElementsBaseVertex( ) : permet de dessiner facilement un objet indexé, lorsque les attributs de ces sommets ne sont pas au début du vertex buffer... 
+
+
+## draw instanced, dessiner plusieurs copies 
+
+dans pas mal de cas, il est nécessaire d'afficher plusieurs fois le même objet ou des variantes du même objet. par exemple, des unités dans un jeu de stratégie, 
+des arbres pour afficher une forêt, des touffes d'herbes pour une prairie, etc.
+
+malheureusement, la solution directe, faire un draw par copie n'est __vraiment pas__ une solution efficace. cf \ref tuto_time.cpp et (les explications \ref time) pour une démonstration.
+
+glDrawArraysInstanced( ) / glDrawElementsInstanced() fournissent une solution (partielle) à ce problème. les fonctions prennent un paramètre 
+supplémentaire (par rappport à glDrawArrays() / glDrawElements()), le nombre de copies à dessiner. 
+
+parfait, reste un petit problème à régler... toutes les copies sont identiques et sont dessinées au même endroit, ce qui ne sert à rien. il faut pouvoir, au minimum,
+les placer à des endroits différents dans la scène / le monde.
+
+il y a 2 deux moyens : on peut stocker les propriétés de chaque copie dans un buffer et modifier le vertex array objet en fonction, et/ou utiliser la variable gl_InstanceID
+du vertex shader pour calculer des propriétés uniques à chaque instance.
+
+exemple : dessiner n copies alignées avec gl_InstanceID :
+il suffit de modifier le vertex shader pour calculer une position qui dépend de gl_InstanceID
+\code
+// vertex shader
+in vec3 position;
+
+uniform mat4 mvpMatrix;
+
+void main( )
+{
+    // int gl_InstanceID varie de 0 a N
+    vec3 p= position + vec3(gl_InstanceID * 10, 0, 0);
+    gl_Position= mvpMatrix * vec3(p, 1);
+}
+\endcode
+
+et dans l'application :
+\code
+glBindVertexArray( ... );
+glUseProgram( ... );
+glUniform( ... );
+
+glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 10); // N= 10 copies
+\endcode
+permet de dessiner 10 cubes, par exemple.
+
+
+## draw base vertex, organisation des données
+
+
+*/
