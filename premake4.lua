@@ -108,6 +108,8 @@ local tutos = {
 	"tuto5GL_sampler",
 	"tuto5GL_samplers",
 	"tuto5GL_multi",
+	"tuto6GL",
+	"tuto6GL_buffer",
 	
 --~ 	"ray_tuto1",
 --~ 	"ray_tuto2",
