@@ -1,5 +1,5 @@
 
-//! \file tuto6GL.cpp utilisation de glDrawArraysInstanced() et gl_InstanceID
+//! \file tuto6GL.cpp utilisation de glDrawArraysInstanced() et attributs d'instance 
 
 #include <cstdlib>
 
@@ -85,7 +85,7 @@ public:
         // configure le vao pour l'attribut d'instance
         // configure l'attribut 1, vec3 instance_position
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, /* stride */ 0, /* offset */ 0);
-        glVertexAttribDivisor(1, 1);    // !!
+        glVertexAttribDivisor(1, 1);    // !! c'est la seule difference entre un attribut de sommet et un attribut d'instance !!
         glEnableVertexAttribArray(1);
         
         //

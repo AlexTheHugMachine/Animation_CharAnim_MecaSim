@@ -1,4 +1,6 @@
 
+//! \file instanceID.glsl utilisation de glDrawArraysInstanced() et gl_InstanceID
+
 #version 330
 
 #ifdef VERTEX_SHADER

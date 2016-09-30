@@ -22,7 +22,8 @@ en consultant la doc d'openGL, d'autres fonctions existent, à quoi servent-elle
 dans pas mal de cas, il est nécessaire d'afficher plusieurs fois le même objet ou des variantes du même objet. par exemple, des unités dans un jeu de stratégie, 
 des arbres pour afficher une forêt, des touffes d'herbes pour une prairie, etc.
 
-malheureusement, la solution directe, faire un draw par copie n'est __vraiment pas__ une solution efficace. cf \ref tuto_time.cpp et (les explications \ref time) pour une démonstration.
+malheureusement, la solution directe, faire un draw par copie n'est __vraiment pas__ une solution efficace. cf \ref tuto_time.cpp et (les explications \ref time) pour 
+une démonstration.
 
 glDrawArraysInstanced( ) / glDrawElementsInstanced() fournissent une solution (partielle) à ce problème. les fonctions prennent un paramètre 
 supplémentaire (par rappport à glDrawArrays() / glDrawElements()), le nombre de copies à dessiner. 
@@ -30,8 +31,8 @@ supplémentaire (par rappport à glDrawArrays() / glDrawElements()), le nombre d
 parfait, reste un petit problème à régler... toutes les copies sont identiques et sont dessinées au même endroit, ce qui ne sert à rien. il faut pouvoir, au minimum,
 les placer à des endroits différents dans la scène / le monde.
 
-il y a 2 deux moyens : on peut stocker les propriétés de chaque copie dans un buffer et modifier le vertex array objet en fonction, et/ou utiliser la variable gl_InstanceID
-du vertex shader pour calculer des propriétés uniques à chaque instance.
+il y a 2 deux moyens : on peut stocker les propriétés de chaque copie dans un buffer et modifier le vertex array object en fonction, et/ou utiliser l'indice de la copie 
+en cours de traitement (cf int gl_InstanceID) dans le vertex shader pour calculer des propriétés uniques à chaque instance.
 
 exemple : dessiner n copies alignées avec gl_InstanceID :
 il suffit de modifier le vertex shader pour calculer une position qui dépend de gl_InstanceID
@@ -43,7 +44,7 @@ uniform mat4 mvpMatrix;
 
 void main( )
 {
-    // int gl_InstanceID varie de 0 a N
+    // int gl_InstanceID varie de 0 a N, le nombre d'instances dessinees
     vec3 p= position + vec3(gl_InstanceID * 10, 0, 0);
     gl_Position= mvpMatrix * vec3(p, 1);
 }
@@ -55,12 +56,150 @@ glBindVertexArray( ... );
 glUseProgram( ... );
 glUniform( ... );
 
-glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 10); // N= 10 copies
+glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 10); // dessine N= 10 copies
 \endcode
-permet de dessiner 10 cubes, par exemple.
+permet de dessiner 10 cubes, par exemple. exemple complet dans \ref tuto6GL.cpp et \ref instanceID.glsl. \ref tuto_time.cpp utilise aussi cette solution 
+pour dessiner des objets disposés sur une grille.
+
+
+l'autre solution nécessite de créer un buffer pour stocker les paramètres de chaque instance et de configurer le format de sommet avec glAttribDivisor(index, 1). 
+le vertex shader doit également déclarer et utiliser l'attribut supplémentaire cf \ref instance_buffer.glsl :
+\code
+in vec3 position;               // attribut du sommet
+in vec3 instance_position;      // l'attribut d'instance se declare "normalement", 
+// c'est l'application qui doit correctement configurer le vao...
+
+void main( )
+{
+    vec3 p= position + instance_position;
+    gl_Position= mvpMatrix * vec4(p, 1);
+    
+    vertex_normal= mat3(normalMatrix) * normal;
+}
+\endcode
+
+et voici comment \ref tuto6GL_buffer.cpp configure le vao, pour l'attribut d'instance :
+\code
+    std::vector<vec3> positions;
+    
+    // remplir les positions
+    { ... }
+    
+    // creer le buffer
+    glGenBuffers(1, &m_instance_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * positions.size(), &positions.front().x, GL_STATIC_DRAW);
+
+    // configure l'attribut,  vec3 instance_position
+    GLint index= glGetAttribLocation(program, "instance_position");
+    
+    // configure le vao pour l'attribut d'instance
+    glVertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, /* stride */ 0, /* offset */ 0);
+    glEnableVertexAttribArray(index);
+    
+    glVertexAttribDivisor(index, 1);    // !! c'est la seule difference entre un attribut de sommet et un attribut d'instance !!
+\endcode
+
+__remarque :__ pourquoi divisor pour nommer une propriete d'instance ? euh, c'est pareil dans directx ? l'idée est de décrire à quel moment l'attribut 
+change de valeur, pour chaque sommet (divisor == 0), ou pour chaque instance (divisor == 1), toutes les 2 instances (divisor == 2), etc.
+
+__remarque :__ oui, ça permet d'avoir des propriétés d'instances qui sont définies pour un groupe d'instances, mais ce n'est pas très flexible...
 
 
 ## draw base vertex, organisation des données
 
+lorsqu'une application doit dessiner beaucoup d'objets, l'organisation des données à un impact sur les performances. par exemple, dans un code simple, 
+les données de chaque objet sont stockées dans un ou plusieurs buffers et la configuration des attributs est stockée dans un vertex array object. pour afficher 
+plusieurs objets, on aura donc une boucle qui sélectionne le vao de l'objet avant de le dessiner :
+\code
+    struct Object
+    {
+        GLuint vao;
+        GLuint program;
+        GLuint texture;
+        int vertex_count;
+        Transform model;
+    };
+    
+    std::vector<Object> scene;
+    
+    // remplir la description de la scene
+    { ... }
+    
+    // afficher la scene
+    Transform vp= { ... };      // composition de view et projection
+    for(int i= 0; i < scene.size(); i++)
+    {
+        glBindVertexArray(scene[i].vao);
+        glUseProgram(scene[i].program);
+        program_uniform(scene[i].program, "mvpMatrix", vp * scene[i].model);
+        program_use_texture(scene[i].program, "diffuseTexture", scene[i].texture);
+        
+        glDrawArrays(GL_TRIANGLES, 0, scene[i].vertex_count);
+    }
+\endcode
+
+malheureusement, changer de vao et de shader demande pas mal de travail au driver, et cette solution est très lente.
+
+il est possible de gagner pas mal de temps en stockant toutes les données des objets dans le même buffer et en utilisant un seul vao, ce qui permet
+d'écrire la boucle d'affichage de manière plus efficace.
+le buffer stocke les sommets des objets, les uns après les autres, il faut donc se rappeller ou commence la description de chaque objet et utiliser le 
+paramètre first de glDrawArrays() :
+\code
+    struct Object
+    {
+        GLuint program;
+        GLuint texture;
+        int begin;
+        int vertex_count;
+        Transform model;
+    };
+    
+    std::vector<Object> scene;
+    
+    // remplir la description de la scene
+    { ... }
+    
+    // afficher la scene
+    glBindVertexArray(vao);
+    for(int i= 0; i < scene.size(); i++)
+    {
+        glUseProgram(program);
+        program_uniform(scene[i].program, "mvpMatrix", vp * scene[i].model);
+        
+        glDrawArrays(GL_TRIANGLES, scenes[i].begin, scene[i].vertex_count);
+    }
+\endcode
+
+__remarque :__ grosso modo, les changements les plus couteux sont, en ordre décroissant, changer de shader, changer de texture, changer de vao, 
+changer de  buffer. changer la valeur d'un uniform est bien plus rapide.
+
+__remarque :__ oui, il est quasi nécessaire de limiter le nombre de shaders utilisés au total dans la scène. une solution courante consiste à trier les objets 
+par shader et à les dessiner avec le nombre minimal de glUseProgram()...
+
+__remarque :__ et re-oui, il faut aussi faire la même chose avec les textures, soit trier les objets par paire de (shader, texture), soit packer les textures 
+dans une seule grande texture (un atlas de texture), soit utiliser un tableau de textures, cf GL_TEXTURE_2D_ARRAY. tout ca pour limiter le nombre de fois ou 
+il faut changer de shader avec glUseProgram() et de texture avec glBindTexture().
+
+### et avec glDrawElements( ) ?
+
+La solution précédente est simple à utiliser tant que l'affichage des objets peut se faire avec glDrawArrays(), si les objets utilisent un index buffer / des sommets partagés,
+glDrawElements( ) ne permet pas directement de faire la même chose... _pourquoi ?_
+
+_indication :_ quel est l'indice du sommet 0 du deuxième objet rangé dans le buffer ? habituellement c'est 0 ? non ??
+
+_réponse :_ ça dépend du nombre de sommets du premier objet rangé dans le buffer... 
+
+et c'est très exactement cette valeur qui sert de paramètre base_vertex à glDrawElementBaseVertex( ).
+
+__bonus :__ il y a une autre solution, qui utilise toujours glDrawElements() mais qui demande un peu plus de préparation... laquelle ?
+
+## et les autres ?
+
+les glDrawInstancedBaseInstance( ) permettent de faire la même chose avec les buffers d'attributs d'instances.
+
+l'autre draw interressant et plus souple que draw instanced s'appelle glMultiDrawIndirect( ), mais il n'est utilisable qu'à partir d'openGL 4.3.
+
+todo 
 
 */
