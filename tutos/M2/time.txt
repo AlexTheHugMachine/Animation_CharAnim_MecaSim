@@ -111,7 +111,8 @@ tuto_time.cpp affiche un objet "normalement" et compare ensuite les temps de ren
 (identiques) disposés sur une grille 5x5 :
     - mode 1 : affiche 25 fois l'objet en modifiant sa transformation model, pour placer les 25 copies sur une grille,
     - mode 2 : utilise glDrawArraysInstanced( ) pour faire la même chose mais avec un seul draw... le travail pour le gpu est le meme : 
-    25 fois plus de sommets à transformer et de triangles à dessiner, mais c'est le vertex shader qui calcule la position de chaque copie.
+    25 fois plus de sommets à transformer et de triangles à dessiner, mais c'est le vertex shader qui calcule la position de chaque copie,
+    cf \ref draw pour les explications.
     
 bilan : 
     - mode 0 : 1 draw, temps cpu 50us, gpu 6us

@@ -7,10 +7,107 @@ glDraw( ) est une famille de fonctions, et selon la description du maillage (som
     - glDrawElements( ) : lorsque le maillage est décrit par des sommets partagés / indexés, les triangles sont décrits par des triplets d'indices,
     - glDrawArrays( ) : lorsque le maillage est décrit uniquement par les coordonnées de ses sommets, les triangles sont décrits par des triplets de positions.
 
-la classe Mesh peut stocker les 2 types de maillages : il suffit de vérifier qu'un index buffer existe (cf Mesh::index_buffer_size()) pour savoir qu'il faut utiliser 
-glDrawElements( ) plutot que glDrawArrays( ).
+la classe Mesh peut stocker les 2 types de maillages : il suffit de vérifier qu'un index buffer existe (cf Mesh::index_count() > 0 ou Mesh::index_buffer_size() > 0) 
+pour savoir qu'il faut utiliser glDrawElements( ) plutot que glDrawArrays( ). cf \ref tuto4GL pour des exemples.
+
+_remarque : quel est l'intêret d'utiliser des sommets partagés ?_
+
+la description de l'objet est plus compacte...
+un indice est un entier stocké sur 4, 2 ou 1 octets, un sommet est a priori 3 floats qui occuppent 4 octets chacuns, soit 12 octets au total. si l'on ajoute les 
+normales (3 floats) et les coordonnées de textures (2 floats), un sommet occuppe 3x4 + 3x4 + 2x4 = 32 octets.
+
+un simple cube composé de 8 sommets (soit 8x32 = 256 octets) et de 12 triangles indexés (12x3x4 = 144 octets) occuppe 400 octets.
+sans utiliser l'indexation, il faut décrire les 3 sommets des 12 triangles : 12x3x32 = 1152 octets... et autre amélioration, les vertex shaders ne transforment que 8 sommets dans un cas, 
+contre 36 dans l'autre...
+
+
+### glDrawArrays et Mesh
+
+s'il n'existe pas d'index buffer dans l'objet, il suffit de créer un vertex buffer et de configurer un vao :
+\code
+Mesh mesh = { ... };
+
+// configuration
+GLuint vao= 0;
+GLuint vertex_buffer= 0;
+
+glGenVertexArrays(1, &vao);
+glBindVertexArray(vao);
+
+glGenBuffers(1, &vertex_buffer);
+glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+glBufferData(GL_ARRAY_BUFFER, mesh.vertex_buffer_size(), mesh.vertex_buffer(), GL_STATIC_DRAW);
+
+// configure l'attribut 0, cf layout(location= 0) in vec3 position, dans le vertex shader
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+glEnableVertexAttrib(0);
+
+// nettoyage
+glBindVertexArray(0);   // !! pourquoi en premier ? !!
+glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+// draw
+glBindVertexArray(vao);
+glUseProgram( ... );
+glUniform( ... );
+
+glDrawArrays(GL_TRIANGLES, /* first */ 0, /* count */ mesh.vertex_count());
+\endcode
+
+### glDrawElements et Mesh
+
+la démarche est la même, il faut créer l'index buffer, en plus du vertex buffer et bien sur configurer le vao :
+\code
+Mesh mesh = { ... };
+
+// configuration
+GLuint vao= 0;
+GLuint vertex_buffer= 0;
+GLuint index_buffer= 0;
+
+glGenVertexArrays(1, &vao);
+glBindVertexArray(vao);
+
+glGenBuffers(1, &vertex_buffer);
+glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+glBufferData(GL_ARRAY_BUFFER, mesh.vertex_buffer_size(), mesh.vertex_buffer(), GL_STATIC_DRAW);
+
+// configure l'attribut 0, cf layout(location= 0) in vec3 position, dans le vertex shader
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+glEnableVertexAttrib(0);
+
+if(mesh.index_count() > 0)
+{
+    glGenBuffers(1, &index_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer_size(), mesh.index_buffer(), GL_STATIC_DRAW);
+    
+    // !! la configuration du vao est implicite au moment du BindBuffer(GL_ELEMENT_ARRAY_BUFFER) !!
+}
+
+// nettoyage
+glBindVertexArray(0);   // !! pourquoi en premier ? !!
+glBindBuffer(GL_ARRAY_BUFFER, 0);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+// draw
+glBindVertexArray(vao);
+glUseProgram( ... );
+glUniform( ... );
+
+// choisir le draw
+if(mesh.index_count() == 0)
+    // pas d'index buffer
+    glDrawArrays(GL_TRIANGLES, /* first */ 0, /* count */ mesh.vertex_count());
+else
+    // avec un index buffer
+    glDrawElements(GL_TRIANGLES, /* count */ mesh.index_count(), /* index type */ GL_UNSIGNED_INT, /* offset */ 0);
+\endcode
+
+les paramètres type et offset permettent d'itérer sur les indices stockés dans l'index buffer associé au vao.
 
 __remarque :__ read_mesh( ) ne construit pas, pour l'instant, d'index buffer, donc un objet chargé par read_mesh( ) peut etre affiché directement par glDrawArrays().
+
 
 en consultant la doc d'openGL, d'autres fonctions existent, à quoi servent-elles ? 
 - glDrawArraysInstanced( ), glDrawElementsInstanced( ) : permettent de dessiner plusieurs copies du même objet,
@@ -20,7 +117,7 @@ en consultant la doc d'openGL, d'autres fonctions existent, à quoi servent-elle
 ## draw instanced, dessiner plusieurs copies 
 
 dans pas mal de cas, il est nécessaire d'afficher plusieurs fois le même objet ou des variantes du même objet. par exemple, des unités dans un jeu de stratégie, 
-des arbres pour afficher une forêt, des touffes d'herbes pour une prairie, etc.
+des arbres pour afficher une forêt, des touffes d'herbes pour une prairie, des _cubes_, etc.
 
 malheureusement, la solution directe, faire un draw par copie n'est __vraiment pas__ une solution efficace. cf \ref tuto_time.cpp et (les explications \ref time) pour 
 une démonstration.
@@ -56,13 +153,13 @@ glBindVertexArray( ... );
 glUseProgram( ... );
 glUniform( ... );
 
-glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 10); // dessine N= 10 copies
+glDrawArraysInstanced(GL_TRIANGLES, /* first */ 0, /* count */ 36, /* instance count */ 10); // dessine N= 10 copies
 \endcode
 permet de dessiner 10 cubes, par exemple. exemple complet dans \ref tuto6GL.cpp et \ref instanceID.glsl. \ref tuto_time.cpp utilise aussi cette solution 
 pour dessiner des objets disposés sur une grille.
 
 
-l'autre solution nécessite de créer un buffer pour stocker les paramètres de chaque instance et de configurer le format de sommet avec glAttribDivisor(index, 1). 
+l'autre solution nécessite de créer un buffer pour stocker les paramètres de chaque instance et de configurer le format de sommet avec glVertexAttribDivisor(index, 1). 
 le vertex shader doit également déclarer et utiliser l'attribut supplémentaire cf \ref instance_buffer.glsl :
 \code
 in vec3 position;               // attribut du sommet
@@ -108,97 +205,99 @@ __remarque :__ oui, ça permet d'avoir des propriétés d'instances qui sont dé
 
 ## draw base vertex, organisation des données
 
-lorsqu'une application doit dessiner beaucoup d'objets, l'organisation des données à un impact sur les performances. par exemple, dans un code simple, 
-les données de chaque objet sont stockées dans un ou plusieurs buffers et la configuration des attributs est stockée dans un vertex array object. pour afficher 
-plusieurs objets, on aura donc une boucle qui sélectionne le vao de l'objet avant de le dessiner :
+si les données de plusieurs objets sont rangées dans le même vertex buffer, ca permet de ne configurer et de n'utiliser qu'un seul vao, ce qui peut simplifier 
+le code d'affichage de plusieurs objets et permet aussi au driver de faire moins de travail.
+
+si les sommets des objets A et B se trouvent dans le même buffer : 
+
+`AAAAAA + BBB` 
+
+on peut les afficher en utilisant le paramètre first de glDrawArrays( ):
 \code
-    struct Object
-    {
-        GLuint vao;
-        GLuint program;
-        GLuint texture;
-        int vertex_count;
-        Transform model;
-    };
-    
-    std::vector<Object> scene;
-    
-    // remplir la description de la scene
-    { ... }
-    
-    // afficher la scene
-    Transform vp= { ... };      // composition de view et projection
-    for(int i= 0; i < scene.size(); i++)
-    {
-        glBindVertexArray(scene[i].vao);
-        glUseProgram(scene[i].program);
-        program_uniform(scene[i].program, "mvpMatrix", vp * scene[i].model);
-        program_use_texture(scene[i].program, "diffuseTexture", scene[i].texture);
-        
-        glDrawArrays(GL_TRIANGLES, 0, scene[i].vertex_count);
-    }
+GLuint vao= { ... };
+glBindVertexArray(vao);
+glUseProgram( ... );
+glUniform( ... );
+
+glDrawArrays(GL_TRIANGLES, /* first */ 0, /* count */ 6);       // dessine A
+glDrawArrays(GL_TRIANGLES, /* first */ 6, /* count */ 3);       // dessine B
 \endcode
 
-malheureusement, changer de vao et de shader demande pas mal de travail au driver, et cette solution est très lente.
-
-il est possible de gagner pas mal de temps en stockant toutes les données des objets dans le même buffer et en utilisant un seul vao, ce qui permet
-d'écrire la boucle d'affichage de manière plus efficace.
-le buffer stocke les sommets des objets, les uns après les autres, il faut donc se rappeller ou commence la description de chaque objet et utiliser le 
-paramètre first de glDrawArrays() :
+et il aussi possible de dessiner les 2 objets avec un seul draw :
 \code
-    struct Object
-    {
-        GLuint program;
-        GLuint texture;
-        int begin;
-        int vertex_count;
-        Transform model;
-    };
-    
-    std::vector<Object> scene;
-    
-    // remplir la description de la scene
-    { ... }
-    
-    // afficher la scene
-    glBindVertexArray(vao);
-    for(int i= 0; i < scene.size(); i++)
-    {
-        glUseProgram(program);
-        program_uniform(scene[i].program, "mvpMatrix", vp * scene[i].model);
-        
-        glDrawArrays(GL_TRIANGLES, scenes[i].begin, scene[i].vertex_count);
-    }
+GLuint vao= { ... };
+glBindVertexArray(vao);
+glUseProgram( ... );
+glUniform( ... );
+
+glDrawArrays(GL_TRIANGLES, /* first */ 0, /* count */ 9);       // dessine A et B
 \endcode
 
-__remarque :__ grosso modo, les changements les plus couteux sont, en ordre décroissant, changer de shader, changer de texture, changer de vao, 
-changer de  buffer. changer la valeur d'un uniform est bien plus rapide.
+__remarque :__ si les objets ne sont pas placés les uns après les autres dans le vertex buffer, il faudra utiliser un draw par intervalle d'objets, ou utiliser glMultiDrawArrays()...
 
-__remarque :__ oui, il est quasi nécessaire de limiter le nombre de shaders utilisés au total dans la scène. une solution courante consiste à trier les objets 
-par shader et à les dessiner avec le nombre minimal de glUseProgram()...
+si les sommets des objets A, B, et C se trouvent dans le même buffer :
 
-__remarque :__ et re-oui, il faut aussi faire la même chose avec les textures, soit trier les objets par paire de (shader, texture), soit packer les textures 
-dans une seule grande texture (un atlas de texture), soit utiliser un tableau de textures, cf GL_TEXTURE_2D_ARRAY. tout ca pour limiter le nombre de fois ou 
-il faut changer de shader avec glUseProgram() et de texture avec glBindTexture().
+`AAAAAA + BBB + CCC`
+
+et que l'on veut afficher A et C, il faudra utiliser 2 DrawArrays() ou préparer les paramètres de MultiDrawArrays( ) :
+\code
+std::vector<GLint> first;
+std::vector<GLSizei> count;
+
+// draw A
+first.push_back(0);
+count.push_back(6);
+
+// draw C
+first.push_back(9);
+count.push_back(3);
+
+glMultiDrawArrays(GL_TRIANGLES, /* first */ &first.front(), /* count */ &count.front(), /* draw count */ first.size());
+\endcode
 
 ### et avec glDrawElements( ) ?
 
 La solution précédente est simple à utiliser tant que l'affichage des objets peut se faire avec glDrawArrays(), si les objets utilisent un index buffer / des sommets partagés,
 glDrawElements( ) ne permet pas directement de faire la même chose... _pourquoi ?_
 
-_indication :_ quel est l'indice du sommet 0 du deuxième objet rangé dans le buffer ? habituellement c'est 0 ? non ??
+si les sommets des objets A et B se trouvent dans le même buffer : 
+
+`AAAA + BBB` 
+
+et que leur indexation est : `012023` pour le quad A et `012` pour le triangle B, et qu'ils sont dans le même index buffer : 
+
+`012023 + 012`
+
+que va dessiner :
+\code
+// dessiner un triangle indexé à partir du 6ième indice du buffer
+glDrawElements(GL_TRIANGLES, /* count */ 3, /* index type */ GL_UNSIGNED_INT, /* offset */ sizeof(unsigned int) * 6); 
+\endcode
+
+- réponse A : le triangle A0A1A2,
+- réponse B : le triangle B0B1B2 ?
+
+_indication :_ quel est l'indice du sommet 0 de l'objet B rangé dans le vertex buffer ? habituellement c'est 0 ? non ??
 
 _réponse :_ ça dépend du nombre de sommets du premier objet rangé dans le buffer... 
 
-et c'est très exactement cette valeur qui sert de paramètre base_vertex à glDrawElementBaseVertex( ).
+et c'est très exactement cette valeur qui sert de paramètre base_vertex à glDrawElementBaseVertex( ) :
+\code
+// dessiner un triangle indexé à partir du 6ième indice du buffer
+glDrawElementsBaseVertex(GL_TRIANGLES, /* count */ 3, /* index type */ GL_UNSIGNED_INT, /* offset */ sizeof(unsigned int) * 6, /* base vertex */ 4); 
+// dont les sommets se trouvent a partir du 4ieme sommet dans le vertex buffer...
+\endcode
 
-__bonus :__ il y a une autre solution, qui utilise toujours glDrawElements() mais qui demande un peu plus de préparation... laquelle ?
+__bonus :__ il y a une autre solution, qui utilise toujours glDrawElements() mais qui demande un peu plus de préparation... que se passe-t-il si l'index buffer contient :
+
+`012023 + 456`
+
 
 ## et les autres ?
 
 les glDrawInstancedBaseInstance( ) permettent de faire la même chose avec les buffers d'attributs d'instances.
 
-l'autre draw interressant et plus souple que draw instanced s'appelle glMultiDrawIndirect( ), mais il n'est utilisable qu'à partir d'openGL 4.3.
+l'autre draw interressant et plus souple que draw instanced s'appelle glMultiDraw( ) et surtout glMultiDrawIndirect( ), mais il n'est utilisable qu'à partir d'openGL 4.3.
 
 todo 
 

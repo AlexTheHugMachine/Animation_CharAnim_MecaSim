@@ -36,6 +36,8 @@ le vertex array object stocke, pour chaque attribut déclaré par le vertex shad
 	- la position de la première valeur dans le buffer, paramètre offset,
 	- la distance entre chaque valeur dans le buffer, paramètre stride.
 
+l'indexation des sommets (l'index buffer) peut aussi être associé à un vertex array objet.
+
 la configuration se fait en plusieurs étapes :
 	- récupérer l'identifiant de l'attribut dans le vertex shader, cf glGetAttribLocation( ),
 	- sélectionner le vertex buffer sur GL_ARRAY_BUFFER,
@@ -66,6 +68,35 @@ le vertex shader déclare : `in vec3 position;`
 	glEnableVertexAttribArray(attribute);
 \endcode
 
+exemple : si le maillage est décrit par des sommets partagés, l'index buffer stocke des triplets d'indices pour décrire chaque triangle. 
+Les opérations sont les mêmes que pour un vertex buffer, par contre, il faut sélectionner le buffer sur GL_ELEMENT_ARRAY_BUFFER :
+
+\code
+	// selectionner le vertex array object a configurer, si necessaire
+	// glBindVertexArray(vao);
+
+	// selectionner l'index buffer et configurer le vao
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+\endcode
+
+
+__remarque : nettoyage / revenir à l'état par défaut__
+
+il y a en général un index buffer et un vertex buffer sélectionné ainsi que le vao. quelle est la bonne manière de les désélectionner :
+	- réponse A :  
+	\code
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	\endcode
+	- réponse B :
+	\code
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	\endcode
+	
+_rappel :_ certains paramètres sont implicites... le vao en cours de configuration, par exemple
 
 ## et avec plusieurs attributs ?
 
@@ -97,7 +128,7 @@ cf \ref shader_reflect
 
 ## et si un attribut n'existe plus dans le vertex shader ?? ( glGetAttribLocation( ) < 0 )
 
-le compilateur et linker des shaders sont capables de déterminer qu'un attribut n'est pas nécessaire pour exécuter un shader. par exemple :
+le compilateur et le linker des shaders sont capables de déterminer qu'un attribut n'est pas nécessaire pour exécuter un shader. par exemple :
 
 \code
 // vertex shader
@@ -162,7 +193,7 @@ glGetAttribLocation( ... "normal" ) renverra bien un identifiant valide dans ce 
 		}
 		\endcode
 	
-	- soit ne pas faire le test et toujours configurer le vertex array, le shader n'utilisera que ce qui est nécessaire...
+	- soit ne pas faire le test et toujours configurer le vertex array, le shader n'utilisera que ce qui est nécessaire et/ou openGL ignore les attributs non valides...
 		\code
 		// recuperer l'attribut
 		GLint attribute= glGetAttribLocation(program, "normal");
@@ -171,6 +202,8 @@ glGetAttribLocation( ... "normal" ) renverra bien un identifiant valide dans ce 
 		glEnableVertexAttribArray(attribute);
 		\endcode
 	
+_remarque :_ les attributs peuvent être numérotés directement par le vertex shader, et dans ce cas l'utilisation de glGetAttribLocation( ) n'est pas 
+nécessaire, cf la section \ref location.
 
 ## et si les attributs sont dans le même vertex buffer ?
 
@@ -200,16 +233,16 @@ exemple : alterner les donnees, position + normale sommet 0, position + normale 
 	stride(normal)= sizeof(vec3) + sizeof(vec3);
 \endcode
 
+cf \ref single_buffer pour un exemple complet de création.
 
 \section buffers vertex buffers et index buffer
 
 les buffers sont des tableaux alloués dans la mémoire de la carte graphique, il faut leur donner une dimension (en octets) 
 et transférer des données, cf glBufferData( ). 
 
-on peut également modifier le contenu d'un buffer à n'importe quel moment,
-cf glBufferSubData( ). en fonction de la fréquence de modifications, il faut choisir l'option correspondante lors de la création, 
-cf le paramètre usage de glBufferData( ). l'option par défaut est GL_STATIC_DRAW qui indique que le buffer est utilisé par
-glDraw( ) et que son contenu ne devrait pas changer.
+on peut également modifier le contenu d'un buffer à n'importe quel moment, cf glBufferSubData( ). en fonction de la fréquence 
+de modifications, il faut choisir l'option correspondante lors de la création, cf le paramètre usage de glBufferData( ). l'option 
+par défaut est GL_STATIC_DRAW qui indique que le buffer est utilisé par glDraw( ) et que son contenu ne devrait pas changer.
 
 mais bien sur, il faut commencer par créer l'objet openGL, cf glGenBuffers( ) :
 \code
@@ -219,9 +252,10 @@ glGenBuffers(1, &buffer);
 
 pour pouvoir manipuler un buffer, il faut le sélectionner, comme les autres objets openGL, cf glBindBuffer( ) :
 	- les vertex buffers sont sélectionnés sur GL_ARRAY_BUFFER,
-	- les index buffers, sur GL_ELEMENT_BUFFER.
+	- les index buffers, sur GL_ELEMENT_ARRAY_BUFFER.
 
-exemple : créer un vertex buffer pour stocker les positions d'un mesh, cf Mesh::vertex_buffer() et Mesh::vertex_buffer_size(), pour récupérer les infos nécessaires :
+exemple : créer un vertex buffer pour stocker les positions d'un mesh, cf Mesh::vertex_buffer() et Mesh::vertex_buffer_size(), 
+pour récupérer les infos nécessaires :
 \code
 	Mesh mesh= ... ;
 
@@ -272,7 +306,7 @@ int draw( )
 \endcode
 
 
-# exemple : utiliser un seul buffer pour stocker les attributs et configurer le vao
+\section single_buffer exemple : utiliser un seul buffer pour stocker les attributs et configurer le vao
 
 le buffer est remplit avec toutes les positions, suivies de toutes les texcoords, et enfin toutes les normales :
 \code
@@ -318,9 +352,9 @@ le buffer est remplit avec toutes les positions, suivies de toutes les texcoords
 \endcode
 
 
-# et sans utiliser glGetAttribLocation( ) ?
+\section location et sans utiliser glGetAttribLocation( ) ?
 
-il suffit de donner l'identifiant directement dans le source du vertex shader avec :
+il suffit de donner l'identifiant directement dans le source du vertex shader avec `layout(location= id) in vec3 attribute;`:
 \code
 layout(location= 0) in vec3 position;
 \endcode
@@ -333,4 +367,5 @@ layout(location= 1) in vec2 texcoord;
 layout(location= 2) in vec3 normal;
 \endcode
 
+et la création des buffers / configuration du vao peut etre simplifiée, puisque l'on connait les identifiants des attributs. cf l'exemple précédent \ref single_buffer.
  */
