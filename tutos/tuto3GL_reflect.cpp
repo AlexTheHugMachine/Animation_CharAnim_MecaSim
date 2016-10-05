@@ -21,6 +21,8 @@ const char *glsl_string( const GLenum type )
     {
         case GL_BOOL:
             return "bool";
+        case GL_UNSIGNED_INT:
+            return "uint";
         case GL_INT:
             return "int";
         case GL_FLOAT:
@@ -48,15 +50,17 @@ void print_value( const GLuint program, const GLint location, const char *name, 
         return;
 
     int value= 0;
-    float values[16]= { 0 };
+    float values[16]= { };
 
 /* les tableaux occuppent plusieurs uniforms places les uns apres les autres, donc :
         for(int i= 0; i < size; i++)
-            glGetActvieUniform(program, location + i, ...)
+            glGetActiveUniform(program, location + i, ...)
     permet de recuperer toutes les cellules du tableau...
  */
 
-    for(int i= 0; i < size; i++)
+    // limite l'affichage d'un tableau a quelques valeurs
+    int n= std::min(10, size);
+    for(int i= 0; i < n; i++)
     {
         if(size > 1)
             printf("[%02d]  ", i);
@@ -105,6 +109,10 @@ void print_value( const GLuint program, const GLint location, const char *name, 
                 printf("    uniform '%s', type %x, type unknown\n", name, type);
         }
     }
+    
+    // indiquer que le tableau a ete tronque
+    if(n < size)
+        printf("...   \n");
 }
 
 // utilitaire : affiche les uniforms utilises par un program
@@ -144,6 +152,7 @@ int print_uniforms( const GLuint program )
 
         printf("  uniform %i '%s': location %d, type %s (0x%x), array_size %d\n", i, name, location,
             glsl_string(glsl_type), glsl_type, glsl_size);
+        
         print_value(program, location, name, glsl_type, glsl_size);
     }
 
@@ -152,8 +161,8 @@ int print_uniforms( const GLuint program )
 }
 
 
-// utilitaire : affiche tous les attributs utilises par un program
-int print_attribs( const GLuint program )
+// utilitaire : affiche tous les attributs utilises par un program, et eventuellement a quel buffer ils sont associes
+int print_attribs( const GLuint program, const GLuint vao= 0 )
 {
     if(program == 0)
     {
@@ -189,6 +198,16 @@ int print_attribs( const GLuint program )
 
         printf("  attribute %i '%s': location %d, type %s (0x%x), array_size %d\n", i, name, location,
             glsl_string(glsl_type), glsl_type, glsl_size);
+        
+        if(vao > 0)
+        {
+            GLint buffer= 0; 
+            glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &buffer );
+            if(buffer > 0)
+                printf("    buffer %d\n", buffer);
+            else
+                printf("    no buffer\n");
+        }
     }
 
     delete [] name;
@@ -208,23 +227,24 @@ int init( )
     // affiche les uniforms et leurs valeurs par defaut
     print_uniforms(program);
     // affiche les attributs
-    print_attribs(program);
-
+    //~ print_attribs(program);
+    
     // transfere les 36 positions dans le tableau declare par le vertex shader
     // etape 1 : recuperer l'identifiant de l'uniform
     GLint location= glGetUniformLocation(program, "positions"); // uniform vec3 positions[36];
     // etape 2 : modifier sa valeur
     glUniform3fv(location, cube.vertex_count(), cube.vertex_buffer());
 
-/* afficher les uniforms apres l'affectation...
-    print_uniforms(program);
- */
-
     // mesh n'est plus necessaire
     cube.release();
 
     // creer un vertex array object
     glGenVertexArrays(1, &vao);
+
+    // afficher les uniforms apres l'affectation...
+    print_uniforms(program);
+    // afficher les attributs... et leurs buffers
+    print_attribs(program, vao);
 
     // etat openGL par defaut
     glClearColor(0.2, 0.2, 0.2, 1);     // definir la couleur par defaut
