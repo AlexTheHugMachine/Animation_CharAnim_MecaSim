@@ -101,11 +101,11 @@ void main( )
 
     float cos_theta;
 #ifdef USE_LIGHT
-    //~ cos_theta= abs(dot(normal, normalize(light - vertex_position)));
-    cos_theta= max(0, dot(normal, normalize(light - vertex_position)));
+    //~ cos_theta= abs(dot(normal, normalize(light - vertex_position)));        // eclairage "double face"
+    cos_theta= max(0, dot(normal, normalize(light - vertex_position)));         // eclairage, uniquement des faces bien orientees
     color= color * light_color;
 #else
-    cos_theta= abs(normal.z);
+    cos_theta= dot( normalize(normal), normalize(- vertex_position) );
 #endif
 
     color.rgb= color.rgb * cos_theta;
@@ -117,8 +117,7 @@ void main( )
         if((pixel.x ^ pixel.y) == 0)
             color= vec4(0.8, 0.4, 0, 1);
     }
-
-    //fragment_color= vec4(color.rgb, 1);
-    fragment_color= vec4(color);
+    
+    fragment_color= color;
 }
 #endif
