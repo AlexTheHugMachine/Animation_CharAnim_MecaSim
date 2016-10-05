@@ -42,11 +42,11 @@ const char *glsl_string( const GLenum type )
 }
 
 // utilitaire : affiche la valeur d'un uniform.
-void print_value( const GLuint program, const GLint location, const char *name, const GLenum type, const GLint size )
+void print_uniform_value( const GLuint program, const int index, const char *name, const GLenum type, const GLint size )
 {
     if(program == 0)
         return;
-    if(location < 0)
+    if(index  < 0)
         return;
 
     int value= 0;
@@ -70,31 +70,31 @@ void print_value( const GLuint program, const GLint location, const char *name, 
         switch(type)
         {
             case GL_BOOL:
-                glGetUniformiv(program, location +i, &value);
+                glGetUniformiv(program, index +i, &value);
                 printf("value= %s\n", value ? "true" : "false");
                 break;
             case GL_INT:
-                glGetUniformiv(program, location +i, &value);
+                glGetUniformiv(program, index +i, &value);
                 printf("value= %d\n", value);
                 break;
             case GL_FLOAT:
-                glGetUniformfv(program, location +i, values);
+                glGetUniformfv(program, index +i, values);
                 printf("value= %f\n", values[0]);
                 break;
             case GL_FLOAT_VEC2:
-                glGetUniformfv(program, location +i, values);
+                glGetUniformfv(program, index +i, values);
                 printf("values= %f %f\n", values[0], values[1]);
                 break;
             case GL_FLOAT_VEC3:
-                glGetUniformfv(program, location +i, values);
+                glGetUniformfv(program, index +i, values);
                 printf("values= %f %f %f\n", values[0], values[1], values[2]);
                 break;
             case GL_FLOAT_VEC4:
-                glGetUniformfv(program, location +i, values);
+                glGetUniformfv(program, index +i, values);
                 printf("values= %f %f %f %f\n", values[0], values[1], values[2], values[3]);
                 break;
             case GL_FLOAT_MAT4:
-                glGetUniformfv(program, location +i, values);
+                glGetUniformfv(program, index +i, values);
                 printf("values=\n");
                 for(int r= 0; r < 4; r++)
                 {
@@ -142,18 +142,18 @@ int print_uniforms( const GLuint program )
 
     printf("program %u:\n", program);
     // recuperer les infos de chaque uniform
-    for(int i= 0; i < n; i++)
+    for(int index= 0; index < n; index++)
     {
         GLint glsl_size;
         GLenum glsl_type;
-        glGetActiveUniform(program, i, length_max, NULL, &glsl_size, &glsl_type, name);
+        glGetActiveUniform(program, index, length_max, NULL, &glsl_size, &glsl_type, name);
         // et son identifiant
         GLint location= glGetUniformLocation(program, name);
 
-        printf("  uniform %i '%s': location %d, type %s (0x%x), array_size %d\n", i, name, location,
+        printf("  uniform %i '%s': location %d, type %s (0x%x), array_size %d\n", index, name, location,
             glsl_string(glsl_type), glsl_type, glsl_size);
         
-        print_value(program, location, name, glsl_type, glsl_size);
+        print_uniform_value(program, index, name, glsl_type, glsl_size);
     }
 
     delete [] name;
@@ -188,25 +188,25 @@ int print_attribs( const GLuint program, const GLuint vao= 0 )
 
     printf("program %u:\n", program);
     // recuperer les infos de chaque attribut
-    for(int i= 0; i < n; i++)
+    for(int index= 0; index < n; index++)
     {
         GLint glsl_size;
         GLenum glsl_type;
-        glGetActiveAttrib(program, i, length_max, NULL, &glsl_size, &glsl_type, name);
+        glGetActiveAttrib(program, index, length_max, NULL, &glsl_size, &glsl_type, name);
         // et son identifiant
         GLint location= glGetAttribLocation(program, name);
 
-        printf("  attribute %i '%s': location %d, type %s (0x%x), array_size %d\n", i, name, location,
+        printf("  attribute %d '%s': location %d, type %s (0x%x), array_size %d\n", index, name, location,
             glsl_string(glsl_type), glsl_type, glsl_size);
         
         if(vao > 0)
         {
             GLint buffer= 0; 
-            glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &buffer );
+            glGetVertexAttribiv(index, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &buffer);
             if(buffer > 0)
-                printf("    buffer %d\n", buffer);
+                printf("      buffer %d\n", buffer);
             else
-                printf("    no buffer\n");
+                printf("      no buffer\n");
         }
     }
 
