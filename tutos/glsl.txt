@@ -107,13 +107,27 @@ void f2( in a, inout b )
 }
 \endcode
 
+il est également possible d'utiliser `const` sur les parametres des fonctions :
+\code
+void f1( const in float a, out float b )
+{
+    b= a + 10;
+}
+
+void f2( const in a, inout b )
+{
+    b= a + 2*b;
+}
+\endcode
+
+
 
 ## vertex shader et GLSL
 
 un vertex shader est composée d'une fonction principale, `void main( void )`, et doit écrire les coordonnées des sommets 
 dans une variable globale `vec4 gl_Position` (_rappel :_ coordonnées x, y, z et w dans le repère projectif).
 
-les attributs se déclarent en global avec le mot clé `in`, les varyings avec `out`, les constantes initialisées avec `const`.
+les attributs se déclarent en global avec le mot clé `in`, les varyings/sorties avec `out`, les constantes initialisées avec `const`.
 
 les variables fournies par l'application sont déclarées avec le mot-clé `uniform` en plus de leur type et de leur nom.
 
@@ -159,10 +173,11 @@ void main( void )
 ## fragment shader et GLSL
 
 le fragment shader est similaire au vertex shader, mais il ne peut pas utiliser les valeurs des attributs, ils ne sont plus
-accessibles, uniquement leurs valeurs interpolées (repassez dans \ref intro3d et \ref pipeline, si ce n'est 
+accessibles, uniquement leurs valeurs interpolées, les _varyings_ (repassez dans \ref intro3d et \ref pipeline, si ce n'est 
 pas clair)
 
-la couleur du fragment doit être écrite dans `vec4 gl_FragColor` ou un varying déclaré par le shader.
+la couleur du fragment doit être écrite dans un `out vec4 gl_FragColor` ou une variable en sortie déclarée par le shader 
+`out vec4 fragment_color;` selon la version d'openGL.
 
 un fragment shader peut déclarer des uniforms et des varyings, et accéder à plusieurs variables définies par le pipeline, 
 par exemple :
@@ -176,7 +191,9 @@ exemple:
 // fragment shader et variables
 #version 330
 
-uniform vec3 back_color;
+uniform vec3 back_color;        // uniform, couleur pour les faces mal orientees
+
+out vec4 fragment_color;        // varying, couleur du fragment, ecrite dans l'image par le pipeline
 
 void main( void )
 {
@@ -191,7 +208,7 @@ void main( void )
     if(gl_FrontFacing == false)
         color= back_color;
         
-    gl_FragColor= vec3(color, 1);       // couleur opaque, alpha= 1
+    fragment_color= vec3(color, 1);       // couleur opaque, alpha= 1
 }
 \endcode
 
@@ -208,7 +225,7 @@ void main( void )
         - pour les autres shaders, les fragment shaders, par exemple, ce sont des varyings, des entrées qui doivent correspondre à des sorties déclarées par 
         les shaders précédents dans le pipeline. ces variables n'existent que pendant l'exécution du pipeline et ne sont pas accessibles par l'application.
     
-    - les `out` sont les sorties, optionnelles, du shader.
+    - les `out` sont les sorties du shader.
 
 _exemple :_
 si chaque sommet est décrit par une position et une couleur, les entrées du vertex shader sont 2 attributs, déclarés avec `in` et configurés par l'application.
@@ -217,12 +234,12 @@ si chaque sommet est décrit par une position et une couleur, les entrées du ve
 #version 330
 // vertex shader
 
-in vec3 position;   // attribut
-in vec4 color;  // attribut
+in vec3 position;               // attribut
+in vec4 color;                  // attribut
 
 void main( )
 {
-    gl_Position= ... ;  // obligatoire, affecter une position
+    gl_Position= ... ;          // obligatoire, affecter une position
 }
 \endcode
 
@@ -237,7 +254,7 @@ du fragment shader.
 in vec3 position;
 in vec4 color;
 
-out vec4 vertex_color;  // sortie, varying
+out vec4 vertex_color;          // sortie, varying
 void main( )
 {
     vertex_color= color;
@@ -249,12 +266,14 @@ void main( )
 #version 330
 // fragment shader
 
-in vec4 vertex_color;   // entree, varying, meme type et meme nom que dans le vertex shader
+in vec4 vertex_color;           // entree, varying, meme type et meme nom que dans le vertex shader
+
+out vec4 fragment_color;        // varying, couleur du fragment, ecrite dans l'image par le pipeline
 
 void main( )
 {
-    gl_FragColor= vertex_color;
-    // le fragment shader doit ecrire une couleur dans gl_FragColor 
+    fragment_color= vertex_color;
+    // le fragment shader doit ecrire une couleur dans la variable declaree en sortie, cf out vec4 fragment_color.
 }
 \endcode
  */
