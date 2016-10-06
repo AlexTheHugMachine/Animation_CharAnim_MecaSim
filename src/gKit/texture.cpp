@@ -22,7 +22,7 @@ int miplevels( const int width, const int height )
     return levels;
 }
 
-GLuint make_texture( const int unit, const Image& im )
+GLuint make_texture( const int unit, const Image& im, const GLenum texel_type )
 {
     if(im == Image::error())
         return 0;
@@ -39,9 +39,9 @@ GLuint make_texture( const int unit, const Image& im )
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-    // transfere les donnees dans la texture
+    // transfere les donnees dans la texture, 4 float par texel
     glTexImage2D(GL_TEXTURE_2D, 0,
-        GL_RGBA, im.width(), im.height(), 0,
+        texel_type, im.width(), im.height(), 0,
         GL_RGBA, GL_FLOAT, im.buffer());
     
     // prefiltre la texture
@@ -49,7 +49,7 @@ GLuint make_texture( const int unit, const Image& im )
     return texture;
 }
 
-GLuint make_texture( const int unit, const ImageData& im )
+GLuint make_texture( const int unit, const ImageData& im, const GLenum texel_type )
 {
     if(im.data.empty())
         return 0;
@@ -86,7 +86,7 @@ GLuint make_texture( const int unit, const ImageData& im )
     
     // transfere les donnees dans la texture
     glTexImage2D(GL_TEXTURE_2D, 0,
-        GL_RGBA, im.width, im.height, 0,
+        texel_type, im.width, im.height, 0,
         format, type, im.buffer());
     
     // prefiltre la texture
@@ -95,10 +95,10 @@ GLuint make_texture( const int unit, const ImageData& im )
 }
 
 
-GLuint read_texture( const int unit, const char *filename )
+GLuint read_texture( const int unit, const char *filename, const GLenum texel_type )
 {
     ImageData image= read_image_data(filename);
-    return make_texture(unit, image);
+    return make_texture(unit, image, texel_type);
 }
 
 
