@@ -13,7 +13,7 @@ graphique. une solution est de découper le rendu complet en plusieurs étapes, 
 jusqu'à obtenir le résultat final que l'on peut afficher.
 
 Ce sont des objets openGL, des framebuffer objects, notés FBO, qui permettent de configurer le pipeline pour stocker les résultats des fragment 
-shaders dans des textures crées par l'application, au lieu de les afficher directement dans la fenêtre de l'application.
+shaders dans des textures crées par l'application, au lieu de les afficher directement.
 
 Leur utilisation est semblable aux autres objets "complexes" d'openGL (comme les vertex array objects, VAO) :
 	- création, cf glGenFramebuffers( ),
@@ -108,7 +108,20 @@ Color color(1, 0, 0);
 glClearBufferfv(GL_COLOR, /* draw buffer */ GL_DRAW_BUFFER0, /* value */ &color.x);
 \endcode
 
-l'indice du draw buffer correspond à l'identifiant de la sortie du framgent shader.
+l'indice du draw buffer correspond à l'identifiant de la sortie du fragment shader.
+
+## et glViewport( ) ?
+
+il faut aussi configurer le pipeline en fonction des dimensions des textures associées au framebuffer.
+\code
+GLuint framebuffer= { ... };
+glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+glViewport(0, 0, framebuffer_width, framebuffer_height);
+
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+\endcode
+
+glClear( ) utilise implicitement les dimensions fournies par glViewport( ), donc il faut configurer viewport avant clear et draw...
 
 
 ## dessiner dans la fenetre ? (framebuffer par défaut)
@@ -116,6 +129,8 @@ l'indice du draw buffer correspond à l'identifiant de la sortie du framgent sha
 il suffit de sélectionner le framebuffer 0 avant de dessiner :
 \code
 glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+glViewport(0, 0, window_width(), window_height());
+glClear(GL_COLOR_BUFFER_BIt | GL_DEPTH_BUFFER_BIT);
 
 glBindVertexArray( ... );
 glUseProgram( ... );
