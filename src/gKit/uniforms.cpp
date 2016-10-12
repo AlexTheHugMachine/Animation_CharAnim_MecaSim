@@ -23,10 +23,10 @@ int location( const GLuint program, const char *uniform )
             char label[1024];
             glGetObjectLabel(GL_PROGRAM, program, sizeof(label), NULL, label);
             
-            sprintf(error, "uniform( %s, '%s' ): not found.", label, uniform); 
+            sprintf(error, "uniform( %s %u, '%s' ): not found.", label, program, uniform); 
         }
     #else
-        sprintf(error, "uniform('%s'): not found.", uniform); 
+        sprintf(error, "uniform( program %u, '%s'): not found.", program, uniform); 
     #endif
         
         static std::set<std::string> log;
@@ -43,7 +43,21 @@ int location( const GLuint program, const char *uniform )
     glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *) &current);
     if(current != program)
     {
-        printf("invalid shader program %u...\n", current);
+        char error[1024]= { 0 };
+    #ifdef GL_VERSION_4_3
+        {
+            char label[1024];
+            glGetObjectLabel(GL_PROGRAM, program, sizeof(label), NULL, label);
+            char labelc[1024];
+            glGetObjectLabel(GL_PROGRAM, current, sizeof(labelc), NULL, labelc);
+            
+            sprintf(error, "uniform( %s %u, '%s' ): invalid shader program %s %u", label, program, uniform, labelc, current); 
+        }
+    #else
+        sprintf(error, "uniform( program %u, '%s'): invalid shader program %u...", program, uniform, current); 
+    #endif
+        
+        printf("%s\n", error);
         glUseProgram(program);
     }
 #endif
