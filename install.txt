@@ -63,24 +63,25 @@ gKit2light/
         ...
     
     extern/
-        bin/
-        
-        include/
-            SDL2/
-                SDL.h
-                SDL_image.h
-                ...
+        mingw/ ou visual2013/ ou visual2015/
+            bin/
             
-            GL/
-                glew.h
+            include/
+                SDL2/
+                    SDL.h
+                    SDL_image.h
+                    ...
+                
+                GL/
+                    glew.h
+                    ...
+                
+            lib/
+                glew32.dll et lib
+                SDL2.dll et lib
+                SDL2_image.dll et lib
+                SDL2_main.lib
                 ...
-            
-        lib/
-            glew32.dll et lib
-            SDL2.dll et lib
-            SDL2_image.dll et lib
-            SDL2_main.lib
-            ...
 \endcode
 
 il faudra modifier le fichier premake4.lua avec le chemin d'accès à ce répertoire, si vous n'utilisez pas cette solution. cf section premake.

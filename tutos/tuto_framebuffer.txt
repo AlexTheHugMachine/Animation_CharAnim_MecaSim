@@ -1,0 +1,152 @@
+
+/*! \addtogroup framebuffer rendu multi-passes : shadow maps, post process
+
+cf \ref tuto_framebuffer.cpp
+
+Dans plusieurs cas, il est nécessaire de "récupérer" le résultat d'un rendu pour le modifier avant l'affichage final. par exemple, on
+peut vouloir filtrer l'image brute avant de l'afficher. ou ajuster les couleurs pour produire une ambiance chaude ou froide, ajouter 
+un grain dans l'image, etc. 
+il faut donc pouvoir recupérer le color buffer et éventuellement le zbuffer qui sont habituellement affichés directement dans la fenêtre de l'application. 
+
+De manière générale, certaines méthodes de rendu sont trop complexes pour être réalisées avec une seule exécution du pipeline 
+graphique. une solution est de découper le rendu complet en plusieurs étapes, chaque étape utilisant l'image produite par l'étape précédente,
+jusqu'à obtenir le résultat final que l'on peut afficher.
+
+Ce sont des objets openGL, des framebuffer objects, notés FBO, qui permettent de configurer le pipeline pour stocker les résultats des fragment 
+shaders dans des textures crées par l'application, au lieu de les afficher directement dans la fenêtre de l'application.
+
+Leur utilisation est semblable aux autres objets "complexes" d'openGL (comme les vertex array objects, VAO) :
+	- création, cf glGenFramebuffers( ),
+	- sélection, cf glBindFramebuffer( ),
+	- configuration des textures associées aux sorties du fragment shader, cf glFramebufferTexture( ),
+	- association des sorties du fragment shader aux "attachments" configurés dans le fbo, cf glDrawBuffers( ).
+	
+mais bien sur, il faut commencer par créer un objet framebuffer et le sélectionner pour le configurer :
+\code
+GLuint framebuffer;
+glGenFramebuffers(1, &framebuffer);
+
+glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+\endcode
+
+ensuite, il n'y a plus qu'à indiquer quelles textures vont stocker les résultats exportés par le fragment shader et le pipeline. Les sorties
+d'un fragment shader sont une ou plusieurs couleurs, ainsi que la profondeur du fragment. ces différentes sorties sont identifiées par :
+	- GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 ... GL_COLOR_ATTACHMENT7, pour les color buffers, les couleurs,
+	- GL_DEPTH_ATTACHMENT, pour le zbuffer, la profondeur du fragment.
+
+\code
+// selectionner le framebuffer a configurer, si necessaire
+// glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+
+GLuint color_texture;
+// creer la texture couleur aux dimensions de la fenetre
+{ ... }
+
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER, /* attachment */ GL_COLOR_ATTCHMENT0, /* texture */ color_texture, /* mipmap level */ 0);
+\endcode
+
+reste une dernière option dans la configuration, récupérer l'identifiant d'une sortie déclarée dans le fragment shader et l'associer à une sortie du 
+fbo. glDrawBuffers( ) configure cette association. il faut lui transmettre un tableau d'identifiants GL_NONE, GL_COLOR_ATTACHMENTxx indexé par 
+l'identifiant de la sortie du fragment shader.
+
+si le fragment shader ne déclare qu'une seule sortie, son identifiant est 0 par convention, il suffit de remplir un tableau contenant l'attachment 
+à l'indice 0 :
+\code
+// selectionner le framebuffer a configurer, si necessaire
+// glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+
+GLenum buffers[]= { GL_COLOR_ATTACHMENT0 };
+glDrawBuffers(1, buffers);
+\endcode
+
+__remarque :__ on peut configurer n'importe quel attachment dans le fbo :
+\code
+// selectionner le framebuffer a configurer, si necessaire
+// glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER, /* attachment */ GL_COLOR_ATTCHMENT4, /* texture */ color_texture, /* mipmap level */ 0);
+
+GLenum buffers[]= { GL_COLOR_ATTACHMENT4 };
+glDrawBuffers(1, buffers);
+\endcode
+
+
+pour "décoder" la configuration de fbo, le plus simple est de partir de la sortie dans le fragment shader : son identifiant est 0, donc la valeur
+sera écrite dans l'attachment d'indice 0 passé à glDrawBuffers(). et la texture stockant la valeur est celle sélectionnée par glFramebufferTexture( ) 
+sur l'attachment correspondant.
+
+## dessiner dans un framebuffer 
+
+il suffit de sélectionner le framebuffer sur GL_DRAW_FRAMEBUFFER avec glBindFramebuffer( ) avant de dessiner quelquechose :
+\code
+GLuint framebuffer= { ... };
+glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+
+glBindVertexArray( ... );
+glUseProgram( ... );
+glUniform( ... );
+
+glDrawArrays(GL_TRIANGLES, ... );
+\endcode
+
+_remarque :_ effacer le framebuffer avant de dessiner :
+\code
+GLuint framebuffer= { ... };
+glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+\endcode
+
+glClear( ) copie la couleur par défaut dans toutes les textures associées aux GL_COLOR_ATTACHMENTxx et copie également la profondeur par défaut 
+dans la texture associée à GL_DEPTH_ATTACHMENT.
+
+si l'on souhaite utiliser des valeurs différentes selon le buffer, il faut utiliser glClearBuffer(). par exemple pour "effacer", le buffer 0 :
+\code
+GLuint framebuffer= { ... };
+glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER, /* attachment */ GL_COLOR_ATTCHMENT0, /* texture */ color_texture, /* mipmap level */ 0);
+
+Color color(1, 0, 0);
+glClearBufferfv(GL_COLOR, /* draw buffer */ GL_DRAW_BUFFER0, /* value */ &color.x);
+\endcode
+
+l'indice du draw buffer correspond à l'identifiant de la sortie du framgent shader.
+
+
+## dessiner dans la fenetre ? (framebuffer par défaut)
+
+il suffit de sélectionner le framebuffer 0 avant de dessiner :
+\code
+glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+glBindVertexArray( ... );
+glUseProgram( ... );
+glUniform( ... );
+
+glDrawArrays(GL_TRIANGLES, ... );
+\endcode
+
+
+## récupérer l'identifiant d'une sortie du fragment shader 
+
+c'est glGetFragDataLocation( ) qui renvoie l'identifiant du varying déclaré par le fragment shader :
+\code
+GLuint program= ... ;
+
+GLint location= glGetFragDataLocation(program, "fragment_color");
+\endcode
+
+et on peut utiliser cette valeur pour configurer le framebuffer, cf glDrawBuffers() :
+\code
+GLuint program= ... ;
+GLuint framebuffer = .... ;
+GLenum buffers[8]= { GL_NONE, GL_NONE, GL_NONE, GL_NONE, GL_NONE, GL_NONE, GL_NONE, GL_NONE };
+GLint location= glGetFragDataLocation(program, "fragment_color");
+if(location >= 0)
+	buffers[location]= GL_COLOR_ATTCHMENT0;
+
+// selectionner le fbo, si necessaire
+// glBindFamebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+
+glDrawBuffers(8, buffers); 
+\endcode
+
+*/
