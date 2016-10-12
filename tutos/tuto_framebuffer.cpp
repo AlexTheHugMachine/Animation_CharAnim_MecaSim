@@ -26,19 +26,18 @@ public:
         m_framebuffer_width= 512;
         m_framebuffer_height= 512;
         
-        // etape 1 : creer une texture couleur
+        // etape 1 : creer une texture couleur...
         glGenTextures(1, &m_color_buffer);
         glBindTexture(GL_TEXTURE_2D, m_color_buffer);
         
         glTexImage2D(GL_TEXTURE_2D, 0,
             GL_RGBA, m_framebuffer_width, m_framebuffer_height, 0,
             GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, miplevels(m_framebuffer_width, m_framebuffer_height));
-        //~ glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+        // ... et tous ses mipmaps
         glGenerateMipmap(GL_TEXTURE_2D);
         
-        // etape 1 : creer aussi une texture depth
+        // etape 1 : creer aussi une texture depth, sinon pas de zbuffer...
         glGenTextures(1, &m_depth_buffer);
         glBindTexture(GL_TEXTURE_2D, m_depth_buffer);
         
@@ -46,6 +45,7 @@ public:
             GL_DEPTH_COMPONENT, m_framebuffer_width, m_framebuffer_height, 0,
             GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
         
+        // un seul mipmap pour le zbuffer
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
         
         // etape 2 : creer et configurer un framebuffer object
@@ -130,10 +130,12 @@ public:
     // destruction des objets de l'application
     int quit( )
     {
-        release_program(m_texture_program);
         glDeleteTextures(1, &m_color_buffer);
         glDeleteTextures(1, &m_depth_buffer);
         glDeleteFramebuffers(1, &m_framebuffer);
+
+        release_program(m_texture_program);
+        glDeleteTextures(1, &m_color_texture);
         glDeleteVertexArrays(1, &m_vao);
         glDeleteBuffers(1, &m_buffer);
         return 0;
@@ -187,10 +189,10 @@ public:
             glDrawArrays(GL_TRIANGLES, 0, m_vertex_count);
         }
         
-
         if(key_state(' '))
         {
             /* montrer le resultat de la passe 1
+                copie le framebuffer sur la fenetre
              */
             
             glBindFramebuffer(GL_READ_FRAMEBUFFER, m_framebuffer);
@@ -200,7 +202,6 @@ public:
             glClear(GL_COLOR_BUFFER_BIT);
             
             glBlitFramebuffer(0, 0, m_framebuffer_width, m_framebuffer_height,
-                //~ 0, 0, window_width(), window_height(),
                 0, 0, m_framebuffer_width, m_framebuffer_height,
                 GL_COLOR_BUFFER_BIT, GL_LINEAR);
         }
@@ -208,6 +209,7 @@ public:
         {
             /* passe 2 : utiliser la texture du framebuffer 
             */
+            
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
             glViewport(0, 0, window_width(), window_height());
             glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
@@ -228,11 +230,12 @@ public:
             program_uniform(m_texture_program, "normalMatrix", mv.normal());
             
             // utilise la texture attachee au framebuffer
-            // recalcule les mipmaps de la texture
-            glBindTexture(GL_TEXTURE_2D, m_color_buffer);
-            glGenerateMipmap(GL_TEXTURE_2D);
+            program_uniform(m_texture_program, "color_texture", 0);
             
-            program_use_texture(m_texture_program, "color_texture", 0, m_color_buffer, 0); 
+            glBindTexture(GL_TEXTURE_2D, m_color_buffer);
+            // recalcule les mipmaps de la texture... ils sont necessaires pour afficher le cube texture, 
+            // pourquoi ? un draw dans un framebuffer ne modifie que le mipmap 0, pas les autres, donc il faut les recalculer...
+            glGenerateMipmap(GL_TEXTURE_2D);
             
             glDrawArrays(GL_TRIANGLES, 0, m_vertex_count);
         }
