@@ -159,7 +159,7 @@ public:
         }
     
         std::chrono::high_resolution_clock::time_point cpu_stop= std::chrono::high_resolution_clock::now();
-        // conversion desmesures en duree...
+        // conversion des mesures en duree...
         long long int cpu_time= std::chrono::duration_cast<std::chrono::nanoseconds>(cpu_stop - cpu_start).count();
         
         glEndQuery(GL_TIME_ELAPSED);
