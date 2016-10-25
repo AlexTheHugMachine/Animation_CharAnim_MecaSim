@@ -267,7 +267,8 @@ public:
     */
     void draw( const Transform& model, const Transform& view, const Transform& projection, 
         const bool use_light, const Point& light, const Color& light_color, 
-        const bool use_texture, const GLuint texture );
+        const bool use_texture, const GLuint texture,
+        const bool use_alpha_test, const float alpha_min );
     
     //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).\n
     //! exemple, cf create_program( )
@@ -288,7 +289,7 @@ public:
     \param use_color force l'utilisation des couleurs 
     \param use_light force l'utilisation d'un source de lumiere 
      */
-    GLuint create_program( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true, const bool use_light= false );
+    GLuint create_program( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true, const bool use_light= false, const bool use_alpha_test= false );
     
     int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color );
     

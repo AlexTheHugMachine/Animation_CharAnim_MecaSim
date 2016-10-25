@@ -53,6 +53,10 @@ in vec3 vertex_position;
     uniform sampler2D diffuse_color;
 #endif
 
+#ifdef USE_ALPHATEST
+    uniform float alpha_min= 0.3;
+#endif
+
 #ifdef USE_NORMAL
     in vec3 vertex_normal;
 #endif
@@ -80,6 +84,11 @@ void main( )
 #ifdef USE_TEXCOORD
     color= color * texture(diffuse_color, vertex_texcoord);
 
+#ifdef USE_ALPHATEST
+    if(color.a < alpha_min)
+        discard;
+#endif
+
     if(color.r + color.g + color.b == 0)    // noir
     {
         // fixer une couleur debug pour indiquer qu'il faut utiliser une texture avec cet objet
@@ -100,12 +109,16 @@ void main( )
 #endif
 
     float cos_theta;
-#ifdef USE_LIGHT
-    //~ cos_theta= abs(dot(normal, normalize(light - vertex_position)));        // eclairage "double face"
-    cos_theta= max(0, dot(normal, normalize(light - vertex_position)));         // eclairage, uniquement des faces bien orientees
-    color= color * light_color;
+#ifdef USE_ALPHATEST
+    cos_theta= 1;
 #else
-    cos_theta= dot( normalize(normal), normalize(- vertex_position) );
+    #ifdef USE_LIGHT
+        //~ cos_theta= abs(dot(normal, normalize(light - vertex_position)));        // eclairage "double face"
+        cos_theta= max(0, dot(normal, normalize(light - vertex_position)));         // eclairage, uniquement des faces bien orientees
+        color= color * light_color;
+    #else
+        cos_theta= dot( normalize(normal), normalize(- vertex_position) );
+    #endif
 #endif
 
     color.rgb= color.rgb * cos_theta;

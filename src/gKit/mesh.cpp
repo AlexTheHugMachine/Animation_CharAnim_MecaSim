@@ -247,7 +247,7 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
 }
 
 
-GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light )
+GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test )
 {
     std::string definitions;
 
@@ -259,7 +259,10 @@ GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, con
         definitions.append("#define USE_COLOR\n");
     if(use_light)
         definitions.append("#define USE_LIGHT\n");
-
+    if(use_texcoord && use_alpha_test)
+        definitions.append("#define USE_ALPHATEST\n");
+    
+    printf("%s\n", definitions.c_str());
     bool use_mesh_color= (m_primitives == GL_POINTS || m_primitives == GL_LINES || m_primitives == GL_LINE_STRIP || m_primitives == GL_LINE_LOOP);
     if(!use_mesh_color)
         return read_program("data/shaders/mesh.glsl", definitions.c_str());
@@ -270,7 +273,8 @@ GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, con
 
 void Mesh::draw( const Transform& model, const Transform& view, const Transform& projection,
     const bool use_light, const Point& light, const Color& light_color,
-    const bool use_texture, const GLuint texture )
+    const bool use_texture, const GLuint texture,
+    const bool use_alpha_test, const float alpha_min )
 {
     bool use_texcoord= (m_texcoords.size() == m_positions.size() && texture > 0);
     bool use_normal= (m_normals.size() == m_positions.size());
@@ -288,6 +292,7 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     if(use_color) key= key | 4;
     if(use_texture) key= key | 8;
     if(use_light) key= key | 16;
+    if(use_alpha_test) key= key | 32;
 
     if(m_state != key)
         // recherche un shader deja compile pour ce type de draw
@@ -296,7 +301,7 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     if(m_program == 0)
     {
         // pas de shader pour ce type de draw
-        m_program= create_program(use_texcoord, use_normal, use_color, use_light);
+        m_program= create_program(use_texcoord, use_normal, use_color, use_light, use_alpha_test);
         program_print_errors(m_program);
 
         // conserver le shader
@@ -328,6 +333,9 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
         program_uniform(m_program, "light_color", light_color);
     }
 
+    if(use_alpha_test)
+        program_uniform(m_program, "alpha_min", alpha_min);
+    
     if(m_indices.size() > 0)
         glDrawElements(m_primitives, (GLsizei) m_indices.size(), GL_UNSIGNED_INT, 0);
     else

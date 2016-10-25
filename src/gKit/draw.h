@@ -51,7 +51,11 @@ class DrawParam
 {
 public:
     //! constructeur par defaut.
-    DrawParam( ) : m_model(), m_view(), m_projection(), m_use_light(false), m_light(), m_light_color(), m_use_texture(false), m_texture(0) {}
+    DrawParam( ) : m_model(), m_view(), m_projection(), 
+        m_use_light(false), m_light(), m_light_color(), 
+        m_use_texture(false), m_texture(0),
+        m_use_alpha_test(false), m_alpha_min(0.3f)
+    {}
 
     //! modifie la transformation model utilisee pour afficher l'objet.
     DrawParam& model( const Transform& m ) { m_model= m; return *this; }
@@ -68,7 +72,10 @@ public:
     DrawParam& light( const Point& p, const Color& c= White() ) { m_use_light= true; m_light= p; m_light_color=c; return *this; }
     //! plaque une texture a la surface de l'objet.
     DrawParam& texture( const GLuint t ) { m_use_texture= true; m_texture= t; return *this; }
-
+    
+    //! texture semi transparente, si l'alpha du texel est plus petit que alpha_min, le pixel est transparent. desactive aussi les calculs d'eclairage.
+    DrawParam& alpha( const float a ) { m_use_alpha_test= true; m_alpha_min= a; return *this; }
+    
     //! dessine l'objet avec l'ensemble des parametres definis.
     void draw( Mesh& mesh ) const;
 
@@ -86,6 +93,9 @@ protected:
 
     bool m_use_texture;
     GLuint m_texture;
+
+    bool m_use_alpha_test;
+    float m_alpha_min;
 };
 
 //! dessine l'objet avec l'ensemble des parametres definis.
