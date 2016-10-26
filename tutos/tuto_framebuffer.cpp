@@ -235,6 +235,11 @@ public:
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, m_color_buffer);
             
+            // SOIT :
+            // bloque le filtrage de la texture pour n'utiliser que le mipmap 0
+            //~ glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+            
+            // OU :
             // recalcule les mipmaps de la texture... ils sont necessaires pour afficher le cube texture, 
             // pourquoi ? un draw dans un framebuffer ne modifie que le mipmap 0, pas les autres, donc il faut les recalculer...
             glGenerateMipmap(GL_TEXTURE_2D);
