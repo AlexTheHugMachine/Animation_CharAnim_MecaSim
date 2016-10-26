@@ -150,8 +150,6 @@ public:
     // dessiner une nouvelle image
     int render( )
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         // deplace la camera
         int mx, my;
         unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
@@ -162,10 +160,10 @@ public:
         else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
             m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
 
-        
-        /* passe 1 : dessiner dans le framebuffer
-         */
         {
+            /* passe 1 : dessiner dans le framebuffer
+             */
+            
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebuffer);
             glViewport(0, 0, m_framebuffer_width, m_framebuffer_height);
             glClearColor(1, 1, 0, 1);
@@ -201,14 +199,15 @@ public:
             glClearColor(0, 0, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT);
             
-            glBlitFramebuffer(0, 0, m_framebuffer_width, m_framebuffer_height,
-                0, 0, m_framebuffer_width, m_framebuffer_height,
-                GL_COLOR_BUFFER_BIT, GL_LINEAR);
+            glBlitFramebuffer(
+                0, 0, m_framebuffer_width, m_framebuffer_height,        // rectangle origine dans READ_FRAMEBUFFER
+                0, 0, m_framebuffer_width, m_framebuffer_height,        // rectangle destination dans DRAW_FRAMEBUFFER
+                GL_COLOR_BUFFER_BIT, GL_LINEAR);                        // ne copier que la couleur (+ interpoler)
         }
         else
         {
             /* passe 2 : utiliser la texture du framebuffer 
-            */
+             */
             
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
             glViewport(0, 0, window_width(), window_height());
@@ -230,13 +229,17 @@ public:
             program_uniform(m_texture_program, "normalMatrix", mv.normal());
             
             // utilise la texture attachee au framebuffer
-            program_uniform(m_texture_program, "color_texture", 0);
+            program_uniform(m_texture_program, "color_texture", 0);     // utilise la texture configuree sur l'unite 0
             
+            // configure l'unite 0
+            glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, m_color_buffer);
+            
             // recalcule les mipmaps de la texture... ils sont necessaires pour afficher le cube texture, 
             // pourquoi ? un draw dans un framebuffer ne modifie que le mipmap 0, pas les autres, donc il faut les recalculer...
             glGenerateMipmap(GL_TEXTURE_2D);
             
+            // go
             glDrawArrays(GL_TRIANGLES, 0, m_vertex_count);
         }
         

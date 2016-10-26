@@ -15,11 +15,11 @@ jusqu'à obtenir le résultat final que l'on peut afficher.
 Ce sont des objets openGL, des framebuffer objects, notés FBO, qui permettent de configurer le pipeline pour stocker les résultats des fragment 
 shaders dans des textures crées par l'application, au lieu de les afficher directement.
 
-Leur utilisation est semblable aux autres objets "complexes" d'openGL (comme les vertex array objects, VAO) :
+Leur utilisation est semblable aux autres objets "complexes" d'openGL (comme les vertex array objects, VAO) : 
 	- création, cf glGenFramebuffers( ),
 	- sélection, cf glBindFramebuffer( ),
-	- configuration des textures associées aux sorties du fragment shader, cf glFramebufferTexture( ),
-	- association des sorties du fragment shader aux "attachments" configurés dans le fbo, cf glDrawBuffers( ).
+	- sélection des textures sur les sorties du framebuffer, cf glFramebufferTexture( ),
+	- association des sorties du fragment shader aux sorties du framebuffer, cf glDrawBuffers( ).
 	
 mais bien sur, il faut commencer par créer un objet framebuffer et le sélectionner pour le configurer :
 \code
@@ -42,15 +42,16 @@ GLuint color_texture;
 // creer la texture couleur aux dimensions de la fenetre
 { ... }
 
-glFramebufferTexture(GL_DRAW_FRAMEBUFFER, /* attachment */ GL_COLOR_ATTCHMENT0, /* texture */ color_texture, /* mipmap level */ 0);
+// associer la texture à une sortie du framebuffer
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER, /* attachment */ GL_COLOR_ATTACHMENT0, /* texture */ color_texture, /* mipmap level */ 0);
 \endcode
 
 reste une dernière option dans la configuration, récupérer l'identifiant d'une sortie déclarée dans le fragment shader et l'associer à une sortie du 
-fbo. glDrawBuffers( ) configure cette association. il faut lui transmettre un tableau d'identifiants GL_NONE, GL_COLOR_ATTACHMENTxx indexé par 
+framebuffer, cf glDrawBuffers( ). il faut lui transmettre un tableau d'identifiants GL_NONE, GL_COLOR_ATTACHMENTxx indexé par 
 l'identifiant de la sortie du fragment shader.
 
-si le fragment shader ne déclare qu'une seule sortie, son identifiant est 0 par convention, il suffit de remplir un tableau contenant l'attachment 
-à l'indice 0 :
+si le fragment shader ne déclare qu'une seule sortie, son identifiant est 0 par convention, il suffit de remplir un tableau contenant la sortie 
+configurée dans le framebuffer à l'indice 0 :
 \code
 // selectionner le framebuffer a configurer, si necessaire
 // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
@@ -63,12 +64,11 @@ __remarque :__ on peut configurer n'importe quel attachment dans le fbo :
 \code
 // selectionner le framebuffer a configurer, si necessaire
 // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
-glFramebufferTexture(GL_DRAW_FRAMEBUFFER, /* attachment */ GL_COLOR_ATTCHMENT4, /* texture */ color_texture, /* mipmap level */ 0);
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER, /* attachment */ GL_COLOR_ATTACHMENT4, /* texture */ color_texture, /* mipmap level */ 0);
 
 GLenum buffers[]= { GL_COLOR_ATTACHMENT4 };
 glDrawBuffers(1, buffers);
 \endcode
-
 
 pour "décoder" la configuration de fbo, le plus simple est de partir de la sortie dans le fragment shader : son identifiant est 0, donc la valeur
 sera écrite dans l'attachment d'indice 0 passé à glDrawBuffers(). et la texture stockant la valeur est celle sélectionnée par glFramebufferTexture( ) 
@@ -88,6 +88,9 @@ glUniform( ... );
 glDrawArrays(GL_TRIANGLES, ... );
 \endcode
 
+__attention :__ glDraw() utilise _implicitement_ plusieurs paramètres : les dimensions du viewport, par exemple (et le framebuffer sélectionné, bien sur).
+il faudra donc penser à utiliser `glViewport()` si les dimensions des textures ne sont pas les memes que celles de la fenetre de l'application.
+
 _remarque :_ effacer le framebuffer avant de dessiner :
 \code
 GLuint framebuffer= { ... };
@@ -95,20 +98,26 @@ glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 \endcode
 
-glClear( ) copie la couleur par défaut dans toutes les textures associées aux GL_COLOR_ATTACHMENTxx et copie également la profondeur par défaut 
-dans la texture associée à GL_DEPTH_ATTACHMENT.
+`Clear( COLOR_BUFFER_BIT ... )` copie la couleur par défaut dans toutes les textures associées aux `COLOR_ATTACHMENTxx` et 
+`Clear( DEPTH_BUFFER_BIT ... )` copie la profondeur par défaut dans la texture associée à `DEPTH_ATTACHMENT`.
 
-si l'on souhaite utiliser des valeurs différentes selon le buffer, il faut utiliser glClearBuffer(). par exemple pour "effacer", le buffer 0 :
+`Clear( )` utilise _implicitement_ les dimensions fournies par glViewport( ), donc il faut penser à configurer le viewport avant...
+
+si l'on souhaite utiliser des valeurs / couleurs différentes selon le buffer, il faut utiliser glClearBuffer(). par exemple pour "effacer", le buffer 0 :
 \code
 GLuint framebuffer= { ... };
 glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
-glFramebufferTexture(GL_DRAW_FRAMEBUFFER, /* attachment */ GL_COLOR_ATTCHMENT0, /* texture */ color_texture, /* mipmap level */ 0);
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER, /* attachment */ GL_COLOR_ATTACHMENT0, /* texture */ color_texture, /* mipmap level */ 0);
+
+GLenum buffers[]= { GL_COLOR_ATTACHMENT0 };
+glDrawBuffers(1, buffers);
 
 Color color(1, 0, 0);
 glClearBufferfv(GL_COLOR, /* draw buffer */ GL_DRAW_BUFFER0, /* value */ &color.x);
 \endcode
 
-l'indice du draw buffer correspond à l'identifiant de la sortie du fragment shader.
+`DRAW_BUFFER0` est l'indice dans le tableau `buffers`, `buffers[0]` contient `COLOR_ATTACHMENT0`, et c'est la texture `color_texture` qui sera 
+finalement modifiée / effacée.
 
 ## et glViewport( ) ?
 
@@ -121,7 +130,7 @@ glViewport(0, 0, framebuffer_width, framebuffer_height);
 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 \endcode
 
-glClear( ) utilise implicitement les dimensions fournies par glViewport( ), donc il faut configurer viewport avant clear et draw...
+glClear( ) et glDraw( ) utilisent _implicitement_ les dimensions fournies par glViewport( ), donc il faut configurer viewport avant clear et draw...
 
 
 ## dessiner dans la fenetre ? (framebuffer par défaut)
@@ -163,5 +172,92 @@ if(location >= 0)
 
 glDrawBuffers(8, buffers); 
 \endcode
+
+# créer une texture de profondeur / zbuffer
+
+Jusqu'à présent cf \ref tuto5GL, les textures peuvent stocker des couleurs (dont les valeurs sont comprises entre 0 et 1) sur plusieurs canaux r, g, 
+b (et alpha, éventuellement). il est aussi possible de créer des textures pour stocker une valeur de profondeur par texel avec le format 
+`GL_DEPTH_COMPONENT` (un entier normalise entre 0 et 1) :
+
+\code
+GLuint zubffer;
+glGenTextures(1, &zbuffer);
+glBindTexture(GL_TEXTURE_2D, zbuffer);
+
+glTexImage2D(GL_TEXTURE_2D, 0,
+	GL_DEPTH_COMPONENT, width, height, 0,
+	GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
+\endcode
+
+ou `GL_DEPTH_COMPONENT32F` (un réel 32bits, un `float` classique) :
+\code
+GLuint zubffer;
+glGenTextures(1, &zbuffer);
+glBindTexture(GL_TEXTURE_2D, zbuffer);
+
+glTexImage2D(GL_TEXTURE_2D, 0,
+	GL_DEPTH_COMPONENT32F, width, height, 0,
+	GL_DEPTH_COMPONENT32F, GL_FLOAT, nullptr);
+\endcode
+
+
+# utiliser une texture attachée à un framebuffer
+
+Dessiner dans un framebuffer, et dans les textures associées, ne modifie que le niveau de mipmap attaché au framebuffer, 
+cf glFramebufferTexture( ... level), le mipmap 0, le plus souvent. Mais lorsque l'on utilise cette texture dans l'étape suivante, ses autres mipmaps
+n'ont pas changés de valeurs. Et selon le mode filtrage utilsé par le shader pour accéder à la texture, les résultats peuvent être surprenants...
+
+par exemple, les paramètres par défaut de filtrage, cf `LINEAR_MIPMAP_LINEAR`, interpolent 2 mipmaps et 4 texels par mipmap, mais seul le 
+mipmap 0 a ete modifie, et le résultat sera faux. 
+
+il y a 2 solutions, soit utiliser un filtrage `NEAREST_MIPMAP_LINEAR` et `MAX_LEVEL` = 0 qui n'utilise que le mipmap 0, soit 
+recalculer tous les mipmaps de la texture, cf glGenerateMipmap( ).
+
+\code
+GLuint color= { ... };
+GLuint framebuffer= { ... };
+
+init( )
+{
+	// configuration framebuffer / texture
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, /* attachment */ GL_COLOR_ATTACHMENT0, /* texture */ color, /* mipmap level */ 0);
+
+	GLenum buffers[]= { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, buffers);
+
+	// nettoyage
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+}
+
+render( )
+{
+// passe 1, dessiner dans la texture color, attachee au framebuffer
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+	glViewport( ... );
+	glClear( ... );
+
+	glBindVertexArray( ... );
+	glUseProgram( ... );
+	glUniform( ... );
+	glDraw( ... );
+
+// passe 2, utiliser la texture de la passe 1 et dessiner dans la fenetre 
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glViewport( ... );
+	glClear( ... );
+
+	// mettre a jour les mipmaps de la texture
+	glBindTexture(GL_TEXTURE_2D, color);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	glBindVertexArray( ... );
+	glUseProgram( ... );
+	glUniform( ... );
+	glDraw( ... );
+}
+\endcode
+
+exemple complet dans cf \ref tuto_framebuffer.cpp.
 
 */
