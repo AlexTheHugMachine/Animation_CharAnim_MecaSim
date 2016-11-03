@@ -76,6 +76,9 @@ public:
     //! texture semi transparente, si l'alpha du texel est plus petit que alpha_min, le pixel est transparent. desactive aussi les calculs d'eclairage.
     DrawParam& alpha( const float a ) { m_use_alpha_test= (a<1.f); m_alpha_min= a; return *this; }
 
+    //! Use light: on/off
+    DrawParam& lightOnOff(bool use_light=true) { m_use_light=use_light; }
+
     //! dessine l'objet avec l'ensemble des parametres definis.
     void draw( Mesh& mesh ) const;
 
