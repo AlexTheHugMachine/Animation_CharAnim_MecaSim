@@ -74,7 +74,7 @@ public:
     DrawParam& texture( const GLuint t ) { m_use_texture= true; m_texture= t; return *this; }
 
     //! texture semi transparente, si l'alpha du texel est plus petit que alpha_min, le pixel est transparent. desactive aussi les calculs d'eclairage.
-    DrawParam& alpha( const float a ) { m_use_alpha_test= (a<1.f); m_alpha_min= a; return *this; }
+    DrawParam& alpha( const float a=0.f ) { m_use_alpha_test= (a>0.f); m_alpha_min= a; return *this; }
 
     //! Use light: on/off
     DrawParam& lightOnOff(bool use_light=true) { m_use_light=use_light; }
