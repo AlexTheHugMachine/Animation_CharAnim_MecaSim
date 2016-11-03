@@ -77,7 +77,7 @@ public:
     DrawParam& alpha( const float a=0.f ) { m_use_alpha_test= (a>0.f); m_alpha_min= a; return *this; }
 
     //! Use light: on/off
-    DrawParam& lightOnOff(bool use_light=true) { m_use_light=use_light; }
+    DrawParam& lighting(bool use_light=true) { m_use_light=use_light; }
 
     //! dessine l'objet avec l'ensemble des parametres definis.
     void draw( Mesh& mesh ) const;
