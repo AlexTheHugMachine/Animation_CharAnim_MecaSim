@@ -51,6 +51,7 @@ solution "gKit2light"
 	configuration { "windows", "vs2013", "x64" }
 		includedirs { "extern/visual2013/include" }
 		libdirs { "extern/visual2013/lib" }
+		platforms { "x64" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 
 		

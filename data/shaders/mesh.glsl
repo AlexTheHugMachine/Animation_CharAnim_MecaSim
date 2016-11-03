@@ -51,6 +51,7 @@ in vec3 vertex_position;
 #ifdef USE_TEXCOORD
     in vec2 vertex_texcoord;
     uniform sampler2D diffuse_color;
+	uniform float alpha_mask=0.3;
 #endif
 
 #ifdef USE_ALPHATEST
@@ -83,7 +84,9 @@ void main( )
 
 #ifdef USE_TEXCOORD
     color= color * texture(diffuse_color, vertex_texcoord);
-
+	if(color.a < alpha_mask)
+        discard;
+		
 #ifdef USE_ALPHATEST
     if(color.a < alpha_min)
         discard;
