@@ -3,6 +3,9 @@
 #ifdef VERTEX_SHADER
 
 layout(location= 0) in vec3 position;
+uniform mat4 mvpMatrix;
+
+uniform mat4 mvMatrix;
 out vec3 vertex_position;
 
 #ifdef USE_TEXCOORD
@@ -12,6 +15,7 @@ out vec3 vertex_position;
 
 #ifdef USE_NORMAL
     layout(location= 2) in vec3 normal;
+    uniform mat4 normalMatrix;
     out vec3 vertex_normal;
 #endif
 
@@ -20,13 +24,11 @@ out vec3 vertex_position;
     out vec4 vertex_color;
 #endif
 
-uniform mat4 mvpMatrix;
-uniform mat4 mvMatrix;
-uniform mat4 normalMatrix;
 
 void main( )
 {
     gl_Position= mvpMatrix * vec4(position, 1);
+
     vertex_position= vec3(mvMatrix * vec4(position, 1));
 
 #ifdef USE_TEXCOORD
@@ -46,17 +48,16 @@ void main( )
 
 #ifdef FRAGMENT_SHADER
 
-in vec3 vertex_position;
-
 #ifdef USE_TEXCOORD
     in vec2 vertex_texcoord;
     uniform sampler2D diffuse_color;
-	uniform float alpha_mask=0.3;
 #endif
 
 #ifdef USE_ALPHATEST
     uniform float alpha_min= 0.3;
 #endif
+
+in vec3 vertex_position;
 
 #ifdef USE_NORMAL
     in vec3 vertex_normal;
@@ -84,14 +85,13 @@ void main( )
 
 #ifdef USE_TEXCOORD
     color= color * texture(diffuse_color, vertex_texcoord);
-	if(color.a < alpha_mask)
-        discard;
-		
-#ifdef USE_ALPHATEST
-    if(color.a < alpha_min)
-        discard;
-#endif
-
+    
+    #ifdef USE_ALPHATEST
+        if(color.a < alpha_min)
+        //~ if(length(color.rgb) < alpha_min)
+            discard;
+    #endif
+    
     if(color.r + color.g + color.b == 0)    // noir
     {
         // fixer une couleur debug pour indiquer qu'il faut utiliser une texture avec cet objet

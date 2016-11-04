@@ -262,7 +262,7 @@ GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, con
     if(use_texcoord && use_alpha_test)
         definitions.append("#define USE_ALPHATEST\n");
     
-    printf("%s\n", definitions.c_str());
+    //~ printf("--\n%s", definitions.c_str());
     bool use_mesh_color= (m_primitives == GL_POINTS || m_primitives == GL_LINES || m_primitives == GL_LINE_STRIP || m_primitives == GL_LINE_LOOP);
     if(!use_mesh_color)
         return read_program("data/shaders/mesh.glsl", definitions.c_str());
@@ -321,7 +321,8 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
 
     program_uniform(m_program, "mvpMatrix", mvp);
     program_uniform(m_program, "mvMatrix", mv);
-    program_uniform(m_program, "normalMatrix", mv.normal()); // transforme les normales dans le repere camera.
+    if(use_normal)
+        program_uniform(m_program, "normalMatrix", mv.normal()); // transforme les normales dans le repere camera.
 
     // utiliser une texture, elle ne sera visible que si le mesh a des texcoords...
     if(texture && use_texcoord && use_texture)
