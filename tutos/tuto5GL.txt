@@ -212,6 +212,10 @@ texture( ) renvoie un vec4 qui correspond aux 4 canaux de la couleur : rgb et a.
 _remarque :_ même si la texture ne contient pas 4 canaux pour décrire une couleur, la fonction texture() renvoie toujours un vec4, les composantes non utilisées ont 
 une valeur par défaut (0 pour rgb et 1 pour a).  exemple : une texture GL_RG, qui ne contient que 2 canaux, renverra `vec4(r, g, 0, 1);`
 
+_remarque :_ `texture( )` suppose que les coordonnées de texture sont normalisées entre 0 et 1, ce qui permet d'oublier les dimensions de l'image... les coordonnées 
+stockées dans les fichiers `.obj` sont normalisées, en général. mais il existe d'autres fonctions, comme `texelFetch()` qui utilisent directement les dimensions de l'image.
+
+
 \code
 // fragment shader
 #version 330
@@ -459,7 +463,7 @@ les attributs de sommets : elles sont numérotées. les textures et leurs param�
 le fragment shader est configuré (l'uniform sampler2D déclaré par le shader) avec l'indice de l'unité sur laquelle est sélectionnée la texture et ses 
 paramètres de filtrage.
 
-openGL définit entre 16 et 32 unités de texture, il suffit de les sélectionner avec glActiveTexture( ) et de les configurer avec glBindTexture( ), et glBindSampler( ).
+openGL définit entre 16 et 32 unités de texture, il suffit de les sélectionner avec glActiveTexture( ) et de les configurer 'normalement' avec glBindTexture( ), et glBindSampler( ).
 \code
 	// selectionne l'unite 0
 	glActiveTexture(GL_TEXTURE0);
