@@ -99,6 +99,7 @@ local tutos = {
 	"tuto8",
 	
 	"tuto_transform",
+	"tuto_pad",
 	
 	"tuto2GL",
 	"tuto3GL",

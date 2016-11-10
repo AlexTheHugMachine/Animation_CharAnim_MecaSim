@@ -186,7 +186,7 @@ int events( Window window )
 Window create_window( const int w, const int h )
 {
     // init sdl
-    if(SDL_Init(SDL_INIT_EVERYTHING | SDL_INIT_NOPARACHUTE ) < 0)
+    if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         printf("[error] SDL_Init() failed:\n%s\n", SDL_GetError());
         return NULL;
