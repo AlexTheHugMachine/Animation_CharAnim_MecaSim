@@ -118,7 +118,6 @@ int screenshot( const char *filename )
     ImageData image(viewport[2], viewport[3], 4);
     glReadPixels(0, 0, image.width, image.height,
         GL_RGBA, GL_UNSIGNED_BYTE, image.buffer());
-
     // ecrit l'image
     return write_image_data(image, filename);
 }

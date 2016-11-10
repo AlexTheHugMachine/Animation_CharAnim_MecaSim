@@ -37,6 +37,14 @@ public:
         // ... et tous ses mipmaps
         glGenerateMipmap(GL_TEXTURE_2D);
         
+        // et son sampler
+        glGenSamplers(1, &color_sampler);
+        
+        glSamplerParameteri(color_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glSamplerParameteri(color_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glSamplerParameteri(color_sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glSamplerParameteri(color_sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        
         // etape 1 : creer aussi une texture depth, sinon pas de zbuffer...
         glGenTextures(1, &m_depth_buffer);
         glBindTexture(GL_TEXTURE_2D, m_depth_buffer);
@@ -45,15 +53,13 @@ public:
             GL_DEPTH_COMPONENT, m_framebuffer_width, m_framebuffer_height, 0,
             GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
         
-        // un seul mipmap pour le zbuffer
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-        
         // etape 2 : creer et configurer un framebuffer object
         glGenFramebuffers(1, &m_framebuffer);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebuffer);
         glFramebufferTexture(GL_DRAW_FRAMEBUFFER,  /* attachment */ GL_COLOR_ATTACHMENT0, /* texture */ m_color_buffer, /* mipmap level */ 0);
         glFramebufferTexture(GL_DRAW_FRAMEBUFFER,  /* attachment */ GL_DEPTH_ATTACHMENT, /* texture */ m_depth_buffer, /* mipmap level */ 0);
-
+        
+        // le fragment shader ne declare qu'une seule sortie, indice 0
         GLenum buffers[]= { GL_COLOR_ATTACHMENT0 };
         glDrawBuffers(1, buffers);
         
@@ -133,7 +139,8 @@ public:
         glDeleteTextures(1, &m_color_buffer);
         glDeleteTextures(1, &m_depth_buffer);
         glDeleteFramebuffers(1, &m_framebuffer);
-
+        glDeleteSamplers(1, &color_sampler);
+        
         release_program(m_texture_program);
         glDeleteTextures(1, &m_color_texture);
         glDeleteVertexArrays(1, &m_vao);
@@ -234,6 +241,7 @@ public:
             // configure l'unite 0
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, m_color_buffer);
+            glBindSampler(0, color_sampler);
             
             // SOIT :
             // bloque le filtrage de la texture pour n'utiliser que le mipmap 0
@@ -242,6 +250,7 @@ public:
             // OU :
             // recalcule les mipmaps de la texture... ils sont necessaires pour afficher le cube texture, 
             // pourquoi ? un draw dans un framebuffer ne modifie que le mipmap 0, pas les autres, donc il faut les recalculer...
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, miplevels(m_framebuffer_width, m_framebuffer_height));
             glGenerateMipmap(GL_TEXTURE_2D);
             
             // go
@@ -260,7 +269,9 @@ protected:
     GLuint m_buffer;
     GLuint m_texture_program;
     int m_vertex_count;
+
     GLuint m_color_texture;
+    GLuint color_sampler;
 
     GLuint m_color_buffer;
     GLuint m_depth_buffer;

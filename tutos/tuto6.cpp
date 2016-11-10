@@ -78,7 +78,11 @@ int draw( )
         // deplace le point de rotation
         camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
     
-    draw(objet, camera, texture);
+    //~ draw(objet, camera, texture);
+    DrawParam param;
+    param.alpha(0.5f);
+    param.camera(camera).texture(texture);
+    param.draw(objet);
     return 1;
 }
 

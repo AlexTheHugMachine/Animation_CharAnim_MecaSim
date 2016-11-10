@@ -127,9 +127,8 @@ void program_use_texture( const GLuint program, const char *uniform, const int u
     // configure la texture
     glBindTexture(GL_TEXTURE_2D, texture);
     
-    if(sampler > 0)
-        // et ses parametres de filtrage, si necessaire
-        glBindSampler(unit, sampler);
+    // les parametres de filtrage
+    glBindSampler(unit, sampler);
     
     // transmet l'indice de l'unite de texture au shader
     glUniform1i(id, unit);

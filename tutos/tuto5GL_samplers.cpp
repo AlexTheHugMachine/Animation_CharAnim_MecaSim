@@ -45,9 +45,7 @@ int init( )
 
     vertex_count= mesh.vertex_count();
 
-    Point pmin, pmax;
-    mesh.bounds(pmin, pmax);
-    camera.lookat(pmin, pmax);
+    camera.lookat(Point(0, 0, 0), 5);
 
     // vertex format : position + texcoord,
     // cf tuto4GL_normals.cpp
