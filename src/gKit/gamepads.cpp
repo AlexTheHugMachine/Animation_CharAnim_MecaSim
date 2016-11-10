@@ -72,6 +72,10 @@ void Gamepads::update( )
         for(int i= 0; i < SDL_CONTROLLER_AXIS_MAX; i++)
         {
             int value= SDL_GameControllerGetAxis(pad, (SDL_GameControllerAxis) i);
+            if(value > -6000 && value < 6000)
+                // dead zone...
+                value= 0;
+            
             m_pads[p].m_axis[i]= (float) value / 32768.f;
         }
     }

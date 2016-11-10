@@ -100,21 +100,24 @@ public:
             m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
         
         static float position= 0;
-        float speed= m_gamepads.axis(0, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+        //~ float speed= m_gamepads.axis(0, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+        float speed= m_gamepads.pad(0).axis(SDL_CONTROLLER_AXIS_TRIGGERLEFT);
         position= position + speed;
         
         static float rotation= 0;
-        float angle= m_gamepads.axis(0, SDL_CONTROLLER_AXIS_RIGHTX);
+        //~ float angle= m_gamepads.axis(0, SDL_CONTROLLER_AXIS_RIGHTX);
+        float angle= m_gamepads.pad(0).axis(SDL_CONTROLLER_AXIS_RIGHTX);
         rotation= rotation + angle;
         
-        m_model= Translation(0, 0, -position) * RotationY(rotation);
+        m_model= Translation(0, 0, -position) * RotationY(-rotation);
         
         draw(m_grid, m_camera);
         draw(m_objet, m_model, m_camera, m_texture);
         
         // quitter
         int stop= 1;
-        if(m_gamepads.button(0, SDL_CONTROLLER_BUTTON_BACK))
+        //~ if(m_gamepads.button(0, SDL_CONTROLLER_BUTTON_BACK))
+        if(m_gamepads.pad(0).button(SDL_CONTROLLER_BUTTON_BACK))
             stop= 0;
         return stop;
     }
