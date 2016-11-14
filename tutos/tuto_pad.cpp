@@ -109,7 +109,7 @@ public:
         float angle= m_gamepads.pad(0).axis(SDL_CONTROLLER_AXIS_RIGHTX);
         rotation= rotation + angle;
         
-        m_model= Translation(0, 0, -position) * RotationY(-rotation);
+        m_model= Translation(0, 0, -position) * RotationY(-rotation) * RotationX(-global_time() / 4);
         
         draw(m_grid, m_camera);
         draw(m_objet, m_model, m_camera, m_texture);

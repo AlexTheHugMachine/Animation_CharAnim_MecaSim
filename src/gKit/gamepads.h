@@ -7,10 +7,13 @@
 
 struct Gamepad
 {
-    Gamepad( ) : m_pad(nullptr), m_state(0) {}
-    Gamepad( SDL_GameController *pad ) : m_pad(pad), m_state(1) {}
+    Gamepad( ) : m_pad(NULL) {}
+    Gamepad( SDL_GameController *pad ) : m_pad(pad) {}
     
     ~Gamepad( ) {}
+    
+    //! renvoie l'etat d'un gamepad. debranche ou pas.
+    bool connected( );
     
     //! renvoie l'etat d'un bouton.
     int button( const SDL_GameControllerButton b );
@@ -26,19 +29,20 @@ struct Gamepad
     float m_axis[SDL_CONTROLLER_AXIS_MAX];
     
     SDL_GameController *m_pad;
-    int m_state;
 };
 
 struct Gamepads
 {
+    //! constructeur par defaut.
     Gamepads( );
     ~Gamepads( );
     
-    //!
+    //! detection des pads connectes.
     bool create( );
+    //! 
     void release( );
     
-    //! 
+    //! lecture des infos des pads connectes.
     void update( );
     
     //! renvoie le nombre de game controllers.
