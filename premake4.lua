@@ -173,20 +173,19 @@ project("l2_lifgfx")
 	files { dir .. "/src/l2_lifgfx/main.cpp" }
 
 	
-master_CharAnim_files = {	dir .. "/src/master_CharAnim/main.cpp",
-							dir .. "src/master_CharAnim/CharAnimViewer.cpp", 
-							dir .. "src/master_CharAnim/CharAnimViewer.h", 
-							dir .. "src/master_CharAnim/BVH.cpp", 
-							dir .. "src/master_CharAnim/BVH.h",
-							dir .. "src/master_CharAnim/BVHAxis.h",
-							dir .. "src/master_CharAnim/BVHChannel.cpp", 
-							dir .. "src/master_CharAnim/BVHChannel.h",
-							dir .. "src/master_CharAnim/BVHJoint.cpp", 
-							dir .. "src/master_CharAnim/BVHJoint.h",
-							dir .. "src/l2_lifgfx/Viewer.cpp", 
-							dir .. "src/l2_lifgfx/Viewer.h", 
-							dir .. "src/l2_lifgfx/AnimationCurve.cpp", 
-							dir .. "src/l2_lifgfx/AnimtionCurve.h" 
+master_CharAnim_files = {	dir .. "/src/master_CharAnim/CharAnimViewer.cpp", 
+							dir .. "/src/master_CharAnim/CharAnimViewer.h", 
+							dir .. "/src/master_CharAnim/BVH.cpp", 
+							dir .. "/src/master_CharAnim/BVH.h",
+							dir .. "/src/master_CharAnim/BVHAxis.h",
+							dir .. "/src/master_CharAnim/BVHChannel.cpp", 
+							dir .. "/src/master_CharAnim/BVHChannel.h",
+							dir .. "/src/master_CharAnim/BVHJoint.cpp", 
+							dir .. "/src/master_CharAnim/BVHJoint.h",
+							dir .. "/src/l2_lifgfx/Viewer.cpp", 
+							dir .. "/src/l2_lifgfx/Viewer.h", 
+							dir .. "/src/l2_lifgfx/AnimationCurve.cpp", 
+							dir .. "/src/l2_lifgfx/AnimtionCurve.h" 
 	}
 project("master_CharAnim")
     language "C++"
@@ -194,3 +193,4 @@ project("master_CharAnim")
     targetdir "bin"
     files ( gkit_files )
     files ( master_CharAnim_files )
+	files { dir .. "/src/master_CharAnim/main.cpp" }
