@@ -73,6 +73,7 @@ protected:
     Transform Tquad;
 
 
+    void draw_axe(const Transform& T);
     void manageCameraLight();
 };
 

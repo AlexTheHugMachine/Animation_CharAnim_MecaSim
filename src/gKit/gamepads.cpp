@@ -1,6 +1,7 @@
 
 #include <cassert>
 #include <vector>
+#include <stdio.h>
 
 #include "gamepads.h"
 
@@ -10,7 +11,7 @@ bool Gamepads::create( )
 {
     // mapping cf https://github.com/gabomdq/SDL_GameControllerDB
     SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
-    
+
     int n= SDL_NumJoysticks();
     for(int i= 0; i < n; i++)
     {
@@ -22,11 +23,11 @@ bool Gamepads::create( )
                 printf("[error] opening pad: %s\n", SDL_GetError());
                 continue;
             }
-            
+
             m_pads.push_back(Gamepad(pad));
         }
     }
-    
+
     printf("found %d pads...\n", (int) m_pads.size());
     return (m_pads.size() > 0);
 }
@@ -48,7 +49,7 @@ void Gamepads::update( )
     for(size_t p= 0; p < m_pads.size(); p++)
     {
         SDL_GameController *pad= m_pads[p].m_pad;
-        
+
         if(SDL_GameControllerGetAttached(pad) == SDL_FALSE)
         {
             // le pad est debranche...
@@ -57,17 +58,17 @@ void Gamepads::update( )
                 m_pads[p].m_buttons[i]= 0;
             for(int i= 0; i < SDL_CONTROLLER_AXIS_MAX; i++)
                 m_pads[p].m_axis[i]= 0;
-            
+
             continue;
         }
-        
+
         // boutons
         for(int i= 0; i < SDL_CONTROLLER_BUTTON_MAX; i++)
             if(SDL_GameControllerGetButton(pad, (SDL_GameControllerButton) i) == SDL_PRESSED)
                 m_pads[p].m_buttons[i]= 1;
             else
                 m_pads[p].m_buttons[i]= 0;
-        
+
         // axes
         for(int i= 0; i < SDL_CONTROLLER_AXIS_MAX; i++)
         {
@@ -75,25 +76,25 @@ void Gamepads::update( )
             if(value > -6000 && value < 6000)
                 // dead zone...
                 value= 0;
-            
+
             m_pads[p].m_axis[i]= (float) value / 32768.f;
         }
     }
 }
 
 
-int Gamepads::pads( ) 
+int Gamepads::pads( )
 {
-    return m_pads.size(); 
+    return m_pads.size();
 }
 
-Gamepad& Gamepads::pad( const unsigned int index ) 
+Gamepad& Gamepads::pad( const unsigned int index )
 {
-    assert(index < m_pads.size()); 
-    return m_pads[index]; 
+    assert(index < m_pads.size());
+    return m_pads[index];
 }
 
-int Gamepads::button( const unsigned int index, const SDL_GameControllerButton b ) 
+int Gamepads::button( const unsigned int index, const SDL_GameControllerButton b )
 {
     return pad(index).button(b);
 }

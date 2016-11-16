@@ -202,7 +202,14 @@ int Viewer::update( const float time, const float delta )
 
 
 
-
+void Viewer::draw_axe(const Transform& T)
+{
+    gl.model(T);
+    gl.texture(0);
+    gl.lighting(false);
+    gl.draw(m_axe);
+    gl.lighting(true);
+}
 
 
 void Viewer::manageCameraLight()
@@ -256,8 +263,10 @@ void Viewer::manageCameraLight()
 
      // LIGHT
     gl.texture( 0 );
+    gl.lighting(false);
     gl.model( Translation( Vector( gl.light()))*Scale(0.3, 0.3, 0.3) );
     gl.draw(m_cube);
+    gl.lighting(true);
 }
 
 int Viewer::quit( )

@@ -5,6 +5,9 @@ solution "gKit2light"
 	
 	includedirs { ".", "src/gKit" }
 	
+	dir = path.getabsolute(".")
+	
+	
 	configuration "debug"
 		targetdir "bin/debug"
 		defines { "DEBUG" }
@@ -61,7 +64,7 @@ solution "gKit2light"
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 		
 	configuration "macosx"
-		local frameworks= "-F /Library/Frameworks/"
+		frameworks= "-F /Library/Frameworks/"
 		buildoptions { "-std=c++11" }
 		defines { "GK_MACOS" }
 		buildoptions { frameworks }
@@ -69,12 +72,12 @@ solution "gKit2light"
 
 
  -- description des fichiers communs
-local gkit_files = { "src/gKit/*.cpp", "src/gKit/*.h" }
+gkit_files = { dir .. "/src/gKit/*.cpp", dir .. "/src/gKit/*.h" }
 
  -- description des projets		
 
     
-local projects = {
+projects = {
 	"shader_kit"
 }
 
@@ -88,7 +91,7 @@ for i, name in ipairs(projects) do
 end
 
  -- description des tutos
-local tutos = {
+tutos = {
 	"tuto1",
 	"tuto2",
 	"tuto3",
@@ -132,7 +135,7 @@ end
 
 
 -- description des tutos openGL avances / M2
-local tutosM2 = {
+tutosM2 = {
 	"tuto_time",
 	"tuto_mdi"
 }
@@ -154,38 +157,40 @@ project("tp2")
 	files { "opengl_tp2/tp2.cpp" }
 
 
- 
+	
+	
+l2_lifgfx_files = { dir .. "/src/l2_lifgfx/Viewer.cpp", 
+					dir .. "/src/l2_lifgfx/Viewer.h", 
+					dir .. "/src/l2_lifgfx/AnimationCurve.cpp", 
+					dir .. "/src/l2_lifgfx/AnimtionCurve.h" 
+	}
 project("l2_lifgfx")
     language "C++"
     kind "ConsoleApp"
     targetdir "bin"
     files ( gkit_files )
-    files { "src/l2_lifgfx/main.cpp",
-			"src/l2_lifgfx/Viewer.cpp", "src/l2_lifgfx/Viewer.h", 
-			"src/l2_lifgfx/AnimationCurve.cpp", "src/l2_lifgfx/AnimtionCurve.h" }
+    files ( l2_lifgfx_files )
+	files { dir .. "/src/l2_lifgfx/main.cpp" }
 
-newoption {
-   trigger     = "corrige",
-   value       = "cor",
-   description = "Choose a particular sub-list of projects",
-   allowed = {
-      { "off",	"Pas de corrige" },
-      { "on",  	"Avec corrige" },
-   }
-}
-
-			
-if not _OPTIONS["corrige"] then
-   _OPTIONS["corrige"] = "off"
-end
-
-if _OPTIONS["corrige"] == "on" then
-project("l2_lifgfx_corrige")
+	
+master_CharAnim_files = {	dir .. "/src/master_CharAnim/main.cpp",
+							dir .. "src/master_CharAnim/CharAnimViewer.cpp", 
+							dir .. "src/master_CharAnim/CharAnimViewer.h", 
+							dir .. "src/master_CharAnim/BVH.cpp", 
+							dir .. "src/master_CharAnim/BVH.h",
+							dir .. "src/master_CharAnim/BVHAxis.h",
+							dir .. "src/master_CharAnim/BVHChannel.cpp", 
+							dir .. "src/master_CharAnim/BVHChannel.h",
+							dir .. "src/master_CharAnim/BVHJoint.cpp", 
+							dir .. "src/master_CharAnim/BVHJoint.h",
+							dir .. "src/l2_lifgfx/Viewer.cpp", 
+							dir .. "src/l2_lifgfx/Viewer.h", 
+							dir .. "src/l2_lifgfx/AnimationCurve.cpp", 
+							dir .. "src/l2_lifgfx/AnimtionCurve.h" 
+	}
+project("master_CharAnim")
     language "C++"
     kind "ConsoleApp"
     targetdir "bin"
     files ( gkit_files )
-    files { "src/l2_lifgfx/Viewer.cpp", "src/l2_lifgfx/Viewer.h", 
-			"src/l2_lifgfx/Viewer_corrige.cpp", "src/l2_lifgfx/Viewer_corrige.h", 
-			"src/l2_lifgfx/AnimationCurve.cpp", "src/l2_lifgfx/AnimtionCurve.h" }
-end
+    files ( master_CharAnim_files )
