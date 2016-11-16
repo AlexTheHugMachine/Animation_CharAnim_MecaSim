@@ -32,6 +32,7 @@ void Viewer::help()
 
 int Viewer::init()
 {
+    cout<<"==>l2_lifgfx/Viewer"<<endl;
     // etat par defaut openGL
     glClearColor(0.5f, 0.5f, 0.9f, 1);
     glClearDepthf(1);

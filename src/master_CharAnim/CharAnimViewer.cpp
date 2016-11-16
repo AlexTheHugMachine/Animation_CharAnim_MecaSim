@@ -149,8 +149,8 @@ CharAnimViewer::CharAnimViewer() : Viewer()
 
 int CharAnimViewer::init()
 {
-
     Viewer::init();
+    cout<<"==>master_CharAnim/CharAnimViewer"<<endl;
     m_camera.lookat( Point(0,0,0), 50 );
 
     init_cylinder();

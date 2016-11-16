@@ -2,7 +2,7 @@
 #ifndef CHARANIMVIEWER_H
 #define CHARANIMVIEWER_H
 
-#include <../l2_lifgfx/Viewer.h>
+#include "../l2_lifgfx/Viewer.h"
 #include "BVH.h"
 
 class CharAnimViewer : public Viewer
