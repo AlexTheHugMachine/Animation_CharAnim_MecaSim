@@ -87,7 +87,7 @@ for i, name in ipairs(projects) do
 		kind "ConsoleApp"
 		targetdir "bin"
 		files ( gkit_files )
-		files { "src/" .. name..'.cpp' }
+		files { gkit_dir .. "/src/" .. name..'.cpp' }
 end
 
  -- description des tutos
@@ -130,7 +130,7 @@ for i, name in ipairs(tutos) do
 		kind "ConsoleApp"
 		targetdir "bin"
 		files ( gkit_files )
-		files { "tutos/" .. name..'.cpp' }
+		files { gkit_dir .. "/tutos/" .. name..'.cpp' }
 end
 
 
@@ -146,7 +146,7 @@ for i, name in ipairs(tutosM2) do
 		kind "ConsoleApp"
 		targetdir "bin"
 		files ( gkit_files )
-		files { "tutos/M2/" .. name..'.cpp' }
+		files { gkit_dir .. "/tutos/M2/" .. name..'.cpp' }
 end
 
 project("tp2")
@@ -154,7 +154,13 @@ project("tp2")
 	kind "ConsoleApp"
 	targetdir "bin"
 	files ( gkit_files )
-	files { "opengl_tp2/tp2.cpp" }
+	files { gkit_dir .. "/opengl_tp2/tp2.cpp" }
+
+-- L2_lifgfx
+
+-- master_CharAnim
+
+
 	
 	
 
