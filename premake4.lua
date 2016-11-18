@@ -175,4 +175,3 @@ project("l2_lifgfx")
     files ( gkit_files )
     files ( l2_lifgfx_files )
 	files { gfx_l2_dir .. "/src/l2_lifgfx/main.cpp" }
-
