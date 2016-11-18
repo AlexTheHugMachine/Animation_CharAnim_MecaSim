@@ -156,3 +156,9 @@ project("tp2")
 	files ( gkit_files )
 	files { gkit_dir .. "/opengl_tp2/tp2.cpp" }
 
+-- L2_lifgfx
+
+-- master_CharAnim
+
+
+
