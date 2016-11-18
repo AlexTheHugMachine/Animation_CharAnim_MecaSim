@@ -155,4 +155,24 @@ project("tp2")
 	targetdir "bin"
 	files ( gkit_files )
 	files { "opengl_tp2/tp2.cpp" }
+	
+	
+
+
+gfx_l2_dir = path.getabsolute(".")
+
+
+l2_lifgfx_files = { gfx_l2_dir .. "/src/l2_lifgfx/Viewer.cpp", 
+					gfx_l2_dir .. "/src/l2_lifgfx/Viewer.h", 
+					gfx_l2_dir .. "/src/l2_lifgfx/AnimationCurve.cpp", 
+					gfx_l2_dir .. "/src/l2_lifgfx/AnimationCurve.h" 
+	}
+
+project("l2_lifgfx")
+    language "C++"
+    kind "ConsoleApp"
+    targetdir "bin"
+    files ( gkit_files )
+    files ( l2_lifgfx_files )
+	files { gfx_l2_dir .. "/src/l2_lifgfx/main.cpp" }
 
