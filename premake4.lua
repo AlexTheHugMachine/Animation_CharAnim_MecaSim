@@ -5,7 +5,7 @@ solution "gKit2light"
 	
 	includedirs { ".", "src/gKit" }
 	
-	dir = path.getabsolute(".")
+	gkit_dir = path.getabsolute(".")
 	
 	
 	configuration "debug"
@@ -72,7 +72,7 @@ solution "gKit2light"
 
 
  -- description des fichiers communs
-gkit_files = { dir .. "/src/gKit/*.cpp", dir .. "/src/gKit/*.h" }
+gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h" }
 
  -- description des projets		
 
@@ -156,41 +156,3 @@ project("tp2")
 	files ( gkit_files )
 	files { "opengl_tp2/tp2.cpp" }
 
-
-	
-	
-l2_lifgfx_files = { dir .. "/src/l2_lifgfx/Viewer.cpp", 
-					dir .. "/src/l2_lifgfx/Viewer.h", 
-					dir .. "/src/l2_lifgfx/AnimationCurve.cpp", 
-					dir .. "/src/l2_lifgfx/AnimtionCurve.h" 
-	}
-project("l2_lifgfx")
-    language "C++"
-    kind "ConsoleApp"
-    targetdir "bin"
-    files ( gkit_files )
-    files ( l2_lifgfx_files )
-	files { dir .. "/src/l2_lifgfx/main.cpp" }
-
-	
-master_CharAnim_files = {	dir .. "/src/master_CharAnim/CharAnimViewer.cpp", 
-							dir .. "/src/master_CharAnim/CharAnimViewer.h", 
-							dir .. "/src/master_CharAnim/BVH.cpp", 
-							dir .. "/src/master_CharAnim/BVH.h",
-							dir .. "/src/master_CharAnim/BVHAxis.h",
-							dir .. "/src/master_CharAnim/BVHChannel.cpp", 
-							dir .. "/src/master_CharAnim/BVHChannel.h",
-							dir .. "/src/master_CharAnim/BVHJoint.cpp", 
-							dir .. "/src/master_CharAnim/BVHJoint.h",
-							dir .. "/src/l2_lifgfx/Viewer.cpp", 
-							dir .. "/src/l2_lifgfx/Viewer.h", 
-							dir .. "/src/l2_lifgfx/AnimationCurve.cpp", 
-							dir .. "/src/l2_lifgfx/AnimtionCurve.h" 
-	}
-project("master_CharAnim")
-    language "C++"
-    kind "ConsoleApp"
-    targetdir "bin"
-    files ( gkit_files )
-    files ( master_CharAnim_files )
-	files { dir .. "/src/master_CharAnim/main.cpp" }
