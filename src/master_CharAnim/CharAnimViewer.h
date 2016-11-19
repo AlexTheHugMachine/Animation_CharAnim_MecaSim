@@ -2,7 +2,7 @@
 #ifndef CHARANIMVIEWER_H
 #define CHARANIMVIEWER_H
 
-#include "../l2_lifgfx/Viewer.h"
+#include "Viewer.h"
 #include "BVH.h"
 
 class CharAnimViewer : public Viewer
@@ -19,15 +19,8 @@ protected:
 
     bvh::BVH m_bvh;
 
-    Mesh m_cylinder;
-    Mesh m_cylinder_cover;
-    Mesh m_sphere;
-    void init_cylinder();
-    void init_sphere();
-    void draw_cylinder(const Transform& T);
-    void draw_sphere(const Transform& T);
 
-    Transform m_Tplane;
+    Transform m_T;
 
 
 
