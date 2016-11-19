@@ -10,7 +10,7 @@
 //! \addtogroup openGL utilitaires openGL
 ///@{
 
-//! \file 
+//! \file
 //! shader program openGL
 
 //! cree un shader program. a detruire avec release_program( ).\n

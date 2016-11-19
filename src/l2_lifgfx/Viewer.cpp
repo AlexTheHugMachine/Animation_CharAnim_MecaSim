@@ -52,7 +52,7 @@ int Viewer::init()
     //glAlphaFunc(GL_GREATER, 0.5);
     //glEnable(GL_ALPHA_TEST);
 
-    m_anim.init( "data/animation/anim1.ani");
+    m_anim.init( smart_path("data/animation/anim1.ani") );
 
     m_camera.lookat( Point(0,0,0), 30 );
     gl.light( Point(0, 20, 20), White() );
@@ -116,7 +116,7 @@ void Viewer::init_cube()
     m_cube = Mesh(GL_TRIANGLE_STRIP);
     m_cube.color( Color(1, 1, 1) );
 
-    m_cube_texture = read_texture(0, "data/debug2x2red.png");
+    m_cube_texture = read_texture(0, smart_path("data/debug2x2red.png")) ;
 
     for (i=0;i<6;i++)
     {
@@ -145,7 +145,7 @@ void Viewer::init_quad()
     m_quad = Mesh(GL_TRIANGLE_STRIP);
     m_quad.color( Color(1, 1, 1));
 
-    m_quad_texture = read_texture(0, "data/papillon.png");
+    m_quad_texture = read_texture(0, smart_path("data/papillon.png") );
 
     m_quad.normal(  0, 0, 1 );
 
