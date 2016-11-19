@@ -8,7 +8,7 @@
 #include "uniforms.h"
 #include "buffer.h"
 #include "mesh.h"
-
+#include "window.h"
 
 int Mesh::create( const GLenum primitives )
 {
@@ -261,13 +261,13 @@ GLuint Mesh::create_program( const bool use_texcoord, const bool use_normal, con
         definitions.append("#define USE_LIGHT\n");
     if(use_texcoord && use_alpha_test)
         definitions.append("#define USE_ALPHATEST\n");
-    
+
     //~ printf("--\n%s", definitions.c_str());
     bool use_mesh_color= (m_primitives == GL_POINTS || m_primitives == GL_LINES || m_primitives == GL_LINE_STRIP || m_primitives == GL_LINE_LOOP);
     if(!use_mesh_color)
-        return read_program("data/shaders/mesh.glsl", definitions.c_str());
+        return read_program(  smart_path("data/shaders/mesh.glsl"), definitions.c_str());
     else
-        return read_program("data/shaders/mesh_color.glsl", definitions.c_str());
+        return read_program( smart_path("data/shaders/mesh_color.glsl"), definitions.c_str());
 }
 
 
@@ -336,7 +336,7 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
 
     if(use_alpha_test)
         program_uniform(m_program, "alpha_min", alpha_min);
-    
+
     if(m_indices.size() > 0)
         glDrawElements(m_primitives, (GLsizei) m_indices.size(), GL_UNSIGNED_INT, 0);
     else

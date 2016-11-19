@@ -4,9 +4,13 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <cstdio>
+#include <cstring>
+#include <iostream>
 
 #include "glcore.h"
 #include "window.h"
+
 
 
 static int width= 0;
@@ -308,3 +312,30 @@ void release_context( Context context )
     SDL_GL_DeleteContext(context);
 }
 
+bool file_exist(const char* filename)
+{
+    FILE* f = fopen(filename,"r");
+    if (f) { fclose(f); return true; }
+    return false;
+}
+
+const char* smart_path(const char* filename)
+{
+    static char smartpath[512];
+
+    if (file_exist(filename)) return filename;
+
+    const char * exec = SDL_GetBasePath();
+
+    strcpy(smartpath,exec);
+    strcat(smartpath,filename);
+    if (file_exist(smartpath)) return smartpath;
+
+    strcpy(smartpath,exec);
+    strcat(smartpath, "/../");
+    strcat(smartpath,filename);
+    if (file_exist(smartpath)) return smartpath;
+
+    std::cerr<<"smart_path: file not found="<<filename<<std::endl;
+    return NULL;
+}
