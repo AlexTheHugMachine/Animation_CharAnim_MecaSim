@@ -82,9 +82,12 @@ solution "gKit2light"
  -- description des fichiers communs
 gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h" }
 
- -- description des projets		
 
-    
+-- quand ce premake4.lua est inclus par un autre premake qui definit no_project=true, stop la creation des projects suivant (tuto, etc.)
+if no_project then
+	do return end
+end
+ -- description des projets		 
 projects = {
 	"shader_kit"
 }
