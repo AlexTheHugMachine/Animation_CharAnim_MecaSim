@@ -83,7 +83,8 @@ solution "gKit2light"
 gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h" }
 
 
--- quand ce premake4.lua est inclus par un autre premake qui definit no_project=true, stop la creation des projects suivant (tuto, etc.)
+-- quand ce premake4.lua est inclus par un autre premake qui definit no_project=true (donc quand gkit2light est utilisé comme une lib),
+-- ceci stoppe la creation des projects suivants (tuto, etc.)
 if no_project then
 	do return end
 end
@@ -167,9 +168,6 @@ project("tp2")
 	files ( gkit_files )
 	files { gkit_dir .. "/opengl_tp2/tp2.cpp" }
 
--- L2_lifgfx
-
--- master_CharAnim
 
 
 
