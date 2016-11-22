@@ -51,14 +51,22 @@ solution "gKit2light"
 		libdirs { "extern/mingw/lib" }
 		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
 		
-	configuration { "windows", "vs2013", "x64" }
+	configuration { "windows", "vs2013" }
+		if _PREMAKE_VERSION >="5.0" then
+			system "Windows"
+			architecture "x64"
+		end
 		includedirs { "extern/visual2013/include" }
 		libdirs { "extern/visual2013/lib" }
 		platforms { "x64" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 
 		
-	configuration { "windows", "vs2015", "x64" }
+	configuration { "windows", "vs2015" }
+		if _PREMAKE_VERSION >="5.0" then
+			system "Windows"
+			architecture "x64"
+		end
 		includedirs { "extern/visual2015/include" }
 		libdirs { "extern/visual2015/lib" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
