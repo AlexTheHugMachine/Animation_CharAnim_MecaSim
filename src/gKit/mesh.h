@@ -84,6 +84,20 @@ m.triangle(a, c, d);
 \endcode
 */
 
+//! representation d'une matiere
+struct Material
+{
+    std::string name;
+    
+    Color diffuse;
+    Color specular;
+    Color emission;
+    float ns;
+    
+    Material( const char *_name ) : name(_name), diffuse(0.8f, 0.8f, 0.8f), specular(0.2f, 0.2f, 0.2f), emission(), ns(22) {}
+};
+
+
 //! representation d'un objet / maillage.
 class Mesh
 {

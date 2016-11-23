@@ -4,6 +4,27 @@
 
 #include "wavefront.h"
 
+/*! renvoie le chaimin d'acces a un fichier. le chemin est toujours termine par /
+    pathname("path/to/file") == "path/to/"
+    pathname("file") == "./"
+ */
+static
+std::string pathname( const std::string& filename )
+{
+    size_t slash = filename.find_last_of( '/' );    // separateur linux
+    size_t bslash = filename.find_last_of( '\\' );  // separateur windows
+
+    if(slash == std::string::npos && bslash != std::string::npos)
+        slash= bslash;
+    else if(slash != std::string::npos && bslash != std::string::npos && bslash > slash)
+        slash= bslash;
+    
+    if(slash != std::string::npos)
+        return filename.substr(0, slash +1); // inclus le slash
+    else
+        return "./";
+}
+
 
 Mesh read_mesh( const char *filename )
 {
@@ -21,11 +42,15 @@ Mesh read_mesh( const char *filename )
     std::vector<vec3> positions;
     std::vector<vec2> texcoords;
     std::vector<vec3> normals;
+    std::vector<unsigned int> material_indices;
+    std::vector<Material> materials;
+    int material= -1;
     
     std::vector<int> idp;
     std::vector<int> idt;
     std::vector<int> idn;
     
+    char tmp[1024];
     char line_buffer[1024];
     bool error= true;
     for(;;)
@@ -111,7 +136,26 @@ Mesh read_mesh( const char *filename )
                     data.vertex(positions[p]);
                 }
             }
-        }        
+        }
+        
+        else if(line_buffer[0] == 'm')
+        {
+           if(sscanf(line, "mtllib %[^\r\n]", tmp) == 1)
+           {
+               std::string path= pathname(filename) + tmp;
+               materials= read_materials(path.c_str());
+           }
+        }
+        
+        else if(line_buffer[0] == 'u')
+        {
+           if(sscanf(line, "usemtl %[^\r\n]", tmp) == 1)
+           {
+               for(size_t i= 0; i < materials.size(); i++)
+                if(materials[i].name == tmp)
+                    material= i;
+           }
+        }
     }
     
     fclose(in);
@@ -179,4 +223,80 @@ int write_mesh( const Mesh& mesh, const char *filename )
     
     fclose(out);
     return 0;
+}
+
+
+std::vector<Material> read_materials( const char *filename )
+{
+    std::vector<Material> materials;
+    
+    FILE *in= fopen(filename, "rt");
+    if(in == NULL)
+    {
+        printf("[error] reading '%s'.\n", filename);
+        return materials;
+    }
+    
+    printf("loading '%s'...\n", filename);
+    
+    Material *material= NULL;
+    char tmp[1024];
+    char line_buffer[1024];
+    bool error= true;
+    for(;;)
+    {
+        // charge une ligne du fichier
+        if(fgets(line_buffer, sizeof(line_buffer), in) == NULL)
+        {
+            error= false;       // fin du fichier, pas d'erreur detectee
+            break;
+        }
+        
+        // force la fin de la ligne, au cas ou
+        line_buffer[sizeof(line_buffer) -1]= 0;
+        
+        // saute les espaces en debut de ligne
+        char *line= line_buffer;
+        while(*line && isspace(*line))
+            line++;
+        
+        if(line[0] == 'n')
+        {
+            if(sscanf(line, "newmtl %[^\r\n]", tmp) == 1)
+            {
+                materials.push_back( Material(tmp) );
+                material= &materials.back();
+            }
+        }
+        
+        if(material == NULL)
+            continue;
+        
+        if(line[0] == 'K')
+        {
+            float r, g, b;
+            if(sscanf(line, "Kd %f %f %f", &r, &g, &b) == 3)
+                material->diffuse= Color(r, g, b);
+            else if(sscanf(line, "Ks %f %f %f", &r, &g, &b) == 3)
+                material->specular= Color(r, g, b);
+            else if(sscanf(line, "Ke %f %f %f", &r, &g, &b) == 3)
+                material->emission= Color(r, g, b);
+        }
+        
+        else if(line[0] == 'N')
+        {
+            float n;
+            if(sscanf(line, "Ns %f", &n) == 1)          // Ns, puissance / concentration du reflet, modele blinn phong
+                material->ns= n;
+        }
+    }
+    
+    fclose(in);
+    if(error)
+    {
+        printf("[error] parsing line :\n%s\n", line_buffer);
+        return materials;
+    }
+    
+    return materials;
 }
