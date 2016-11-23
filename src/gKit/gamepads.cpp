@@ -1,6 +1,7 @@
 
 #include <cassert>
 #include <vector>
+#include <stdio.h>
 
 #include "gamepads.h"
 
@@ -51,7 +52,7 @@ void Gamepads::update( )
     {
         if(SDL_GameControllerGetAttached(m_pads[p].m_pad) == SDL_FALSE)
         {
-            // le pad est debranche...
+            // le pad est debranche...         
             for(int i= 0; i < SDL_CONTROLLER_BUTTON_MAX; i++)
                 m_pads[p].m_buttons[i]= 0;
             for(int i= 0; i < SDL_CONTROLLER_AXIS_MAX; i++)
@@ -86,18 +87,18 @@ void Gamepads::update( )
 }
 
 
-int Gamepads::pads( ) 
+int Gamepads::pads( )
 {
-    return m_pads.size(); 
+    return m_pads.size();
 }
 
-Gamepad& Gamepads::pad( const unsigned int index ) 
+Gamepad& Gamepads::pad( const unsigned int index )
 {
-    assert(index < m_pads.size()); 
-    return m_pads[index]; 
+    assert(index < m_pads.size());
+    return m_pads[index];
 }
 
-int Gamepads::button( const unsigned int index, const SDL_GameControllerButton b ) 
+int Gamepads::button( const unsigned int index, const SDL_GameControllerButton b )
 {
     return pad(index).button(b);
 }
@@ -116,7 +117,6 @@ void Gamepads::clear_axis( const unsigned int index, const SDL_GameControllerAxi
 {
     return pad(index).clear_axis(a);
 }
-
 
 bool Gamepad::connected( )
 {

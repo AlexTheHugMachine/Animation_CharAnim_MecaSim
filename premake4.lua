@@ -5,6 +5,9 @@ solution "gKit2light"
 	
 	includedirs { ".", "src/gKit" }
 	
+	gkit_dir = path.getabsolute(".")
+	
+	
 	configuration "debug"
 		targetdir "bin/debug"
 		defines { "DEBUG" }
@@ -48,20 +51,28 @@ solution "gKit2light"
 		libdirs { "extern/mingw/lib" }
 		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
 		
-	configuration { "windows", "vs2013", "x64" }
+	configuration { "windows", "vs2013" }
+		if _PREMAKE_VERSION >="5.0" then
+			system "Windows"
+			architecture "x64"
+		end
 		includedirs { "extern/visual2013/include" }
 		libdirs { "extern/visual2013/lib" }
 		platforms { "x64" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 
 		
-	configuration { "windows", "vs2015", "x64" }
+	configuration { "windows", "vs2015" }
+		if _PREMAKE_VERSION >="5.0" then
+			system "Windows"
+			architecture "x64"
+		end
 		includedirs { "extern/visual2015/include" }
 		libdirs { "extern/visual2015/lib" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 		
 	configuration "macosx"
-		local frameworks= "-F /Library/Frameworks/"
+		frameworks= "-F /Library/Frameworks/"
 		buildoptions { "-std=c++11" }
 		defines { "GK_MACOS" }
 		buildoptions { frameworks }
@@ -69,12 +80,16 @@ solution "gKit2light"
 
 
  -- description des fichiers communs
-local gkit_files = { "src/gKit/*.cpp", "src/gKit/*.h" }
+gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h" }
 
- -- description des projets		
 
-    
-local projects = {
+-- quand ce premake4.lua est inclus par un autre premake qui definit no_project=true (donc quand gkit2light est utilisé comme une lib),
+-- ceci stoppe la creation des projects suivants (tuto, etc.)
+if no_project then
+	do return end
+end
+ -- description des projets		 
+projects = {
 	"shader_kit"
 }
 
@@ -84,11 +99,11 @@ for i, name in ipairs(projects) do
 		kind "ConsoleApp"
 		targetdir "bin"
 		files ( gkit_files )
-		files { "src/" .. name..'.cpp' }
+		files { gkit_dir .. "/src/" .. name..'.cpp' }
 end
 
  -- description des tutos
-local tutos = {
+tutos = {
 	"tuto1",
 	"tuto2",
 	"tuto3",
@@ -127,12 +142,12 @@ for i, name in ipairs(tutos) do
 		kind "ConsoleApp"
 		targetdir "bin"
 		files ( gkit_files )
-		files { "tutos/" .. name..'.cpp' }
+		files { gkit_dir .. "/tutos/" .. name..'.cpp' }
 end
 
 
 -- description des tutos openGL avances / M2
-local tutosM2 = {
+tutosM2 = {
 	"tuto_time",
 	"tuto_mdi"
 }
@@ -143,7 +158,7 @@ for i, name in ipairs(tutosM2) do
 		kind "ConsoleApp"
 		targetdir "bin"
 		files ( gkit_files )
-		files { "tutos/M2/" .. name..'.cpp' }
+		files { gkit_dir .. "/tutos/M2/" .. name..'.cpp' }
 end
 
 project("tp2")
@@ -151,41 +166,8 @@ project("tp2")
 	kind "ConsoleApp"
 	targetdir "bin"
 	files ( gkit_files )
-	files { "opengl_tp2/tp2.cpp" }
+	files { gkit_dir .. "/opengl_tp2/tp2.cpp" }
 
 
- 
-project("l2_lifgfx")
-    language "C++"
-    kind "ConsoleApp"
-    targetdir "bin"
-    files ( gkit_files )
-    files { "src/l2_lifgfx/main.cpp",
-			"src/l2_lifgfx/Viewer.cpp", "src/l2_lifgfx/Viewer.h", 
-			"src/l2_lifgfx/AnimationCurve.cpp", "src/l2_lifgfx/AnimtionCurve.h" }
 
-newoption {
-   trigger     = "corrige",
-   value       = "cor",
-   description = "Choose a particular sub-list of projects",
-   allowed = {
-      { "off",	"Pas de corrige" },
-      { "on",  	"Avec corrige" },
-   }
-}
 
-			
-if not _OPTIONS["corrige"] then
-   _OPTIONS["corrige"] = "off"
-end
-
-if _OPTIONS["corrige"] == "on" then
-project("l2_lifgfx_corrige")
-    language "C++"
-    kind "ConsoleApp"
-    targetdir "bin"
-    files ( gkit_files )
-    files { "src/l2_lifgfx/Viewer.cpp", "src/l2_lifgfx/Viewer.h", 
-			"src/l2_lifgfx/Viewer_corrige.cpp", "src/l2_lifgfx/Viewer_corrige.h", 
-			"src/l2_lifgfx/AnimationCurve.cpp", "src/l2_lifgfx/AnimtionCurve.h" }
-end

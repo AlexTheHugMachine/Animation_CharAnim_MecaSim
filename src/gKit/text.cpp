@@ -9,14 +9,14 @@
 #include "image_io.h"
 #include "texture.h"
 #include "text.h"
-
+#include "window.h"
 
 Text create_text( )
 {
     Text text;
 
     // charge la fonte
-    Image font= read_image("data/font.png");
+    Image font= read_image( smart_path("data/font.png") );
 
     // modifie la transparence du caractere de fond
     for(unsigned int y= 0; y < 16; y++)
@@ -45,7 +45,7 @@ Text create_text( )
     text.color= White();
 
     // shader
-    text.program= read_program("data/shaders/text.glsl");
+    text.program= read_program( smart_path("data/shaders/text.glsl") );
     program_print_errors(text.program);
 
     // associe l'uniform buffer a l'entree 0 / binding 0
