@@ -1,6 +1,7 @@
 
-#include <ctype.h>
 #include <cstdio>
+#include <ctype.h>
+#include <climits>
 
 #include "wavefront.h"
 
@@ -44,7 +45,6 @@ Mesh read_mesh( const char *filename )
     std::vector<vec3> normals;
     std::vector<unsigned int> material_indices;
     std::vector<Material> materials;
-    int material= -1;
     
     std::vector<int> idp;
     std::vector<int> idt;
@@ -142,8 +142,8 @@ Mesh read_mesh( const char *filename )
         {
            if(sscanf(line, "mtllib %[^\r\n]", tmp) == 1)
            {
-               std::string path= pathname(filename) + tmp;
-               materials= read_materials(path.c_str());
+               materials= read_materials(std::string(pathname(filename) + tmp).c_str());
+               data.mesh_materials(materials);
            }
         }
         
@@ -153,7 +153,7 @@ Mesh read_mesh( const char *filename )
            {
                for(size_t i= 0; i < materials.size(); i++)
                 if(materials[i].name == tmp)
-                    material= i;
+                    data.material(i);
            }
         }
     }
@@ -237,7 +237,7 @@ std::vector<Material> read_materials( const char *filename )
         return materials;
     }
     
-    printf("loading '%s'...\n", filename);
+    printf("loading materials '%s'...\n", filename);
     
     Material *material= NULL;
     char tmp[1024];

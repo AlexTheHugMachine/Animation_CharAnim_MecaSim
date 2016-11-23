@@ -7,6 +7,7 @@
 #include "program.h"
 #include "uniforms.h"
 #include "buffer.h"
+#include "vec.h"
 #include "mesh.h"
 #include "window.h"
 
@@ -65,6 +66,10 @@ unsigned int Mesh::vertex( const vec3& position )
     if(m_colors.size() > 0 && m_colors.size() != m_positions.size())
         m_colors.push_back(m_colors.back());
 
+    // copie la matiere
+    if(m_triangle_materials.size() > 0 && m_positions.size() / 3 > m_triangle_materials.size())
+        m_triangle_materials.push_back(m_triangle_materials.back());
+    
     unsigned int index= (unsigned int) m_positions.size() -1;
     // construction de l'index buffer pour les strip
     switch(m_primitives)
@@ -148,6 +153,91 @@ Mesh& Mesh::restart_strip( )
     glEnable(GL_PRIMITIVE_RESTART_FIXED_INDEX); // n'existe pas sur mac ?!
 #endif
     return *this;
+}
+
+
+unsigned int Mesh::mesh_material( const Material& m )
+{
+    m_materials.push_back(m);
+    return (unsigned int) m_materials.size();
+}
+
+void Mesh::mesh_materials( const std::vector<Material>& m )
+{
+    m_materials= m;
+}
+
+int Mesh::mesh_material_count( ) const
+{
+    return (int) m_materials.size();
+}
+
+Material Mesh::mesh_material( const unsigned int id ) const
+{
+    assert((size_t) id < m_materials.size());
+    return m_materials[id];
+}
+
+Mesh& Mesh::material( const unsigned int id )
+{
+    m_triangle_materials.push_back(id);
+    return *this;
+}
+
+Material Mesh::triangle_material( const unsigned int id ) const
+{
+    assert((size_t) id < m_triangle_materials.size());
+    assert((size_t) m_triangle_materials[id] < m_materials.size());
+    return m_materials[m_triangle_materials[id]];
+}
+
+int Mesh::triangle_count( ) const
+{
+    return (m_primitives == GL_TRIANGLES) ? (int) m_positions.size() / 3: 0;
+}
+
+Triangle Mesh::triangle( const unsigned int id ) const
+{
+    unsigned int a, b, c;
+    if(m_indices.size())
+    {
+        assert((size_t) id*3 < m_indices.size());
+        a= m_indices[id*3];
+        b= m_indices[id*3 +1];
+        c= m_indices[id*3 +2];
+    }
+    else
+    {
+        assert((size_t) id*3 < m_positions.size());
+        a= id*3;
+        b= id*3 +1;
+        c= id*3 +2;
+    }
+    
+    Triangle triangle;
+    triangle.a= Point(m_positions[a]);
+    triangle.b= Point(m_positions[b]);
+    triangle.c= Point(m_positions[c]);
+    
+    if(m_normals.size() == m_positions.size())
+    {
+        triangle.na= Vector(m_normals[a]);
+        triangle.nb= Vector(m_normals[b]);
+        triangle.nc= Vector(m_normals[c]);
+    }
+    else
+    {
+        // calculer la normale geometrique
+        Vector ab(triangle.a, triangle.b);
+        Vector ac(triangle.a, triangle.c);
+        Vector n= normalize(cross(ab, ac));
+        triangle.na= n;
+        triangle.nb= n;
+        triangle.nc= n;
+    }
+    
+    triangle.material= triangle_material(id);
+    return triangle;
 }
 
 void Mesh::bounds( Point& pmin, Point& pmax )
