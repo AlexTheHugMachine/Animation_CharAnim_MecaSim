@@ -17,8 +17,5 @@ Mesh read_mesh( const char *filename );
 //! enregistre un mesh dans un fichier .obj.
 int write_mesh( const Mesh& mesh, const char *filename );
 
-//! charge un fichier .mtl, description des matieres.
-std::vector<Material> read_materials( const char *filename );
-
 ///@}
 #endif

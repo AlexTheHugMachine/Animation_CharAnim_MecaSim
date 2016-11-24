@@ -87,22 +87,19 @@ m.triangle(a, c, d);
 //! representation d'une matiere.
 struct Material
 {
-    std::string name;
-    
     Color diffuse;
     Color specular;
     Color emission;
     float ns;
     
-    Material( ) : name(), diffuse(0.8f, 0.4f, 0.1f), specular(), emission(), ns() {}
-    Material( const char *_name ) : name(_name), diffuse(0.8f, 0.8f, 0.8f), specular(0.2f, 0.2f, 0.2f), emission(), ns(22) {}
+    Material( ) : diffuse(0.8f, 0.8f, 0.8f), specular(0.2f, 0.2f, 0.2f), emission(), ns(22) {}
 };
 
 //! representation d'un triangle.
 struct Triangle
 {
-    Point a, b, c;
-    Vector na, nb, nc;
+    vec3 a, b, c;
+    vec3 na, nb, nc;
     Material material;
 };
 
@@ -214,13 +211,13 @@ public:
     //! renvoie le nombre de matieres.
     int mesh_material_count( ) const;
     //! renvoie une description de matiere en fonction de son indice.
-    Material mesh_material( const unsigned int id ) const;
+    const Material& mesh_material( const unsigned int id ) const;
     
-    //! definit la matiere du prochain triangle. id est l'indice de la matiere ajoutee par material() ou materials( ). ne fonctionne que pour les primitives GL_TRIANGLES, indexees ou pas.
+    //! definit la matiere du prochain triangle. id est l'indice d'une matiere ajoutee par material() ou materials( ). ne fonctionne que pour les primitives GL_TRIANGLES, indexees ou pas.
     Mesh& material( const unsigned int id );
     
     //! renvoie la matiere d'un triangle.
-    Material triangle_material( const unsigned int id ) const;
+    const Material &triangle_material( const unsigned int id ) const;
     //! renvoie le nombre de triangles.
     int triangle_count( ) const;
     //! renvoie un triangle.

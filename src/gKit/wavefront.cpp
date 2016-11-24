@@ -27,6 +27,16 @@ std::string pathname( const std::string& filename )
 }
 
 
+struct MaterialLib
+{
+    std::vector<std::string> names;
+    std::vector<Material> data;
+};
+
+//! charge un fichier .mtl, description des matieres.
+MaterialLib read_materials( const char *filename );
+
+
 Mesh read_mesh( const char *filename )
 {
     FILE *in= fopen(filename, "rt");
@@ -44,7 +54,7 @@ Mesh read_mesh( const char *filename )
     std::vector<vec2> texcoords;
     std::vector<vec3> normals;
     std::vector<unsigned int> material_indices;
-    std::vector<Material> materials;
+    MaterialLib materials;
     
     std::vector<int> idp;
     std::vector<int> idt;
@@ -142,8 +152,9 @@ Mesh read_mesh( const char *filename )
         {
            if(sscanf(line, "mtllib %[^\r\n]", tmp) == 1)
            {
-               materials= read_materials(std::string(pathname(filename) + tmp).c_str());
-               data.mesh_materials(materials);
+               materials= read_materials( std::string(pathname(filename) + tmp).c_str() );
+               // enregistre les matieres dans le mesh
+               data.mesh_materials(materials.data);
            }
         }
         
@@ -151,8 +162,9 @@ Mesh read_mesh( const char *filename )
         {
            if(sscanf(line, "usemtl %[^\r\n]", tmp) == 1)
            {
-               for(size_t i= 0; i < materials.size(); i++)
-                if(materials[i].name == tmp)
+               for(size_t i= 0; i < materials.names.size(); i++)
+                if(materials.names[i] == tmp)
+                    // selectionne une matiere pour le prochain triangle
                     data.material(i);
            }
         }
@@ -226,9 +238,9 @@ int write_mesh( const Mesh& mesh, const char *filename )
 }
 
 
-std::vector<Material> read_materials( const char *filename )
+MaterialLib read_materials( const char *filename )
 {
-    std::vector<Material> materials;
+    MaterialLib materials;
     
     FILE *in= fopen(filename, "rt");
     if(in == NULL)
@@ -264,8 +276,9 @@ std::vector<Material> read_materials( const char *filename )
         {
             if(sscanf(line, "newmtl %[^\r\n]", tmp) == 1)
             {
-                materials.push_back( Material(tmp) );
-                material= &materials.back();
+                materials.names.push_back( tmp );
+                materials.data.push_back( Material() );
+                material= &materials.data.back();
             }
         }
         
@@ -293,10 +306,7 @@ std::vector<Material> read_materials( const char *filename )
     
     fclose(in);
     if(error)
-    {
         printf("[error] parsing line :\n%s\n", line_buffer);
-        return materials;
-    }
     
     return materials;
 }

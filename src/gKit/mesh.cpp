@@ -66,8 +66,8 @@ unsigned int Mesh::vertex( const vec3& position )
     if(m_colors.size() > 0 && m_colors.size() != m_positions.size())
         m_colors.push_back(m_colors.back());
 
-    // copie la matiere
-    if(m_triangle_materials.size() > 0 && m_positions.size() / 3 > m_triangle_materials.size())
+    // copie la matiere courante, uniquement si elle est definie
+    if(m_triangle_materials.size() > 0 && (size_t) triangle_count() > m_triangle_materials.size())
         m_triangle_materials.push_back(m_triangle_materials.back());
     
     unsigned int index= (unsigned int) m_positions.size() -1;
@@ -159,7 +159,7 @@ Mesh& Mesh::restart_strip( )
 unsigned int Mesh::mesh_material( const Material& m )
 {
     m_materials.push_back(m);
-    return (unsigned int) m_materials.size();
+    return (unsigned int) m_materials.size() -1;
 }
 
 void Mesh::mesh_materials( const std::vector<Material>& m )
@@ -172,7 +172,7 @@ int Mesh::mesh_material_count( ) const
     return (int) m_materials.size();
 }
 
-Material Mesh::mesh_material( const unsigned int id ) const
+const Material& Mesh::mesh_material( const unsigned int id ) const
 {
     assert((size_t) id < m_materials.size());
     return m_materials[id];
@@ -184,7 +184,7 @@ Mesh& Mesh::material( const unsigned int id )
     return *this;
 }
 
-Material Mesh::triangle_material( const unsigned int id ) const
+const Material &Mesh::triangle_material( const unsigned int id ) const
 {
     assert((size_t) id < m_triangle_materials.size());
     assert((size_t) m_triangle_materials[id] < m_materials.size());
@@ -193,47 +193,53 @@ Material Mesh::triangle_material( const unsigned int id ) const
 
 int Mesh::triangle_count( ) const
 {
-    return (m_primitives == GL_TRIANGLES) ? (int) m_positions.size() / 3: 0;
+    if(m_primitives != GL_TRIANGLES)
+        return 0;
+    
+    if(m_indices.size() > 0)
+        return (int) m_indices.size() / 3;
+    else
+        return (int) m_positions.size() / 3;
 }
 
 Triangle Mesh::triangle( const unsigned int id ) const
 {
     unsigned int a, b, c;
-    if(m_indices.size())
+    if(m_indices.size() > 0)
     {
-        assert((size_t) id*3 < m_indices.size());
+        assert((size_t) id*3+2 < m_indices.size());
         a= m_indices[id*3];
         b= m_indices[id*3 +1];
         c= m_indices[id*3 +2];
     }
     else
     {
-        assert((size_t) id*3 < m_positions.size());
+        assert((size_t) id*3+2 < m_positions.size());
         a= id*3;
         b= id*3 +1;
         c= id*3 +2;
     }
     
     Triangle triangle;
-    triangle.a= Point(m_positions[a]);
-    triangle.b= Point(m_positions[b]);
-    triangle.c= Point(m_positions[c]);
+    triangle.a= m_positions[a];
+    triangle.b= m_positions[b];
+    triangle.c= m_positions[c];
     
     if(m_normals.size() == m_positions.size())
     {
-        triangle.na= Vector(m_normals[a]);
-        triangle.nb= Vector(m_normals[b]);
-        triangle.nc= Vector(m_normals[c]);
+        triangle.na= m_normals[a];
+        triangle.nb= m_normals[b];
+        triangle.nc= m_normals[c];
     }
     else
     {
         // calculer la normale geometrique
-        Vector ab(triangle.a, triangle.b);
-        Vector ac(triangle.a, triangle.c);
+        Vector ab(Point(m_positions[a]), Point(m_positions[b]));
+        Vector ac(Point(m_positions[a]), Point(m_positions[c]));
         Vector n= normalize(cross(ab, ac));
-        triangle.na= n;
-        triangle.nb= n;
-        triangle.nc= n;
+        triangle.na= vec3(n);
+        triangle.nb= vec3(n);
+        triangle.nc= vec3(n);
     }
     
     triangle.material= triangle_material(id);
