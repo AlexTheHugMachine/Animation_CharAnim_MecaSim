@@ -23,7 +23,7 @@ void Mesh::release( )
         release_vertex_format(m_vao);
 
     // detruit tous les shaders crees...
-    for(std::unordered_map<unsigned int, GLuint>::iterator it= m_state_map.begin(); it != m_state_map.end(); ++it)
+    for(auto it= m_state_map.begin(); it != m_state_map.end(); ++it)
         if(it->second > 0)
             release_program(it->second);
 }
@@ -202,7 +202,7 @@ int Mesh::triangle_count( ) const
         return (int) m_positions.size() / 3;
 }
 
-Triangle Mesh::triangle( const unsigned int id ) const
+TriangleData Mesh::triangle( const unsigned int id ) const
 {
     unsigned int a, b, c;
     if(m_indices.size() > 0)
@@ -220,7 +220,7 @@ Triangle Mesh::triangle( const unsigned int id ) const
         c= id*3 +2;
     }
     
-    Triangle triangle;
+    TriangleData triangle;
     triangle.a= m_positions[a];
     triangle.b= m_positions[b];
     triangle.c= m_positions[c];
@@ -242,7 +242,20 @@ Triangle Mesh::triangle( const unsigned int id ) const
         triangle.nc= vec3(n);
     }
     
-    triangle.material= triangle_material(id);
+    if(m_texcoords.size() == m_positions.size())
+    {
+        triangle.ta= m_texcoords[a];
+        triangle.tb= m_texcoords[b];
+        triangle.tc= m_texcoords[c];
+    }
+    else
+    {
+        // coordonnees barycentriques des sommets, convention p(u, v)= w*a + u*b + v*c, avec w= 1 - u -v
+        triangle.ta= vec2(0, 0);
+        triangle.tb= vec2(1, 0);
+        triangle.tc= vec2(0, 1);
+    }
+    
     return triangle;
 }
 

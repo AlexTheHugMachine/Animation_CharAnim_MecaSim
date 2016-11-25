@@ -16,7 +16,7 @@
 ///@{
 
 /*! \file 
- representation d'un objet.
+representation d'un objet.
 
 Mesh propose plusieurs manieres de decrire un maillage.
 par exemple, un triangle :
@@ -32,8 +32,8 @@ m.vertex( b );
 m.vertex( c );
 \endcode
 
-il est aussi possible de definir d'autres attributs : la couleur du sommet, sa normale, ses coordonnees de texture, ce sont les fonctions Mesh::color(), Mesh::normal() et Mesh::texcoord().
-on peut decrire ces informations de maniere assez compacte :
+il est aussi possible de definir d'autres attributs : la couleur du sommet, sa normale, ses coordonnees de texture, ce sont 
+les fonctions Mesh::color(), Mesh::normal() et Mesh::texcoord(). on peut decrire ces informations de maniere assez compacte :
 \code
 Mesh m(GL_TRIANGLES);
 
@@ -87,20 +87,20 @@ m.triangle(a, c, d);
 //! representation d'une matiere.
 struct Material
 {
-    Color diffuse;
-    Color specular;
-    Color emission;
-    float ns;
+    Color diffuse;      //!< couleur diffuse
+    Color specular;     //!< couleur du reflet
+    Color emission;     //!< > 0 pour une source de lumiere
+    float ns;           //!< exposant pour les reflets blinn-phong
     
     Material( ) : diffuse(0.8f, 0.8f, 0.8f), specular(0.2f, 0.2f, 0.2f), emission(), ns(22) {}
 };
 
 //! representation d'un triangle.
-struct Triangle
+struct TriangleData
 {
-    vec3 a, b, c;
-    vec3 na, nb, nc;
-    Material material;
+    vec3 a, b, c;       //!< positions       
+    vec3 na, nb, nc;    //!< normales
+    vec2 ta, tb, tc;    //!< texcoords
 };
 
 
@@ -221,7 +221,7 @@ public:
     //! renvoie le nombre de triangles.
     int triangle_count( ) const;
     //! renvoie un triangle.
-    Triangle triangle( const unsigned int id ) const;
+    TriangleData triangle( const unsigned int id ) const;
     
     //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet (boite englobante alignee sur les axes, aabb).
     void bounds( Point& pmin, Point& pmax );
