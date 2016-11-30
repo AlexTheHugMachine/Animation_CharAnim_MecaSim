@@ -55,6 +55,7 @@ solution "gKit2light"
 		if _PREMAKE_VERSION >="5.0" then
 			system "Windows"
 			architecture "x64"
+			disablewarnings { "4244", "4305" }
 		end
 		includedirs { "extern/visual2013/include" }
 		libdirs { "extern/visual2013/lib" }
@@ -66,6 +67,7 @@ solution "gKit2light"
 		if _PREMAKE_VERSION >="5.0" then
 			system "Windows"
 			architecture "x64"
+			disablewarnings { "4244", "4305" }
 		end
 		includedirs { "extern/visual2015/include" }
 		libdirs { "extern/visual2015/lib" }
@@ -82,9 +84,13 @@ solution "gKit2light"
  -- description des fichiers communs
 gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h" }
 
- -- description des projets		
 
-    
+-- quand ce premake4.lua est inclus par un autre premake qui definit no_project=true (donc quand gkit2light est utilisé comme une lib),
+-- ceci stoppe la creation des projects suivants (tuto, etc.)
+if no_project then
+	do return end
+end
+ -- description des projets		 
 projects = {
 	"shader_kit"
 }
@@ -165,8 +171,5 @@ project("tp2")
 	files { gkit_dir .. "/opengl_tp2/tp2.cpp" }
 
 
-
-	
-	
 
 

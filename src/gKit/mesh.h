@@ -16,7 +16,7 @@
 ///@{
 
 /*! \file 
- representation d'un objet.
+representation d'un objet.
 
 Mesh propose plusieurs manieres de decrire un maillage.
 par exemple, un triangle :
@@ -32,8 +32,8 @@ m.vertex( b );
 m.vertex( c );
 \endcode
 
-il est aussi possible de definir d'autres attributs : la couleur du sommet, sa normale, ses coordonnees de texture, ce sont les fonctions Mesh::color(), Mesh::normal() et Mesh::texcoord().
-on peut decrire ces informations de maniere assez compacte :
+il est aussi possible de definir d'autres attributs : la couleur du sommet, sa normale, ses coordonnees de texture, ce sont 
+les fonctions Mesh::color(), Mesh::normal() et Mesh::texcoord(). on peut decrire ces informations de maniere assez compacte :
 \code
 Mesh m(GL_TRIANGLES);
 
@@ -70,7 +70,7 @@ m.vertex(c);
 \endcode
 et cette solution permet aussi de decrire plusieurs triangles partageant leurs sommets, par exemple :
 \code
-Mesh m(GL_TRIANGLE);
+Mesh m(GL_TRIANGLES);
 
 // insere 4 sommets dans le maillage et conserve leurs indices
 unsigned int a= m.vertex(Point(...));
@@ -83,6 +83,26 @@ m.triangle(a, b, c);
 m.triangle(a, c, d);
 \endcode
 */
+
+//! representation d'une matiere.
+struct Material
+{
+    Color diffuse;      //!< couleur diffuse
+    Color specular;     //!< couleur du reflet
+    Color emission;     //!< > 0 pour une source de lumiere
+    float ns;           //!< exposant pour les reflets blinn-phong
+    
+    Material( ) : diffuse(0.8f, 0.8f, 0.8f), specular(0.2f, 0.2f, 0.2f), emission(), ns(22) {}
+};
+
+//! representation d'un triangle.
+struct TriangleData
+{
+    vec3 a, b, c;       //!< positions       
+    vec3 na, nb, nc;    //!< normales
+    vec2 ta, tb, tc;    //!< texcoords
+};
+
 
 //! representation d'un objet / maillage.
 class Mesh
@@ -183,6 +203,26 @@ public:
     //! modifie la position du sommet d'indice id.
     void vertex( const unsigned int id, const float x, const float y, const float z ) { vertex(id, vec3(x, y, z)); }
     
+    //! ajoute une description de matiere. et renvoie son indice.
+    unsigned int mesh_material( const Material& m );
+    //! ajoute un ensemble de description de matieres.
+    void mesh_materials( const std::vector<Material>& m );
+
+    //! renvoie le nombre de matieres.
+    int mesh_material_count( ) const;
+    //! renvoie une description de matiere en fonction de son indice.
+    const Material& mesh_material( const unsigned int id ) const;
+    
+    //! definit la matiere du prochain triangle. id est l'indice d'une matiere ajoutee par material() ou materials( ). ne fonctionne que pour les primitives GL_TRIANGLES, indexees ou pas.
+    Mesh& material( const unsigned int id );
+    
+    //! renvoie la matiere d'un triangle.
+    const Material &triangle_material( const unsigned int id ) const;
+    //! renvoie le nombre de triangles.
+    int triangle_count( ) const;
+    //! renvoie un triangle.
+    TriangleData triangle( const unsigned int id ) const;
+    
     //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet (boite englobante alignee sur les axes, aabb).
     void bounds( Point& pmin, Point& pmax );
     
@@ -217,10 +257,10 @@ public:
     std::size_t index_buffer_size( ) const { return m_indices.size() * sizeof(unsigned int); }
     
     /*! renvoie l'adresse d'un attribut du premier sommet.
-    
+
     attention : tous les attributs ne sont pas definis. il est possible de verifier qu'ils existent en consultant la taille du buffer, 
     cf attribute_buffer_size(), 0 indique que l'attribut n'existe pas.
-    
+
     par convention, les attributs sont numerotes :
         - 0 : position, vertex buffer,
         - 1 : coordonnee de texture, texcoord buffer,
@@ -300,6 +340,9 @@ protected:
     std::vector<vec4> m_colors;
     
     std::vector<unsigned int> m_indices;
+
+    std::vector<Material> m_materials;
+    std::vector<unsigned int> m_triangle_materials;
 
     std::unordered_map<unsigned int, GLuint> m_state_map;
     unsigned int m_state;
