@@ -1,86 +1,53 @@
+/****************************************************************************
+Copyright (C) 2010-2020 Alexandre Meyer
+
+This file is part of Simea.
+
+Simea is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Simea is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Simea.  If not, see <http://www.gnu.org/licenses/>.
+*****************************************************************************/
 
 #ifndef VIEWER_H
 #define VIEWER_H
 
+#include <ViewerBasic.h>
 
-#include "glcore.h"
-
-#include "window.h"
-#include "program.h"
-#include "buffer.h"
-#include "texture.h"
-#include "mesh.h"
-#include "draw.h"
-#include "vec.h"
-#include "mat.h"
-#include "orbiter.h"
-#include "app.h"
-
-
-class Viewer : public App
+class Viewer : public ViewerBasic
 {
 public:
-    Viewer();
+	Viewer() : ViewerBasic() {}
 
-    //! Initialise tout : compile les shaders et construit le programme + les buffers + le vertex array.
-    //! renvoie -1 en cas d'erreur.
     int init();
-
-    //! La fonction d'affichage
     int render();
-
-    //! Libere tout
-    int quit();
-
-    void help();
-
     int update( const float time, const float delta );
 
 protected:
 
-    Orbiter m_camera;
-    DrawParam gl;
-    bool mb_cullface;
-    bool mb_wireframe;
-
-    Mesh m_axe;
-    Mesh m_grid;
-    Mesh m_cube;
-    GLuint m_cube_texture;
-
-    bool b_draw_grid;
-    bool b_draw_axe;
-    void init_axe();
-    void init_grid();
-    void init_cube();
-
     Mesh m_cylinder;
     Mesh m_cylinder_cover;
+    Mesh m_cone;
     Mesh m_sphere;
+
+    void init_cone();
     void init_cylinder();
     void init_sphere();
+
     void draw_cylinder(const Transform& T);
-    void draw_sphere(const Transform& T);
-
-
-    /* Pour creer un nouvel objet vous devez :
-       1. declarer ici
-                le Mesh,
-                la texture si besoin,
-                une fonction 'init_votreObjet'
-        2. Appeller la fonction 'init_votreObjet' dans la fonction 'init' du .cpp
-        3. Pour l'affichage, ajouter un appel  gl.draw(votreMesh); dans la fonction 'render' du .cpp
-    */
-    Mesh m_quad;
-    GLuint m_quad_texture;
-    void init_quad();
-    Transform Tquad;
-
-
-    void draw_axe(const Transform& T);
-    void manageCameraLight();
+    void draw_cone(const Transform& T);
+	void draw_sphere(const Transform& T);
+	void draw_cylinder(const Vector& a, const Vector& b, float r=1.f);
+	void draw_sphere(const Vector& a, float r = 1.f);
 };
-
 
 
 #endif
