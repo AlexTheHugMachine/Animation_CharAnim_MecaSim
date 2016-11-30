@@ -1,0 +1,90 @@
+########################################################################
+#                 Makefile                                             #
+#								                                       #
+########################################################################
+
+SYSTEM = $(shell uname)
+
+ifeq (${SYSTEM}, CYGWIN_NT-5.1)
+  SYSTEM = CYGWIN
+endif
+
+ifeq (${SYSTEM}, CYGWIN)
+
+CC = cl
+LD = cl
+CPPFLAGS = /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "SOWIN_NOT_DLL" /D "COIN_NOT_DLL" /EHsc /Zc:wchar_t- /W3 /nologo /c -D_CRT_SECURE_NO_WARNINGS /wd4244 /wd4251 /wd4275 /wd4290
+LDFLAGS  = /INCREMENTAL:NO /NOLOGO /SUBSYSTEM:CONSOLE
+
+INCLUDE_DIR = /I "C:\Program Files\Microsoft Platform SDK\Include"
+LIB_DIR = /LIBPATH:"C:\Program Files\Microsoft Platform SDK\Lib"
+LIBS =
+
+all: CreateData vg32sappe obj2sappe off2sappe scalepoints
+
+CreateData.obj: CreateData.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDE_DIR) $< /Fo$@
+CreateData: CreateData.obj
+	$(LD) $+ /link /out:$@.exe $(LDFLAGS) $(LIB_DIR) $(LIBS)
+
+vg32sappe.obj: vg32sappe.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDE_DIR) $< /Fo$@
+vg32sappe: vg32sappe.obj
+	$(LD) $+ /link /out:$@.exe $(LDFLAGS) $(LIB_DIR) $(LIBS)
+
+obj2sappe.obj: obj2sappe.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDE_DIR) $< /Fo$@
+obj2sappe: obj2sappe.obj
+	$(LD) $+ /link /out:$@.exe $(LDFLAGS) $(LIB_DIR) $(LIBS)
+
+off2sappe.obj: off2sappe.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDE_DIR) $< /Fo$@
+off2sappe: off2sappe.obj
+	$(LD) $+ /link /out:$@.exe $(LDFLAGS) $(LIB_DIR) $(LIBS)
+
+scalepoints.obj: scalepoints.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDE_DIR) $< /Fo$@
+scalepoints: scalepoints.obj
+	$(LD) $+ /link /out:$@.exe $(LDFLAGS) $(LIB_DIR) $(LIBS)
+
+clean:
+	rm -f *.obj *.exe
+
+else
+
+CXX        = g++
+LD         = 
+
+########################################################################
+
+all: CreateData vg32sappe obj2sappe off2sappe scalepoints
+
+CreateData: CreateData.cpp
+	${CXX}  -o CreateData CreateData.cpp ${LDFLAGS} ${CXXFLAGS}
+	
+vg32sappe: vg32sappe.cpp
+	${CXX}  -o vg32sappe vg32sappe.cpp ${LDFLAGS} ${CXXFLAGS}
+	
+obj2sappe: obj2sappe.cpp
+	${CXX}  -o obj2sappe obj2sappe.cpp ${LDFLAGS} ${CXXFLAGS}
+	
+off2sappe: off2sappe.cpp
+	${CXX}  -o off2sappe off2sappe.cpp ${LDFLAGS} ${CXXFLAGS}
+
+scalepoints: scalepoints.cpp
+	${CXX}  -o scalepoints scalepoints.cpp ${LDFLAGS} ${CXXFLAGS}
+
+
+%.o: %.cpp
+	${CXX}  -c ${@:.o=.cpp} ${CXXFLAGS}
+
+%: %.o  
+	${CXX}  -o $@ $@.o ${LDFLAGS}
+
+
+clean:
+	rm -f core core.* *.o *~ CreateData vg32sappe obj2sappe off2sappe scalepoints
+
+endif
+
+########################################################################
