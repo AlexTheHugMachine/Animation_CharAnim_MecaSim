@@ -21,6 +21,7 @@ project("master_CharAnim")
     language "C++"
     kind "ConsoleApp"
     targetdir ( gfx_masterCharAnim_dir .. "/bin" )
+	includedirs { gfx_masterCharAnim_dir .. "/src/master_CharAnim/" }
     files ( gkit_files )
     files ( master_CharAnim_files )
 	files { gfx_masterCharAnim_dir .. "/src/master_CharAnim/main.cpp" }

@@ -7,6 +7,7 @@
 #include "program.h"
 #include "uniforms.h"
 #include "buffer.h"
+#include "vec.h"
 #include "mesh.h"
 #include "window.h"
 
@@ -22,7 +23,7 @@ void Mesh::release( )
         release_vertex_format(m_vao);
 
     // detruit tous les shaders crees...
-    for(std::unordered_map<unsigned int, GLuint>::iterator it= m_state_map.begin(); it != m_state_map.end(); ++it)
+    for(auto it= m_state_map.begin(); it != m_state_map.end(); ++it)
         if(it->second > 0)
             release_program(it->second);
 }
@@ -65,6 +66,10 @@ unsigned int Mesh::vertex( const vec3& position )
     if(m_colors.size() > 0 && m_colors.size() != m_positions.size())
         m_colors.push_back(m_colors.back());
 
+    // copie la matiere courante, uniquement si elle est definie
+    if(m_triangle_materials.size() > 0 && (size_t) triangle_count() > m_triangle_materials.size())
+        m_triangle_materials.push_back(m_triangle_materials.back());
+    
     unsigned int index= (unsigned int) m_positions.size() -1;
     // construction de l'index buffer pour les strip
     switch(m_primitives)
@@ -148,6 +153,110 @@ Mesh& Mesh::restart_strip( )
     glEnable(GL_PRIMITIVE_RESTART_FIXED_INDEX); // n'existe pas sur mac ?!
 #endif
     return *this;
+}
+
+
+unsigned int Mesh::mesh_material( const Material& m )
+{
+    m_materials.push_back(m);
+    return (unsigned int) m_materials.size() -1;
+}
+
+void Mesh::mesh_materials( const std::vector<Material>& m )
+{
+    m_materials= m;
+}
+
+int Mesh::mesh_material_count( ) const
+{
+    return (int) m_materials.size();
+}
+
+const Material& Mesh::mesh_material( const unsigned int id ) const
+{
+    assert((size_t) id < m_materials.size());
+    return m_materials[id];
+}
+
+Mesh& Mesh::material( const unsigned int id )
+{
+    m_triangle_materials.push_back(id);
+    return *this;
+}
+
+const Material &Mesh::triangle_material( const unsigned int id ) const
+{
+    assert((size_t) id < m_triangle_materials.size());
+    assert((size_t) m_triangle_materials[id] < m_materials.size());
+    return m_materials[m_triangle_materials[id]];
+}
+
+int Mesh::triangle_count( ) const
+{
+    if(m_primitives != GL_TRIANGLES)
+        return 0;
+    
+    if(m_indices.size() > 0)
+        return (int) m_indices.size() / 3;
+    else
+        return (int) m_positions.size() / 3;
+}
+
+TriangleData Mesh::triangle( const unsigned int id ) const
+{
+    unsigned int a, b, c;
+    if(m_indices.size() > 0)
+    {
+        assert((size_t) id*3+2 < m_indices.size());
+        a= m_indices[id*3];
+        b= m_indices[id*3 +1];
+        c= m_indices[id*3 +2];
+    }
+    else
+    {
+        assert((size_t) id*3+2 < m_positions.size());
+        a= id*3;
+        b= id*3 +1;
+        c= id*3 +2;
+    }
+    
+    TriangleData triangle;
+    triangle.a= m_positions[a];
+    triangle.b= m_positions[b];
+    triangle.c= m_positions[c];
+    
+    if(m_normals.size() == m_positions.size())
+    {
+        triangle.na= m_normals[a];
+        triangle.nb= m_normals[b];
+        triangle.nc= m_normals[c];
+    }
+    else
+    {
+        // calculer la normale geometrique
+        Vector ab(Point(m_positions[a]), Point(m_positions[b]));
+        Vector ac(Point(m_positions[a]), Point(m_positions[c]));
+        Vector n= normalize(cross(ab, ac));
+        triangle.na= vec3(n);
+        triangle.nb= vec3(n);
+        triangle.nc= vec3(n);
+    }
+    
+    if(m_texcoords.size() == m_positions.size())
+    {
+        triangle.ta= m_texcoords[a];
+        triangle.tb= m_texcoords[b];
+        triangle.tc= m_texcoords[c];
+    }
+    else
+    {
+        // coordonnees barycentriques des sommets, convention p(u, v)= w*a + u*b + v*c, avec w= 1 - u -v
+        triangle.ta= vec2(0, 0);
+        triangle.tb= vec2(1, 0);
+        triangle.tc= vec2(0, 1);
+    }
+    
+    return triangle;
 }
 
 void Mesh::bounds( Point& pmin, Point& pmax )

@@ -18,6 +18,7 @@ along with Simea.  If not, see <http://www.gnu.org/licenses/>.
 *****************************************************************************/
 
 #include <Viewer.h>
+#include <cmath>
 
 using namespace std;
 
