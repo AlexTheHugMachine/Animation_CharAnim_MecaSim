@@ -55,10 +55,10 @@ solution "gKit2light"
 		if _PREMAKE_VERSION >="5.0" then
 			system "Windows"
 			architecture "x64"
+			disablewarnings { "4244", "4305" }
 		end
 		includedirs { "extern/visual2013/include" }
 		libdirs { "extern/visual2013/lib" }
-		disablewarnings { "4244", "4305" }
 		--disablewarnings { "4244", "4305" }
 		--buildoptions { "/" }
 		platforms { "x64" }
@@ -69,6 +69,7 @@ solution "gKit2light"
 		if _PREMAKE_VERSION >="5.0" then
 			system "Windows"
 			architecture "x64"
+			disablewarnings { "4244", "4305" }
 		end
 		includedirs { "extern/visual2015/include" }
 		libdirs { "extern/visual2015/lib" }
