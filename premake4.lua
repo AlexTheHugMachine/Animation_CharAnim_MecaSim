@@ -59,8 +59,6 @@ solution "gKit2light"
 		end
 		includedirs { "extern/visual2013/include" }
 		libdirs { "extern/visual2013/lib" }
-		--disablewarnings { "4244", "4305" }
-		--buildoptions { "/" }
 		platforms { "x64" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 
