@@ -234,8 +234,15 @@ TriangleData Mesh::triangle( const unsigned int id ) const
     else
     {
         // calculer la normale geometrique
+#if (_MSC_VER>1500)				// je ne sais pas pourquoi mais Visual ne veut pas la 2e version : il veut un truc constant en 2e paramètre mais c'est bien un truc constant
+		Point pb(m_positions[b]);
+		Point pc(m_positions[c]);
+		Vector ab(Point(m_positions[a]), pb);
+		Vector ac(Point(m_positions[a]), pc);
+#else
         Vector ab(Point(m_positions[a]), Point(m_positions[b]));
         Vector ac(Point(m_positions[a]), Point(m_positions[c]));
+#endif
         Vector n= normalize(cross(ab, ac));
         triangle.na= vec3(n);
         triangle.nb= vec3(n);

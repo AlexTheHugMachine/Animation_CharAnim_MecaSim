@@ -82,6 +82,8 @@ public:
     //! enregistre la position de l'orbiter dans un fichier texte.
     int write_orbiter( const char *filename );
 
+	//! renvoie le rayon de la scene
+	float radius() const { return m_radius;  }
 protected:
     Point m_center;
     vec2 m_position;
