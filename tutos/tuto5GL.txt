@@ -261,7 +261,7 @@ void main( )
 #ifdef FRAGMENT_SHADER
 // fragment shader
 
-in vec3 vertex_texcoord;
+in vec2 vertex_texcoord;
 
 uniform sampler2D diffuse_color;
 

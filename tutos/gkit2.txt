@@ -35,6 +35,7 @@ plus ceux dédiés à openGL :
     - \ref shader_reflect,
     - \ref tuto5GL,
     - \ref draw,
+    - \ref framebuffer,
     - \ref time
     
 et un utilitaire pour jouer avec les shaders, shader_kit, décrit dans \ref tuto2GL

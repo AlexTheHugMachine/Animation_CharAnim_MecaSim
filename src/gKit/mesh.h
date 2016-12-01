@@ -89,7 +89,7 @@ struct Material
 {
     Color diffuse;      //!< couleur diffuse
     Color specular;     //!< couleur du reflet
-    Color emission;     //!< > 0 pour une source de lumiere
+    Color emission;     //!< pour une source de lumiere
     float ns;           //!< exposant pour les reflets blinn-phong
     
     Material( ) : diffuse(0.8f, 0.8f, 0.8f), specular(0.2f, 0.2f, 0.2f), emission(), ns(22) {}
@@ -108,6 +108,8 @@ struct TriangleData
 class Mesh
 {
 public:
+    //! \name construction.
+    //@{
     //! constructeur par defaut.
     Mesh( ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
         m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_program(0), m_update_buffers(false) {}
@@ -120,12 +122,10 @@ public:
     int create( const GLenum primitives );
     //! detruit les objets openGL.
     void release( );
+    //@}
     
-    //! renvoie la couleur par defaut du mesh, utilisee si les sommets n'ont pas de couleur associee.
-    Color default_color( ) const { return m_color; }
-    //! modifie la couleur par defaut, utilisee si les sommets n'ont pas de couleur associee.
-    Mesh& default_color( const Color& color );
-    
+    //! \name description des attributs des sommets. 
+    //@{
     //! definit la couleur du prochain sommet.
     Mesh& color( const vec4& c );
     //! definit la couleur du prochain sommet.
@@ -151,7 +151,10 @@ public:
     unsigned int vertex( const Point& p ) { return vertex(vec3(p)); }
     //! insere un sommet de position p, et ses attributs (s'ils sont definis par color(), texcoord(), normal()), dans l'objet. renvoie l'indice du sommet.
     unsigned int vertex( const float x, const float y, const float z ) { return vertex(vec3(x, y, z)); }
+    //@}
 
+    //! \name description de triangles indexes.
+    //@{
     /*! insere un triangle.  a, b, c sont les indices des sommets deja inseres dans l'objet. ne fonctionne pas avec les strips et les fans.
     \code
     Mesh m(GL_TRIANGLES);
@@ -176,7 +179,10 @@ public:
     
     //! demarre un nouveau strip. a utiliser avec un objet composes de GL_TRIANGLE_STRIP, doit aussi fonctionner avec GL_TRIANGLE_FAN, GL_LINE_STRIP, GL_LINE_LOOP, etc.
     Mesh& restart_strip( );
+    //@}
     
+    //! \name modification des attributs des sommets.
+    //@{
     //! modifie la couleur du sommet d'indice id.
     Mesh& color( const unsigned int id, const vec4& c );
     //! modifie la couleur du sommet d'indice id.
@@ -202,7 +208,10 @@ public:
     void vertex( const unsigned int id, const Point& p ) { vertex(id, vec3(p)); }
     //! modifie la position du sommet d'indice id.
     void vertex( const unsigned int id, const float x, const float y, const float z ) { vertex(id, vec3(x, y, z)); }
+    //@}
     
+    //! \name description des matieres.
+    //@{
     //! ajoute une description de matiere. et renvoie son indice.
     unsigned int mesh_material( const Material& m );
     //! ajoute un ensemble de description de matieres.
@@ -210,22 +219,33 @@ public:
 
     //! renvoie le nombre de matieres.
     int mesh_material_count( ) const;
-    //! renvoie une description de matiere en fonction de son indice.
+    //! renvoie la description de matiere d'indice id.
     const Material& mesh_material( const unsigned int id ) const;
     
-    //! definit la matiere du prochain triangle. id est l'indice d'une matiere ajoutee par material() ou materials( ). ne fonctionne que pour les primitives GL_TRIANGLES, indexees ou pas.
+    //! definit la matiere du prochain triangle. id est l'indice d'une matiere ajoutee par mesh_material() ou mesh_materials( ). ne fonctionne que pour les primitives GL_TRIANGLES, indexees ou pas.
     Mesh& material( const unsigned int id );
+    //@}
     
+    //! \name description des triangles d'un maillage.
+    //@{
     //! renvoie la matiere d'un triangle.
     const Material &triangle_material( const unsigned int id ) const;
     //! renvoie le nombre de triangles.
     int triangle_count( ) const;
     //! renvoie un triangle.
     TriangleData triangle( const unsigned int id ) const;
+    //@}
     
     //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet (boite englobante alignee sur les axes, aabb).
     void bounds( Point& pmin, Point& pmax );
     
+    //! renvoie la couleur par defaut du mesh, utilisee si les sommets n'ont pas de couleur associee.
+    Color default_color( ) const { return m_color; }
+    //! modifie la couleur par defaut, utilisee si les sommets n'ont pas de couleur associee.
+    Mesh& default_color( const Color& color );
+    
+    //! \name manipulation des buffers d'attributs.
+    //@{
     //! renvoie le nombre de sommets.
     int vertex_count( ) const { return (int) m_positions.size(); }
     //! renvoie le nombre d'indices de sommets.
@@ -277,8 +297,13 @@ public:
     const std::vector<vec3>& normals( ) const { return m_normals; }
     const std::vector<vec4>& colors( ) const { return m_colors; }
     const std::vector<unsigned int>& indices( ) const { return m_indices; }
+    //@}
+    
+    //! renvoie le type de primitives.
     GLenum primitives( ) const { return m_primitives; }
     
+    //! \name gestion d'erreur.
+    //@{
     /*! sentinelle pour la gestion d'erreur lors du chargement d'un fichier.
     exemple :
     \code
@@ -297,6 +322,7 @@ public:
     {
         return (this == &m);
     }
+    //@}
     
     /*! dessine l'objet avec les transformations model, vue et projection.\n
         eventuellement eclaire l'objet avec une source de lumiere.\n
@@ -328,9 +354,11 @@ public:
     \param use_normal force l'utilisation des normales
     \param use_color force l'utilisation des couleurs 
     \param use_light force l'utilisation d'un source de lumiere 
+    \param use_alpha_test force l'utilisation d'un test de transparence, cf utilisation d'une texture avec un canal alpha
      */
     GLuint create_program( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true, const bool use_light= false, const bool use_alpha_test= false );
     
+    //! modifie les buffers openGL, si necessaire.
     int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color );
     
 protected:    

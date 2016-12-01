@@ -41,14 +41,14 @@ public:
     //! renvoie la projection reglee pour une image d'aspect width / height, et une ouverture de fov degres.
     Transform projection( const float width, const float height, const float fov ) const;
     
-    /*! renvoie les coorodnnees de l'origine d0 et les axes dx, dy du plan image dans le repere du monde. 
+    /*! renvoie les coordonnees de l'origine d0 et les axes dx, dy du plan image dans le repere du monde. 
     permet de construire un rayon pour le pixel x, y : 
-        - l'extremite : un point dans le plan image avec z = 0 : 
+        - l'extremite : un point dans le plan image avec z = 1 : 
         \code
-            Point d0;
-            Vector dx0, dy0;
-            camera.frame(width, height, 0, fov, d0, dx0, dy0);
-            Point e= d0 + x*dx0 + y*dy0;
+            Point d1;
+            Vector dx1, dy1;
+            camera.frame(width, height, 1, fov, d1, dx1, dy1);
+            Point e= d1 + x*dx1 + y*dy1;
         \endcode
         - l'origine : 
         \code
