@@ -32,6 +32,21 @@ Transform::Transform (
     m[3][0]= t30; m[3][1]= t31; m[3][2]= t32; m[3][3]= t33;
 }
 
+Transform::Transform(const Vector& x, const Vector& y, const Vector& z, const Vector& w)
+{
+	m[0][0] = x.x;	m[0][1] = y.x;	m[0][2] = z.x;	m[0][3] = w.x;
+	m[1][0] = x.y;	m[1][1] = y.y;	m[1][2] = z.y;	m[1][3] = w.y;
+	m[2][0] = x.z;	m[2][1] = y.z;	m[2][2] = z.z;	m[2][3] = w.z;
+	m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
+}
+
+Vector Transform::operator[](int c) const
+{
+	assert(c >= 0 && c <= 3);
+	return Vector(m[0][c], m[1][c], m[2][c]);
+}
+
+
 //! renvoie le point transforme.
 Point Transform::operator() ( const Point& p ) const
 {

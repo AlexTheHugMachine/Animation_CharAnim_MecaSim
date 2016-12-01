@@ -26,6 +26,12 @@ struct Transform
         const float t20=0.f, const float t21=0.f, const float t22=1.f, const float t23=0.f,
         const float t30=0.f, const float t31=0.f, const float t32=0.f, const float t33=1.f );
     
+	//! constructeur a partir de 4 Vector colonnes, met (0, 0, 0, 1) dans la 4e ligne 
+	Transform(const Vector& x, const Vector& y, const Vector& z, const Vector& w);
+
+	//! renvoie le Vector colonne c de la matrice
+	Vector operator[](int c) const;
+
     //! renvoie le point transforme.
     Point operator() ( const Point& p ) const;
     //! renvoie le vecteur transforme.
@@ -84,6 +90,18 @@ Transform Lookat( const Point& from, const Point& to, const Vector& up );
 Transform compose_transform( const Transform& a, const Transform& b );
 //! renvoie la composition des transformations a et b, t = a * b.
 Transform operator* ( const Transform& a, const Transform& b );
+
+#include <iostream>
+
+inline std::ostream& operator<<(std::ostream& o, const Transform& t)
+{
+	o << t.m[0][0] << " " << t.m[0][1] << " " << t.m[0][2] << " " << t.m[0][3] << " " << std::endl;
+	o << t.m[1][0] << " " << t.m[1][1] << " " << t.m[1][2] << " " << t.m[1][3] << " " << std::endl;
+	o << t.m[2][0] << " " << t.m[2][1] << " " << t.m[2][2] << " " << t.m[2][3] << " " << std::endl;
+	o << t.m[3][0] << " " << t.m[3][1] << " " << t.m[3][2] << " " << t.m[3][3] << " " << std::endl;
+	return o;
+}
+
 
 ///@}
 #endif

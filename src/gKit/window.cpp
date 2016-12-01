@@ -325,17 +325,26 @@ const char* smart_path(const char* filename)
 
     if (file_exist(filename)) return filename;
 
-    const char * exec = SDL_GetBasePath();
+    char * exec = SDL_GetBasePath();
 
     strcpy(smartpath,exec);
     strcat(smartpath,filename);
-    if (file_exist(smartpath)) return smartpath;
+    if (file_exist(smartpath))
+    {
+        SDL_free(exec);
+        return smartpath;
+    }
 
     strcpy(smartpath,exec);
     strcat(smartpath, "/../");
     strcat(smartpath,filename);
-    if (file_exist(smartpath)) return smartpath;
+    if (file_exist(smartpath))
+    {
+        SDL_free(exec);
+        return smartpath;
+    }
 
+    SDL_free(exec);
     std::cerr<<"smart_path: file not found="<<filename<<std::endl;
     return NULL;
 }
