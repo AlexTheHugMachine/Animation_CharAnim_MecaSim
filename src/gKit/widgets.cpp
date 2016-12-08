@@ -229,6 +229,47 @@ bool value( Widgets& w, const char *label, int& value, const int value_min, cons
     return change;
 }
 
+bool value( Widgets& w, const char *label, float& value, const float value_min, const float value_max, const float value_step )
+{
+    char tmp[128];
+    sprintf(tmp, "%s: %.4f", label, value);
+    
+    Rect r= place(w, (int) strlen(tmp));
+
+    bool change= false;
+    if(w.mb > 0 && overlap(r, w.mx, w.my))
+        change= true;
+    if(overlap(r, w.mx, w.my))
+    {
+        if(w.wy != 0)
+            value= value + w.wy * value_step;
+        if(w.key == SDLK_UP)
+            value= value + value_step;
+        if(w.key == SDLK_PAGEUP)
+            value= value + value_step * 10;
+        if(w.key == SDLK_DOWN)
+            value= value - value_step;
+        if(w.key == SDLK_PAGEDOWN)
+            value= value - value_step * 10;
+        
+        if(value < value_min)
+            value= value_min;
+        if(value > value_max)
+            value= value_max;
+        
+        sprintf(tmp, "%s: ", label);
+        int l= (int) strlen(tmp);
+        print(w.console, r.x, r.y, tmp);
+        
+        sprintf(tmp, "%.4f", value);
+        print_background(w.console, r.x + l, r.y, tmp);
+    }
+    else
+        print(w.console, r.x, r.y, tmp);
+    
+    return change;
+}
+
 void text_area( Widgets& w, const int height, const char *text, int& begin_line )
 {
     Rect r= place(w, 128, height);

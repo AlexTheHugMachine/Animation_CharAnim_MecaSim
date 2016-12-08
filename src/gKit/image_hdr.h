@@ -18,6 +18,9 @@ Image read_image_hdr( const char *filename );
 //! enregistre une image dans un fichier .hdr.
 int write_image_hdr( const Image& image, const char *filename );
 
+//! renvoie vrai si le nom de fichier se termine par .hdr.
+bool is_hdr_image( const char *filename );
+
 //@}
 
 #endif

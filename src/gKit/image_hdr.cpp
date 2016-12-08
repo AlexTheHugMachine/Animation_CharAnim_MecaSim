@@ -1,6 +1,14 @@
 
+#include <string>
+
 #include "rgbe.h"
 #include "image_hdr.h"
+
+
+bool is_hdr_image( const char *filename )
+{
+    return (std::string(filename).rfind(".hdr") != std::string::npos);
+}
 
 
 Image read_image_hdr( const char *filename )
