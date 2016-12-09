@@ -75,6 +75,45 @@ std::string prepare_source( std::string file, const std::string& definitions )
     return source;
 }
 
+
+static 
+const char *shader_string( const GLenum type )
+{
+    switch (type)
+    {
+        case GL_VERTEX_SHADER: return "vertex shader";
+        case GL_FRAGMENT_SHADER: return "fragment shader";
+        case GL_GEOMETRY_SHADER: return "geometry shader";
+        case GL_TESS_CONTROL_SHADER: return "control shader";
+        case GL_TESS_EVALUATION_SHADER: return "evaluation shader";
+        case GL_COMPUTE_SHADER: return "compute shader";
+        default: return "shader";
+    }
+}
+
+static 
+const char *shader_keys[] = 
+{
+    "VERTEX_SHADER",
+    "FRAGMENT_SHADER",
+    "GEOMETRY_SHADER",
+    "TESSELATION_CONTROL",
+    "EVALUATION_CONTROL",
+    "COMPUTE_SHADER"
+};
+const int shader_keys_max= 6;
+
+static
+GLenum shader_types[] =
+{
+    GL_VERTEX_SHADER,
+    GL_FRAGMENT_SHADER,
+    GL_GEOMETRY_SHADER,
+    GL_TESS_CONTROL_SHADER,
+    GL_TESS_EVALUATION_SHADER,
+    GL_COMPUTE_SHADER
+};
+
 static
 GLuint compile_shader( const GLuint program, const GLenum shader_type, const std::string& source )
 {
@@ -119,12 +158,18 @@ int reload_program( GLuint program, const char *filename, const char *definition
 
     // prepare les sources
     std::string common_source= read(filename);
-    std::string vertex_source= prepare_source(common_source, std::string(definitions).append("#define VERTEX_SHADER\n"));
-    std::string fragment_source= prepare_source(common_source, std::string(definitions).append("#define FRAGMENT_SHADER\n"));
-
-    // cree et compile un vertex shader et un fragment shader
-    GLuint vertex_shader= compile_shader(program, GL_VERTEX_SHADER, vertex_source);
-    GLuint fragment_shader= compile_shader(program, GL_FRAGMENT_SHADER, fragment_source);
+    for(int i = 0; i < shader_keys_max; i++)
+    {
+        if(common_source.find(shader_keys[i]) != std::string::npos)
+        {
+            // cree et compile les shaders detectes dans le source
+            std::string source= prepare_source(common_source, std::string(definitions).append("#define ").append(shader_keys[i]).append("\n"));
+            GLuint shader= compile_shader(program, shader_types[i], source);
+            if(shader == 0)
+                printf("[error] compiling %s...\n%s\n", shader_string(shader_types[i]), definitions);
+        }
+    }
+    
     // linke les shaders
     glLinkProgram(program);
 
@@ -133,10 +178,6 @@ int reload_program( GLuint program, const char *filename, const char *definition
     glGetProgramiv(program, GL_LINK_STATUS, &status);
     if(status == GL_FALSE)
     {
-        if(vertex_shader == 0)
-            printf("[error] compiling vertex shader...\n%s\n", definitions);
-        if(fragment_shader == 0)
-            printf("[error] compiling fragment shader...\n%s\n", definitions);
         printf("[error] linking program %u '%s'...\n", program, filename);
         return -1;
     }
@@ -274,7 +315,6 @@ int program_format_errors( const GLuint program, std::string& errors )
         return 0;
 
     int first_error= INT_MAX;
-
     // recupere les shaders
     int shaders_max= 0;
     glGetProgramiv(program, GL_ATTACHED_SHADERS, &shaders_max);
@@ -298,14 +338,8 @@ int program_format_errors( const GLuint program, std::string& errors )
             glGetShaderSource(shaders[i], source.size(), NULL, &source.front());
 
             glGetShaderiv(shaders[i], GL_SHADER_TYPE, &value);
-            errors.append("[error] compiling ");
-            if(value == GL_VERTEX_SHADER)
-                errors.append("vertex shader...\n");
-            else if(value == GL_FRAGMENT_SHADER)
-                errors.append("fragment shader...\n");
-            else
-                errors.append("shader...\n");
-
+            errors.append("[error] compiling ").append(shader_string(value)).append("...\n");
+            
             // formatte les erreurs
             int last_error= print_errors(errors, &log.front(), &source.front());
             first_error= std::min(first_error, last_error);
