@@ -139,10 +139,9 @@ Mesh read_mesh( const char *filename )
                     int t= (idt[k] < 0) ? (int) texcoords.size() + idt[k] : idt[k] -1;
                     int n= (idn[k] < 0) ? (int) normals.size()   + idn[k] : idn[k] -1;
                     
+                    if(p < 0) break; // error
                     if(t >= 0) data.texcoord(texcoords[t]);
                     if(n >= 0) data.normal(normals[n]);
-                    
-                    if(p < 0) break; // error
                     data.vertex(positions[p]);
                 }
             }
