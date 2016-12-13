@@ -5,7 +5,7 @@
 
 #include "wavefront.h"
 
-/*! renvoie le chaimin d'acces a un fichier. le chemin est toujours termine par /
+/*! renvoie le chemin d'acces a un fichier. le chemin est toujours termine par /
     pathname("path/to/file") == "path/to/"
     pathname("file") == "./"
  */
@@ -244,7 +244,7 @@ MaterialLib read_materials( const char *filename )
     FILE *in= fopen(filename, "rt");
     if(in == NULL)
     {
-        printf("[error] reading '%s'.\n", filename);
+        printf("[error] loading '%s'.\n", filename);
         return materials;
     }
     
