@@ -1,7 +1,12 @@
 
+//! \file tuto_storage.cpp utilisation de storage buffers.
+
 #include <vector>
+#include <cstddef>
 
 #include "window.h"
+
+#include "vec.h"
 #include "program.h"
 
 
@@ -89,7 +94,7 @@ int print_storage( const GLuint program )
             printf("    '%s %s': offset %d array stride %d, top level stride %d", glsl_string(params[1]), vname, params[0], params[2], params[5]);
             
             // organisation des matrices
-            if(params[1] == GL_FLOAT_MAT4) 
+            if(params[1] == GL_FLOAT_MAT4 || params[1] == GL_FLOAT_MAT3) 
                 printf(" %s, matrix stride %d", params[4] ? "row major" : "column major", params[3]);
             printf("\n");
         }
@@ -102,6 +107,48 @@ int print_storage( const GLuint program )
 // application
 GLuint program;
 
+namespace glsl 
+{
+#ifdef _MSC_VER   // visual studio >= 2012 necessaire
+# define ALIGN(...) __declspec(align(__VA_ARGS__))
+
+#else   // gcc, clang, icc
+# define ALIGN(...) __attribute__((aligned(__VA_ARGS__)))
+#endif
+
+    template < typename T >
+    struct ALIGN(8) gvec2
+    {
+        ALIGN(4) T x, y;
+    };
+    
+    typedef gvec2<float> vec2;
+    typedef gvec2<int> ivec2;
+    typedef gvec2<unsigned int> uvec2;
+    typedef gvec2<int> bvec2;
+    
+    template < typename T >
+    struct ALIGN(16) gvec3
+    {
+        ALIGN(4) T x, y, z;
+    };
+    
+    typedef gvec3<float> vec3;
+    typedef gvec3<int> ivec3;
+    typedef gvec3<unsigned int> uvec3;
+    typedef gvec3<int> bvec3;
+    
+    template < typename T >
+    struct ALIGN(16) gvec4
+    {
+        ALIGN(4) T x, y, z, w;
+    };
+    
+    typedef gvec4<float> vec4;
+    typedef gvec4<int> ivec4;
+    typedef gvec4<unsigned int> uvec4;
+    typedef gvec4<int> bvec4;
+}
 
 int init( )
 {
@@ -110,6 +157,35 @@ int init( )
     program_print_errors(program);
     
     print_storage(program);
+
+
+    struct toto
+    {
+        vec3 a;
+        vec3 ab;
+        vec3 ac;
+    };
+    
+    printf("a %d\n", (int) offsetof(toto, a));
+    printf("a.x %d\n", (int) offsetof(toto, a.x));
+    printf("a.y %d\n", (int) offsetof(toto, a.y));
+    printf("a.z %d\n", (int) offsetof(toto, a.z));
+    printf("ab %d\n", (int) offsetof(toto, ab));
+    printf("ac %d\n", (int) offsetof(toto, ac));
+    
+    struct titi
+    {
+        glsl::vec3 a;
+        glsl::vec3 ab;
+        glsl::vec3 ac;
+    };
+    
+    printf("a %d\n", (int) offsetof(titi, a));
+    printf("a.x %d\n", (int) offsetof(titi, a.x));
+    printf("a.y %d\n", (int) offsetof(titi, a.y));
+    printf("a.z %d\n", (int) offsetof(titi, a.z));
+    printf("ab %d\n", (int) offsetof(titi, ab));
+    printf("ac %d\n", (int) offsetof(titi, ac));
     
     return 0;
 }
