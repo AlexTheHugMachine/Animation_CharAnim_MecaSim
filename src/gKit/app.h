@@ -6,7 +6,6 @@
 
 
 //! \addtogroup application utilitaires pour creer une application
-///@{
 
 //! \file
 /*! squelette d'application: creation d'une fenetre, d'un contexte openGL et gestion des evenements.
