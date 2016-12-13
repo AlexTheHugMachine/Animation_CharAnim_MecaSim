@@ -107,9 +107,7 @@ int init( std::vector<const char *>& options )
         reload_program();
     }
     
-    glGenVertexArrays(1, &vao);
-    vertex_count= 3;
-    
+    vao= 0;
     option= option_find(options, ".obj");
     if(option != NULL)
     {
@@ -124,6 +122,12 @@ int init( std::vector<const char *>& options )
             mesh.bounds(mesh_pmin, mesh_pmax);
             camera.lookat(mesh_pmin, mesh_pmax);
         }
+    }
+
+    if(vao == 0)
+    {
+        glGenVertexArrays(1, &vao);
+        vertex_count= 3;
     }
     
     // charge les textures, si necessaire
@@ -164,7 +168,8 @@ int quit( )
     // detruit les objets openGL
     release_widgets(widgets);
     release_program(program);
-    release_vertex_format(vao);
+    mesh.release();
+    
     for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
         glDeleteTextures(1, &textures[i]);
     return 0;
