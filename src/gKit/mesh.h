@@ -112,11 +112,11 @@ public:
     //@{
     //! constructeur par defaut.
     Mesh( ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
-        m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_program(0), m_update_buffers(false) {}
+        m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_buffer(0), m_index_buffer(0), m_program(0), m_update_buffers(false) {}
     
     //! constructeur.
     Mesh( const GLenum primitives ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
-        m_color(White()), m_primitives(primitives), m_vao(0), m_program(0), m_update_buffers(false) {}
+        m_color(White()), m_primitives(primitives), m_vao(0), m_buffer(0), m_index_buffer(0), m_program(0), m_update_buffers(false) {}
     
     //! construit les objets openGL.
     int create( const GLenum primitives );
@@ -276,6 +276,7 @@ public:
     //! renvoie la taille (en octets) de l'index buffer.
     std::size_t index_buffer_size( ) const { return m_indices.size() * sizeof(unsigned int); }
     
+#if 0
     /*! renvoie l'adresse d'un attribut du premier sommet.
 
     attention : tous les attributs ne sont pas definis. il est possible de verifier qu'ils existent en consultant la taille du buffer, 
@@ -290,6 +291,7 @@ public:
     const void *attribute_buffer( const unsigned int id ) const;
     //! renvoie la taille (en octets) d'un attribut.
     std::size_t attribute_buffer_size( const unsigned int id ) const;
+#endif
     
     //
     const std::vector<vec3>& positions( ) const { return m_positions; }
@@ -336,20 +338,15 @@ public:
         const bool use_texture, const GLuint texture,
         const bool use_alpha_test, const float alpha_min );
     
-    //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).\n
-    //! exemple, cf create_program( )
-    GLuint create_buffers( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
-
-    //! construit un shader program configure.
-    /*! exemple :
-    \code
-    Mesh mesh= { ... };
-    Orbiter camera= { ... };
+    //! dessine l'objet avec un shader fourni par l'application. les uniforms du shader doivent deja etre configure, cf transformations...
+    void draw( const GLuint program );
     
-    GLuint vao= mesh.create_buffers(false, false, false);
-    GLuint program= mesh.create_program(false, false, false);
-    \endcode
+    //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).\n
+    GLuint create_buffers( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
+    
+protected:    
 
+    /*! construit un shader program configure.
     \param use_texcoord force l'utilisation des coordonnees de texture
     \param use_normal force l'utilisation des normales
     \param use_color force l'utilisation des couleurs 
@@ -361,7 +358,7 @@ public:
     //! modifie les buffers openGL, si necessaire.
     int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color );
     
-protected:    
+    //
     std::vector<vec3> m_positions;
     std::vector<vec2> m_texcoords;
     std::vector<vec3> m_normals;
@@ -379,6 +376,8 @@ protected:
     
     GLenum m_primitives;
     GLuint m_vao;
+    GLuint m_buffer;
+    GLuint m_index_buffer;
     GLuint m_program;
     
     bool m_update_buffers;
