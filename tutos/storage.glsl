@@ -5,34 +5,21 @@
 
 struct Triangle
 {
-	//~ vec3 a;
-	//~ vec3 ab;
-	//~ vec3 ac;
-	float a[2];
-	int q[2];
+	vec3 a;
+	vec3 b;
+	vec3 c;
 };
 
-//~ layout(std430) readonly buffer bufferData 
-//~ {
-	//~ Triangle triangles[];
-//~ };
-
-layout(std430) buffer bufferData 
+layout(std430) readonly buffer bufferData 
 {
-	Triangle positions[];
+	Triangle triangles[];
 };
 
 uniform mat4 mvpMatrix;
 
-//~ layout(local_size_x= 64) in;
 void main( )
 {
-	//~ gl_Position= mvpMatrix * vec4(positions[gl_VertexID].a, 1);
-	//~ vec4 p;
-	//~ for(int i= 0 ; i< positions.length(); i++)
-		//~ p= p + vec4(positions[i], 1);
-		
-	//~ gl_Position= mvpMatrix * p;
+	gl_Position= mvpMatrix * vec4(triangles[gl_VertexID].a, 1);
 }
 
 #endif

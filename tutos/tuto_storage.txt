@@ -1,5 +1,5 @@
 
-/*! \addtogroup openGLCompute openGL 4.3 : storage buffers
+/*! \addtogroup storage openGL 4.3 : storage buffers
 
 cf \ref tuto_storage.cpp
 
@@ -29,8 +29,8 @@ lecture seule, écriture seule ou mixte, avec les mots-clés `readonly` et `writ
 dans le shader, il faut nommer le block, cf `vertexData` dans l'exemple précédent.
 
 Il est aussi possible d'utiliser plusieurs buffers, et comme d'habitude, ils sont numérotés. En pratique, on déclare le numéro du buffer dans le 
-shader avec `layout(binding= xxx)`, ce qui permet à application d'associer un buffer au block directement avec `glBindBufferBase( ..., xxx)`, sans 
-utiliser `glGetProgram( )`.
+shader avec `layout(binding= xxx)`, ce qui permet à application d'associer un buffer au block directement avec 
+`glBindBufferBase(GL_SHADER_STORAGE_BUFFER, xxx)`, sans utiliser `glGetProgram( )`.
 
 exemple :
 \code
@@ -186,7 +186,7 @@ struct Triangle430pad
 ### en utilisant le compilateur C++
 
 Les compilateurs C et C++ permettent de modifier l'alignement des variables :
-	- pour xcode/clang/gcc/g++ il faut décorer les déclarations avec `__attribute__((aligned(n)))`,
+	- pour clang / gcc, il faut décorer les déclarations avec `__attribute__((aligned(n)))`,
 	- pour visal studio > 2012, il faut décorer les déclarations avec  `__declspec(align(n))`,
 	- `n` est l'alignement en octets.
 	
@@ -210,7 +210,58 @@ struct TriangleGLSL
 };
 \endcode
 
+cf \ref tuto_storage.cpp pour une version plus complète.
 
+### vérifier l'alignement
+
+openGL 4.3 a introduit 2 fonctions `glGetProgramInterface( ) / glGetProgramResource( )` permettant d'énumérer les blocks associés à des buffers et de récupérer 
+l'organisation mémoire des variables déclarées dans ces blocks. Comme d'habitude, il faut commencer par récupérer le nombre de blocks et le nombre 
+de variables du block afin de pouvoir itérer sur les variables.
+
+\code
+// recupere le nombre de blocks
+GLint buffer_count= 0;
+glGetProgramInterfaceiv(program, GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES, &buffer_count);
+
+// pour chaque block
+for(int i= 0; i < buffer_count; i++)
+{
+	// recupere le nombre de variables
+	GLint variable_count= 0;
+	{
+		GLenum prop[]= { GL_NUM_ACTIVE_VARIABLES };
+		glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, sizeof(GLint), NULL, &variable_count);
+	}
+	
+	// recupere les indices des variables du block
+	std::vector<GLint> variables(variable_count);
+	{
+		GLenum prop[]= { GL_ACTIVE_VARIABLES };
+		glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, variable_count*sizeof(GLint), NULL, &variables.front());
+	}
+	
+	// recupere l'organisation mémoire d'une variable
+	for(int k= 0; k < variable_count; k++)
+	{
+		GLint offset= 0;
+		GLenum props[]= { GL_OFFSET };
+		glGetProgramResourceiv(program, GL_BUFFER_VARIABLE, variables[k], 1, props, sizeof(GLint), NULL, &offset);
+		
+		printf("offset %d\n", offset);
+	}
+}
+\endcode
+
+cf \ref tuto_storage.cpp pour une version plus complète, qui récupère aussi le nom, le type de chaque variable ainsi que l'organisation des tableaux et 
+des matrices.
+
+\code
+loading program 'tutos/storage.glsl'...
+  buffer 'bufferData' binding 0
+    'vec3 triangles[0].a': offset 0, top level stride 48
+    'vec3 triangles[0].b': offset 16, top level stride 48
+    'vec3 triangles[0].c': offset 32, top level stride 48
+\endcode
 
 */
 

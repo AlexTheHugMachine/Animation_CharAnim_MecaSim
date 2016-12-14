@@ -23,6 +23,7 @@ namespace glsl
     struct ALIGN(8) gvec2
     {
         ALIGN(4) T x, y;
+        gvec2( const vec2& v ) : x(v.x), y(v.y) {}
     };
     
     typedef gvec2<float> vec2;
@@ -34,6 +35,8 @@ namespace glsl
     struct ALIGN(16) gvec3
     {
         ALIGN(4) T x, y, z;
+        
+        gvec3( const vec3& v ) : x(v.x), y(v.y), z(v.z) {}
     };
     
     typedef gvec3<float> vec3;
@@ -45,12 +48,16 @@ namespace glsl
     struct ALIGN(16) gvec4
     {
         ALIGN(4) T x, y, z, w;
+        
+        gvec4( const vec4& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
     };
     
     typedef gvec4<float> vec4;
     typedef gvec4<int> ivec4;
     typedef gvec4<unsigned int> uvec4;
     typedef gvec4<int> bvec4;
+    
+#undef ALIGN
 }
 
 
@@ -105,7 +112,7 @@ int print_storage( const GLuint program )
         GLint binding= 0;
         {
             GLenum prop[]= { GL_BUFFER_BINDING };
-            glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, 1, NULL, &binding);
+            glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, sizeof(GLint), NULL, &binding);
         }
 
         printf("  buffer '%s' binding %d\n", bname, binding);
@@ -114,33 +121,36 @@ int print_storage( const GLuint program )
         GLint vcount= 0;
         {
             GLenum prop[]= { GL_NUM_ACTIVE_VARIABLES };
-            glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, 1, NULL, &vcount);
+            glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, sizeof(vcount), NULL, &vcount);
         }
         
         // identifidants des variables 
         std::vector<GLint> variables(vcount);
         {
             GLenum prop[]= { GL_ACTIVE_VARIABLES };
-            glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, vcount, NULL, &variables.front());
+            glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, vcount*sizeof(GLint), NULL, &variables.front());
         }
         
         for(int k= 0; k < vcount; k++)
         {
             // organisation des variables dans le buffer
-            GLenum props[]= { GL_OFFSET, GL_TYPE, GL_ARRAY_STRIDE, GL_MATRIX_STRIDE, GL_IS_ROW_MAJOR, GL_TOP_LEVEL_ARRAY_STRIDE };
+            GLenum props[]= { GL_OFFSET, GL_TYPE, GL_ARRAY_SIZE, GL_ARRAY_STRIDE, GL_MATRIX_STRIDE, GL_IS_ROW_MAJOR, GL_TOP_LEVEL_ARRAY_STRIDE };
             GLint params[sizeof(props) / sizeof(GLenum)];
-            glGetProgramResourceiv(program, GL_BUFFER_VARIABLE, variables[k], sizeof(props) / sizeof(GLenum), props, sizeof(params) / sizeof(GLenum), NULL, params);
+            glGetProgramResourceiv(program, GL_BUFFER_VARIABLE, variables[k], sizeof(props) / sizeof(GLenum), props, sizeof(params), NULL, params);
             
             // nom de la variable
             char vname[1024]= { 0 };
             glGetProgramResourceName(program, GL_BUFFER_VARIABLE, variables[k], sizeof(vname), NULL, vname);
             
-            printf("    '%s %s': offset %d array stride %d, top level stride %d", glsl_string(params[1]), vname, params[0], params[2], params[5]);
+            printf("    '%s %s': offset %d", glsl_string(params[1]), vname, params[0]);
+            if(params[2] > 1)
+                printf(", array size %d, stride %d", params[2], params[3]);
             
             // organisation des matrices
             if(params[1] == GL_FLOAT_MAT4 || params[1] == GL_FLOAT_MAT3) 
-                printf(" %s, matrix stride %d", params[4] ? "row major" : "column major", params[3]);
-            printf("\n");
+                printf(", %s, matrix stride %d", params[5] ? "row major" : "column major", params[4]);
+            
+            printf(", top level stride %d\n", params[6]);
         }
     }
     
