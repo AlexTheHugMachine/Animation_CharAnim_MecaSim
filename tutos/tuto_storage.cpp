@@ -10,6 +10,50 @@
 #include "program.h"
 
 
+namespace glsl 
+{
+#ifdef _MSC_VER   // visual studio >= 2012 necessaire
+# define ALIGN(...) __declspec(align(__VA_ARGS__))
+
+#else   // gcc, clang, icc
+# define ALIGN(...) __attribute__((aligned(__VA_ARGS__)))
+#endif
+
+    template < typename T >
+    struct ALIGN(8) gvec2
+    {
+        ALIGN(4) T x, y;
+    };
+    
+    typedef gvec2<float> vec2;
+    typedef gvec2<int> ivec2;
+    typedef gvec2<unsigned int> uvec2;
+    typedef gvec2<int> bvec2;
+    
+    template < typename T >
+    struct ALIGN(16) gvec3
+    {
+        ALIGN(4) T x, y, z;
+    };
+    
+    typedef gvec3<float> vec3;
+    typedef gvec3<int> ivec3;
+    typedef gvec3<unsigned int> uvec3;
+    typedef gvec3<int> bvec3;
+    
+    template < typename T >
+    struct ALIGN(16) gvec4
+    {
+        ALIGN(4) T x, y, z, w;
+    };
+    
+    typedef gvec4<float> vec4;
+    typedef gvec4<int> ivec4;
+    typedef gvec4<unsigned int> uvec4;
+    typedef gvec4<int> bvec4;
+}
+
+
 // utilitaire : renvoie la chaine de caracteres pour un type glsl.
 const char *glsl_string( const GLenum type )
 {
@@ -106,49 +150,6 @@ int print_storage( const GLuint program )
 
 // application
 GLuint program;
-
-namespace glsl 
-{
-#ifdef _MSC_VER   // visual studio >= 2012 necessaire
-# define ALIGN(...) __declspec(align(__VA_ARGS__))
-
-#else   // gcc, clang, icc
-# define ALIGN(...) __attribute__((aligned(__VA_ARGS__)))
-#endif
-
-    template < typename T >
-    struct ALIGN(8) gvec2
-    {
-        ALIGN(4) T x, y;
-    };
-    
-    typedef gvec2<float> vec2;
-    typedef gvec2<int> ivec2;
-    typedef gvec2<unsigned int> uvec2;
-    typedef gvec2<int> bvec2;
-    
-    template < typename T >
-    struct ALIGN(16) gvec3
-    {
-        ALIGN(4) T x, y, z;
-    };
-    
-    typedef gvec3<float> vec3;
-    typedef gvec3<int> ivec3;
-    typedef gvec3<unsigned int> uvec3;
-    typedef gvec3<int> bvec3;
-    
-    template < typename T >
-    struct ALIGN(16) gvec4
-    {
-        ALIGN(4) T x, y, z, w;
-    };
-    
-    typedef gvec4<float> vec4;
-    typedef gvec4<int> ivec4;
-    typedef gvec4<unsigned int> uvec4;
-    typedef gvec4<int> bvec4;
-}
 
 int init( )
 {

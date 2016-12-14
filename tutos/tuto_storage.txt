@@ -90,6 +90,19 @@ offsetof(Triangle, c)  = 24;
 sizeof(Triangle)       = 36;
 \endcode
 
+ce qui correspond à cette organisation mémoire :
+\code
+ 0	a.x
+ 4	a.y
+ 8	a.z
+12	b.x
+16	b.y
+20	b.z
+24	c.x
+28	c.y
+32	c.z
+\endcode
+
 Les types de base `int` et `float` du c++ occuppent 4 octets et les structures `vec3` sont rangées les unes à la suite des autres : 
     - 4 octets par float, 
     - 4x3= 12 octets par vec3 
@@ -107,13 +120,30 @@ offsetof(Triangle, c)  = 32;
 sizeof(Triangle)       = 48;
 \endcode
 
+ce qui correspond à cette organisation mémoire :
+\code
+ 0	a.x
+ 4	a.y
+ 8	a.z
+12	...
+16	b.x
+20	b.y
+24	b.z
+28	...
+32	c.x
+36	c.y
+40	c.z
+44	...
+\endcode
+
+
 Les `vec3` occuppent la place de 4 `float`, soit 16 octets. De manière générale, dans un shader : 
     - 4 octets pour les `int`, `float` et `bool`,
     - 2x`float` pour les `vec2`, ou 2x type de base pour ivec2, uvec2 et bvec2,
     - 4x`float` pour les `vec3`, ou 4x type de base pour ivec3, uvec3 et bvec3
     - 4x`float` pour les `vec4`, ou 4x type de base pour ivec4, uvec4 et bvec4 
 
-Par défaut les éléments d'un tableau sont alignés sur 16 octets, quelque soit le type de l'élement. un `int t[2]` occuppe 16 octets dans un buffer... 
+Par défaut les éléments d'un tableau sont alignés sur 16 octets, quelque soit le type de l'élement. un `int t[1]` ou `int t[2]` occuppe 16 octets dans un buffer... 
 Mais il est aussi possible de choisir un alignement un peu plus économique en mémoire, il faut décorer la déclaration avec `layout(std430)`, les éléments d'un 
 tableau sont alignés normalement, en fonction de leur type.
 
