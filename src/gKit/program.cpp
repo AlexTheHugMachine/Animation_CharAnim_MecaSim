@@ -84,9 +84,13 @@ const char *shader_string( const GLenum type )
         case GL_VERTEX_SHADER: return "vertex shader";
         case GL_FRAGMENT_SHADER: return "fragment shader";
         case GL_GEOMETRY_SHADER: return "geometry shader";
+    #ifdef GL_VERSION_4_0
         case GL_TESS_CONTROL_SHADER: return "control shader";
         case GL_TESS_EVALUATION_SHADER: return "evaluation shader";
+    #endif
+    #ifdef GL_VERSION_4_3
         case GL_COMPUTE_SHADER: return "compute shader";
+    #endif
         default: return "shader";
     }
 }
@@ -109,15 +113,24 @@ GLenum shader_types[] =
     GL_VERTEX_SHADER,
     GL_FRAGMENT_SHADER,
     GL_GEOMETRY_SHADER,
+#ifdef GL_VERSION_4_0
     GL_TESS_CONTROL_SHADER,
     GL_TESS_EVALUATION_SHADER,
+#else
+    0, 
+    0,
+#endif
+#ifdef GL_VERSION_4_3
     GL_COMPUTE_SHADER
+#else
+    0
+#endif
 };
 
 static
 GLuint compile_shader( const GLuint program, const GLenum shader_type, const std::string& source )
 {
-    if(source.size() == 0)
+    if(source.size() == 0 || shader_type == 0)
         return 0;
 
     GLuint shader= glCreateShader(shader_type);
