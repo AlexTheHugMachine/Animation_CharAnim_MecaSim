@@ -459,6 +459,7 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     assert(m_program != 0);
     m_state= key;
 
+    glUseProgram(m_program);
     program_uniform(m_program, "mesh_color", default_color());
 
     Transform mv= view * model;
