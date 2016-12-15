@@ -278,34 +278,6 @@ void Mesh::bounds( Point& pmin, Point& pmax )
     }
 }
 
-#if 0
-const void *Mesh::attribute_buffer( const unsigned int id ) const
-{
-    assert(id < 4);
-    switch(id)
-    {
-        case 0: return vertex_buffer(); break;
-        case 1: return texcoord_buffer(); break;
-        case 2: return normal_buffer(); break;
-        case 3: return color_buffer(); break;
-        default: return nullptr;
-    }
-}
-
-std::size_t Mesh::attribute_buffer_size( const unsigned int id ) const
-{
-    assert(id < 4);
-    switch(id)
-    {
-        case 0: return vertex_buffer_size(); break;
-        case 1: return texcoord_buffer_size(); break;
-        case 2: return normal_buffer_size(); break;
-        case 3: return color_buffer_size(); break;
-        default: return 0;
-    }
-}
-#endif
-
 GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, const bool use_color )
 {
     if(m_positions.size() == 0)

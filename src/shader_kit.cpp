@@ -13,7 +13,6 @@
 #include "texture.h"
 #include "mesh.h"
 #include "wavefront.h"
-#include "buffer.h"
 
 #include "vec.h"
 #include "mat.h"

@@ -4,7 +4,6 @@
 #include <chrono>
 
 #include "mat.h"
-#include "buffer.h"
 #include "program.h"
 #include "uniforms.h"
 
@@ -78,7 +77,6 @@ public:
         glDeleteBuffers(1, &m_model_buffer);
         
         release_text(m_console);
-        release_vertex_format(m_vao);
         release_program(m_program);
         
         m_objet.release();
