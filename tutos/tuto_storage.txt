@@ -212,6 +212,33 @@ struct TriangleGLSL
 
 cf \ref tuto_storage.cpp pour une version plus complète.
 
+### exemple d'utilisation
+
+La solution directe consiste à préparer un `std::vector` d'une structure utilisant des membres alignés et à allouer le buffer :
+\code
+struct TriangleGLSL
+{
+	glsl::vec3 a;
+	glsl::vec3 b;
+	glsl::vec3 c;
+
+	TriangleGLSL( const Point& _a, const Point& _b, const Point& _c ) : a(_a), b(_b), c(_c) {}
+	TriangleGLSL( const vec3& _a, const vec3& _b, const vec3& _c ) : a(_a), b(_b), c(_c) {}
+};
+
+std::vector<TriangleGLSL> triangles;
+
+for(int i= 0; i < n; i++)
+	triangles.push_back( TriangleGLSL( {...}, {...}, {...} ) );
+
+GLuint buffer;
+glGenBuffers(1, &buffer);
+
+glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(TriangleGLSL) * triangles.size(), triangles.data(), GL_STATIC_DRAW);
+\endcode
+
+
 ### vérifier l'alignement
 
 openGL 4.3 a introduit 2 fonctions `glGetProgramInterface( ) / glGetProgramResource( )` permettant d'énumérer les blocks associés à des buffers et de récupérer 
@@ -230,14 +257,14 @@ for(int i= 0; i < buffer_count; i++)
 	GLint variable_count= 0;
 	{
 		GLenum prop[]= { GL_NUM_ACTIVE_VARIABLES };
-		glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, sizeof(GLint), NULL, &variable_count);
+		glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, 1, NULL, &variable_count);
 	}
 	
 	// recupere les indices des variables du block
 	std::vector<GLint> variables(variable_count);
 	{
 		GLenum prop[]= { GL_ACTIVE_VARIABLES };
-		glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, variable_count*sizeof(GLint), NULL, &variables.front());
+		glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, variable_count, NULL, variables.data());
 	}
 	
 	// recupere l'organisation mémoire d'une variable
@@ -245,7 +272,7 @@ for(int i= 0; i < buffer_count; i++)
 	{
 		GLint offset= 0;
 		GLenum props[]= { GL_OFFSET };
-		glGetProgramResourceiv(program, GL_BUFFER_VARIABLE, variables[k], 1, props, sizeof(GLint), NULL, &offset);
+		glGetProgramResourceiv(program, GL_BUFFER_VARIABLE, variables[k], 1, props, 1, NULL, &offset);
 		
 		printf("offset %d\n", offset);
 	}

@@ -1,0 +1,52 @@
+
+/*! \addtogroup storage_texture openGL 4.3 : storage textures / images
+
+### compute shader et textures
+
+Les textures sont accessibles en lecture avec un sampler, comme dans les fragment shaders. Il y a quand même une différence, habituellement le pipeline graphique 
+calcule automatiquement les paramètres de filtrage de la texture, mais comme un compute shader ne fait pas parti du pipeline graphique, il faut choisir le mipmap 
+explicitement avec `textureLod()`, par exemple.
+
+### écrire dans une texture
+
+Lorsqu'un compute shader veut écrire dans une texture, il faut "emballer" la texture dans un objet openGL, une `texture image` (rappel: pour que le pipeline graphique
+écrive dans une texture, il faut aussi l'emballer dans un framebuffer object, cf \ref framebuffer). Et comme d'habitude, plusieurs images peuvent être déclarées, elles sont
+donc numérotées, comme les unités de textures, ou les sorties d'un framebuffer object.
+
+C'est `glBindImageTexture()` qui permet de configurer le pipeline / d'associer une texture à une unité :
+\code
+GLuint texture= { ... };
+GLint unit= 0;
+glBindImageTexture​( unit​, /* texture​ */ texture, /* level​ */ 0, 
+    /* layered​ */ GL_FALSE, /* layer​ */ 0, 
+    /* access​ */ GL_WRITE_ONLY, /* format​ */ GL_RGBA8UI );
+\endcode
+
+Pour des textures 2d classiques, les paramètres layered et layer sont ignorés. Il faut donc préciser la texture, le niveau de mipmap à sélectionner, le type d'accès (lecture seule, 
+écriture seule, mixte) et le format interne des texels (GL_RGBA8UI pour les textures classiques avec des valeurs 0..255 par canal et 4 canaux, rgb et a).
+
+Dernière étape, fournir au shader, le numéro de l'unité sur laquelle la texture est sélectionnée, c'est le même principe que pour les unités de textures et les samplers :
+\code
+// selectionner le shader program, si necessaire
+// glUseProgram(program);
+
+GLint location= glGetUniformLocation(programn, "...");
+glUniform1i(location, unit);
+\endcode
+
+### déclaration dans le shader
+
+Les images sont déclarées avec le type :
+    - `image2D` pour les textures 2d classiques (valeurs re-interprétées comme des réels entre 0 et 1), 
+    - `uimage2D` pour les textures 2d, sans re-interpretation des valeurs entières non signées 
+    - `iimage2D` pour les textures 2d, sans re-interpretation des valeurs entières signées.
+    
+La déclaration doit aussi être décorée avec le format exact des données et éventuellement l'indice de l'unité sur laquelle une texture est sélectionnée :
+\code
+    layout() writeonly image2D 
+\endcode
+
+
+*/
+
+

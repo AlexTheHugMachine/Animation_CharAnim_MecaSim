@@ -138,9 +138,9 @@ void main( )
 \endcode
 
 __problème :__ cet algorithme ne fonctionnera pas sur un processeur graphique... 
-	- l'ordonnancement des threads, géré automatiquement par le matériel, ne garanti pas
-que tous les groupes progressent à la même vitesse / de manière synchronisée. Entre chaque itération du `while(n > 1)`, il faut attendre que tous les threads aient écrit
-leur résultat dans `tmp[]` avant de pouvoir le relire à l'itération suivante, avec des threads / groupes différents.
+	- l'ordonnancement des threads, géré automatiquement par le matériel, ne garanti pas que tous les groupes progressent à la même vitesse / de manière synchronisée. 
+Entre chaque itération du `while(n > 1)`, il faut attendre que tous les threads de tous les groupes aient écrits leur résultat dans `tmp[]` avant de pouvoir le relire à l'itération 
+suivante, avec des threads / groupes différents.
 	- autre problème, cet algorithme suppose que les threads s'exécutent dans l'ordre de leur numero, c'est qui n'est pas non plus le cas... `tmp[id]` doit contenir le résultat
 de l'itération précédente pour que l'algorithme fonctionne. Pour corriger ce problème, il suffit de lire et d'écrire dans des tableaux différents (ou des zones différentes
 du même tableau).
@@ -303,13 +303,96 @@ flouter/débruiter/analyser une image, des opérations sur des matrices, etc.
 
 Les ressources disponibles par processeur graphique sont limitées : le nombre de registres, la quantité de mémoire partagée, le nombre de groupes gérés par l'ordonnanceur matériel.
 
+\todo
+
 
 ## et on peut faire quoi avec tout ca ?
 
-pas mal de choses...
+Pour utiliser un compute shader, il faut, comme d'habitude, le compiler, le linker pour obtenir un programme et le paramétrer, donner des valeurs à ses uniforms, sélectionner des buffers, 
+des textures, etc. avant de pouvoir l'exécuter avec `glComputeDispatch( )`.
 
-entrées : uniform, textures, storage buffers
-sorties : storage buffers, storage textures / images, 
+
+### compiler un compute shader
+
+c'est la même chose qu'un shader program "classique", mais il n'y a qu'un seul shader de type GL_COMPUTE_SHADER dans le program.
+
+\code
+// charger les sources
+std::string source= read( "compute.glsl" );
+const char *strings[]= { source.c_str() };
+
+// creer et compiler le shader
+GLuint shader= glCreateShader(GL_COMPUTE_SHADER);
+glShaderSource(shader, 1, strings, NULL);
+glCompileShader(shader);
+
+// creer et linker le program
+GLuint program= glCreateProgram();
+glAttachShader(program, shader);
+glLinkProgram(program);
+
+// verifier
+GLint status;
+glGetProgramiv(program, GL_LINK_STATUS, &status);
+if(status == GL_TRUE)
+	// pas d'erreur de link, le program est pret a etre utilise !
+else
+	// erreurs ...
+\endcode
+
+vous pouvez aussi utiliser `read_program( )` et `program_print_errors()` de program.h, le source du shader doit être dans un bloc `#ifdef COMPUTE_SHADER / #endif`.
+
+### paramétrer un compute shader 
+
+Les compute shaders ont les mêmes entrées que les autres shaders, des uniforms, des buffers, des textures et des samplers. c'est exactement la même chose. Par contre, 
+ils ne s'exécutent pas dans le pipeline graphique, donc ils n'écrivent pas leurs résultats automatiquement, il faut décrire ou stocker les résultats.
+
+les shaders peuvent écrire dans 2 types d'objets openGL :
+	- des buffers, plus précisement des storage buffers, cf \ref storage, déclarés `writeonly` ou `coherent` si les shaders écrivent et relisent les données du buffer,
+	- des textures, plus précisement des texture images, cf \ref storage_texture
+
+### exécuter un compute shader
+
+c'est `glComputeDispatch()` qui provoque l'exécution des shaders. Il faut fournir le nombre de groupes de shaders à lancer. Dernière précision, le nombre de groupes est un ivec3, les 
+shaders peuvent être organisés en 1d, 2d ou en 3d, selon la dimension des données à manipuler.
+
+\code
+// selectionner le program, si necessaire
+// glUseProgram(program);
+
+glComputeDispatch(groups_x, 1, 1);			// execution 1d
+glComputeDispatch(groups_x, groups_y, 1);		// execution 2d
+glComputeDispatch(groups_x, groups_y, groups_z);	// execution 3d
+\endcode
+
+Il est possible de récupérer le nombre de shaders par groupe déclaré dans le shader :
+\code
+GLint threads[3]= { };
+glGetProgramiv(program, GL_COMPUTE_WORK_GROUP_SIZE, threads);
+\endcode
+
+et de calculer le nombre de groupes à lancer en fonction du nombre de données à traiter. Par exemple, extraire la plus petite valeur parmi N :
+\code
+int N= {...};
+int groups= N / threads[0];
+if(N % threads[0] > 0) 
+	groups= groups +1;	// un groupe supplémentaire, si N n'est pas un multiple de threads[0]
+
+glComputeDispatch(groups, 1, 1);
+\endcode
+
+### attendre les résultats 
+
+En général, les résultats calculés par un compute shader sont utilisés par un autre shader, et il faut explicitement attendre que les résultats soient disponibles avant d'exécuter le shader suivant,
+c'est `glMemoryBarrier()` qui permet de le faire. 
+
+Il existe plusieurs types de d'attente / de barrière, en fonction de la méthode utilisée pour relire les résultats :
+	- si les résultats sont écrits dans un (storage) buffer et que le cpu va relire ces données avec `glGetBufferSubData()`, il faut utiliser `glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT)`,
+	- si les résultats sont écrits dans un (storage) buffer et qu'un shader va relire ces données, il faut utiliser `glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)`,
+	- si les résultats sont écrits dans une (storage) texture et que le cpu va relire ces données avec `glGetTexImage()`, il faut utiliser `glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT)`,
+	- si les résultats sont écrits dans une (storage) texture et qu'un shader va relire ces données avec un sampler, il faut utiliser `glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)`
+	
+En cas de problèmes de synchronisation, il est possible d'utiliser une barrière globale, `glMemoryBarrier(GL_ALL_BARRIER_BITS)`.
 
 
 */
