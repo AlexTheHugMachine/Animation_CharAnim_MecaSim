@@ -24,18 +24,8 @@ void main( )
 	if(id < N/2)
 		tmp[N/2+id]= min(data[id*2], data[id*2+1]);
 	
-	//~ uint n= N/2;
-	//~ while(n > 1)
 	if(id < n/2)
-	{
-		barrier();
-		memoryBarrier();
-		
-		//~ if(id < n/2)
-			tmp[n/2+id]= min(tmp[n+id*2], tmp[n+id*2+1]);
-		
-		//~ n= n / 2;
-	}
+		tmp[n/2+id]= min(tmp[n+id*2], tmp[n+id*2+1]);
 }
 
 #endif

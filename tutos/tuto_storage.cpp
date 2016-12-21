@@ -168,7 +168,7 @@ GLuint program;
 int init( )
 {
     // compile le shader program, le program est selectionne
-    program= read_program("tutos/min_data.glsl");
+    program= read_program("tutos/storage.glsl");
     program_print_errors(program);
     
     print_storage(program);
