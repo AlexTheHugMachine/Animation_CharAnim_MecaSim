@@ -73,11 +73,11 @@ namespace glsl
 #undef ALIGN
 }
 
-class TP : public App
+class StorageBuffer : public App
 {
 public:
     // application openGL 4.3
-    TP( ) : App(1024, 640,  4, 3) {}
+    StorageBuffer( ) : App(1024, 640,  4, 3) {}
     
     int init( )
     {
@@ -218,8 +218,8 @@ protected:
 
 int main( int argc, char **argv )
 {
-    TP tp;
-    tp.run();
+    StorageBuffer app;
+    app.run();
     
     return 0;
 }
