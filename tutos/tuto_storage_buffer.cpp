@@ -73,11 +73,11 @@ namespace glsl
 #undef ALIGN
 }
 
-class TP : public App
+class StorageBuffer : public App
 {
 public:
     // application openGL 4.3
-    TP( ) : App(1024, 640,  4, 3) {}
+    StorageBuffer( ) : App(1024, 640,  4, 3) {}
     
     int init( )
     {
@@ -89,6 +89,7 @@ public:
 
         m_texture= read_texture(0, "data/debug2x2red.png");
         
+    #if 1
         // construit le storage buffer contenant les positions, les normales et les texcoords, en utilisant les types alignes
         struct vertex
         {
@@ -98,6 +99,22 @@ public:
             
             vertex( ) : position(), normal(), texcoord() {}
         };
+    #else
+        // ou a la main
+        struct vertex
+        {
+            vec3 position;      // vec3 aligne sur 4 float
+            float pad0;
+            vec3 normal;
+            float pad1;
+            vec2 texcoord;      // vec2 aligne sur 2 float
+            
+            float pad2[2];      // donc la taille totale de la structure doit etre un mulitple de 4 floats
+            
+            vertex( ) : position(), normal(), texcoord() {}
+        };
+    #endif
+        
         
         std::vector<vertex> data(m_mesh.vertex_count());
         for(int i= 0; i < m_mesh.vertex_count(); i++)
@@ -201,8 +218,8 @@ protected:
 
 int main( int argc, char **argv )
 {
-    TP tp;
-    tp.run();
+    StorageBuffer app;
+    app.run();
     
     return 0;
 }

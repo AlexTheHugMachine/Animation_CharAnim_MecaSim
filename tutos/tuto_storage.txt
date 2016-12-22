@@ -1,7 +1,9 @@
 
 /*! \addtogroup storage openGL 4.3 : storage buffers
 
-cf \ref tuto_storage.cpp
+cf \ref tuto_storage.cpp 
+et
+\ref tuto_storage_buffer.cpp 
 
 Les uniforms déclarés dans les shaders permettent de manipuler des tableaux de structures de manière assez directe, mais leur taille est très 
 limitée (32Ko ou 64Ko), ce qui les rend assez peu pratiques.
@@ -61,6 +63,7 @@ glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, buffer);
 glBufferData(GL_SHADER_STORAGE_BUFFER, /* size */, /* data */, GL_STATIC_DRAW);
 \endcode
 
+__attention :__ `glBindBufferBase()` sélectionne le buffer à la fois sur `GL_SHADER_STORAGE_BUFFER` et sur la version indexée `GL_SHADER_STORAGE_BUFFER 0`. 
 
 ## alignement des données...
 
@@ -145,7 +148,7 @@ Les `vec3` occuppent la place de 4 `float`, soit 16 octets. De manière généra
 
 Par défaut les éléments d'un tableau sont alignés sur 16 octets, quelque soit le type de l'élement. un `int t[1]` ou `int t[2]` occuppe 16 octets dans un buffer... 
 Mais il est aussi possible de choisir un alignement un peu plus économique en mémoire, il faut décorer la déclaration avec `layout(std430)`, les éléments d'un 
-tableau sont alignés normalement, en fonction de leur type.
+tableau sont alignés normalement, en fonction de leur type, mais la taille de la structure doit être un multiple de son membre le plus important. 
 
 par exemple :
 \code
@@ -154,6 +157,9 @@ layout(std430) readonly buffer triangleData
 	Triangle triangles[];
 };
 \endcode
+
+`triangles[0].a` et `triangle[1].a` doivent etre tous les deux alignés sur un multiple de 16 octets (4x`float`), donc la taille de la structure doit être aussi un 
+multiple de 16.
 
 ## preparer des données alignées...
 

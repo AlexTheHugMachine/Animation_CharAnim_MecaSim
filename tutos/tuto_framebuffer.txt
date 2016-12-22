@@ -227,7 +227,7 @@ init( )
 	glDrawBuffers(1, buffers);
 
 	// nettoyage
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 render( )
