@@ -29,7 +29,9 @@ along with gkit2light.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdlib>
 #include "vec.h"
 
-
+#ifndef M_PI
+#define M_PI       3.14159265358979323846
+#endif
 	/*! \brief A Quaternion class
 	 *
 	 */
@@ -51,7 +53,7 @@ along with gkit2light.  If not, see <http://www.gnu.org/licenses/>.
 
 		void setAxisAngleDegree(const Vec3Real& axis, const Real angle)
 		{
-			setAxisAngle(axis, angle*M_PI / 180.0);
+			setAxisAngle(axis, angle*M_PI/180.0);
 		}
 
 		TQuaternion(const Vec3Real& from, const Vec3Real& to)
@@ -415,15 +417,15 @@ along with gkit2light.  If not, see <http://www.gnu.org/licenses/>.
 			const Real q23 = 2.0l * q[2] * q[3];
 
 			m[0][0] = 1.0l - q11 - q22;
-			m[1][0] =        q01 - q23;
-			m[2][0] =        q02 + q13;
+			m[0][1] =        q01 - q23;
+			m[0][2] =        q02 + q13;
 
-			m[0][1] =        q01 + q23;
+			m[1][0] =        q01 + q23;
 			m[1][1] = 1.0l - q22 - q00;
-			m[2][1] =        q12 - q03;
+			m[1][2] =        q12 - q03;
 
-			m[0][2] =        q02 - q13;
-			m[1][2] =        q12 + q03;
+			m[2][0] =        q02 - q13;
+			m[2][1] =        q12 + q03;
 			m[2][2] = 1.0l - q11 - q00;
 
             m[0][3] = 0.0l;
@@ -458,15 +460,15 @@ along with gkit2light.  If not, see <http://www.gnu.org/licenses/>.
             const Real q23 = 2.0l * q[2] * q[3];
 
             m[0][0] = 1.0l - q11 - q22;
-            m[1][0] =        q01 - q23;
-            m[2][0] =        q02 + q13;
+            m[0][1] =        q01 - q23;
+            m[0][2] =        q02 + q13;
 
-            m[0][1] =        q01 + q23;
+            m[1][0] =        q01 + q23;
             m[1][1] = 1.0l - q22 - q00;
-            m[2][1] =        q12 - q03;
+            m[1][2] =        q12 - q03;
 
-            m[0][2] =        q02 - q13;
-            m[1][2] =        q12 + q03;
+            m[2][0] =        q02 - q13;
+            m[2][1] =        q12 + q03;
             m[2][2] = 1.0l - q11 - q00;
         }
 

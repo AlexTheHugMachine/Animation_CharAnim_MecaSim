@@ -35,6 +35,14 @@ int CharAnimViewer::init()
     m_angle_b=40;
     m_angle_milieu_ab = (m_angle_a+m_angle_b)/2;
 
+
+    m_quat_a.setAxisAngleDegree(Vector(0,0,1),90);
+    Transform R;
+    m_quat_a.getMatrix44(R);
+    cout<<R<<endl;
+
+    R =RotationZ(90);
+    cout<<R<<endl;
     return 0;
 }
 
@@ -85,8 +93,8 @@ int CharAnimViewer::update( const float time, const float delta )
     m_angle_milieu_ab = (m_angle_a+m_angle_b)/2;
 
     Vector Z(0,0,1);
-    m_quat_a.setAxisAngleDegree(Z,m_angle_a); m_quat_a.invert();
-    m_quat_b.setAxisAngleDegree(Z,m_angle_b); m_quat_b.invert();
+    m_quat_a.setAxisAngleDegree(Z,m_angle_a); //m_quat_a.invert();
+    m_quat_b.setAxisAngleDegree(Z,m_angle_b); //m_quat_b.invert();
     m_quat_milieu_ab = Quaternion::slerp( m_quat_a, m_quat_b, 0.5);
 
     return 0;
