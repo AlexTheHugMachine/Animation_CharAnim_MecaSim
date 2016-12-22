@@ -1,93 +1,44 @@
 #include "BVHJoint.h"
-
-namespace bvh {
+#include <BVH.h>
+#include <iostream>
+using namespace std;
+namespace simea {
 
 
 //=============================================================================
-BVHJoint::BVHJoint(const std::string& name, BVHJoint* parent, BVH* bvh, float* offset)
+BVHJoint::BVHJoint(const std::string& name, int parent, BVH& bvh, int id)
 		: m_name(name)
-		, m_parent(parent)
+		, m_parentId(parent)
 		, m_bvh(bvh)
+		, m_id(id)
 {
-	assert(bvh!=0);
-	assert(offset!=0);
-
-	memcpy(m_offset, offset, 3*sizeof(float));
-	bvh->m_joints.push_back(this);
+	setOffset(0, 0, 0);
 }
 //-----------------------------------------------------------------------------
-BVHJoint::~BVHJoint()
+void BVHJoint::removeChannel(const BVHChannel& channel)
 {
-	for (int i=0; i<(int)m_channels.size(); ++i)
-		delete m_channels[i];
-
-	for (int i=0; i<(int)m_childs.size(); ++i)
-		delete m_childs[i];
-}
-//-----------------------------------------------------------------------------
-std::string BVHJoint::getName(void) const
-{ return m_name; }
-//-----------------------------------------------------------------------------
-void BVHJoint::setName(const std::string& name)
-{ m_name = name; }
-//-----------------------------------------------------------------------------
-void BVHJoint::getOffset(float& x, float& y, float& z) const
-{
-	x = m_offset[0];
-	y = m_offset[1];
-	z = m_offset[2];
-}
-//-----------------------------------------------------------------------------
-void BVHJoint::setOffset(float x, float y, float z)
-{
-	m_offset[0] = x;
-	m_offset[1] = y;
-	m_offset[2] = z;
-}
-//-----------------------------------------------------------------------------
-int BVHJoint::getNumChannel(void) const
-{
-	return (int)m_channels.size();
-}
-//-----------------------------------------------------------------------------
-BVHChannel* BVHJoint::getChannel(int i) const
-{
-	return m_channels[i];
-}
-//-----------------------------------------------------------------------------
-void BVHJoint::SetChannel(int i, BVHChannel* channel)
-{
-	m_channels[i] = channel;
-}
-//-----------------------------------------------------------------------------
-void BVHJoint::addChannel(BVHChannel* channel)
-{
-	m_channels.push_back(channel);
-}
-//-----------------------------------------------------------------------------
-BVHChannel* BVHJoint::removeChannel(BVHChannel* channel)
-{
-	BVHChannel* result=0;
-
-	std::vector<BVHChannel*>::iterator ite=m_channels.begin();
-	while (ite!=m_channels.end() && *ite!=channel)
+	std::vector<BVHChannel>::iterator ite=m_channels.begin();
+	while (ite!=m_channels.end() && (*ite!=channel) )
 		ite++;
 
 	if (ite!=m_channels.end())
 	{
-		result = *ite;
 		m_channels.erase(ite);
 	}
 
-	return result;
 }
-//-----------------------------------------------------------------------------
-BVHChannel* BVHJoint::removeChannel(int i)
-{
-	BVHChannel* result=0;
 
+const simea::BVHJoint& BVHJoint::getChild(int i) const { return m_bvh[getChildId(i)]; }
+void BVHJoint::addChild(int i) { assert(i >= 0); assert(i < m_bvh.getNumberOfJoint()); m_childs.push_back(i); }
+const BVHJoint& BVHJoint::getParent(void) const { assert(m_parentId >= 0); assert(m_parentId < m_bvh.getNumberOfJoint()); return m_bvh[m_parentId]; }
+void BVHJoint::setParentId(int parent) { assert(parent >= 0); assert(parent < m_bvh.getNumberOfJoint()); m_parentId = parent; }
+
+
+//-----------------------------------------------------------------------------
+void BVHJoint::removeChannel(int i)
+{
 	int k=0;
-	std::vector<BVHChannel*>::iterator ite=m_channels.begin();
+	std::vector<BVHChannel>::iterator ite=m_channels.begin();
 	while (ite!=m_channels.end() && k!=i)
 	{
 		ite++;
@@ -96,47 +47,12 @@ BVHChannel* BVHJoint::removeChannel(int i)
 
 	if (ite!=m_channels.end())
 	{
-		result = *ite;
 		m_channels.erase(ite);
 	}
 
-	return result;
+	//return result;
 }
-//----------------------------------------------------------------------------
-int BVHJoint::getNumChild(void) const
-{
-	return (int)m_childs.size();
-}
-//----------------------------------------------------------------------------
-BVHJoint* BVHJoint::getChild(int i) const
-{
-	return m_childs[i];
-}
-//-----------------------------------------------------------------------------
-void BVHJoint::addChild(BVHJoint* BVHJoint)
-{
-	m_childs.push_back(BVHJoint);
-}
-//-----------------------------------------------------------------------------
-BVHJoint* BVHJoint::getParent(void) const
-{
-	return m_parent;
-}
-//----------------------------------------------------------------------------
-void BVHJoint::setParent(BVHJoint* parent)
-{
-	m_parent = parent;
-}
-//----------------------------------------------------------------------------
-BVH* BVHJoint::getBVH(void) const
-{
-	return m_bvh;
-}
-//----------------------------------------------------------------------------
-void BVHJoint::setBVH(BVH* bvh)
-{
-	m_bvh = bvh;
-}
+
 //----------------------------------------------------------------------------
 void BVHJoint::scale(float factor)
 {
@@ -145,15 +61,16 @@ void BVHJoint::scale(float factor)
 		m_offset[i]*=factor;
 
 	// scaling translation channels
-	for (int i=0; i<getNumChannel(); ++i)
+	for (int i=0; i<getNumberOfChannel(); ++i)
 	{
-		BVHChannel* curChannel = getChannel(i);
-		if (curChannel->isTranslation())
+		BVHChannel& curChannel = getChannel(i);
+		if (curChannel.isTranslation())
 		{
-			curChannel->scale(factor);
+			curChannel.scale(factor);
 		}
 	}
 }
+
 //----------------------------------------------------------------------------
 void BVHJoint::rotate90(AXIS axis, bool cw)
 {
@@ -183,23 +100,23 @@ void BVHJoint::rotate90(AXIS axis, bool cw)
 	}
 
 	// Now, let's transform these axis :
-	for (int i=0; i<getNumChannel(); ++i)
+	for (int i=0; i<getNumberOfChannel(); ++i)
 	{
-		BVHChannel* curChannel = getChannel(i);
+		BVHChannel& curChannel = getChannel(i);
 
-		if (curChannel->getAxis() == from)
+		if (curChannel.getAxis() == from)
 		{
 			// 'from' => 'to'
-			curChannel->setAxis(to);
+			curChannel.setAxis(to);
 			if (cw)
-				curChannel->scale(-1.0f);
+				curChannel.scale(-1.0f);
 		}
-		else if (curChannel->getAxis() == to)
+		else if (curChannel.getAxis() == to)
 		{
 			// 'to' => -'from'
-			curChannel->setAxis(from);
+			curChannel.setAxis(from);
 			if (!cw)
-				curChannel->scale(-1.0f);
+				curChannel.scale(-1.0f);
 		}
 	}
 
@@ -216,35 +133,34 @@ void BVHJoint::rotate90(AXIS axis, bool cw)
 		m_offset[(int)to] = -tmp;
 	}
 }
+
 //----------------------------------------------------------------------------
 static int g_displayIndex = 0;
 std::ostream& operator << (std::ostream& os, const BVHJoint& BVHJoint)
 {
-	for (int i=0; i<g_displayIndex; ++i)
-		os << "  ";
-	os << BVHJoint.getName() << " [" << BVHJoint.getNumChannel() << " DOF]";
+	for (int i=0; i<g_displayIndex; ++i) os << "  ";
+	os <<" id="<<BVHJoint.getId();
+	os <<" name="<<BVHJoint.getName();
+	os <<" nChannel=" << BVHJoint.getNumberOfChannel() << " nChildren="<<BVHJoint.getNumberOfChildren()<<"(";
+	for(int i=0;i<BVHJoint.getNumberOfChildren();++i) os<<BVHJoint.getChildId(i)<<",";
+	os<<")";
+	//os << " &m_bvh=" << (void*)&BVHJoint.m_bvh;
+	os << " parentId=" << BVHJoint.getParentId();
 	os<< " offset=("<<BVHJoint.m_offset[0]<<", "<<BVHJoint.m_offset[1]<<", "<<BVHJoint.m_offset[2]<<")";
 	os << std::endl;
 	g_displayIndex++;
-	for (int i=0; i<BVHJoint.getNumChild(); ++i)
-		os << *(BVHJoint.getChild(i));
+	for (int i = 0; i < BVHJoint.getNumberOfChildren(); ++i)
+		//os << "childNumber="<<i<<"  childId=" << (BVHJoint.getChildId(i)) << " " << BVHJoint.getChild(i) << " ";
+		os <<BVHJoint.getChild(i) << " ";
 	g_displayIndex--;
 
 	return os;
 }
 //-----------------------------------------------------------------------------
-BVHJoint::BVHJoint(const std::string& name, BVHJoint* parent, BVH* bvh,
-                   std::ifstream& stream, std::vector<BVHChannel*>& channels,
-                   bool enableEndSite)
-		: m_name(name)
-		, m_parent(parent)
-		, m_bvh(bvh)
+void BVHJoint::initChannel(std::ifstream& stream)
 {
-	assert(bvh!=0);
 
 	bool result = true;
-
-	bvh->m_joints.push_back(this);
 
 	BVH::expect("{", stream);
 	BVH::expect("OFFSET", stream);
@@ -304,64 +220,13 @@ BVHJoint::BVHJoint(const std::string& name, BVHJoint* parent, BVH* bvh,
 			continue;
 		}
 
-		BVHChannel* channel = new BVHChannel(type, axis);
-		addChannel(channel);
-		channels.push_back(channel);
-	}
-
-	std::string str;
-	stream >> str;
-
-	while (str!="}")
-	{
-		if (str=="JOINT")
-		{
-			stream >> str;
-			addChild(new BVHJoint(str, this, bvh, stream, channels, enableEndSite));
-		}
-		else if (str=="End")
-		{
-			BVH::expect("Site", stream);
-			BVH::expect("{", stream);
-			BVH::expect("OFFSET", stream);
-			float offset[3];
-			stream >> offset[0] >> offset[1] >> offset[2];
-			if (enableEndSite)
-			{
-				std::string nameES = getEndSiteName(name);
-				addChild(new BVHJoint(nameES, this, bvh, offset));
-			}
-			BVH::expect("}", stream);
-		}
-		else
-		{
-			std::cerr << "ERROR : unexpected word : '" << str << "'." << std::endl;
-			result = false;
-		}
-
-		stream >> str;
+		addChannel(BVHChannel(type, axis));
 	}
 
 	if (!result)
-		std::cerr << "ERROR during the '" << name << "' BVHJoint creation." << std::endl;
+		std::cerr << "ERROR during the '" << m_name << "' BVHJoint creation." << std::endl;
 }
-//----------------------------------------------------------------------------
-std::string BVHJoint::getEndSiteName(const std::string& parentName)
-{
-	std::string result;
-	if (parentName=="RWrist")
-		result="RHand";
-	else if (parentName=="LWrist")
-		result="LHand";
-	else if (parentName=="RAnkle")
-		result="RFoot";
-	else if (parentName=="LAnkle")
-		result="LFoot";
-	else
-		result=parentName+"_ES";
 
-	return result;
-}
 //=============================================================================
 
 } // namespace

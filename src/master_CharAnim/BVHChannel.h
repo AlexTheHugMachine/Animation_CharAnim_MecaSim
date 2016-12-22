@@ -8,7 +8,7 @@
 	@{
 */
 
-namespace bvh {
+namespace simea {
 
 
 /** @brief Motion capture bone dof evolution
@@ -30,7 +30,7 @@ public:
 	//! Constructor
 	BVHChannel(TYPE type, AXIS axis);
 	//! Destructor
-	~BVHChannel();
+	~BVHChannel() {}
 
 	//! Check if the channel is a rotation
 	bool isRotation(void) const;
@@ -63,6 +63,9 @@ public:
 
     //! Compute the multi resolution signal (See [] paper)
     void computeMultiResolution();
+
+	bool operator == (const BVHChannel& c);
+	bool operator != (const BVHChannel& c) { return !operator==(c); }
 
     //! return Multiresolution Size
 //    unsigned int getMultiResolutionSize() const       { return m_multiR.size(); }

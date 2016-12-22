@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "BVH.h"
+//#include "BVH.h"
 #include "BVHChannel.h"
 #include "BVHAxis.h"
 
@@ -16,8 +16,9 @@
 	@{
 */
 
-namespace bvh {
+namespace simea {
 
+	class BVH;
 
 /** @brief Motion capture bone and bone animation
 
@@ -26,55 +27,63 @@ namespace bvh {
 */
 class BVHJoint
 {
-	friend class bvh::BVH;
+	friend class simea::BVH;
 public:
-	/** @brief Constructor
-		@pre bvh!=0
-		@pre offset!=0
-	*/
-	BVHJoint(const std::string& name, BVHJoint* parent, bvh::BVH* bvh, float* offset);
+	//! @brief Constructor
+	BVHJoint(const std::string& name, int parent, BVH& bvh, int id);
 	//! Destructor (recursive)
-	~BVHJoint();
+	~BVHJoint() {}
 
 	//! Return the name of the Joint
-	std::string getName(void) const;
+	std::string getName(void) const { return m_name;  }
 	//! Modify the name of the Joint
-	void setName(const std::string& name);
+	void setName(const std::string& name) { m_name = name;  }
+
+	//! return id
+	int getId() const { return m_id; }
 
 	//! Return the offset of the joint
-	void getOffset(float& x, float& y, float& z) const;
+	void getOffset(float& x, float& y, float& z) const { x = m_offset[0]; y = m_offset[1]; z = m_offset[2]; }
 	//! Modify the offset of the joint
-	void setOffset(float x, float y, float z);
+	void setOffset(float x, float y, float z) { m_offset[0] = x; m_offset[1] = y; m_offset[2] = z; }
 
 	//! Return the number of channels in the Joint
-	int getNumChannel(void) const;
+	int getNumberOfChannel(void) const { return (int)m_channels.size();  }
 	//! Return the i-th channel of the Joint
-	bvh::BVHChannel* getChannel(int i) const;
+	const simea::BVHChannel& getChannel(int i) const  { assert(i >= 0); assert(i < (int)m_channels.size()); return m_channels[i]; }
+
+	//! Return the i-th channel of the Joint
+	simea::BVHChannel& getChannel(int i) { assert(i >= 0); assert(i < (int)m_channels.size()); return m_channels[i]; }
 	//! modify the i-th channel of the Joint
-	void SetChannel(int i, bvh::BVHChannel* channel);
+	void setChannel(int i, const simea::BVHChannel& channel);
 	//! Add channel
-	void addChannel(bvh::BVHChannel* channel);
+	void addChannel(const simea::BVHChannel& channel)	{ m_channels.push_back(channel);  }
 	//! Remove channel
-	bvh::BVHChannel* removeChannel(bvh::BVHChannel* channel);
+	void removeChannel(const simea::BVHChannel& channel);
 	//! Remove channel
-	bvh::BVHChannel* removeChannel(int i);
+	void removeChannel(int i);
 
 	//! Return the number of child
-	int getNumChild(void) const;
+	int getNumberOfChildren(void) const		{ return (int)m_childs.size();  }
 	//! Return a child
-	bvh::BVHJoint* getChild(int i) const;
+	const simea::BVHJoint& getChild(int i) const;
+	//! Return the i-th child Id in the vector<Joint> store in the BVH
+	int getChildId(int i) const 	{ assert(i >= 0); assert(i < (int)m_childs.size()); return m_childs[i]; }
 	//! Add child
-	void addChild(bvh::BVHJoint* joint);
+	void addChild(int i);
+
+	//! return true if the Joint is the root
+	bool isRoot() const { return getParentId()<0;  }
 
 	//! Return the parent of the Joint
-	BVHJoint* getParent(void) const;
+	const BVHJoint& getParent(void) const;
+	//! Return the parent indice of the Joint
+	int getParentId(void) const	{ return m_parentId;  }
 	//! Modify the parent of the joint
-	void setParent(bvh::BVHJoint* parent);
+	void setParentId(int parent);
 
 	//! Return the bvh
-	bvh::BVH* getBVH(void) const;
-	//! Modify the bvh
-	void setBVH(bvh::BVH* bvh);
+	const simea::BVH& getBVH(void) const;
 
 	//! Scaling the joint
 	void scale(float factor);
@@ -84,31 +93,31 @@ public:
 	//! dump (recursive)
 	friend std::ostream& operator << (std::ostream& os, const BVHJoint& joint);
 
+	//! init channels from a opened file
+	void initChannel(std::ifstream& stream);
+
 protected:
-	/** @brief Constructor from file stream (recursive)
-		@pre bvh!=0
-	*/
-	BVHJoint(const std::string& name, BVHJoint* parent, bvh::BVH* bvh,
-		  std::ifstream& stream, std::vector<BVHChannel*>& channels,
-		  bool enableEndSite);
-	//! Return the best end name from it parent e.g. RHand from RWrist
-	static std::string getEndSiteName(const std::string& parentName);
 
 	//! Joint name
 	std::string m_name;
+
+	//! The parent
+	int m_parentId;
+
+	//! The BVH
+	simea::BVH& m_bvh;
+
+	//! Id in the vector<joint> of BVH
+	int m_id;
+
 	//! Offset vector
 	float m_offset[3];
 
 	//! Channels
-	std::vector<bvh::BVHChannel*> m_channels;
+	std::vector<simea::BVHChannel> m_channels;
 
 	//! Childs
-	std::vector<bvh::BVHJoint*> m_childs;
-	//! The parent
-	bvh::BVHJoint* m_parent;
-
-	//! The BVH
-	bvh::BVH* m_bvh;
+	std::vector<int> m_childs;
 };
 
 } // namespace

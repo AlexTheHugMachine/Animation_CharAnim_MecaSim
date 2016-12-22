@@ -1,16 +1,21 @@
 #include "BVH.h"
 #include "BVHJoint.h"
+#include <iostream>
 
-namespace bvh {
+using namespace std;
+namespace simea {
 
 
 //=============================================================================
 BVH::BVH()
  : m_numFrames(0)
  , m_frameTime(0)
- , m_root(0)
+ , m_rootId(-1)
 {
 }
+
+const simea::BVHJoint& BVH::getRoot(void) const { assert(m_rootId >= 0); assert(m_rootId < m_joints.size()); return m_joints[m_rootId]; }
+
 
 //-----------------------------------------------------------------------------
 void BVH::init(const std::string& filename, bool enableEndSite)
@@ -24,11 +29,13 @@ void BVH::init(const std::string& filename, bool enableEndSite)
         expect("HIERARCHY", stream);
         expect("ROOT", stream);
 
+        //m_joints.reserve( 100 );
+
         std::string rootName;
         stream >> rootName;
 
-        std::vector<BVHChannel*> channels;
-        m_root = new BVHJoint(rootName, 0, this, stream, channels, enableEndSite); // recursive
+		m_rootId = addJoint(rootName, -1);
+		init(stream, enableEndSite, m_rootId);
 
         expect("MOTION", stream);
         expect("Frames:", stream);
@@ -38,33 +45,24 @@ void BVH::init(const std::string& filename, bool enableEndSite)
         expect("Time:", stream);
         stream >> m_frameTime;
 
-        int i,j;
-        for(j=0; j<(int)channels.size(); ++j)
-            channels[j]->setDataSize(m_numFrames);
+        int i,j,k;
+		for (i = 0; i<(int)m_joints.size(); ++i)
+			for(j=0; j<(int)m_joints[i].getNumberOfChannel(); ++j)
+				m_joints[i].getChannel(j).setDataSize(m_numFrames);
 
-        for(i=0; i<(int)m_numFrames; ++i)
+        for(k=0; k<(int)m_numFrames; ++k)
         {
-            for(j=0; j<(int)channels.size(); ++j)
-            {
-                float data;
-                stream >> data;
-                channels[j]->setData(i, data);
-            }
+			for (i = 0; i < (int)m_joints.size(); ++i)
+			{
+				for (j = 0; j < (int)m_joints[i].getNumberOfChannel(); ++j)
+				{
+					float data;
+					stream >> data;
+					m_joints[i].getChannel(j).setData(k, data);
+				}
+			}
         }
 
-//        for(j=0;j<(int)channels.size();++j)
-//        {
-//            channels[j]->computeMultiResolution();
-//
-//            channels[0]->printMultiResData();
-//            std::vector<float> coef;
-//            for(unsigned int i=0;i<channels[0]->getMultiResolutionSize();++i)
-//                coef.push_back(1.0f);
-//            channels[0]->regenerateDataFromMultiResolution(coef);
-//            printf("\n\n\n");
-//            channels[0]->printMultiResData();
-//            printf("\n\n\n");
-//        }
     }
     else // file==0
     {
@@ -73,65 +71,87 @@ void BVH::init(const std::string& filename, bool enableEndSite)
 		assert(0);
     }
 }
-//-----------------------------------------------------------------------------
-BVH::~BVH()
-{
-    delete m_root;
-}
-//-----------------------------------------------------------------------------
-int BVH::getNumFrame(void) const
-{
-  return m_numFrames;
-}
-//-----------------------------------------------------------------------------
-float BVH::getFrameTime(void) const
-{
-  return m_frameTime;
-}
-//-----------------------------------------------------------------------------
-BVHJoint* BVH::getRoot(void) const
-{
-  return m_root;
-}
-//-----------------------------------------------------------------------------
-void BVH::setRoot(BVHJoint* joint)
-{
-  m_root = joint;
-}
-//-----------------------------------------------------------------------------
-int BVH::getNumJoint(void) const
-{
-    return (int)m_joints.size();
-}
-//-----------------------------------------------------------------------------
-BVHJoint* BVH::getJoint(int i) const
-{
-    if(i<getNumJoint())
-        return m_joints[i];
-    else
-        return NULL;
-}
-//----------------------------------------------------------------------------
-BVHJoint* BVH::getJoint(const std::string& name) const
-{
-    int i=0;
-    while(i<getNumJoint() && getJoint(i)->getName()!=name)
-        ++i;
 
-    if(i<getNumJoint())
-        return getJoint(i);
-    else
-        return 0;
-}
 
 //----------------------------------------------------------------------------
-int BVH::getJointNumber(const std::string& name) const
+std::string BVH::getEndSiteName(const std::string& parentName)
+{
+	std::string result;
+	if (parentName=="RWrist")
+		result="RHand";
+	else if (parentName=="LWrist")
+		result="LHand";
+	else if (parentName=="RAnkle")
+		result="RFoot";
+	else if (parentName=="LAnkle")
+		result="LFoot";
+	else
+		result=parentName+"_ES";
+
+	return result;
+}
+
+
+void BVH::init(std::ifstream& stream, bool enableEndSite, int id)
+{
+    m_joints[id].initChannel(stream);
+
+	std::string str;
+	stream >> str;
+
+	while (str!="}")
+	{
+		if (str=="JOINT")
+		{
+			stream >> str;
+			//addChild(new BVHJoint(str, this, bvh, stream, channels, enableEndSite));
+			int childId = addJoint(str,id);
+			init(stream, enableEndSite, childId);
+		}
+		else
+		if (str=="End")
+		{
+			BVH::expect("Site", stream);
+			BVH::expect("{", stream);
+			BVH::expect("OFFSET", stream);
+			float x, y, z;
+			stream >> x >> y >> z;
+			if (enableEndSite)
+			{
+				std::string nameES = getEndSiteName(m_joints[id].getName());
+				//addChild(new BVHJoint(nameES, this, bvh, offset));
+				int childId = addJoint(nameES, id);
+				(*this)[childId].setOffset(x, y, z);
+			}
+			BVH::expect("}", stream);
+		}
+		else
+		{
+			std::cerr << "ERROR : unexpected word : '" << str << "'." << std::endl;
+		}
+
+		stream >> str;
+	}
+}
+
+
+int BVH::addJoint(const std::string& name, int parentId)
+{
+    assert( parentId<(int)m_joints.size() );
+	int id = int(m_joints.size());
+	m_joints.push_back( BVHJoint(name, parentId, *this, m_joints.size()));
+	if (parentId>=0) m_joints[parentId].addChild( id );
+	return id;
+}
+
+//----------------------------------------------------------------------------
+int BVH::getJointId(const std::string& name) const
 {
     int i=0;
-    while(i<getNumJoint() && getJoint(i)->getName()!=name)
+    while(i<getNumberOfJoint() && getJoint(i).getName()!=name)
         ++i;
 
-    if(i<getNumJoint())
+    if(i<getNumberOfJoint())
         return i;
     else
         return -1;
@@ -149,14 +169,14 @@ void BVH::scaleSkeleton(float factor)
 {
     assert(factor>0);
 
-    for(int i=0; i<getNumJoint(); ++i)
-        getJoint(i)->scale(factor);
+    for(int i=0; i<getNumberOfJoint(); ++i)
+        getJoint(i).scale(factor);
 }
 //----------------------------------------------------------------------------
-void BVH::rotate90(bvh::AXIS axis, bool cw)
+void BVH::rotate90(simea::AXIS axis, bool cw)
 {
-    for(int i=0; i<getNumJoint(); ++i)
-        getJoint(i)->rotate90(axis, cw);
+    for(int i=0; i<getNumberOfJoint(); ++i)
+        getJoint(i).rotate90(axis, cw);
 }
 //----------------------------------------------------------------------------
 bool BVH::expect(const std::string& word, std::ifstream& stream)
@@ -175,16 +195,19 @@ bool BVH::expect(const std::string& word, std::ifstream& stream)
 
     return result;
 }
+
+
 //============================================================================
 std::ostream& operator << (std::ostream& os, const BVH& bvh)
 {
-    os << (*bvh.getRoot())
-       << std::endl
-       << "Number of frames : " << bvh.getNumFrame() << std::endl
-       << "Animation time   : " << bvh.getFrameTime()*(bvh.getNumFrame()-1) << " s" << std::endl;
-
+    os << (bvh.getRootId())
+       << "Number of frames : " << bvh.getNumberOfFrame() << std::endl
+       << "Animation time   : " << bvh.getFrameTime()*(bvh.getNumberOfFrame()-1) << " s" << std::endl;
+    os<<bvh.getRoot()<<endl;
     return os;
 }
+
+
 //============================================================================
 
 void BVH::multiResEditAnimation(const std::vector<float>& coef)
@@ -193,8 +216,8 @@ void BVH::multiResEditAnimation(const std::vector<float>& coef)
     int j;
     for(i=0;i<m_joints.size();++i)
     {
-        for(j=0;j<m_joints[i]->getNumChannel();++j)
-            m_joints[i]->getChannel(j)->regenerateDataFromMultiResolution(coef);
+        for(j=0;j<m_joints[i].getNumberOfChannel();++j)
+            m_joints[i].getChannel(j).regenerateDataFromMultiResolution(coef);
     }
 }
 

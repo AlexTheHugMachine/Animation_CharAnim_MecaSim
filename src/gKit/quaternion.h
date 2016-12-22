@@ -42,10 +42,15 @@ along with gkit2light.  If not, see <http://www.gnu.org/licenses/>.
 		TQuaternion()
 		{ q[0]=q[1]=q[2]=0.0;  q[3]=1.0; }
 
-		/*! Constructor from rotation axis (non null) and angle (in radians). See also setAxisAngle(). */
+		/*! Constructor from rotation axis (non null) and angle (in degree). See also setAxisAngle(). */
 		TQuaternion(const Vec3Real& axis, const Real angle)
 		{
-			setAxisAngle(axis, angle);
+			setAxisAngleDegree(axis, angle);
+		}
+
+		void setAxisAngleDegree(const Vec3Real& axis, const Real angle)
+		{
+			setAxisAngle(axis, angle*M_PI / 180.0);
 		}
 
 		TQuaternion(const Vec3Real& from, const Vec3Real& to)

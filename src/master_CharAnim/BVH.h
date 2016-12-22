@@ -10,12 +10,13 @@
 #include <iostream>
 
 #include "BVHAxis.h"
+#include <BVHJoint.h>
 
 /** @addtogroup BVH
 @{
 */
 
-namespace bvh {
+namespace simea {
 
 	class BVHJoint;
 
@@ -24,42 +25,50 @@ namespace bvh {
 	*/
 	class BVH
 	{
-		friend class bvh::BVHJoint;
+		friend class simea::BVHJoint;
 	public:
 		//! Default constructor
 		BVH();
 		//! Destructor
 		BVH(const std::string& filename, bool enableEndSite=false)  { init(filename,enableEndSite); }
-		~BVH();
+		~BVH() {}
 
 		//! init
-		void init(const std::string& filename, bool enableEndSite=false);
+		void init(const std::string& filename, bool enableEndSite=true);
 
 		//! Return the number of frames
-		int getNumFrame(void) const;
+		int getNumberOfFrame(void) const	{ return m_numFrames;  }
 		//! Return the dt between 2 frames
-		float getFrameTime(void) const;
+		float getFrameTime(void) const		{ return m_frameTime;  }
 
 		//! Return the root joint
-		bvh::BVHJoint* getRoot(void) const;
-		//! Modify the root
-		void setRoot(bvh::BVHJoint* joint);
+		const simea::BVHJoint& getRoot(void) const;
+		//! Return the root joint Id
+		int getRootId(void) const { return m_rootId; }
 
 		//! Return the number of joint
-		int getNumJoint(void) const;
+		int getNumberOfJoint(void) const	{ return (int)m_joints.size(); }
 		//! Return the i-th joint
-		bvh::BVHJoint* getJoint(int i) const;
-		//! Return a joint
-		bvh::BVHJoint* getJoint(const std::string& name) const;
-		//! Return a joint number
-		int getJointNumber(const std::string& name) const;
+		simea::BVHJoint& getJoint(int i) { assert(i >= 0); assert(i < (int)m_joints.size()); return m_joints[i]; }
+		//! Return the i-th joint
+		const simea::BVHJoint& getJoint(int i) const  { assert(i >= 0); assert(i < (int)m_joints.size()); return m_joints[i]; }
+		//! Return a joint Id fro mhis name, -& if the joint does not exist
+		int getJointId(const std::string& name) const;
+		//! Return the i-th joint
+		simea::BVHJoint& operator[](int i) { return getJoint(i); }
+		//! Return the i-th joint
+		const simea::BVHJoint& operator[](int i) const { return getJoint(i); }
+		//! create and add a joint, return the joint Id of the created joint
+		int addJoint(const std::string& name, int parentId);
+
+
 
 		//! Scaling the animation time
 		void scaleAnimation(float factor);
 		//! Scaling the skeleton
 		void scaleSkeleton(float factor);
 		//! Rotate the BVH
-		void rotate90(bvh::AXIS axis, bool cw);
+		void rotate90(simea::AXIS axis, bool cw);
 		//! Edit the animation in a multi resolution way
 		void multiResEditAnimation(const std::vector<float>& coef);
 
@@ -73,10 +82,18 @@ namespace bvh {
 		float m_frameTime;
 
 		//! Vector of joint
-		std::vector<bvh::BVHJoint*> m_joints;
+		std::vector<simea::BVHJoint> m_joints;
 
 		//! Root Joint
-		bvh::BVHJoint* m_root;
+		//simea::BVHJoint* m_root;
+		int m_rootId;
+
+
+		//! internal init: recursive on the children
+		void init(std::ifstream& stream, bool enableEndSite, int id);
+        //! Return the best end name from it parent e.g. RHand from RWrist
+		static std::string getEndSiteName(const std::string& parentName);
+
 
 	private:
 		//! Check if the next word in stream is word

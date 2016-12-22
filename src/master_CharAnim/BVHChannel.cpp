@@ -5,16 +5,12 @@
 using namespace std;
 
 
-namespace bvh {
+namespace simea {
 
 //=============================================================================
 BVHChannel::BVHChannel(BVHChannel::TYPE type, AXIS axis)
 		: m_type(type)
 		, m_axis(axis)
-{
-}
-//-----------------------------------------------------------------------------
-BVHChannel::~BVHChannel()
 {
 }
 //-----------------------------------------------------------------------------
@@ -116,6 +112,14 @@ void BVHChannel::rotate90(AXIS axis, bool cw)
 		if (!cw)
 			scale(-1.0f);
 	}
+}
+
+bool BVHChannel::operator == (const BVHChannel& c)
+{
+	if (m_axis != c.m_axis) return false;
+	if (m_data != c.m_data) return false;
+	if (m_axis != c.m_axis) return false;
+	return true;
 }
 
 
