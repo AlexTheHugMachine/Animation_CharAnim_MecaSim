@@ -7,7 +7,6 @@
 
 #include "window.h"
 #include "program.h"
-#include "buffer.h"
 #include "texture.h"
 #include "mesh.h"
 #include "draw.h"
