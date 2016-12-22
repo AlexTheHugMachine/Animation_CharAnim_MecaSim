@@ -1,7 +1,9 @@
 
 /*! \addtogroup storage openGL 4.3 : storage buffers
 
-cf \ref tuto_storage.cpp
+cf \ref tuto_storage.cpp 
+et
+\ref tuto_storage_buffer.cpp 
 
 Les uniforms déclarés dans les shaders permettent de manipuler des tableaux de structures de manière assez directe, mais leur taille est très 
 limitée (32Ko ou 64Ko), ce qui les rend assez peu pratiques.

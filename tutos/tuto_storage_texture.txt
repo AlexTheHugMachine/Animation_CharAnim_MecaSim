@@ -1,6 +1,8 @@
 
 /*! \addtogroup storage_texture openGL 4.3 : storage textures / images
 
+cf \ref tuto_storage_texture.cpp
+
 ### compute shader et textures
 
 Les textures sont accessibles en lecture avec un sampler, comme dans les fragment shaders. Il y a quand même une différence, habituellement le pipeline graphique 
