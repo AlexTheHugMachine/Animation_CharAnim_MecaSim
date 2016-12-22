@@ -79,10 +79,6 @@ int CharAnimViewer::update( const float time, const float delta )
     // time est le temps ecoule depuis le demarrage de l'application, en millisecondes,
     // delta est le temps ecoule depuis l'affichage de la derniere image / le dernier appel a draw(), en millisecondes.
 
-    //m_T = RotationZ( degrees(0.01*time) );
-
-    //m_q = Quaternion( Vector(0,1,1), degrees(0.01*time) ); // rotation
-    //m_q = m_q * Quaternion( Vector(0,1,1), degrees(0.01*delta) ); // rotation
 
     m_angle_a = int(0.1*time)%360;
     m_angle_b = int(0.1*time+40)%360;
