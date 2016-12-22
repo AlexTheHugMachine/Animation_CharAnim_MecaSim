@@ -99,6 +99,11 @@ int main( int argc, char **argv )
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &groups_max[1]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &groups_max[2]);
     printf("groups max %d %d %d\n", groups_max[0], groups_max[1], groups_max[2]);
+    
+    // taille de la memoire partagee
+    GLint size= 0;
+    glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, &size);
+    printf("shared memory %dKb\n", size / 1024);
     printf("\n");
     
 #ifndef ATOMIC
