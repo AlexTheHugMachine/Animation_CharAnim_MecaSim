@@ -9,9 +9,9 @@ explicitement avec `textureLod()`, par exemple.
 
 ### écrire dans une texture
 
-Lorsqu'un shader (fragment ou compute) veut écrire dans une texture, il faut "emballer" la texture dans un objet openGL, une `texture image` (rappel: pour que le pipeline graphique
-écrive dans une texture, il faut aussi l'emballer dans un framebuffer object, cf \ref framebuffer). Et comme d'habitude, plusieurs images peuvent être déclarées, elles sont
-donc numérotées, comme les unités de textures, ou les sorties d'un framebuffer object.
+Lorsqu'un shader (fragment ou compute) veut écrire dans une texture, il faut "emballer" la texture dans un objet openGL, une `texture image` (rappel: pour que le pipeline
+graphique écrive dans une texture, il faut aussi l'emballer dans un framebuffer object, cf \ref framebuffer). Et comme d'habitude, plusieurs images peuvent être déclarées, 
+elles sont donc numérotées, comme les unités de textures, ou les sorties d'un framebuffer object.
 
 C'est `glBindImageTexture()` qui permet de configurer le pipeline / d'associer une texture à une unité :
 \code
@@ -38,16 +38,16 @@ glUniform1i(location, unit);
 ### déclaration dans le shader
 
 Les images sont des uniforms déclarés avec le type :
-    - `image2D` pour les textures 2d classiques (renvoie des réels entre 0 et 1), 
-    - `uimage2D` pour les textures 2d (renvoie des entièrs non signés),
-    - `iimage2D` pour les textures 2d (renvoie des entièrs signés).
+    - `image2D` pour les textures 2d classiques (réels), 
+    - `uimage2D` pour les textures 2d (entièrs non signés),
+    - `iimage2D` pour les textures 2d (entièrs signés).
     
 La déclaration doit aussi être décorée avec le format des données en cas de lecture (ou d'accès mixte) et éventuellement l'indice de l'unité sur laquelle la texture 
 est sélectionnée :
 \code
 layout(binding= 0) writeonly uniform image2D image;
-layout(binding= 0, rgba8ui) readonly uniform image2D image;
-layout(binding= 0, rgba8ui) coherent uniform image2D image;
+layout(binding= 0, rgba8ui) readonly uniform uimage2D image;
+layout(binding= 0, rgba8ui) coherent uniform uimage2D image;
 \endcode
 
 __attention :__ les accès déclarés dans le shader et par l'application (cf `glBindImageTexture()`) doivent être les mêmes.
@@ -64,7 +64,7 @@ dépend de la déclaration de l'image. `image2D` renvoie un vec4, `uimage2D` ren
 L'image doit etre déclarée en lecture :
 \code
 // shader
-layout(binding= 0, rgba8ui) readonly uniform image2D image;
+layout(binding= 0, rgba8ui) readonly uniform uimage2D image;
 
 void main( )
 {
@@ -92,7 +92,7 @@ Et bien sur l'image doit etre déclarée en écriture :
 
 \code
 // shader
-layout(binding= 0, rgba8ui) writeonly uniform image2D image;
+layout(binding= 0) writeonly uniform image2D image;
 
 void main( )
 {
@@ -141,6 +141,24 @@ glBindImageTexture( unit, texture, /* level*/ 0,
 
 GLint location= glGetUniformLocation(program, "image");
 glUniform1i(location, unit);    
+\endcode
+
+## créer une texture GL_R32UI / entiers
+
+Les textures classiques stockent des couleurs soit directement avec des réels (`GL_RGBA32F`), soit avec des entiers normalisés (`GL_RGBA` ou `GL_RGBA8`). 
+Pour créer une texture permettant de stocker des entiers non normalisés, il faut utiliser `GL_RED_INTEGER` pour un canal, et `GL_RG_INTEGER`, 
+`GL_RGB_INTEGER` ou `GL_RGBA_INTEGER`, pour 2, 3, et 4 canaux.
+
+\code
+GLuint texture= 0;
+glGenTextures(1, &texture);
+glBindTexture(GL_TEXTURE_2D, texture);
+glTexImage2D(GL_TEXTURE_2D, 0,
+    GL_R32UI, width, height, 0,
+    GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
+
+// pas de mipmaps
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 \endcode
 
 
