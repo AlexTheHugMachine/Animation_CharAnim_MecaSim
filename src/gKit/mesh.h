@@ -276,23 +276,6 @@ public:
     //! renvoie la taille (en octets) de l'index buffer.
     std::size_t index_buffer_size( ) const { return m_indices.size() * sizeof(unsigned int); }
     
-#if 0
-    /*! renvoie l'adresse d'un attribut du premier sommet.
-
-    attention : tous les attributs ne sont pas definis. il est possible de verifier qu'ils existent en consultant la taille du buffer, 
-    cf attribute_buffer_size(), 0 indique que l'attribut n'existe pas.
-
-    par convention, les attributs sont numerotes :
-        - 0 : position, vertex buffer,
-        - 1 : coordonnee de texture, texcoord buffer,
-        - 2 : normale, normal buffer,
-        - 3 : couleur, color buffer.
-    */
-    const void *attribute_buffer( const unsigned int id ) const;
-    //! renvoie la taille (en octets) d'un attribut.
-    std::size_t attribute_buffer_size( const unsigned int id ) const;
-#endif
-    
     //
     const std::vector<vec3>& positions( ) const { return m_positions; }
     const std::vector<vec2>& texcoords( ) const { return m_texcoords; }

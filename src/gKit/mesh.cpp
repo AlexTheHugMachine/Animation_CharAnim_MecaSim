@@ -488,6 +488,14 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
 
 void Mesh::draw( const GLuint program )
 {
+    if(m_vao == 0)
+        // force la creation de tous les buffers
+        create_buffers(true, true, true);
+    assert(m_vao != 0);
+    
+    if(m_update_buffers)
+        update_buffers(true, true, true);
+    
     glBindVertexArray(m_vao);
     glUseProgram(program);
     
