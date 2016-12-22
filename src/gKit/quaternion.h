@@ -27,6 +27,7 @@ along with gkit2light.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <iostream>
 #include <cstdlib>
+#include "vec.h"
 
 
 	/*! \brief A Quaternion class
@@ -118,7 +119,7 @@ along with gkit2light.  If not, see <http://www.gnu.org/licenses/>.
 		/*! Sets the TQuaternion as a rotation of axis \p axis and angle \p angle (in radians).
 
 		\p axis does not need to be normalized. A null \p axis will result in an identity TQuaternion. */
-		void setAxisAngle(const Vec3Real& axis, const Real angle)
+		void setAxisAngle(const Vec3Real& axis, const Real _angle)
 		{
 			const Real norm = length(axis); // axis.norm();
 			if (norm < 1E-8)
@@ -131,6 +132,7 @@ along with gkit2light.  If not, see <http://www.gnu.org/licenses/>.
 			}
 			else
 			{
+                const Real angle = -_angle;
 				const Real sin_half_angle = sin(angle / 2.0);
 				q[0] = sin_half_angle*axis.x/norm;
 				q[1] = sin_half_angle*axis.y/norm;

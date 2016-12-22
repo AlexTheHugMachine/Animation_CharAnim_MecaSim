@@ -2,8 +2,10 @@
 #ifndef CHARANIMVIEWER_H
 #define CHARANIMVIEWER_H
 
+#include "quaternion.h"
 #include "Viewer.h"
 #include "BVH.h"
+using namespace simea;
 
 class CharAnimViewer : public Viewer
 {
@@ -17,22 +19,18 @@ public:
 
 protected:
 
-    bvh::BVH m_bvh;
+    BVH m_bvh;
+
+    float m_angle_a;
+    float m_angle_b;
+    float m_angle_milieu_ab;
+
+    Quaternion m_quat_a;
+    Quaternion m_quat_b;
+    Quaternion m_quat_milieu_ab;
 
 
-    Transform m_T;
-
-
-
-    /* Pour creer un nouvel objet vous devez :
-       - declarer ici le Mesh
-       - la texture si besoin
-       - une fonction init_votreObjet et l'appeller dans la fonction init du .cpp
-       - ajouter un appel a l'affichage dans la fonction draw
-    */
-//    Mesh quad;
-//    GLuint quad_texture;
-//    void init_quad();
+    int m_frameNumber;
 };
 
 
