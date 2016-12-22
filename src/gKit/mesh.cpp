@@ -296,7 +296,7 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
     glBindVertexArray(m_vao);
     
     // determine la taille du buffer pour stocker tous les attributs et les indices
-    size_t size= vertex_buffer_size() + texcoord_buffer_size() + normal_buffer_size();
+    size_t size= vertex_buffer_size() + texcoord_buffer_size() + normal_buffer_size() + color_buffer_size();
     // allouer le buffer
     glGenBuffers(1, &m_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
@@ -424,15 +424,7 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     bool use_texcoord= (m_texcoords.size() == m_positions.size() && texture > 0);
     bool use_normal= (m_normals.size() == m_positions.size());
     bool use_color= (m_colors.size() == m_positions.size());
-
-    if(m_vao == 0)
-        // force la creation de tous les buffers
-        create_buffers(true, true, true);
-    assert(m_vao != 0);
     
-    if(m_update_buffers)
-        update_buffers(true, true, true);
-
     unsigned int key= 0;
     if(use_texcoord) key= key | 1;
     if(use_normal) key= key | 2;
