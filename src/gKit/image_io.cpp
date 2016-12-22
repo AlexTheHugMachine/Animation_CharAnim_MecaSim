@@ -19,19 +19,19 @@ Image read_image( const char *filename )
     SDL_Surface *surface= IMG_Load(filename);
     if(surface == NULL)
     {
-        printf("loading image '%s'... sdl_image failed.\n", filename);
+        printf("[error] loading image '%s'... sdl_image failed.\n", filename);
         return Image::error();
     }
-
+    
     // verifier le format, rgb ou rgba
     const SDL_PixelFormat format= *surface->format;
     if(format.BitsPerPixel != 24 && format.BitsPerPixel != 32)
     {
-        printf("loading image '%s'... format failed. (bpp %d)\n", filename, format.BitsPerPixel);
+        printf("[error] loading image '%s'... format failed. (bpp %d)\n", filename, format.BitsPerPixel);
         SDL_FreeSurface(surface);
         return Image::error();
     }
-
+    
     int width= surface->w;
     int height= surface->h;
     int channels= (format.BitsPerPixel == 32) ? 4 : 3;
@@ -89,7 +89,7 @@ int write_image( const Image& image, const char *filename )
 {
     if(std::string(filename).rfind(".png") == std::string::npos && std::string(filename).rfind(".bmp") == std::string::npos )
     {
-        printf("writing color image '%s'... failed, not a .png / .bmp image.\n", filename);
+        printf("[error] writing color image '%s'... not a .png / .bmp image.\n", filename);
         return -1;
     }
 
@@ -136,7 +136,7 @@ int write_image( const Image& image, const char *filename )
 
     SDL_FreeSurface(surface);
     if(code < 0)
-        printf("writing color image '%s'... failed\n%s\n", filename, SDL_GetError());
+        printf("[error] writing color image '%s'...\n%s\n", filename, SDL_GetError());
     return code;
 }
 
@@ -147,7 +147,7 @@ ImageData read_image_data( const char *filename )
     SDL_Surface *surface= IMG_Load(filename);
     if(surface == NULL)
     {
-        printf("loading image '%s'... sdl_image failed.\n", filename);
+        printf("[error] loading image '%s'... sdl_image failed.\n%s\n", filename, SDL_GetError());
         return ImageData();
     }
 
@@ -155,7 +155,7 @@ ImageData read_image_data( const char *filename )
     const SDL_PixelFormat format= *surface->format;
     if(format.BitsPerPixel != 24 && format.BitsPerPixel != 32)
     {
-        printf("loading image '%s'... format failed. (bpp %d)\n", filename, format.BitsPerPixel);
+        printf("[error] loading image '%s'... format failed. (bpp %d)\n", filename, format.BitsPerPixel);
         SDL_FreeSurface(surface);
         return ImageData();
     }
@@ -223,13 +223,13 @@ int write_image_data( ImageData& image, const char *filename )
 {
     if(std::string(filename).rfind(".png") == std::string::npos && std::string(filename).rfind(".bmp") == std::string::npos )
     {
-        printf("writing color image '%s'... failed, not a .png / .bmp image.\n", filename);
+        printf("[error] writing color image '%s'... not a .png / .bmp image.\n", filename);
         return -1;
     }
 
     if(image.size != 1)
     {
-        printf("writing color image '%s'... failed, not an 8 bits image.\n", filename);
+        printf("[error] writing color image '%s'... not an 8 bits image.\n", filename);
         return -1;
     }
 
@@ -280,6 +280,6 @@ int write_image_data( ImageData& image, const char *filename )
 
     SDL_FreeSurface(surface);
     if(code < 0)
-        printf("writing color image '%s'... failed\n%s\n", filename, SDL_GetError());
+        printf("[error] writing color image '%s'...\n%s\n", filename, SDL_GetError());
     return code;
 }

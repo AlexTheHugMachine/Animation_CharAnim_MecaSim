@@ -24,7 +24,7 @@ Le principe est simple :
     - calculer la différence.
     
 la seule subtilité est la précision necéssaire pour faire les mesures : pour le cpu c'est de l'ordre de la micro seconde... et il faut choisir l'horloge la 
-plus précise std::chrono::high_resolution_clock.
+plus précise `std::chrono::high_resolution_clock`.
 
 \code
 #include <chrono>
@@ -46,7 +46,7 @@ plus précise std::chrono::high_resolution_clock.
 
 l'utilisation est la même dans une application openGL.
 
-__remarque :__ std::high_resolution_time est buggé sur visual studio avant la version 2015. 
+__remarque :__ `std::high_resolution_clock` est buggé sur visual studio avant la version 2015. 
 
 
 ## mesure temps gpu

@@ -1,4 +1,11 @@
 
+#ifndef _MSC_VER
+    #include <sys/stat.h>
+#else
+    #include <sys/types.h>
+    #include <sys/stat.h>
+#endif
+
 #include <cassert>
 #include <cstdio>
 #include <vector>
@@ -235,7 +242,7 @@ void release_window( Window window )
 //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
 static
 void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
-    const char *message, const void *userParam )
+    const char *message, void *userParam )
 {
     static std::set<std::string> log;
     if(log.insert(message).second == false)
@@ -296,9 +303,9 @@ Context create_context( Window window, const int major, const int minor )
     // configure l'affichage des messages d'erreurs opengl, si l'extension est disponible
     if(GLEW_ARB_debug_output)
     {
-        printf("debug output enabled...\n");
+        //~ printf("debug output enabled...\n");
         glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-//        glDebugMessageCallbackARB(debug, NULL);
+        //~ glDebugMessageCallbackARB(debug, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
 #endif
@@ -312,39 +319,49 @@ void release_context( Context context )
     SDL_GL_DeleteContext(context);
 }
 
-bool file_exist(const char* filename)
+
+//! verifie l'existance d'un fichier.
+bool exists( const char *filename )
 {
-    FILE* f = fopen(filename,"r");
-    if (f) { fclose(f); return true; }
-    return false;
+    //~ printf("file '%s'\n", filename);
+#ifndef _MSC_VER
+    struct stat info;
+    if(stat(filename, &info) < 0)
+        return false;
+
+    // verifie aussi que c'est bien un fichier standard
+    return S_ISREG(info.st_mode);
+
+#else
+    struct _stat64 info;
+    if(_stat64(filename, &info) < 0)
+        return false;
+
+    // verifie aussi que c'est bien un fichier standard
+    return (info.st_mode & _S_IFREG);
+#endif
 }
 
-const char* smart_path(const char* filename)
+
+static std::string smartpath;
+
+const char *smart_path( const char *filename )
 {
-    static char smartpath[512];
-
-    if (file_exist(filename)) return filename;
-
-    char * exec = SDL_GetBasePath();
-
-    strcpy(smartpath,exec);
-    strcat(smartpath,filename);
-    if (file_exist(smartpath))
-    {
-        SDL_free(exec);
-        return smartpath;
-    }
-
-    strcpy(smartpath,exec);
-    strcat(smartpath, "/../");
-    strcat(smartpath,filename);
-    if (file_exist(smartpath))
-    {
-        SDL_free(exec);
-        return smartpath;
-    }
-
-    SDL_free(exec);
-    std::cerr<<"smart_path: file not found="<<filename<<std::endl;
-    return NULL;
+    if(exists(filename)) 
+        return filename;
+    
+    char *base= SDL_GetBasePath();
+    smartpath= base;
+    SDL_free(base);
+    
+    std::string tmp;
+    tmp= smartpath + filename;
+    if(exists(tmp.c_str()))
+        smartpath= tmp;
+    
+    tmp= smartpath + "../" + filename;
+    if(exists(tmp.c_str()))
+        smartpath= tmp;
+    
+    return smartpath.c_str();
 }

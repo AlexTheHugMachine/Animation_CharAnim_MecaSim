@@ -92,7 +92,8 @@ if no_project then
 end
  -- description des projets		 
 projects = {
-	"shader_kit"
+	"shader_kit",
+	"image_viewer"
 }
 
 for i, name in ipairs(projects) do
@@ -134,6 +135,7 @@ tutos = {
 --~ 	"ray_tuto1",
 --~ 	"ray_tuto2",
 --~ 	"ray_tuto3",
+	"ray_tuto4"
 --~ 	
 --~ 	"pipeline"
 }

@@ -8,17 +8,9 @@
 
 
 //! \addtogroup application utilitaires pour creer une application
-///@{
 
 //! \file
-/*! squelette d'application: creation d'une fenetre, d'un contexte openGL et gestion des evenements.
-    tuto7.cpp et tuto8.cpp presentent un exemple simple d'utilisation.
-
-    la class App expose les fonctionnalites de window.h, elles sont juste presentees differemment.
-    les fonctions globales de window.h sont toujours utilisables (a part run() qui est remplace par App::run()).
-*/
-
-//! classe application.
+//! classe application, avec mesure integree du temps d'execution cpu et gpu.
 class AppTime : public App
 {
 public:
