@@ -88,8 +88,9 @@ int CharAnimViewer::update( const float time, const float delta )
     m_angle_b = int(0.1*time+40)%360;
     m_angle_milieu_ab = (m_angle_a+m_angle_b)/2;
 
-    m_quat_a = Quaternion( Vector(0,0,1), m_angle_a);
-    m_quat_b = Quaternion( Vector(0,0,1), m_angle_b);
+    Vector Z(0,0,1);
+    m_quat_a.setAxisAngleDegree(Z,m_angle_a); m_quat_a.invert();
+    m_quat_b.setAxisAngleDegree(Z,m_angle_b); m_quat_b.invert();
     m_quat_milieu_ab = Quaternion::slerp( m_quat_a, m_quat_b, 0.5);
 
     return 0;

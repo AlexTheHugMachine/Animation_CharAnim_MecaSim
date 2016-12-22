@@ -132,7 +132,7 @@ along with gkit2light.  If not, see <http://www.gnu.org/licenses/>.
 			}
 			else
 			{
-                const Real angle = -_angle;
+                const Real angle = _angle;
 				const Real sin_half_angle = sin(angle / 2.0);
 				q[0] = sin_half_angle*axis.x/norm;
 				q[1] = sin_half_angle*axis.y/norm;
