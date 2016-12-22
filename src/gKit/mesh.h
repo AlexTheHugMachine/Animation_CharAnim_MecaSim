@@ -111,11 +111,11 @@ public:
     //! \name construction.
     //@{
     //! constructeur par defaut.
-    Mesh( ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), m_state_map(), m_state(0),
+    Mesh( ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), m_state(0),
         m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_buffer(0), m_index_buffer(0), m_program(0), m_update_buffers(false) {}
 
     //! constructeur.
-    Mesh( const GLenum primitives ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), m_state_map(), m_state(0),
+    Mesh( const GLenum primitives ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), m_state(0),
         m_color(White()), m_primitives(primitives), m_vao(0), m_buffer(0), m_index_buffer(0), m_program(0), m_update_buffers(false) {}
 
     //! construit les objets openGL.
@@ -275,7 +275,6 @@ public:
     const void *index_buffer( ) const { return &m_indices.front(); }
     //! renvoie la taille (en octets) de l'index buffer.
     std::size_t index_buffer_size( ) const { return m_indices.size() * sizeof(unsigned int); }
-<<<<<<< local
 
 #if 0
     /*! renvoie l'adresse d'un attribut du premier sommet.
@@ -294,9 +293,6 @@ public:
     std::size_t attribute_buffer_size( const unsigned int id ) const;
 #endif
 
-=======
-    
->>>>>>> other
     //
     const std::vector<vec3>& positions( ) const { return m_positions; }
     const std::vector<vec2>& texcoords( ) const { return m_texcoords; }
