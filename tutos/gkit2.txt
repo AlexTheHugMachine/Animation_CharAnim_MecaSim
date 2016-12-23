@@ -38,6 +38,7 @@ plus ceux dédiés à openGL :
     - \ref framebuffer,
     - \ref time,
     - \ref storage,
+    - \ref storage_texture,
     - \ref compute
     
 et un utilitaire pour jouer avec les shaders, shader_kit, décrit dans \ref tuto2GL
