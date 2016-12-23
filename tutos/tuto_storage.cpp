@@ -135,12 +135,14 @@ int print_storage( const GLuint program )
             glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, variable_count, NULL, variables.data());
         }
         
-        for(int k= 0; k < vcount; k++)
+        for(int k= 0; k < variable_count; k++)
         {
             // organisation des variables dans le buffer
             GLenum props[]= { GL_OFFSET, GL_TYPE, GL_ARRAY_SIZE, GL_ARRAY_STRIDE, GL_MATRIX_STRIDE, GL_IS_ROW_MAJOR, GL_TOP_LEVEL_ARRAY_STRIDE };
-            GLint params[sizeof(props) / sizeof(GLenum)];
-            glGetProgramResourceiv(program, GL_BUFFER_VARIABLE, variables[k], sizeof(props) / sizeof(GLenum), props, sizeof(props) / sizeof(GLenum), NULL, params);
+            const int size= sizeof(props) / sizeof(GLenum);
+            
+            GLint params[size];
+            glGetProgramResourceiv(program, GL_BUFFER_VARIABLE, variables[k], size, props, size, NULL, params);
             
             // nom de la variable
             char vname[1024]= { 0 };
