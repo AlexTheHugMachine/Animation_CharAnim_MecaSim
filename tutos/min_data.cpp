@@ -33,13 +33,13 @@ int init( )
     
     glGenBuffers(1, &input_buffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, input_buffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * input.size(), input.data(), GL_STREAM_READ);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * input.size(), input.data(), GL_STATIC_READ);
     
     glGenBuffers(1, &tmp_buffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, tmp_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * input.size(), input.data(), GL_STREAM_READ);
 
-#define ATOMIC
+//~ #define ATOMIC
     
 #ifndef ATOMIC
     // version reduction globale
