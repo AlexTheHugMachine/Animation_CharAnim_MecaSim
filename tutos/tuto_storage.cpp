@@ -14,17 +14,10 @@
 
 namespace glsl 
 {
-#ifdef _MSC_VER   // visual studio >= 2012 necessaire
-# define ALIGN(...) __declspec(align(__VA_ARGS__))
-
-#else   // gcc, clang, icc
-# define ALIGN(...) __attribute__((aligned(__VA_ARGS__)))
-#endif
-
     template < typename T >
-    struct ALIGN(8) gvec2
+    struct alignas(8) gvec2
     {
-        ALIGN(4) T x, y;
+        alignas(4) T x, y;
         
         gvec2( ) {}
         gvec2( const vec2& v ) : x(v.x), y(v.y) {}
@@ -36,9 +29,9 @@ namespace glsl
     typedef gvec2<int> bvec2;
     
     template < typename T >
-    struct ALIGN(16) gvec3
+    struct alignas(16) gvec3
     {
-        ALIGN(4) T x, y, z;
+        alignas(4) T x, y, z;
         
         gvec3( ) {}
         gvec3( const vec3& v ) : x(v.x), y(v.y), z(v.z) {}
@@ -52,9 +45,9 @@ namespace glsl
     typedef gvec3<int> bvec3;
     
     template < typename T >
-    struct ALIGN(16) gvec4
+    struct alignas(16) gvec4
     {
-        ALIGN(4) T x, y, z, w;
+        alignas(4) T x, y, z, w;
         
         gvec4( ) {}
         gvec4( const vec4& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
@@ -64,8 +57,6 @@ namespace glsl
     typedef gvec4<int> ivec4;
     typedef gvec4<unsigned int> uvec4;
     typedef gvec4<int> bvec4;
-    
-#undef ALIGN
 }
 
 
@@ -196,6 +187,7 @@ int init( )
     printf("    a.z %d\n", (int) offsetof(TriangleCPU, a.z));
     printf("  b %d\n", (int) offsetof(TriangleCPU, b));
     printf("  c %d\n", (int) offsetof(TriangleCPU, c));
+    printf("= %dB\n", (int) sizeof(TriangleCPU));
 
     
     struct TriangleGLSL
@@ -215,6 +207,7 @@ int init( )
     printf("    a.z %d\n", (int) offsetof(TriangleGLSL, a.z));
     printf("  b %d\n", (int) offsetof(TriangleGLSL, b));
     printf("  c %d\n", (int) offsetof(TriangleGLSL, c));    
+    printf("= %dB\n", (int) sizeof(TriangleGLSL));
     
     return 0;
 }

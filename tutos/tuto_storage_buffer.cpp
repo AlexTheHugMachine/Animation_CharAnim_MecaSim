@@ -19,17 +19,10 @@
 // cf tuto_storage
 namespace glsl 
 {
-#ifdef _MSC_VER   // visual studio >= 2012 necessaire
-# define ALIGN(...) __declspec(align(__VA_ARGS__))
-
-#else   // gcc, clang, icc
-# define ALIGN(...) __attribute__((aligned(__VA_ARGS__)))
-#endif
-
     template < typename T >
-    struct ALIGN(8) gvec2
+    struct alignas(8) gvec2
     {
-        ALIGN(4) T x, y;
+        alignas(4) T x, y;
         
         gvec2( ) {}
         gvec2( const vec2& v ) : x(v.x), y(v.y) {}
@@ -41,9 +34,9 @@ namespace glsl
     typedef gvec2<int> bvec2;
     
     template < typename T >
-    struct ALIGN(16) gvec3
+    struct alignas(16) gvec3
     {
-        ALIGN(4) T x, y, z;
+        alignas(4) T x, y, z;
         
         gvec3( ) {}
         gvec3( const vec3& v ) : x(v.x), y(v.y), z(v.z) {}
@@ -57,9 +50,9 @@ namespace glsl
     typedef gvec3<int> bvec3;
     
     template < typename T >
-    struct ALIGN(16) gvec4
+    struct alignas(16) gvec4
     {
-        ALIGN(4) T x, y, z, w;
+        alignas(4) T x, y, z, w;
         
         gvec4( ) {}
         gvec4( const vec4& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
@@ -69,9 +62,8 @@ namespace glsl
     typedef gvec4<int> ivec4;
     typedef gvec4<unsigned int> uvec4;
     typedef gvec4<int> bvec4;
-    
-#undef ALIGN
 }
+
 
 class StorageBuffer : public App
 {
@@ -104,7 +96,8 @@ public:
             float pad1;
             vec2 texcoord;      // vec2 aligne sur 2 float
             
-            float pad2[2];      // donc la taille totale de la structure doit etre un mulitple de 4 floats
+            float pad2;
+            float pad3;      // donc la taille totale de la structure doit etre un mulitple de 4 floats
             
             vertex( ) : position(), normal(), texcoord() {}
         };
@@ -128,7 +121,7 @@ public:
         glGenBuffers(1, &m_buffer);
         
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_buffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vertex) * data.size(), data.data(), GL_STATIC_READ);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vertex) * data.size(), data.data(), GL_STREAM_READ);
         
         // 
         m_program= read_program("tutos/tuto_storage_buffer.glsl");
