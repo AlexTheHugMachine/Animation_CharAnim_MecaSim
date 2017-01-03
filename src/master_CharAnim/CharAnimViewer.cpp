@@ -31,6 +31,7 @@ int CharAnimViewer::init()
     cout<<m_bvh<<endl;
     cout<<endl<<"========================"<<endl;
 
+
     m_angle_a=0;
     m_angle_b=40;
     m_angle_milieu_ab = (m_angle_a+m_angle_b)/2;
@@ -47,6 +48,19 @@ int CharAnimViewer::init()
 }
 
 
+
+void CharAnimViewer::bvhDrawGL(const BVH&, int frameNumber)
+{
+	// TODO
+}
+
+
+void CharAnimViewer::bvhDrawGLRec(const BVHJoint&, int frameNumber, Transform& T) // la fonction récursive sur le squelette
+{
+	// TODO
+}
+
+
 int CharAnimViewer::render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -55,26 +69,24 @@ int CharAnimViewer::render()
 
     gl.camera(m_camera);
 
-    if (key_state('n')) { m_frameNumber++; cout<<m_frameNumber<<endl; }
-    if (key_state('b')) { m_frameNumber--; cout<<m_frameNumber<<endl; }
+
+	// Affiche une pose du bvh
+	bvhDrawGL(m_bvh, m_frameNumber);
 
 
+	// affiche 3 cylindres dont l'angle est interpole
     draw_cylinder( Translation(5,0,0)*RotationZ(m_angle_a)*Scale(0.1,2,0.1) );
     draw_cylinder( Translation(5,0,0)*RotationZ(m_angle_b)*Scale(0.1,2,0.1) );
     draw_cylinder( Translation(5,0,0)*RotationZ(m_angle_milieu_ab)*Scale(0.1,2,0.1) );
 
-
+	// affiche 3 cylindres dont le quaternion est interpole
     Transform R;
-
     m_quat_a.getMatrix44(R);
     draw_cylinder( Translation(-5,0,0)*R*Scale(0.1,2,0.1) );
-
     m_quat_b.getMatrix44(R);
     draw_cylinder( Translation(-5,0,0)*R*Scale(0.1,2,0.1) );
-
     m_quat_milieu_ab.getMatrix44(R);
     draw_cylinder( Translation(-5,0,0)*R*Scale(0.1,2,0.1) );
-
 
 
     return 1;
@@ -83,9 +95,11 @@ int CharAnimViewer::render()
 
 int CharAnimViewer::update( const float time, const float delta )
 {
-    // modifier l'orientation du cube a chaque image.
     // time est le temps ecoule depuis le demarrage de l'application, en millisecondes,
     // delta est le temps ecoule depuis l'affichage de la derniere image / le dernier appel a draw(), en millisecondes.
+
+	if (key_state('n')) { m_frameNumber++; cout << m_frameNumber << endl; }
+	if (key_state('b')) { m_frameNumber--; cout << m_frameNumber << endl; }
 
 
     m_angle_a = int(0.1*time)%360;
