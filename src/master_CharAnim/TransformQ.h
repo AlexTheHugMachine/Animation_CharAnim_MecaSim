@@ -60,7 +60,8 @@ along with Sime.  If not, see <http://www.gnu.org/licenses/>.
 
 		inline static TransformQ slerp(const TransformQ& a, const TransformQ& b, float t)
 		{
-			return TransformQ(Quaternion::slerp(a.Q, b.Q, t), (1 - t)*a.T + t*b.T);
+			// TODO
+			return TransformQ();
 		}
 
 		void setIdentity()
