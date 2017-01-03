@@ -24,7 +24,9 @@ int CharAnimViewer::init()
     init_sphere();
 
 
-    m_bvh.init("data/bvh/Robot.bvh" );
+    //m_bvh.init("data/bvh/Robot.bvh" );
+	m_bvh.init("data/bvh/danse.bvh");
+
     m_frameNumber = 0;
     cout<<endl<<"========================"<<endl;
     cout<<"BVH decription"<<endl;
@@ -72,6 +74,7 @@ int CharAnimViewer::render()
 
 	// Affiche une pose du bvh
 	bvhDrawGL(m_bvh, m_frameNumber);
+
 
 
 	// affiche 3 cylindres dont l'angle est interpole
