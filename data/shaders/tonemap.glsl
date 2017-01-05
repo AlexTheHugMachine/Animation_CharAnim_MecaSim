@@ -40,8 +40,8 @@ void main(void)
     }
     
     float y= dot(color.rgb, rgby);  // normalisation de la couleur : (color / y) == teinte
-    if(y > saturation)
-        color.rgb= vec3(y, y, y);
+    //~ if(y > saturation)
+        //~ color.rgb= vec3(y, y, y);
     
     // applique la compression (gamma)
     color= (color / y) * k1 * pow(y, 1.0 / compression);

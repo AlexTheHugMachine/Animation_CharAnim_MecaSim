@@ -84,7 +84,7 @@ int write_image_hdr( const Image& image, const char *filename )
         Color color= image(x, height - y -1);
         data[i]= color.r;
         data[i+1]= color.g;
-        data[i+3]= color.b;
+        data[i+2]= color.b;
         i= i + 3;
     }
 
