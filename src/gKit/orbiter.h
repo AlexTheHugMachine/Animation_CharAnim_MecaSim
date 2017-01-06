@@ -21,7 +21,7 @@ public:
     //! cree une camera. observe le point center a une distance size.
     Orbiter( const Point& center, const float size ) : m_center(center), m_position(), m_rotation(), m_size(size), m_radius(size) {}
     //! cree une camera. observe une boite alignee sur les axes.
-    Orbiter( const Point& pmin, const Point& pmax ) : m_center(center(pmin, pmax)), m_position(), m_rotation(), m_size(distance(pmin, pmax)) {}
+    Orbiter( const Point& pmin, const Point& pmax ) : m_center(center(pmin, pmax)), m_position(), m_rotation(), m_size(distance(pmin, pmax)), m_radius(m_size) {}
     
     //! observe le point center a une distance size.
     void lookat(  const Point& center, const float size );
