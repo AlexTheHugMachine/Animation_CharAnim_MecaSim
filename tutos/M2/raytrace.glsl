@@ -1,5 +1,5 @@
 
-#version 430
+#version 330
 
 #ifdef VERTEX_SHADER
 out vec2 position;
@@ -24,7 +24,7 @@ struct Triangle
 };
 
 // uniform buffer 0
-layout(binding= 0) uniform triangleData
+uniform triangleData
 {
 	Triangle triangles[1024];
 };

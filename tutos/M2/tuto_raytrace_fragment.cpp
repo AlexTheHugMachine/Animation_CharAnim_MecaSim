@@ -114,6 +114,10 @@ struct RT : public AppTime
         //
         m_program= read_program("tutos/M2/raytrace.glsl");
         program_print_errors(m_program);
+
+        // associe l'uniform buffer a l'entree 0
+        GLint index= glGetUniformBlockIndex(m_program, "triangleData");
+        glUniformBlockBinding(m_program, index, 0);
         
         return 0;
     }
