@@ -73,8 +73,6 @@ public:
 
 protected:
 
-    //Mesh m_mesh;
-
     /// Fichier de donnees contenant les points
     std::string _Fich_Points;
 
