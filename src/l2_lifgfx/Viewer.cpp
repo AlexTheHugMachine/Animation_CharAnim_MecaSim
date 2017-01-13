@@ -24,8 +24,8 @@ void Viewer::help()
     printf("\ta: (des)active l'affichage de l'axe\n");
     printf("\tg: (des)active l'affichage de la grille\n");
     printf("\tz: (des)active l'affichage de la courbe d'animation\n");
-    printf("\tfleches/pageUp/pageDown: bouge la caméra\n");
-    printf("\tCtrl+fleche/pageUp/pageDown: bouge la source de lumière\n");
+    printf("\tfleches/pageUp/pageDown: bouge la camera\n");
+    printf("\tCtrl+fleche/pageUp/pageDown: bouge la source de lumiere\n");
     printf("\tSouris+bouton gauche: rotation\n");
     printf("\tSouris mouvement vertical+bouton droit: (de)zoom\n");
 }
