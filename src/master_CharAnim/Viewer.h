@@ -45,8 +45,8 @@ protected:
     void draw_cylinder(const Transform& T);
     void draw_cone(const Transform& T);
 	void draw_sphere(const Transform& T);
-	void draw_cylinder(const Vector& a, const Vector& b, float r=1.f);
-	void draw_sphere(const Vector& a, float r = 1.f);
+	void draw_cylinder(const Point& a, const Point& b, float r=1.f);
+	void draw_sphere(const Point& a, float r = 1.f);
 };
 
 

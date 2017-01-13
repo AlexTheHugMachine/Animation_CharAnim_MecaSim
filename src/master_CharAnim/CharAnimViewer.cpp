@@ -71,10 +71,8 @@ int CharAnimViewer::render()
 
     gl.camera(m_camera);
 
-
 	// Affiche une pose du bvh
 	bvhDrawGL(m_bvh, m_frameNumber);
-
 
 
 	// affiche 3 cylindres dont l'angle est interpole

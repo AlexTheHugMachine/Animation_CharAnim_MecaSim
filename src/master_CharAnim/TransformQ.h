@@ -50,11 +50,16 @@ along with Sime.  If not, see <http://www.gnu.org/licenses/>.
 			return TransformQ();
 		}
 
-
 		friend inline Vector 		operator*(const TransformQ& a, const Vector& v)
 		{
 			// TODO
 			return Vector(0, 0, 0);
+		}
+
+		friend inline Point 		operator*(const TransformQ& a, const Point& v)
+		{
+			// TODO
+			return Point(0, 0, 0);
 		}
 
 

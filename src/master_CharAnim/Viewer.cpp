@@ -146,7 +146,7 @@ void Viewer::draw_cylinder(const Transform& T)
 }
 
 
-void Viewer::draw_cylinder(const Vector& a, const Vector& b, float r)
+void Viewer::draw_cylinder(const Point& a, const Point& b, float r)
 {
 	Vector ab = b - a;
 	Vector p,y,z;
@@ -167,12 +167,12 @@ void Viewer::draw_cylinder(const Vector& a, const Vector& b, float r)
 	//cout << T[2] << endl;
 	//cout << T[3] << endl;
 
-	draw_cylinder( Translation(a) * T * Scale(r, lab, r));
+	draw_cylinder( Translation( Vector(a) ) * T * Scale(r, lab, r));
 }
 
-void Viewer::draw_sphere(const Vector& a, float r)
+void Viewer::draw_sphere(const Point& a, float r)
 {
-	draw_sphere(Translation(a)*Scale(r, r, r));
+	draw_sphere(Translation(Vector(a))*Scale(r, r, r));
 }
 
 
