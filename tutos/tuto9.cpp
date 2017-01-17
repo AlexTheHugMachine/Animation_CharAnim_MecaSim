@@ -1,12 +1,14 @@
 
-//! \file tuto8.cpp exemple d'animation en derivant App::update()
+//! \file tuto9.cpp utilisation d'un shader 'utilisateur' pour afficher un objet Mesh
 
 #include "mat.h"
 #include "wavefront.h"
 #include "texture.h"
 
 #include "orbiter.h"
-#include "draw.h"
+#include "program.h"
+#include "uniforms.h"
+
 #include "app.h"        // classe Application a deriver
 
 
@@ -26,6 +28,10 @@ public:
 
         m_texture= read_texture(0, "data/debug2x2red.png");
 
+        // etape 1 : creer le shader program
+        m_program= read_program("tutos/tuto9_color.glsl");
+        program_print_errors(m_program);
+        
         // etat openGL par defaut
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
         
@@ -39,19 +45,12 @@ public:
     // destruction des objets de l'application
     int quit( )
     {
+        // etape 3 : detruire le sahder program
+        release_program(m_program);
+
         m_objet.release();
         glDeleteTextures(1, &m_texture);
         
-        return 0;
-    }
-    
-    int update( const float time, const float delta )
-    {
-        // modifier l'orientation du cube a chaque image. 
-        // time est le temps ecoule depuis le demarrage de l'application, en millisecondes,
-        // delta est le temps ecoule depuis l'affichage de la derniere image / le dernier appel a draw(), en millisecondes.
-        
-        m_model= RotationY(time / 20);
         return 0;
     }
     
@@ -69,13 +68,29 @@ public:
             m_camera.move(mx);
         else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
             m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
+    
+        // etape 2 : dessiner m_objet avec le shader program
+
+        // configurer le shader program
+        // . recuperer les transformations
+        Transform model= RotationX(global_time() / 20);
+        Transform view= m_camera.view();
+        Transform projection= m_camera.projection(window_width(), window_height(), 45);
         
-        draw(m_objet, m_model, m_camera, m_texture);
+        // . composer les transformations : model, view et projection
+        Transform mvp= projection * view * model;
         
-    /* on pourrait obtenir le meme resultat sans utiliser App::update( ). 
-        les parametres time et update sont renvoyes par les fonctions  global_time() et delta_time() :
-        draw(m_objet, RotationY(global_time() / 20), m_camera, m_texture);
-    */
+        // . parametrer le shader program :
+        //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+        program_uniform(m_program, "mvpMatrix", mvp);
+        
+        // . parametres "supplementaires" :
+        //   . couleur des pixels, cf la declaration 'uniform vec4 color;' dans le fragment shader
+        program_uniform(m_program, "color", vec4(1, 1, 0, 1));
+        // ou program_uniform(m_program, "color", Color(1, 1, 0, 1));
+        
+        // go !
+        m_objet.draw(m_program);
         
         return 1;
     }
@@ -83,8 +98,9 @@ public:
 protected:
     Transform m_model;
     Mesh m_objet;
-    GLuint m_texture;
     Orbiter m_camera;
+    GLuint m_texture;
+    GLuint m_program;
 };
 
 
