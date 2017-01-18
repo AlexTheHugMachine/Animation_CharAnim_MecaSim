@@ -45,7 +45,7 @@ public:
     // destruction des objets de l'application
     int quit( )
     {
-        // etape 3 : detruire le sahder program
+        // etape 3 : detruire le shader program
         release_program(m_program);
 
         m_objet.release();
@@ -70,6 +70,8 @@ public:
             m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
     
         // etape 2 : dessiner m_objet avec le shader program
+        // configurer le pipeline 
+        glUseProgram(m_program);
 
         // configurer le shader program
         // . recuperer les transformations

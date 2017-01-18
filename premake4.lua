@@ -115,6 +115,7 @@ tutos = {
 	"tuto6",
 	"tuto7",
 	"tuto8",
+	"tuto9",
 	
 	"tuto_transform",
 	"tuto_pad",
@@ -158,7 +159,8 @@ end
 tutosM2 = {
 	"tuto_time",
 	"tuto_mdi",
-	"tuto_is"
+	"tuto_is",
+	"tuto_raytrace_fragment"
 }
 
 for i, name in ipairs(tutosM2) do
