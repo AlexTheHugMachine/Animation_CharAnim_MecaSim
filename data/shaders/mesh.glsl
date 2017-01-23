@@ -72,7 +72,7 @@ uniform vec3 light;
 uniform vec4 light_color;
 #endif
 
-uniform vec4 mesh_color= vec4(1, 1, 1, 0);
+uniform vec4 mesh_color;
 
 out vec4 fragment_color;
 
@@ -102,7 +102,7 @@ void main( )
     }
 #endif
 
-    vec3 normal;
+    vec3 normal= vec3(0, 0, 1);
 #ifdef USE_NORMAL
     normal= normalize(vertex_normal);
 #else
@@ -111,16 +111,15 @@ void main( )
     normal= normalize(cross(t, b));
 #endif
 
-    float cos_theta;
+    float cos_theta= 1;
 #ifdef USE_ALPHATEST
     cos_theta= 1;
 #else
     #ifdef USE_LIGHT
-        //~ cos_theta= abs(dot(normal, normalize(light - vertex_position)));        // eclairage "double face"
         cos_theta= max(0, dot(normal, normalize(light - vertex_position)));         // eclairage, uniquement des faces bien orientees
         color= color * light_color;
     #else
-        cos_theta= dot( normalize(normal), normalize(- vertex_position) );
+        cos_theta= normal.z;
     #endif
 #endif
 

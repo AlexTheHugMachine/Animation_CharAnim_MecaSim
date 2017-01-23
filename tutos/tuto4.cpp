@@ -59,6 +59,7 @@ int draw( )
         avance= -1;
 
     camera.move(avance);
+    //~ camera.translation(avance / 100, 0);
     draw(triangle, camera);
 
     return 1;
