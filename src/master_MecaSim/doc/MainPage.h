@@ -60,7 +60,7 @@
    - Creer un fichier qui s'appelle go
   
    - Mettre dedans l'instruction suivante :
-  ./bin/master_meca_sim_etudiant 1 ./src/master_MecaSim/exec/Fichier_Param.simu ./src/master_MecaSim/exec/Fichier_Param.objet
+  ./bin/master_meca_sim_etudiant 1 ./src/master_MecaSim/exec/Fichier_Param.simu ./src/master_MecaSim/exec/Fichier_Param.objet1
   
    - Faire : chmod +x go
   
@@ -103,11 +103,12 @@
       - La methode Simulation() de la classe \ref Scene permet d'effectuer les differents calculs d'un pas de temps de simulation pour l'ensemble des elements attaches a la \ref Scene.
   
   -  A noter que, la gravite et la viscosite du milieu sont definies dans la \ref Scene, c'est-a-dire que leurs proprietes sont identiques pour chacun des objets simules. Leurs caracteristiques sont fournies au lancement de l'application via le fichier de donnees.
-
   
   
-    - - -
   
+  
+  
+  - - -
   
   \section sec-visu2 Representation d'un objet de la scene pour le visualiser
   
@@ -149,8 +150,16 @@
   
       - la structure \ref Ressort permet de donner la definition geometrique d'un ressort. Elle est constituee d'un identifiant, d'un \ref Spring contenant ces proprietes, et des deux indices des particules auxquelles le ressort est relie.
   
-   - A noter que pour le moment, tous les ressorts d'un meme objet ont les memes caracteristiques physiques definies par l'utilisateur. Il sera possible d'ajouter ulterieurement ces caracteristiques pour chacun des ressorts constituant le systeme masses-ressorts en les mettant par exemple dans un fichier de donnees. Ce systeme masses-ressorts est cree lors de l'initialisation de l'objet simule, notamment a partir du fichier des facettes fourni en parametre de l'objet a simuler. Ce maillage est utilise pour connaitre les interactions qui existent entre les particules d'un objet donne.
+      - A noter que pour le moment, tous les ressorts d'un meme objet ont les memes caracteristiques physiques definies par l'utilisateur. Il sera possible d'ajouter ulterieurement ces caracteristiques pour chacun des ressorts constituant le systeme masses-ressorts en les mettant par exemple dans un fichier de donnees. Ce systeme masses-ressorts est cree lors de l'initialisation de l'objet simule, notamment a partir du fichier des facettes fourni en parametre de l'objet a simuler. Ce maillage est utilise pour connaitre les interactions qui existent entre les particules d'un objet donne.
   
+La class SolveurExpl permet de gerer un solveur suivant la methode d'Euler semi-implicite. 
+  - La methode CalculAccel_ForceGravite rajoute la force de gravite a l ensemble des forces calculees, puis calcul l acceleration des particules. 
+  - La methode Solve calcul les vitesses et positions des particules avec le schema d integration numerique d Euler semi-implicite.
+  
+La class SolveurImpl permet de gerer un solveur suivant la methode d'Euler implicite. 
+  - La methode CalculAccel_ForceGravite rajoute la force de gravite a l ensemble des forces calculees, puis calcul l acceleration des particules. 
+  - La methode Solve calcul les vitesses et positions des particules avec le schema d integration numerique d Euler implicite.
+
   
   - - -
   

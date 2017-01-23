@@ -38,21 +38,20 @@
 #include "Noeuds.h"
 #include "ObjetSimule.h"
 #include "Viewer.h"
+#include "SolveurExpl.h"
+#include "SolveurImpl.h"
 
 #include "vec.h"
 #include "draw.h"
-#include "Viewer.h"
 
 /**
  * Constructeur de la class ObjetSimuleMSS.
  */
 ObjetSimuleMSS::ObjetSimuleMSS(std::string fich_param)
-:_Size(),
+: ObjetSimule(fich_param),
+_Size(),
 _SytemeMasseRessort(0)
 {
-    /** Recuperation des parametres du maillage mis dans le fichier **/
-    Param_mesh(fich_param);
-    
     /* Allocation du systeme masse-ressort */
     _SytemeMasseRessort = new MSS();
     
@@ -161,7 +160,8 @@ void ObjetSimuleMSS::initObjetSimule()
             
         }
     }
-    cout << " Utilisation des textures pour ObjetSimule" << _use_texture << endl;
+
+    cout << "Utilisation des textures pour ObjetSimule : " << _use_texture << endl;
     
     /* Lecture des textures */
     if (_use_texture)
@@ -224,10 +224,14 @@ void ObjetSimuleMSS::initObjetSimule()
         // TODO : cette position n est pas mise a jour car on se sert du tableau P
         // TODO : mettre un pointeur sur la valeur contenue dans P[i] pour que la position de la particule soit mise ˆ jour
         
+        /* Masse de la particule */
+        Part->SetMass(M[i]);
+                
         /* Ajout effectif de la particule dans le systeme masses-ressorts */
         _SytemeMasseRessort->AddParticule(Part);
         
     }//for
+    
     
     
     /** Constructions de toutes les facettes du maillage **/
@@ -294,6 +298,11 @@ void ObjetSimuleMSS::initObjetSimule()
     
     /** Message pour la fin de la creation du maillage **/
     std::cout << "Systeme masse-ressort build ..." << std::endl;
+    
+    // Allocation des structures de donnees dans le cas utilisation solveur implicite
+    // X, Y, Df_Dx, Df_Dx_diag, Df_Dv, Df_Dv_diag
+    if (_Integration == "implicite")
+        _SolveurImpl->Allocation_Structure(_Nb_Sommets);
     
 }
 
@@ -384,6 +393,10 @@ void ObjetSimuleMSS::initMeshObjet()
 {
     //std::cout << "------ ObjetSimule::init_Mesh_Object() ----------- " << std::endl;
     
+   
+    
+    
+    std::cout << "Maillage du MSS pour affichage build ..." << std::endl;
     
 }
 
@@ -395,6 +408,7 @@ void ObjetSimuleMSS::initMeshObjet()
 void ObjetSimuleMSS::updateVertex()
 {
     //std::cout << "ObjetSimuleMSS::updateVertex() ..." << std::endl;
+    
       
 }
 
@@ -410,30 +424,25 @@ void ObjetSimuleMSS::Simulation(Vector gravite, float viscosite, int Tps)
     
     /* Calcul des accelerations (avec ajout de la gravite aux forces) */
     //std::cout << "Accel.... " << std::endl;
-    CalculAccel_ForceGravite(gravite);
+    if (_Integration == "explicite")
+    _SolveurExpl->CalculAccel_ForceGravite(gravite, _Nb_Sommets, A, Force, M);
+    else if (_Integration == "implicite")
+        _SolveurImpl->CalculAccel_ForceGravite(gravite, _Nb_Sommets, A, Force, M);
     
-    /* Calcul des positions et vitesses */
-    if (Tps == 0)
-    {
-        /* Calcul des vitesses et positions au temps 0 */
-        //std::cout << "PosVit Temps 0.... " << std::endl;
-        CalculPositionVitesseTps0(viscosite);
-    }
-    else
-    {
-        /* Calcul des positions et vitesses au temps t */
-        //std::cout << "PosVit.... " << std::endl;
-        CalculPositionVitesse(viscosite);
-        
-    }
+    /* Calcul des vitesses et positions au temps t */
+    //std::cout << "Vit.... " << std::endl;
+    if (_Integration == "explicite")
+        _SolveurExpl->Solve(viscosite, _Nb_Sommets, Tps, A, V, P);
+    else if (_Integration == "implicite")
+        _SolveurImpl->Solve(viscosite, _Nb_Sommets, Tps, Force, A, V, P, M, gravite, _SytemeMasseRessort);
     
     /* ! Gestion des collisions avec plan (x,y,z)  */
     // Reponse : reste a la position du plan - arret des vitesses
     // Penser au Translate de l objet dans la scene pour trouver plan coherent
-    CollisionPlan(-10, -10, -10);
+    //CollisionPlan(-10, -10, -10);
     
     // Affichage des positions
-    // AffichagePos(Tps);
+   //  AffichagePos(Tps);
     
     /** Modification des normales **/
     setNormals();

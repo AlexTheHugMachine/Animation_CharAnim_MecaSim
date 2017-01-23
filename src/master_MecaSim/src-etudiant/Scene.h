@@ -41,6 +41,9 @@
 
 
 
+/// Nombre d'objets maximum presents dans la scene
+const int NB_OBJ_MAX = 100;
+
 /**
 * \brief Type liste de noeuds.
  */
@@ -106,7 +109,7 @@ public:
 	int _nb_iter;
     
     /// Type d objet simule
-    std::string _type_objet;
+    std::string _type_objet[NB_OBJ_MAX];
     
     /// Nombre d objets presents dans la scene
     int _NbObj;

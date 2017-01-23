@@ -197,9 +197,6 @@ int Viewer::init()
     // Etats par defaut openGL
     glClearColor(0.5f, 0.6f, 0.8f, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-    //glEnable(GL_ALPHA_TEST);
     
     // Camera
     m_camera.lookat( Point(0,0,0), 15 );
@@ -210,12 +207,13 @@ int Viewer::init()
     
     // Chargement des textures utilisees dans la scene
     // Texture pour le cube
-   // m_cube_texture = read_texture(0, "../data/debug2x2red.png");
+   //  m_cube_texture = read_texture(0, "../data/debug2x2red.png");
     m_cube_texture = read_texture(0, smart_path("data/debug2x2red.png"));
-    
+
     // Texture pour le tissu
     //m_tissu_texture = read_texture(0, "data/papillon.png");
-   // m_tissu_texture = read_texture(0, "master_meca_sim/data/textures/tissu1.png");
+    //m_tissu_texture = read_texture(0, "data/textures/tissu1.png");
+   // m_tissu_texture = read_texture(0, "data/textures/tissu2.jpg");
     m_tissu_texture = read_texture(0, smart_path("data/textures/tissu2.jpg"));
 
     // Appel des procedures d initialisation des objets de la scene
@@ -227,7 +225,8 @@ int Viewer::init()
     init_sphere();
     
     // Creation du plan (x, y, z) - plan utilise pour les ObjetSimule::CollisionPlan(x, y, z);
-    init_plan(0, 0, 0);
+    // Rq : pas vraiment le plan, mais < x, < y, < z
+    //init_plan(0, 0, 0);
     
     // Initialisation du Tps
     Tps = 0;

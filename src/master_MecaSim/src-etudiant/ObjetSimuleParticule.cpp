@@ -52,9 +52,11 @@
  * Constructeur de la class ObjetSimuleParticule.
  */
 ObjetSimuleParticule::ObjetSimuleParticule(std::string fich_param)
+: ObjetSimule(fich_param)
 {
-    /** Recuperation des parametres du maillage mis dans le fichier **/
-    Param_mesh(fich_param);
+
+    /** Recuperation des parametres du systeme de particules mis dans le fichier **/
+    Param_particule(fich_param);
     
 }
 
@@ -176,25 +178,13 @@ void ObjetSimuleParticule::updateVertex()
  */
 void ObjetSimuleParticule::Simulation(Vector gravite, float viscosite, int Tps)
 {
-    
     /* Calcul des accelerations (avec ajout de la gravite aux forces) */
     //std::cout << "Accel.... " << std::endl;
-    CalculAccel_ForceGravite(gravite);
+    _SolveurExpl->CalculAccel_ForceGravite(gravite, _Nb_Sommets, A, Force, M);
     
-    /* Calcul des positions et vitesses */
-    if (Tps == 0)
-    {
-        /* Calcul des vitesses et positions au temps 0 */
-        //std::cout << "PosVit Temps 0.... " << std::endl;
-        CalculPositionVitesseTps0(viscosite);
-    }
-    else
-    {
-        /* Calcul des positions et vitesses au temps t */
-        //std::cout << "PosVit.... " << std::endl;
-        CalculPositionVitesse(viscosite);
-        
-    }
+    /* Calcul des vitesses et positions au temps t */
+    //std::cout << "Vit.... " << std::endl;
+    _SolveurExpl->Solve(viscosite, _Nb_Sommets, Tps, A, V, P);
     
     /* ! Gestion des collisions avec plan (x,y,z) et bords de la fenetre */
     // Reponse : rebond

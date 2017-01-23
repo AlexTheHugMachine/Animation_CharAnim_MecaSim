@@ -229,6 +229,9 @@ public:
 	
 	/*! Pour acceder a la position de la particule */
 	inline const Vector& GetPosition() const {return _Pos;}
+    
+    /*! Pour acceder a la masse de la particule */
+    inline float GetMass() const {return _Mass;}
 	
 	/*! Pour connaitre le nombre de voisins d une particule */
 	inline int GetNbVoisins() {return _RessortList.size();}
@@ -238,6 +241,9 @@ public:
 	
 	/*! Modification de la position */
 	inline void SetPosition(const Vector &C) {_Pos = C;}
+    
+    /*! Modification de la masse */
+    inline void SetMass(float M) {_Mass = M;}
 	
 	/*! Ajout d un ressort dans la liste des ressorts lies a la particule */
 	inline void AddRessort(Ressort *R) {_RessortList.push_back(R);}
@@ -253,6 +259,9 @@ public:
 	
 	/// Position de la particule
 	Vector _Pos;
+    
+    /// Masse de la particule
+    float _Mass;
 	
 };
 

@@ -45,6 +45,16 @@
 
 
 
+/**
+ * Constructeur de la class ObjetSimule.
+ */
+ObjetSimule::ObjetSimule(std::string fich_param)
+{
+    /** Recuperation des parametres du maillage mis dans le fichier **/
+    Param_mesh(fich_param);
+    
+}
+
 
 /**
  * \brief Interaction avec l utilisateur.
@@ -54,15 +64,11 @@ void ObjetSimule::Interaction(Vector MousePos)
 {
     if (_Interaction == "yes")
     {
-
-
+        
+        
     }//if
-
+    
 }//void
-
-
-
-
 
 
 
@@ -76,13 +82,13 @@ void ObjetSimule::AffichagePos(int tps)
     {
         // Affichage du temps
         std::cout << "[T=" << tps;
-
+        
         // Ecriture du numero du sommet
         std::cout << " ; Vertex=" << i;
-
+        
         // Affichage des coordonnees de la position
         std::cout << " ; P=" << P[i] << std::endl;
-
+        
     }//for_i
 }
 

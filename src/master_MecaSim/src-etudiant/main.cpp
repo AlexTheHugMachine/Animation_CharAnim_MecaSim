@@ -1,5 +1,5 @@
 #include <stdlib.h>
-
+#include <unistd.h>
 
 #include "Viewer.h"
 #include "vec.h"
@@ -8,8 +8,13 @@ using namespace std;
 
 
 
+
 int main( int argc, char **argv )
 {
+    char tampon[100];
+    std:cout << "Le code s execute depuis " << getcwd(tampon, 100) << std::endl;
+    std::cout << "----------------------------------------" << std::endl;
+    
     /**********************************/
     /** Pour la simulation mecanique **/
     /**********************************/
@@ -24,7 +29,7 @@ int main( int argc, char **argv )
     /// Pour ne pas a avoir a mettre les fichiers en parametres de l execution
     if (argc == 1)
     {
-        argc=4; // modifie le nombre de parametre mis dans l execution
+        argc = 4; // modifie le nombre de parametre mis dans l execution
         
         argv = new char*[4];
         
@@ -33,10 +38,14 @@ int main( int argc, char **argv )
         argv[2] = new char[256]; // Nom du fichier de parametre de la simulation
         argv[3] = new char[256]; // Nom du fichier de parametre de l objet
         
-        strcpy( argv[0], "master_meca_sim_etudiant");
+        strcpy( argv[0], "./bin/master_MecaSim_etudiant");
         strcpy( argv[1], "1");
-        strcpy( argv[2], "master_meca_sim/exec/Fichier_Param.simu");
-        strcpy( argv[3], "master_meca_sim/exec/Fichier_Param.objet");
+        strcpy( argv[2], "./src/master_MecaSim/exec/Fichier_Param.simu");
+        strcpy( argv[3], "./src/master_MecaSim/exec/Fichier_Param.objet1");
+        
+        // Equivalent a la commande :
+        //  ./bin/master_MecaSim_etudiant 1 ./src/master_MecaSim/exec/Fichier_Param.simu ./src/master_MecaSim/exec/Fichier_Param.objet1
+
         
     }
     
@@ -59,7 +68,9 @@ int main( int argc, char **argv )
             Fichier_Param[i] = argv[i+2];
         
         cout << "Fichiers de donnees de la simulation : " << Fichier_Param[0] << endl;
-        cout << "Fichier de donnees de l objet : " << Fichier_Param[1] << endl;
+        
+        for (int i=1; i<= NbObj; i++)
+            cout << "Fichier de donnees de l objet " << i << " : " << Fichier_Param[i] << endl;
         
     }
     
@@ -67,14 +78,13 @@ int main( int argc, char **argv )
     {
         /// Usage de l execution du programme
         // Exemple pour un seul objet simule :
-        // ./bin/master_meca_sim 1 ./exec/master_meca_sim/Fichier_Param.simu exec/master_meca_sim/Fichier_Param.objet
         
         cout << "Usage depuis le repertoire gkit2light:" << endl;
         cout << "<executable> NbObj <Fichier_Param_Anim> <Fichier_Param_Obj1> <Fichier_Param_Obj2> ..." << endl << endl;
         
         cout << "Exemple pour un seul objet : " << endl;
-        cout << "./bin/master_meca_sim_corrige 1 master_meca_sim/exec/Fichier_Param.simu master_meca_sim/exec/Fichier_Param.objet" << endl;
-        
+        cout << "./bin/master_MecaSim_etudiant 1 ./src/master_MecaSim/exec/Fichier_Param.simu ./src/master_MecaSim/exec/Fichier_Param.objet1" << endl;
+ 
         
         /// Arret du programme
         exit(1);

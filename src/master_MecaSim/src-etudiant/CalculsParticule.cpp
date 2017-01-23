@@ -48,7 +48,9 @@ using namespace std;
  */
 void ObjetSimuleParticule::CollisionPlan(float x, float y, float z)
 {
+ 
+    // Collision juste par rapport au plan horizontal passant par le y
+   
     
-        
 }
 

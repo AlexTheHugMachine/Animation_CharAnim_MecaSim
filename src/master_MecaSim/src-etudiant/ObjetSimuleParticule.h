@@ -22,6 +22,7 @@
 #include "MSS.h"
 #include "Noeuds.h"
 #include "Properties.h"
+#include "SolveurExpl.h"
 
 
 
@@ -38,6 +39,9 @@ public:
     /*! Constructeur */
     ObjetSimuleParticule(std::string fich_param);
     
+    /*  Lecture des parametres de l execution relatfs au systeme de particules */
+    void Param_particule(std::string Fichier_Param);
+    
     /*! Initialisation a partir des fichiers de donnees.*/
     void initObjetSimule();
     
@@ -53,6 +57,9 @@ public:
     /*! Mise a jour du Mesh (pour affichage) de l objet en fonction des nouvelles positions calculees */
     void updateVertex();
     
+    /// SolveurExpl : schema d integration semi-implicite 
+    SolveurExpl *_SolveurExpl;
+
 };
 
 

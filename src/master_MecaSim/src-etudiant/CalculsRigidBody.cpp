@@ -1,5 +1,5 @@
 /*
- * CalculsMSS.cpp :
+ * CalculsRigidBody.cpp :
  * Copyright (C) 2016 Florence Zara, LIRIS
  *               florence.zara@liris.univ-lyon1.fr
  *               http://liris.cnrs.fr/florence.zara/
@@ -21,10 +21,10 @@
  */
 
 /** \file CalculsMSS.cpp
-Programme calculant pour chaque particule i d un MSS son etat au pas de temps suivant 
+ Programme calculant pour chaque particule i d un MSS son etat au pas de temps suivant
  (methode d 'Euler semi-implicite) : principales fonctions de calculs.
-\brief Fonctions de calculs de la methode semi-implicite sur un systeme masses-ressorts.
-*/ 
+ \brief Fonctions de calculs de la methode semi-implicite sur un systeme masses-ressorts.
+ */
 
 #include <stdio.h>
 #include <math.h>
@@ -33,7 +33,7 @@ Programme calculant pour chaque particule i d un MSS son etat au pas de temps su
 
 #include "vec.h"
 #include "ObjetSimule.h"
-#include "ObjetSimuleMSS.h"
+#include "ObjetSimuleRigidBody.h"
 #include "Viewer.h"
 
 using namespace std;
@@ -41,26 +41,63 @@ using namespace std;
 
 
 
+/*
+ * Calcul de la masse de l objet rigide
+ */
+void ObjetSimuleRigidBody::CalculMasse()
+{
+    
+    
+}
+
+
+/*
+ * Calcul du tenseur d inertie de l objet rigide - - partie constante Ibody
+ * et remplissage tableau roi (position particules dans repere objet)
+ */
+void ObjetSimuleRigidBody::CalculIBody()
+{
+    
+}
+
+
+/*
+ * Calcul de l etat de l objet rigide.
+ */
+void ObjetSimuleRigidBody::CalculStateX()
+{
+    
+    
+}
+
+
+
+/*
+ * Calcul de la derivee de l etat : d/dt X(t).
+ */
+void ObjetSimuleRigidBody::CalculDeriveeStateX(Vector gravite)
+{
+    
+}
+
 
 /**
-* Calcul des forces appliquees sur les particules du systeme masses-ressorts.
+ * Schema integration pour obbtenir X(t+dt) en fct de X(t) et d/dt X(t)
  */
-void ObjetSimuleMSS::CalculForceSpring()
+void ObjetSimuleRigidBody::Solve(float visco)
 {
-	/// f = somme_i (ki * (l(i,j)-l_0(i,j)) * uij ) + (nuij * (vi - vj) * uij) + (m*g) + force_ext
-	
-	/// Rq : Les forces dues a la gravite et au vent sont ajoutees lors du calcul de l acceleration
+  
     
-		
 }//void
+
 
 
 /**
  * Gestion des collisions avec le sol - plan (x,y,z).
  */
-void ObjetSimuleMSS::CollisionPlan(float x, float y, float z)
+void ObjetSimuleRigidBody::CollisionPlan(float x, float y, float z)
 {
-    /// Arret de la vitesse quand touche le plan
+
    
     
 }// void

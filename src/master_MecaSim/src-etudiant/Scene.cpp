@@ -46,12 +46,12 @@ Appel des differentes fonctions sur l'ensemble des noeuds du graphe de scene.
  */
 Scene::Scene(std::string Fichier_Param, int NbObj)
 {
+    /// Nombre d objets presents dans la scene
+    _NbObj = NbObj;
+    
 	// Lecture du fichier de parametres : 
 	// recuperation de la gravite et de la viscosite
 	Param(Fichier_Param);
-    
-    /// Nombre d objets presents dans la scene
-    _NbObj = NbObj;
     
 }
 
@@ -91,11 +91,20 @@ void Scene::initObjetSimule()
 	//std::cout << "----------------- Scene::initObjetSimule()-------------" << std::endl;
     
 	ListeNoeuds::iterator e;
+    int i = 0;
 	
 	for(e=_enfants.begin(); e!=_enfants.end(); e++)
 	{
+        std::cout << "-------------------------------------- " << std::endl;
+
+        std::cout << "Initialisation de l objet " << _type_objet[i] << std::endl;
+
 		(*e)->initObjetSimule();
+        
+        i++;
+        
 	}
+
     
     //std::cout << "----------------- FIN -- Scene::initObjetSimule()-------------" << std::endl;
 
@@ -110,11 +119,21 @@ void Scene::initMeshObjet()
     //std::cout << "----------------- Scene::initMeshObjet()-------------" << std::endl;
     
     ListeNoeuds::iterator e;
+    int i = 0;
     
     for(e=_enfants.begin(); e!=_enfants.end(); e++)
     {
+        std::cout << "-------------------------------------- " << std::endl;
+
+        std::cout << "Pour objet " << _type_objet[i] << std::endl;
+
         (*e)->initMeshObjet();
+        
+        i++;
+        
     }
+    std::cout << "-------------------------------------- " << std::endl;
+
     
     //std::cout << "----------------- FIN -- Scene::initMeshObjet()-------------" << std::endl;
     

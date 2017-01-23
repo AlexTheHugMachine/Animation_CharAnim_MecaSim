@@ -14,6 +14,7 @@
 
 #include "ObjetSimule.h"
 #include "ObjetSimuleMSS.h"
+#include "ObjetSimuleRigidBody.h"
 #include "ObjetSimuleParticule.h"
 
 
@@ -48,19 +49,26 @@ b_draw_axe(true) // Par defaut - affiche les axes
     
     /// Ajoute les objets de la simulation au graphe de scene
     /// Objets construits a partir des parametres mis dans les fichiers de parametres des objets
-    for (int i=1; i<= NbObj; i++)
+    for (int i=1; i<=_Simu->_NbObj ; i++)
     {
-        if (_Simu->_type_objet == "mss")
+        cout  << "Creation de l objet " << i << " de type : " << _Simu->_type_objet[i-1] << endl;
+        
+        if (_Simu->_type_objet[i-1] == "mss")
             _Simu->attache(new ObjetSimuleMSS(Fichier_Param[i]));
-        else if (_Simu->_type_objet == "particule")
+        
+        else if (_Simu->_type_objet[i-1] == "particule")
             _Simu->attache(new ObjetSimuleParticule(Fichier_Param[i]));
+        
+        else if (_Simu->_type_objet[i-1] == "rigid")
+            _Simu->attache(new ObjetSimuleRigidBody(Fichier_Param[i]));
+        
     }
     
     /// Initialisation des objets pour l'animation
     _Simu->initObjetSimule();
     
     /// Creation des maillages (de type Mesh) des objets de la scene
-    _Simu->initMeshObjet();
+   _Simu->initMeshObjet();
     
 }
 
@@ -146,11 +154,12 @@ int Viewer::render( )
     T = Translation( 0, 3, 0 );
     
     ListeNoeuds::iterator e;
-    
+    int num=0;
+  
     for(e=_Simu->_enfants.begin(); e!=_Simu->_enfants.end(); e++)
     {
         // Cas systeme masses-ressorts
-        if (_Simu->_type_objet == "mss")
+        if (_Simu->_type_objet[num] == "mss")
         {
             // Specification de la texture de l objet simule
             if ((*e)->_use_texture)
@@ -159,6 +168,8 @@ int Viewer::render( )
             // Transformation geometrique appliquee a l objet
             //gl.model(Translation( 0, 3, 1 ) * Scale(3, 3, 3)); // pour le drap10
             gl.model( T * Scale(0.3, 0.3, 0.3))  ; // pour le drap70
+            //gl.model( T )  ; // pour le drap70
+
             
             // Affichage du Mesh de l objet du graphe de scene
             gl.draw((*e)->m_ObjetSimule);
@@ -169,23 +180,46 @@ int Viewer::render( )
             gl.model((Translation( Vector((*e)->Coord_Point_Inter)) * T ) * Scale(0.03, 0.03, 0.03));
             gl.draw(m_cube);
             
-        }
+        }//mss
         
          // Cas systeme de particules non connectees
-        else if (_Simu->_type_objet == "particule")
+        else if (_Simu->_type_objet[num] == "particule")
         {
             // Affichage des particules
             for (int i =0; i<(*e)->_Nb_Sommets; i++)
             {
+                // Positionnement en fonction de la position de la particule
                 gl.model(Translation( Vector((*e)->P[i])));
+                
+                // Affichage d une sphere pour modeliser une particule
                 gl.draw(m_sphere);
             }
             
-        }
+        }//particule
+        
+        // Cas systeme de particules non connectees
+        else if (_Simu->_type_objet[num] == "rigid")
+        {
+            // Specification de la texture de l objet simule
+            if ((*e)->_use_texture)
+                gl.texture(m_tissu_texture);
+            
+            // Transformation geometrique appliquee a l objet
+         //  gl.model(T * Scale(0.3, 0.3, 0.3));
+            gl.model(Identity());
+                
+            // Affichage du Mesh de l objet du graphe de scene
+            gl.draw((*e)->m_ObjetSimule);
+            
+        }//rigid
+
         
         // Affichage du plan ou se produisent les collisions
         // gl.model(Identity());
         //   gl.draw(m_plan);
+        
+        // Passage a l objet suivant
+        num++;
         
     }
     
@@ -211,31 +245,30 @@ int Viewer::update( const float time, const float delta )
     _Simu->Simulation(Tps);
     
     /// Mise a jour du Mesh en fct des positions calculees
-    Transform T;
-    T = Translation( 0, 3, 1 );
+    ListeNoeuds::iterator e;
+    int num=0;
     
-    // Cas systeme masses-ressorts
-    if (_Simu->_type_objet == "mss")
+    for(e=_Simu->_enfants.begin(); e!=_Simu->_enfants.end(); e++)
     {
-        ListeNoeuds::iterator e;
-        
-        for(e=_Simu->_enfants.begin(); e!=_Simu->_enfants.end(); e++)
+        // Cas systeme masses-ressorts ou objet rigide
+        if ((_Simu->_type_objet[num] == "mss") || (_Simu->_type_objet[num] == "rigid"))
         {
             // Mise a jour du Mesh des objets
             (*e)->updateVertex();
             
         }
+        
+        // Passage a l objet suivant
+        num++;
+        
     }
     
     /// Le temps qui passe...
     Tps = Tps + 1;
     //cout << "Temps : " << Tps << endl;
     
-    
     return 1;
 }
-
-
 
 
 /*

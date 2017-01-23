@@ -1,5 +1,5 @@
 /*
- * Calculs.cpp : Application schemas explicite sur les objets.
+ * SolveurExpl.cpp : Application schemas semi-implicite sur les objets.
  * Copyright (C) 2016 Florence Zara, LIRIS
  *               florence.zara@liris.univ-lyon1.fr
  *               http://liris.cnrs.fr/florence.zara/
@@ -21,9 +21,9 @@
  */
 
 /** \file Calculs.cpp
-Fonctions de calculs communes aux objets simules.
-\brief Fonctions de calculs communes aux objets simules.
-*/ 
+ Fonctions de calculs communes aux objets simules.
+ \brief Fonctions de calculs communes aux objets simules.
+ */
 
 #include <stdio.h>
 #include <math.h>
@@ -33,42 +33,44 @@ Fonctions de calculs communes aux objets simules.
 #include "vec.h"
 #include "ObjetSimule.h"
 #include "Viewer.h"
+#include "SolveurExpl.h"
+
 
 using namespace std;
 
 
 
 /**
-* Calcul de l acceleration des particules
+ * Calcul de l acceleration des particules
  * avec ajout de la gravite aux forces des particules
  * et ajout de la force due au vent sur une des particules du maillage
  * et reinitialisation des forces.
  */
-void ObjetSimule::CalculAccel_ForceGravite(Vector g)
-{	
-	
-	
+void SolveurExpl::CalculAccel_ForceGravite(Vector g,
+                                           int nb_som,
+                                           std::vector<Vector> &A,
+                                           std::vector<Vector> &Force,
+                                           std::vector<float> &M)
+{
+    
+    
 }//void
 
 
-/**
-* Calcul de la position et de la vitesse des particules 
- * au temps 0 (methode d integration Leap Frog).       
+/*! Calcul des vitesses et positions : 
+ *  Formule d Euler semi-implicite :
+ *  x'(t+dt) = x'(t) + dt x"(t)
+ *  x(t+dt) = x(t) + dt x'(t+dt)
  */
-void ObjetSimule::CalculPositionVitesseTps0(float visco)
+void SolveurExpl::Solve(float visco,
+                        int nb_som,
+                        int Tps,
+                        std::vector<Vector> &A,
+                        std::vector<Vector> &V,
+                        std::vector<Vector> &P)
 {
-	
-	
-}
-
-
-/**
-* Calcul de la position et de la vitesse des particules.     
- */
-void ObjetSimule::CalculPositionVitesse(float visco)
-{
-	
     
     
+       
 }//void
 

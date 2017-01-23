@@ -22,40 +22,8 @@
 #include "MSS.h"
 #include "Noeuds.h"
 #include "Properties.h"
-
-
-
-
-/**
- * \brief Texture determinee par valeurs a et b.
- */
-struct Texture
-{
-    /// Coordonnee a de la texture
-    float u;
-    
-    /// Coordonnee b de la texture
-    float v;
-};
-
-
-/**
- * \brief Facette determinee par valeurs fi, fj, fk :
- * indices des sommets dans le fichier.
- */
-struct FacetTriangle
-{
-    /// Premier sommet de la facette
-    int fi;
-    
-    /// Second sommet de la facette
-    int fj;
-    
-    /// Troisieme sommet de la facette
-    int fk;
-    
-};
-
+#include "SolveurExpl.h"
+#include "SolveurImpl.h"
 
 /**
  * \brief Structure de donnees pour un systeme masses-ressorts.
@@ -126,6 +94,15 @@ public:
     
     /// Declaration du systeme masse-ressort (maillage point de vue de la simulation)
     MSS * _SytemeMasseRessort;
+    
+    /// Choix du schema d integration
+    std::string _Integration;
+    
+    /// SolveurExpl : schema d integration semi-implicite
+    SolveurExpl *_SolveurExpl;
+    
+    /// SolveurImpl : schema d integration implicite 
+    SolveurImpl *_SolveurImpl;
     
 };
 
