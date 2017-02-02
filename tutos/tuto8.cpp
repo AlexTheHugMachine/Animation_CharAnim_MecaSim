@@ -72,6 +72,11 @@ public:
         
         draw(m_objet, m_model, m_camera, m_texture);
         
+    /* on pourrait obtenir le meme resultat sans utiliser App::update( ). 
+        les parametres time et update sont renvoyes par les fonctions  global_time() et delta_time() :
+        draw(m_objet, RotationY(global_time() / 20), m_camera, m_texture);
+    */
+        
         return 1;
     }
 

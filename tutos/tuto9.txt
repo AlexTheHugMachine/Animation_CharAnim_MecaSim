@@ -1,0 +1,69 @@
+
+/*! \addtogroup tuto_mesh_shader tuto9
+
+cf \ref tuto9.cpp
+
+Mesh::draw( ) et les utilitaires DrawParam de draw.h dessinent l'objet avec un shader crée en fonction de la description de l'objet et des paramètres. Il est aussi 
+très simple de continuer à utiliser Mesh pour décrire l'objet et de le dessiner avec un shader différent, cf Mesh::draw( const GLuint program ). Il faut par contre
+créer et configurer le shader avant de pouvoir dessiner l'objet.
+
+repassez dans \ref intro3d et \ref glsl, si nécessaire.
+
+## créer un shader program
+
+repassez dans \ref tuto2GL, si nécessaire.
+
+\code
+GLuint program= 0;
+
+program= read_program("...");
+program_print_errors(program);
+\endcode
+
+## configurer un shader program
+
+les attributs des sommets sont configurés par Mesh, il faut respecter la convention utilisée par Mesh :
+    - attribut 0, `vec3 position`,
+    - attribut 1, `vec2 texcoord`,
+    - attribut 2, `vec3 normal`,
+    - attribut 3, `vec4 color`.
+    
+voila la déclaration à utiliser dans le vertex shader :
+\code
+layout(location= 0) in vec3 position;
+layout(location= 1) in vec2 texcoord;
+layout(location= 2) in vec3 normal;
+layout(location= 3) in vec4 color;
+\endcode
+
+Le vertex shader aura probablement besoin d'appliquer une transformation aux sommets, il faut donc la lui transmettre. repassez dans \ref tuto3GL, si nécessaire.
+\code
+// selectionner le shader program, si necessaire
+// glUseProgram(program);
+
+Transform mvp= { ... };
+program_uniform(program, "mvpMatrix", mvp);
+\endcode
+
+En général c'est un Orbiter qui fournit les transformations `view` et `projection`:
+\code
+Orbiter camera= { ... };
+
+Transform model= { ... };
+Transform view= camera.view();
+Transform projection= camera.projection(window_width(), window_height(), 45);
+Transform mvp= projection * view * model;
+\endcode
+
+## dessiner
+
+Une fois le shader program complètement paramétré, il ne reste plus qu'à dessiner l'objet :
+\code
+Mesh objet= { ... };
+GLuint program= { ... };
+
+objet.draw(program);
+\endcode
+
+cf \ref tuto9.cpp pour un exemple complet qui utilise un uniform supplémentaire, qui permet de donner la même couleur aux pixels de l'objet.
+*/

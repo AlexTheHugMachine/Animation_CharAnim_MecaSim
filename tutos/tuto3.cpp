@@ -58,12 +58,13 @@ int draw( )
     if(key_state('k'))
         angle= angle - 1;
     
-    Transform T= make_rotationZ( angle );
-    draw(triangle, T, make_identity(), make_identity());
+    Transform T= RotationZ( angle );
+    draw(triangle, T, Identity(), Identity());
 
     return 1;
  */
-// utiliser une autre transformation : make_scale(), make_translation(), etc.
+ 
+// utiliser une autre transformation : Scale(), Translation(), etc.
 }
 
 int quit( )
@@ -79,12 +80,14 @@ int main( int argc, char **argv )
     // etape 1 : creer la fenetre
     Window window= create_window(1024, 640);
     if(window == NULL)
-        return 1;       // erreur lors de la creation de la fenetre ou de l'init de sdl2
+        // erreur lors de la creation de la fenetre ou de l'init de sdl2
+        return 1;       
 
     // etape 2 : creer un contexte opengl pour pouvoir dessiner
     Context context= create_context(window);
     if(context == NULL)
-        return 1;       // erreur lors de la creation du contexte opengl
+        // erreur lors de la creation du contexte opengl
+        return 1;       
 
     // etape 3 : creation des objets
     if(init() < 0)

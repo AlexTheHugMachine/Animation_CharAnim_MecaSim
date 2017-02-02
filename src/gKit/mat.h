@@ -29,7 +29,7 @@ struct Transform
 	//! constructeur a partir de 4 Vector colonnes, met (0, 0, 0, 1) dans la 4e ligne 
 	Transform(const Vector& x, const Vector& y, const Vector& z, const Vector& w);
 
-	//! retoune le Vector colonne c de la matrice
+	//! renvoie le Vector colonne c de la matrice
 	Vector operator[](int c) const;
 
     //! renvoie le point transforme.

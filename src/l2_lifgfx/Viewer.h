@@ -7,7 +7,6 @@
 
 #include "window.h"
 #include "program.h"
-#include "buffer.h"
 #include "texture.h"
 #include "mesh.h"
 #include "draw.h"
@@ -17,7 +16,7 @@
 #include "app.h"
 
 #include "AnimationCurve.h"
-
+#include "pacman_core/jeu.h"
 
 class Viewer : public App
 {
@@ -72,8 +71,15 @@ protected:
     void init_quad();
     Transform Tquad;
 
+    Jeu m_pacman;       // pacman
+    GLuint m_tex_mur;
+    GLuint m_tex_pacman;
+    GLuint m_tex_fantome;
+    GLuint m_tex_pastille;
 
     void draw_axe(const Transform& T);
+    void draw_cube(const Transform& T, unsigned int tex);
+    void draw_pacman(const Transform& T);
     void manageCameraLight();
 };
 

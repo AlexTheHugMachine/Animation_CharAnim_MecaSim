@@ -133,6 +133,8 @@ bool edit( Widgets& widgets, const int text_size, char *text );
 
 //! valeur editable par increment.
 bool value( Widgets& widgets, const char *label, int& value, const int value_min, const int value_max, const int value_step );
+//! valeur editable par increment.
+bool value( Widgets& widgets, const char *label, float& value, const float value_min, const float value_max, const float value_step );
 
 //! termine la description des elements de la ligne.
 void end_line( Widgets& widgets );

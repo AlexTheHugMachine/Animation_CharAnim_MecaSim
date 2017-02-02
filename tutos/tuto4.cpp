@@ -50,7 +50,7 @@ int draw( )
 
     return 1;   // on continue, renvoyer 0 pour sortir de l'application
 
-// on peut aussi controler la position de la camera
+// on peut aussi controler la position de la camera, au clavier, par exemple 
 /*
     float avance= 0;
     if(key_state('j'))
@@ -58,12 +58,13 @@ int draw( )
     if(key_state('k'))
         avance= -1;
 
-    orbiter_move(camera, avance);
+    camera.move(avance);
+    //~ camera.translation(avance / 100, 0);
     draw(triangle, camera);
 
     return 1;
  */
- // et ses rotations, cf orbiter_rotation( ), orbiter_translation( )...
+ // et ses rotations, cf Orbiter::rotation( ), Orbiter::translation( )...
  // on peut aussi recuperer les mouvements de la souris et l'utiliser pour controler la camera... cf SDL_GetRelativeMouseState( )
 }
 
@@ -80,12 +81,12 @@ int main( int argc, char **argv )
     // etape 1 : creer la fenetre
     Window window= create_window(1024, 640);
     if(window == NULL)
-        return 1;       // erreur lors de la creation de la fenetre ou de l'init de sdl2
+        return 1;
 
     // etape 2 : creer un contexte opengl pour pouvoir dessiner
     Context context= create_context(window);
     if(context == NULL)
-        return 1;       // erreur lors de la creation du contexte opengl
+        return 1;
 
     // etape 3 : creation des objets
     if(init() < 0)

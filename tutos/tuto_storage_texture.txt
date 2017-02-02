@@ -1,0 +1,169 @@
+
+/*! \addtogroup storage_texture openGL 4.3 : storage textures / images
+
+cf \ref tuto_storage_texture.cpp
+
+### compute shader et textures
+
+Les textures sont accessibles en lecture avec un sampler, comme dans les fragment shaders. Il y a quand même une différence, habituellement le pipeline graphique 
+calcule automatiquement les paramètres de filtrage de la texture, mais comme un compute shader ne fait pas parti du pipeline graphique, il faut choisir le mipmap 
+explicitement avec `textureLod()`, par exemple.
+
+### écrire dans une texture
+
+Lorsqu'un shader (fragment ou compute) veut écrire dans une texture, il faut "emballer" la texture dans un objet openGL, une `texture image` (rappel: pour que le pipeline
+graphique écrive dans une texture, il faut aussi l'emballer dans un framebuffer object, cf \ref framebuffer). Et comme d'habitude, plusieurs images peuvent être déclarées, 
+elles sont donc numérotées, comme les unités de textures, ou les sorties d'un framebuffer object.
+
+C'est `glBindImageTexture()` qui permet de configurer le pipeline / d'associer une texture à une unité :
+\code
+GLuint texture= { ... };
+GLint unit= 0;
+glBindImageTexture( unit, /* texture */ texture, /* level */ 0, 
+    /* layered */ GL_TRUE, /* layer */ 0, 
+    /* access */ GL_WRITE_ONLY, /* format */ GL_RGBA8UI );
+\endcode
+
+Pour des textures 2d classiques, les paramètres layered et layer sont ignorés. Il faut donc préciser la texture, le niveau de mipmap à sélectionner, le type d'accès 
+(lecture seule `GL_READ_ONLY`, écriture seule `GL_WRITE_ONLY`, mixte `GL_READ_WRITE`) et le format interne des texels (GL_RGBA8UI pour les textures classiques 
+avec des valeurs 0..255 par canal et 4 canaux, rgb et a) à utiliser lorsque le shader écrit une valeur dans l'image.
+
+Dernière étape, fournir au shader, le numéro de l'unité sur laquelle la texture est sélectionnée, c'est le même principe que pour les unités de textures et les samplers :
+\code
+// selectionner le shader program, si necessaire
+// glUseProgram(program);
+
+GLint location= glGetUniformLocation(program, "...");
+glUniform1i(location, unit);
+\endcode
+
+### déclaration dans le shader
+
+Les images sont des uniforms déclarés avec le type :
+    - `image2D` pour les textures 2d classiques (réels), 
+    - `uimage2D` pour les textures 2d (entièrs non signés),
+    - `iimage2D` pour les textures 2d (entièrs signés).
+    
+La déclaration doit aussi être décorée avec le format des données en cas de lecture (ou d'accès mixte) et éventuellement l'indice de l'unité sur laquelle la texture 
+est sélectionnée :
+\code
+layout(binding= 0) writeonly uniform image2D image;
+layout(binding= 0, rgba8ui) readonly uniform uimage2D image;
+layout(binding= 0, rgba8ui) coherent uniform uimage2D image;
+\endcode
+
+__attention :__ les accès déclarés dans le shader et par l'application (cf `glBindImageTexture()`) doivent être les mêmes.
+
+Tous les formats de textures ne sont pas disponibles, seuls les versions 1, 2 et 4 canaux existent : `r`, `rg`, `rgba`, par contre les formats sont les memes, 8bits entiers, 
+16bits réels, 32bits réels et entiers, signés ou pas. Ils sont désignés par les suffixes : `8`, `16` ou `32` pour la taille et par `i`, `ui` ou `f` pour entier, entier non signé et réel.
+Voici les types courants : `rgba8ui`, `rgba32f`, `r32ui`.
+
+### lecture
+
+c'est la fonction `imageLoad( image, ivec2 pixel )` qui permet de lire une valeur. Les coordonnées du pixel sont comprises entre 0 et largur / hauteur. La valeur renvoyée
+dépend de la déclaration de l'image. `image2D` renvoie un vec4, `uimage2D` renvoie un uvec4, etc.
+
+L'image doit etre déclarée en lecture :
+\code
+// shader
+layout(binding= 0, rgba8ui) readonly uniform uimage2D image;
+
+void main( )
+{
+    vec4 color= imageLoad(image, ivec2(x, y));
+    ...
+}
+
+// application
+GLuint program= { ... };
+GLuint texture= { ... };
+GLint unit= 0;
+
+glBindImageTexture( unit, texture, /* level*/ 0, 
+    /* layered */ GL_TRUE, /* layer */ 0, 
+    /* access */ GL_READ_ONLY, /* format*/ GL_RGBA8UI );
+    
+GLint location= glGetUniformLocation(program, "image");
+glUniform1i(location, unit);    
+\endcode
+
+### écriture
+
+c'est la fonction `imageStore( image, ivec2 pixel, values )` qui permet d'écrire une valeur.  le type des valeurs écrites dans l'image dépend aussi de la déclaration de l'image.
+Et bien sur l'image doit etre déclarée en écriture :
+
+\code
+// shader
+layout(binding= 0) writeonly uniform image2D image;
+
+void main( )
+{
+    imageStore(image, ivec2(x, y), vec4(r, g, b, a));
+    ...
+}
+
+// application
+GLuint program= { ... };
+GLuint texture= { ... };
+GLint unit= 0;
+
+glBindImageTexture( unit, texture, /* level*/ 0, 
+    /* layered */ GL_TRUE, /* layer */ 0, 
+    /* access */ GL_WRITE_ONLY, /* format*/ GL_RGBA8UI );
+
+GLint location= glGetUniformLocation(program, "image");
+glUniform1i(location, unit);    
+\endcode
+
+
+### opération atomiques
+
+les images permettent aussi d'utiliser les opérations atomiques `imageAtomicAdd()`, `imageAtomicMin()`, `imageAtomicMax()`, `imageAtomicAnd()`, 
+`imageAtomicOr()`, `imageAtomicXor()` et `imageAtomicExchange()``imageAtomicCompSwap()`.
+
+L'image doit être déclarée en lecture / écriture cohérente et avec un type entier 32 bits :
+\code
+// shader
+layout(binding= 0, r32ui) coherent uniform uimage2D image;
+
+void main( )
+{
+    imageAtomicAdd(image, ivec2(x, y), 1);
+    ...
+}
+
+// application
+GLuint program= { ... };
+GLuint texture= { ... };
+GLint unit= 0;
+
+glBindImageTexture( unit, texture, /* level*/ 0, 
+    /* layered */ GL_TRUE, /* layer */ 0, 
+    /* access */ GL_READ_WRITE, /* format*/ GL_R32UI );
+
+GLint location= glGetUniformLocation(program, "image");
+glUniform1i(location, unit);    
+\endcode
+
+## créer une texture GL_R32UI / entiers
+
+Les textures classiques stockent des couleurs soit directement avec des réels (`GL_RGBA32F`), soit avec des entiers normalisés (`GL_RGBA` ou `GL_RGBA8`). 
+Pour créer une texture permettant de stocker des entiers non normalisés, il faut utiliser `GL_RED_INTEGER` pour un canal, et `GL_RG_INTEGER`, 
+`GL_RGB_INTEGER` ou `GL_RGBA_INTEGER`, pour 2, 3, et 4 canaux.
+
+\code
+GLuint texture= 0;
+glGenTextures(1, &texture);
+glBindTexture(GL_TEXTURE_2D, texture);
+glTexImage2D(GL_TEXTURE_2D, 0,
+    GL_R32UI, width, height, 0,
+    GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
+
+// pas de mipmaps
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+\endcode
+
+
+*/
+
+

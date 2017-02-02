@@ -1,0 +1,361 @@
+
+/*! \addtogroup storage openGL 4.3 : storage buffers
+
+cf \ref tuto_storage.cpp 
+et
+\ref tuto_storage_buffer.cpp 
+
+Les uniforms déclarés dans les shaders permettent de manipuler des tableaux de structures de manière assez directe, mais leur taille est très 
+limitée (32Ko ou 64Ko), ce qui les rend assez peu pratiques.
+
+Mais il est possible d'associer un buffer à un block d'uniforms et d'éliminer la limite de taille. La déclaration dans le shader ressemble à celle d'une 
+structure :
+\code
+#version 430
+
+buffer vertexData 
+{
+    vec3 positions[];
+};
+
+uniform mat4 mvpMatrix;
+
+void main( )
+{
+    gl_Position= mvpMatrix * vec4(positions[gl_VertexID], 1);
+}
+\endcode
+
+Autre fonctionnalité interressante, les shaders peuvent écrire dans ces buffers. Il est recommandé de préciser l'utilisation du contenu du buffer : 
+lecture seule, écriture seule ou mixte, avec les mots-clés `readonly`, `writeonly`, et `coherent` en général, pour les accès mixtes. Pour que l'application 
+puisse associer un buffer à la déclaration dans le shader, il faut nommer le block, cf `vertexData` dans l'exemple précédent.
+Et comme il est possible d'utiliser plusieurs storage buffers, ils sont numérotés. 
+
+L'application peut utiliser le nom du block pour connaître son identifiant, cf `glGetProgramResourceIndex()` et lui associer un numéro de block, 
+cf `glShaderStorgeBlockBinding()`et enfin, un buffer,  cf `glBindbufferBase()`: 
+\code
+GLuint program= { ... };
+GLuint buffer= { ... };
+
+// recupere l'identifiant du block
+GLuint index= glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, "vertexData");
+// affecte le numero 0 au block
+glShaderStorageBlockBinding(program, index, /* binding */ 0);
+
+// selectionne un buffer pour le block numero 0
+glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, buffer);
+\endcode
+
+En pratique, il est plus simple de déclarer le numéro du block dans le shader avec `layout(binding= xxx)`, ce qui permet à application d'associer un 
+buffer au block directement avec `glBindBufferBase(GL_SHADER_STORAGE_BUFFER, xxx, buffer)`, sans utiliser `glShaderStorageBlockBinding( )` :
+\code
+#version 430
+
+layout(binding= 0) readonly buffer vertexData 
+{
+    vec3 positions[];
+};
+
+uniform mat4 mvpMatrix;
+
+void main( )
+{
+    gl_Position= mvpMatrix * vec4(positions[gl_VertexID], 1);
+}
+\endcode
+
+ce qui permettra, dans l'application, de créer un buffer contenant les données et de le sélectionner sur `GL_SHADER_STORAGE_BUFFER` numero 0 :
+\code
+GLuint buffer;
+glGenBuffers(1, &buffer);
+
+// selectionner le buffer comme le storage buffer numero 0
+glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, buffer);
+
+// dimensionner le buffer et l'initialiser
+glBufferData(GL_SHADER_STORAGE_BUFFER, /* size */, /* data */, GL_STATIC_READ);
+\endcode
+
+__attention :__ `glBindBufferBase()` sélectionne le buffer à la fois sur `GL_SHADER_STORAGE_BUFFER` et sur la version numérotée `GL_SHADER_STORAGE_BUFFER 0`. 
+
+## alignement des données...
+
+L'utilisation des storage buffers est assez directe, mais il y a une grosse différence par rapport aux uniforms classiques, il n'y a pas d'interface (cf `glUniform())` 
+permettant d'affecter des valeurs aux variables déclarées dans le block. Il faut le faire "à la main" en remplissant _correctement_ le buffer qui sera associé au block. 
+Un cpu et un gpu sont des processeurs conçus différemment, et ils n'accèdent pas à la mémoire de la même manière... Il faut donc placer les données au bon 
+endroit dans le buffer pour que les shaders relisent correctement toutes les valeurs. Ce n'est pas très compliqué, voici quelques exemples, pour mieux comprendre
+les diférences.
+
+Quelle est l'organisation mémoire d'une structure `Triangle` pour un cpu ?
+\code
+struct Triangle
+{
+    vec3 a;
+    vec3 b;
+    vec3 c;
+};
+\endcode
+
+`offsetof(type, field)` du c++ renvoie la position en octets d'un champ à l'intérieur d'une structure :
+\code
+offsetof(Triangle, a)  = 0;
+offsetof(Triangle, a.x)= 0;
+offsetof(Triangle, a.y)= 4;
+offsetof(Triangle, a.z)= 8;
+offsetof(Triangle, b)  = 12;
+offsetof(Triangle, c)  = 24;
+
+sizeof(Triangle)       = 36;
+\endcode
+
+ce qui correspond à :
+\code
+ 0	a.x
+ 4	a.y
+ 8	a.z
+12	b.x
+16	b.y
+20	b.z
+24	c.x
+28	c.y
+32	c.z
+\endcode
+
+Les types de base `int` et `float` du c++ occupent 4 octets et les structures `vec3` sont rangées les unes à la suite des autres : 
+    - 4 octets par float, 
+    - 4x3= 12 octets par vec3 
+    - et 12x3= 36 octets au total.
+
+Pour un shader, la structure triangle est organisée différement :
+\code
+offsetof(Triangle, a)  = 0;
+offsetof(Triangle, a.x)= 0;
+offsetof(Triangle, a.y)= 4;
+offsetof(Triangle, a.z)= 8;
+offsetof(Triangle, b)  = 16;
+offsetof(Triangle, c)  = 32;
+
+sizeof(Triangle)       = 48;
+\endcode
+
+ce qui correspond à cette organisation mémoire :
+\code
+ 0	a.x
+ 4	a.y
+ 8	a.z
+12	...
+16	b.x
+20	b.y
+24	b.z
+28	...
+32	c.x
+36	c.y
+40	c.z
+44	...
+\endcode
+
+
+Les `vec3` occupent la place de 4 `float`, soit 16 octets. De manière générale, dans un shader : 
+    - 4 octets pour les `int`, `float` et `bool`,
+    - 2x`float` pour les `vec2`, ou 2x type de base pour ivec2, uvec2 et bvec2,
+    - 4x`float` pour les `vec3`, ou 4x type de base pour ivec3, uvec3 et bvec3
+    - 4x`float` pour les `vec4`, ou 4x type de base pour ivec4, uvec4 et bvec4 
+
+Par défaut les éléments d'un tableau sont alignés sur 16 octets, quelque soit le type de l'élement. un `int t[1]` ou `int t[2]` occupent 16 octets dans un buffer... 
+Mais il est aussi possible de choisir un alignement un peu plus économique en mémoire, il faut décorer la déclaration avec `layout(std430)`, les éléments d'un 
+tableau sont alignés normalement, en fonction de leur type, mais la taille de la structure doit être un multiple de son membre le plus important, pour que toutes 
+les variables du tableau restent alignées correctement pour le gpu.
+
+\code
+layout(std430) readonly buffer triangleData 
+{
+	Triangle triangles[];
+};
+\endcode
+
+`triangles[0].a` et `triangle[1].a` doivent être tous les deux alignés sur un multiple de 16 octets (4x`float`), donc la taille de la structure doit être aussi un 
+multiple de 16.
+
+## preparer des données alignées...
+
+Question pratique, comment remplir simplement un buffer avec les variables organisées correctement pour les shaders, et comment vérifier que tout est correct ?
+
+### à la main...
+Une solution directe consiste tout simplement à ne pas utiliser de vecteurs à 3 composantes. Dans le cas général, ce n'est pas suffisant, il peut être nécessaire 
+de déclarer une ou plusieurs variables supplémentaires dans la structure pour respecter l'alignement gpu :
+\code
+// alignement std430 sur cpu
+struct Triangle430
+{
+	vec4 a;
+	vec4 b;
+	vec4 c;
+};
+
+// ou en gardant vec3 + une variable supplementaire 
+struct Triangle430pad
+{
+	vec3 a;
+	float pad0;
+	vec3 b;
+	float pad1;
+	vec3 c;
+	float pad2;
+};
+
+// remarque: ces 2 solutions sont équivalentes, elles construisent la même organisation mémoire
+\endcode
+
+autre exemple :
+\code
+struct Data
+{
+	vec4 a;
+	vec2 b;
+};
+
+layout(std430, binding= 0) readonly buffer bufferData
+{
+	Data data[];
+};
+\endcode
+
+La taille de la structure `Data` est de 4x4 + 4x2 = 24 octets. Pour que toutes les cellules du tableau `data[]` soient alignées correctement, il faut que la taille de
+la structure Data soit elle aussi un multiple de 16 (alignement nécessaire pour le champ `vec4 a`), il faut donc ajouter 2 float supplémentaires pour que 
+data[0].a et data[1].a restent alignés sur un multiple de 16.
+\code
+struct Data
+{
+	vec4 a;
+	vec2 b;
+	float pad0;
+	float pad1;
+	// ou
+	// vec2 pad;
+};
+\endcode
+
+cf \ref tuto_storage_buffer.cpp pour une version plus complète.
+
+### en utilisant le compilateur C++
+
+Les compilateurs C et C++ permettent de modifier l'alignement des variables en c++11 avec : `alignas(n)` avec `n` l'alignement d'une variable en octets.
+	
+on peut donc déclarer une structure glsl::vec3, compatible avec les shaders :
+\code
+namespace glsl {
+	struct alignas(16) vec3
+	{
+		float x, y, z;
+	};
+}
+\endcode
+
+et l'utiliser directement :
+\code
+struct TriangleGLSL
+{
+	glsl::vec3 a;
+	glsl::vec3 b;
+	glsl::vec3 c;
+};
+\endcode
+
+cf \ref tuto_storage_buffer.cpp pour une version plus complète qui aligne le block suivant :
+\code
+struct vertex
+{
+	vec3 position;
+	vec3 normal;
+	vec2 texcoord;
+};
+
+layout(std430, binding= 0) readonly buffer vertexData
+{
+	vertex data[];
+};
+\endcode
+
+
+### exemple d'utilisation
+
+La solution directe consiste à préparer un `std::vector` d'une structure utilisant des membres alignés et à allouer le buffer :
+\code
+struct TriangleGLSL
+{
+	glsl::vec3 a;
+	glsl::vec3 b;
+	glsl::vec3 c;
+
+	TriangleGLSL( const Point& _a, const Point& _b, const Point& _c ) : a(_a), b(_b), c(_c) {}
+	TriangleGLSL( const vec3& _a, const vec3& _b, const vec3& _c ) : a(_a), b(_b), c(_c) {}
+};
+
+std::vector<TriangleGLSL> triangles;
+
+for(int i= 0; i < n; i++)
+	triangles.push_back( TriangleGLSL( {...}, {...}, {...} ) );
+
+GLuint buffer;
+glGenBuffers(1, &buffer);
+
+glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(TriangleGLSL) * triangles.size(), triangles.data(), GL_STATIC_READ);
+\endcode
+
+cf \ref tuto_storage_buffer.cpp 
+
+### vérifier l'alignement
+
+En cas de doute sur l'organisation mémoire d'un block, comment connaître la position des variables ? openGL 4.3 a introduit 2 fonctions 
+`glGetProgramInterface( ) / glGetProgramResource( )` permettant d'énumérer les blocks associés à des buffers et de récupérer 
+l'organisation mémoire des variables déclarées dans ces blocks. Comme d'habitude, il faut commencer par récupérer le nombre de blocks et le nombre 
+de variables du block afin de pouvoir itérer sur les variables.
+
+\code
+// recupere le nombre de blocks
+GLint buffer_count= 0;
+glGetProgramInterfaceiv(program, GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES, &buffer_count);
+
+// pour chaque block
+for(int i= 0; i < buffer_count; i++)
+{
+	// recupere le nombre de variables
+	GLint variable_count= 0;
+	{
+		GLenum prop[]= { GL_NUM_ACTIVE_VARIABLES };
+		glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, 1, NULL, &variable_count);
+	}
+	
+	// recupere les indices des variables du block
+	std::vector<GLint> variables(variable_count);
+	{
+		GLenum prop[]= { GL_ACTIVE_VARIABLES };
+		glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, variable_count, NULL, variables.data());
+	}
+	
+	// recupere l'organisation mémoire d'une variable / la position de la variable dans le buffer.
+	for(int k= 0; k < variable_count; k++)
+	{
+		GLint offset= 0;
+		GLenum props[]= { GL_OFFSET };
+		glGetProgramResourceiv(program, GL_BUFFER_VARIABLE, variables[k], 1, props, 1, NULL, &offset);
+		
+		printf("offset %d\n", offset);
+	}
+}
+\endcode
+
+cf \ref tuto_storage.cpp pour une version plus complète, qui récupère aussi le nom, le type de chaque variable ainsi que l'organisation des tableaux et 
+des matrices.
+
+\code
+loading program 'tutos/storage.glsl'...
+  buffer 'vertexData' binding 0
+    'vec3 triangles[0].a': offset 0, top level stride 48
+    'vec3 triangles[0].b': offset 16, top level stride 48
+    'vec3 triangles[0].c': offset 32, top level stride 48
+\endcode
+
+*/
+

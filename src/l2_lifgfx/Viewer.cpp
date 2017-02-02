@@ -62,6 +62,11 @@ int Viewer::init()
     init_cube();
     init_quad();
 
+    m_tex_mur = read_texture(0, smart_path("data/mur.png")) ;
+    m_tex_pacman = read_texture(0, smart_path("data/pacman.png")) ;;
+    m_tex_fantome = read_texture(0, smart_path("data/fantome.png")) ;;
+    m_tex_pastille = read_texture(0, smart_path("data/pastille.png")) ;;
+
     return 0;
 }
 
@@ -164,6 +169,25 @@ void Viewer::init_quad()
 
 
 
+void Viewer::draw_pacman(const Transform& T)
+{
+    int i,j;
+    for(i=0;i<m_pacman.getTerrain().getDimX();++i)
+        for(j=0;j<m_pacman.getTerrain().getDimY();++j)
+        {
+            if (m_pacman.getTerrain().getXY(i,j)=='#')
+                draw_cube( T*Translation(i,j,0), m_tex_mur);
+            else
+            if (m_pacman.getTerrain().getXY(i,j)=='.')
+                draw_cube( T*Translation(i,j,0), m_tex_pastille);
+            else
+                draw_cube( T*Translation(i,j,0), 0);
+        }
+    draw_cube( T*Translation( m_pacman.getConstPacman().getX(),m_pacman.getConstPacman().getY(),1), m_tex_pacman);
+    draw_cube( T*Translation( m_pacman.getConstFantome().getX(),m_pacman.getConstFantome().getY(),1), m_tex_fantome);
+}
+
+
 int Viewer::render( )
 {
     // Efface l'ecran
@@ -175,14 +199,16 @@ int Viewer::render( )
     // donne notre camera au shader
     gl.camera(m_camera);
 
-    gl.texture(m_quad_texture);
-    gl.model( Tquad );
-    gl.draw(m_quad);
 
     gl.texture(m_cube_texture);
     gl.model(Translation( -3, 5, 0 ));
     gl.draw(m_cube);
 
+    draw_pacman( RotationX(-90)*Translation(-m_pacman.getConstTerrain().getDimX()/2,-m_pacman.getConstTerrain().getDimY()/2,0) );
+
+    gl.texture(m_quad_texture);
+    gl.model( Tquad );
+    gl.draw(m_quad);
 
     return 1;
 }
@@ -192,6 +218,13 @@ int Viewer::render( )
 int Viewer::update( const float time, const float delta )
 {
     Tquad = Translation( 3, 5, 0 ) * Rotation( Vector(0,0,1), 0.1f*time);
+
+    m_pacman.actionsAutomatiques();
+    if (key_state(SDLK_RIGHT) && key_state(SDLK_LALT)) m_pacman.actionClavier('d');
+    if (key_state(SDLK_LEFT) && key_state(SDLK_LALT)) m_pacman.actionClavier('g');
+    if (key_state(SDLK_UP) && key_state(SDLK_LALT)) m_pacman.actionClavier('h');
+    if (key_state(SDLK_DOWN) && key_state(SDLK_LALT)) m_pacman.actionClavier('b');
+
     return 1;
 }
 
@@ -212,6 +245,15 @@ void Viewer::draw_axe(const Transform& T)
     gl.lighting(true);
 }
 
+void Viewer::draw_cube(const Transform& T, unsigned int tex)
+{
+    gl.model(T*Scale(0.5,0.5,0.5));
+    gl.texture(tex);
+    //gl.lighting(false);
+    gl.draw(m_cube);
+    //gl.lighting(true);
+}
+
 
 void Viewer::manageCameraLight()
 {
@@ -225,12 +267,12 @@ void Viewer::manageCameraLight()
         m_camera.rotation( mx, my);       // tourne autour de l'objet
     else if(mb & SDL_BUTTON(3))                 // le bouton droit est enfonce
         m_camera.move( my);               // approche / eloigne l'objet
-    if (key_state(SDLK_PAGEUP) && (!key_state(SDLK_LCTRL))) { m_camera.translation( 0,0.01); }
-    if (key_state(SDLK_PAGEDOWN) && (!key_state(SDLK_LCTRL))) { m_camera.translation( 0,-0.01); }
-    if (key_state(SDLK_LEFT) && (!key_state(SDLK_LCTRL))) { m_camera.translation(  0.01,0); }
-    if (key_state(SDLK_RIGHT) && (!key_state(SDLK_LCTRL))) { m_camera.translation( -0.01,0); }
-    if (key_state(SDLK_UP) && (!key_state(SDLK_LCTRL))) { m_camera.move( 1); }
-    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL))) { m_camera.move( -1); }
+    if (key_state(SDLK_PAGEUP) && (!key_state(SDLK_LCTRL)) && (!key_state(SDLK_LALT)) ) { m_camera.translation( 0,0.01); }
+    if (key_state(SDLK_PAGEDOWN) && (!key_state(SDLK_LCTRL)) && (!key_state(SDLK_LALT)) ) { m_camera.translation( 0,-0.01); }
+    if (key_state(SDLK_LEFT) && (!key_state(SDLK_LCTRL)) && (!key_state(SDLK_LALT)) ) { m_camera.translation(  0.01,0); }
+    if (key_state(SDLK_RIGHT) && (!key_state(SDLK_LCTRL)) && (!key_state(SDLK_LALT)) ) { m_camera.translation( -0.01,0); }
+    if (key_state(SDLK_UP) && (!key_state(SDLK_LCTRL)) && (!key_state(SDLK_LALT))) { m_camera.move( 1); }
+    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL)) && (!key_state(SDLK_LALT))) { m_camera.move( -1); }
 
 
     // Deplace la lumiere

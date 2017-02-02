@@ -1,0 +1,432 @@
+
+/*! \addtogroup compute openGL 4.3 : compute shaders
+
+### compute shader ? qu'est ce que c'est ?
+
+des shaders qui calculent ensemble ? ils ne font pas parti du pipeline graphique classique, mais ils utilisent aussi des buffers, et des textures pour lire 
+les donnéees et écrire les résultats. La principale différence avec les fragment shaders est qu'ils peuvent communiquer et échanger des données.
+
+### comment ça marche ?
+
+les compute shaders s'exécutent par groupe, chaque shader peut être vu comme un thread, et un groupe de threads est mis en exécution sur 
+un processeur graphique. Chaque thread peut communiquer avec les autres threads de son groupe, ils partagent des ressources (mémoire commune, 
+unités de texture, cache de données, etc.)
+
+chaque thread est numéroté : globalement et dans son groupe, et connaissant son numero, il peut décider de la tâche à exécuter. Ce type d'organisation 
+correspond au parallélisme de données... la même tâche est réalisée sur un ensemble de données, et chaque donnée est traitée par un thread.
+
+exemple : transformer les N sommets d'un maillage. le code séquentiel est sans surprises :
+\code
+vec4 positions[N]
+vec4 output[N]
+mat4 mvp
+
+for(int id= 0; id < N; id++)
+	output[id]= mvp * positions[id]
+\endcode
+
+la version compute shader est différente, chaque thread traite un seul sommet et il faut ordonnancer l'exécution de N threads. `GlobalID` est le 
+numéro (global) du thread :
+\code
+vec4 positions[N]
+vec4 output[N]
+mat4 mvp
+
+layout(local_size= 64)
+void main( )
+{
+	int id= GlobalID
+	if(id < N)
+		output[id]= mvp * positions[id]
+}
+\endcode
+
+l'exécution du shader est controlée par l'application qui demande à exécuter suffisament de groupes de shaders pour transformer tous les sommets, 
+et c'est le shader qui déclare la taille d'un groupe, cf `layout(local_size= ...)`. Il est donc fréquent de provoquer l'exécution de quelques shaders 
+de trop, à cause de l'arrondi à la taille du groupe, ce qui explique le `if(id < N)`...
+\code
+int N= ...;
+int groups= (N + 64) / 64	// faux pour les multiples de 64...
+Dispatch(groups)
+\endcode
+
+__remarque :__ les processeurs graphiques sont conçus pour exécuter efficacement plusieurs millions de threads...
+
+Pour vérifier, il est possible de récupérer le nombre max de threads par groupe et le nombre max de groupes :
+\code
+GLint threads_max= 0;
+glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &threads_max);
+\endcode
+
+\code
+GLint groups_max[3]= { };
+glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &groups_max[0]);
+glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &groups_max[1]);
+glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &groups_max[2]);
+\endcode
+
+### parallélisme de données
+
+Tous les algorithmes ne sont pas aussi simples que transformer tous les sommets d'un maillage, calculer une couleur pour tous les pixels d'une image.
+Dans ces 2 cas, il y a le même nombre de résultats que de données et chaque thread n'écrit qu'un seul résultat et la place du résultat de chaque thread
+est connue à l'avance. Il n'y a pas partage des données ou des résultats.
+
+Souvent le nombre de résultats est différent du nombre d'entrées. Dans ce cas, une solution consiste à ne créer qu'un thread par résultat, pour conserver 
+la séparation des données. Mais ce n'est pas toujours efficace. Par exemple, calculer la plus petite valeur d'un ensemble.... un seul thread ne permet pas 
+de paralléliser le calcul. La solution est classique, il suffit de découper le problème, de paralléliser l'exécution de chaque sous problème et de fusionner 
+les résultats partiels. Ce type d'algorithme, cette décomposition, s'appelle une réduction. Chaque groupe de threads peut calculer la plus petite valeur 
+d'un sous-ensemble des données et ensuite les différents groupes calculent la plus petite valeur des résultats intermédiaires.
+
+exemple : chaque thread compare 2 valeurs et écrit la plus petite dans un tableau intermédiaire
+\code
+// etape 1 : pour N valeurs, executer N/2 threads
+int input[N]
+int output
+
+int tmp[N/2]
+
+layout(local_size= 64)
+void main( )
+{
+	int id= GlobalID
+	if(id < N/2)
+	{
+		int a= input[id*2]
+		int b= input[id*2+1]
+		tmp[id]= min(a, b)
+	}
+}
+\endcode
+
+mais il faut recommencer pour N/4, N/8, etc. l'algo complet comporte donc une boucle qui traite de moins en moins de données avec de moins en
+moins de threads... 
+
+\code
+// etape 2 : pour N valeurs, comparer N/2 paires, puis N/4, puis N/8, etc.
+int input[N]
+int output
+
+int tmp[N/2]
+
+layout(local_size= 64)
+void main( )
+{
+	int id= GlobalID
+	if(id < N/2)
+	{
+		int a= input[id*2]
+		int b= input[id*2+1]
+		tmp[id]= min(a, b)
+	}
+
+	for(int n= N/2; n > 1; n= n / 2)
+	{
+		if(id < n)
+		{
+			int a= tmp[id*2]
+			int b= tmp[id*2+1]
+			tmp[id]= min(a, b)
+		}
+	}
+	
+	// dernier détail, il faut encore copier le résultat de tmp[0] dans output...
+	if(id == 0)
+		output= tmp[0]
+}
+\endcode
+
+__problème :__ cet algorithme ne fonctionnera pas sur un processeur graphique... 
+	- l'ordonnancement des threads, géré automatiquement par le matériel, ne garanti pas que tous les groupes progressent à la même vitesse / de manière 
+	synchronisée. Entre chaque itération du `for(n ...)`, il faut attendre que tous les threads de tous les groupes aient écrits leur résultat dans `tmp[]` 
+	avant de pouvoir le relire à l'itération suivante, avec des threads / groupes différents.
+	- autre problème, cet algorithme suppose que les threads s'exécutent dans l'ordre de leur numero, c'est qui n'est pas non plus le cas... `tmp[id]` doit 
+	contenir le résultat de l'itération précédente pour que l'algorithme fonctionne. Pour corriger ce problème, il suffit de lire et d'écrire dans des tableaux 
+	différents (ou des zones différentes du même tableau).
+	
+pour mieux visualiser le problème, on peut reformuler l'algorithme de manière séquentielle / classique :
+\code
+	for(int n= N/2; n > 1; n = n / 2 )
+	{
+		for(int id= 0; id < n; id++) // if(id < n)
+		{
+			int a= tmp[id*2]
+			int b= tmp[id*2+1]
+			tmp[id]= min(a, b)
+		}
+	}
+\endcode
+
+que se passe-t-il si `id` est choisi au hasard parmi les `n` valeurs possibles au lieu de respecter l'ordre 0, 1, 2, etc. ?
+
+Une solution simple consiste à écrire les résultats dans un autre tableau, mais cette solution n'est pas très pratique, le nombre de tableaux accessibles à 
+un shader est limité à une valeur assez faible, 8 ou 16, par exemple. Une solution pratique consiste à créer un tableau `tmp[]` plus grand et à écrire les 
+résultats dans des parties non utilisées du tableau. Par exemple, allouer N valeurs pour `tmp[]`. la première itération stocke N/2 comparaisons, la suivante 
+N/4, etc. en gros, chaque itération peut utiliser la moitié du tableau encore disponible.
+
+Pour N=16, on peut représenter l'organisation schèmatiquement : 
+\code
+tmp[16]= . . .. .... ........
+// iteration 0, 8 valeurs, stockees dans [8..16[
+tmp[16]= . . .. .... 00000000
+// iteration 1, 4 valeurs, stockees dans [4..8[
+tmp[16]= . . .. 1111 00000000
+// iteration 2, 2 valeurs, stockees dans [2..4[
+tmp[16]= . . 22 1111 00000000
+// iteration 3, 1 valeur, stockee dans [1..2[
+tmp[16]= . 3 22 1111 00000000
+\endcode
+Le résultat final se trouvera dans `tmp[1]`.
+
+GLSL fournit 2 types de synchronisation pour écrire ce type de shader, `barrier()` et `memoryBarrier()` qui permettent de synchroniser l'exécution 
+_interne_ et les accès mémoire des threads d'un groupe, et openGL fournit `glMemoryBarrier( )` qui permet à l'application de contrôler l'exécution _externe_ / _globale_ 
+et les accès mémoire de tous les groupes, entre 2 `dispatch`.
+
+Au final la solution complète ressemble à :
+\code
+// shader
+int data[N]
+int tmp[N]
+
+uniform uint N		// nombre de valeurs à traiter pour l'iteration 0, comparer les valeurs de data et ecrire dans tmp
+uniform uint n		// nombre de valeurs à traiter pour les autres iterations, comparer les valeurs de tmp et les ecrire dans une partie libre de tmp
+
+layout(local_size= 1024)
+void main( )
+{
+	uint id= GlobalID;
+	
+	if(id < N/2)
+		// uniquement pour la premiere iteration
+		tmp[N/2+id]= min(data[id*2], data[id*2+1]);
+	
+	if(id < n/2)
+	{
+		// pour les autres iterations 
+		tmp[n/2+id]= min(tmp[n+id*2], tmp[n+id*2+1]);
+	}
+}
+
+// application
+int N= ...;
+int groups= (N + 1024) / 1024;
+Dispatch(groups, N, n=0);	// premiere iteration
+
+/*	la syntaxe correcte, pour fixer les valeurs des uniforms est la meme que d'habitude, cf
+	glUniform1i( glUniformLocation(program, "N"), N);
+	glUniform1i( glUniformLocation(program, "n"), 0);
+*/
+
+// iterations suivantes
+for(int n= N/2; n > 1; n= n /2)
+{
+	// attendre que les résultats soient écrits
+	MemoryBarrier();
+	
+	int groups= (n + 1024) / 1024;
+	Dispatch(groups, N= 0, n)
+}
+
+\endcode
+
+Au final cette version de l'algorithme est quand même moins directe que la version séquentielle, est ce que c'est interressant ? voici une illustration 
+des temps d'exécution sur cpu et gpu pour N= 2, 4, 8, 16, ... 
+
+\image html min_data.png "temps d'execution (ms) pour N= 2, 4, 8, 16, ..."
+
+globalement, à part la premiere exécution qui mesure aussi le temps de compilation du shader et la réorganisation des buffers en mémoire, c'est 
+plutot interressant...
+
+exemple complet \ref min_data.cpp
+
+### synchronisation et opérations atomiques
+
+`barrier()` et `memoryBarrier()` permettent de synchroniser l'exécution des threads d'un groupe, mais il est quand même très fréquent de devoir synchroniser 
+les groupes entre eux. La  synchronisation externe par l'application fonctionne mais reste une solution très lourde. Un autre solution existe : les shaders 
+peuvent utiliser des opérations _atomiques_ pour synchroniser leurs écritures/lectures mémoire. 
+
+_opération atomique ?_ 
+Modifier une valeur en mémoire, se décompose de manière générale en 3 opérations, lire la valeur actuellement en mémoire, modifier la valeur et écrire 
+la nouvelle valeur en mémoire. par exemple, pour calculer `tmp[i]++` ou  `tmp[i]= tmp[i] +1`, il faut lire tmp[i], calculer l'addition et écrire le résultat dans 
+tmp[i]. Lorsque plusieurs threads font cette opération en même temps sur la même variable, le résultat est faux; si N threads ajoutent 1 à une variable, on 
+devrait obtenir N comme résultat, ce qui ne sera pas le cas. Les opérations atomiques permettent de sérialiser / synchroniser l'exécution des opérations pour 
+obtenir le "bon" résultat. Mais l'exécution des threads n'est plus parallèle, elle (re-) devient séquentielle... 
+
+Du coup, calculer la plus petite valeur d'un ensemble peut s'écrire d'une manière beaucoup plus directe...
+\code
+int data[N]
+int tmp
+
+layout(local_size= 1024)
+void main( )
+{
+	int id= GlobalID;
+	if(id < N)
+	{
+		atomicMin(tmp, data[id])
+	}
+}
+\endcode
+
+
+Les opérations atomiques suivantes sont disponibles : atomicMin, atomicMax, atomicOr, atomicXor, atomicAnd, atomicAdd, ainsi que atomicExchange et 
+atomicCompSwap (compare and swap) qui permettent de construire des spinlocks.
+
+Au final, cette solution, qui détruit complètement la parallélisation, reste tout de même plus efficace (à peu près 2 fois dans ce cas) que la solution précédente 
+avec une synchronisation externe. Une meilleure solution consiste à conserver le plus de parallélisme possible sans utiliser la synchronisation externe, en 
+limitant le nombre de threads manipulant la même variable avec des opérations atomiques. L'idée est de créer une variable atomique par groupe puis de fusionner 
+les résultats. Cette hiérarchie est expliquée sur gpuopen.com cf http://gpuopen.com/fast-compaction-with-mbcnt/.
+
+### mémoire partagée
+
+Les compute shaders ont également accès à la mémoire partagée des processeurs. C'est une zone de mémoire dédiée, locale à chaque processeur qui est 
+beaucoup plus rapide d'accès que la mémoire video, mais seuls 32Ko ou 64Ko sont disponibles. Une variable ou un tableau partagé se déclare dans le shader 
+avec le mot clé `shared`. 
+\code
+shared int value;
+shared int values[128];
+\endcode
+
+La quantitié disponible est accessible directement :
+\code
+GLint size= 0;
+glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, &size);
+\endcode
+
+L'accès _parallèle_ à cette mémoire est également soumis à conditions : les threads doivent y accéder de manière cohérente, sinon les accès sont sérialisés. 
+Un accès est cohérent lorsque les threads accèdent à une séquence d'adresses contiguees, ou à une séquence de cellules d'un tableau. Par exemple, les threads 
+d'un groupe accèdent à `tmp[LocalID]`, le thread 0 du groupe lit la cellule 0, le thread 1 lit la cellule 1, etc. 
+
+Selon les architectures (AMD, Intel, Nvidia), d'autres accès peuvent être cohérents : par exemple lorsque tous les threads lisent la même cellule d'un tableau partagé.
+
+L'utilisation de la mémoire partagée permet de lire une seule fois les données depuis la mémoire video, ce qui très (très) lent, mais permet ensuite d'accéder aux 
+données de manière efficace. Par exemple, sur AMD GCN, la mémoire partagée n'est que 4 fois plus lente que l'accès à un registre et bien plus rapide que l'accès 
+aux caches, qui sont eux mếmes largement plus rapides que l'accès à la mémoire video.
+
+L'utilisation de la mémoire partagée n'est pas obligatoire, mais pour les algorithmes qui relisent plusieurs fois leurs données, c'est en général très efficace, par exemple, 
+des filtres pour flouter/débruiter/analyser une image, des opérations sur des matrices, etc.
+
+
+## et on peut faire quoi avec tout ca ?
+
+Pour utiliser un compute shader, il faut, comme d'habitude, le compiler, le linker pour obtenir un programme et le paramétrer, donner des valeurs à ses uniforms, 
+sélectionner des buffers, des textures, etc. avant de pouvoir l'exécuter avec `glComputeDispatch( )`.
+
+
+### compiler un compute shader
+
+c'est la même chose qu'un shader program "classique", mais il n'y a qu'un seul shader de type GL_COMPUTE_SHADER dans le program.
+
+\code
+// charger les sources
+std::string source= read( "compute.glsl" );
+const char *strings[]= { source.c_str() };
+
+// creer et compiler le shader
+GLuint shader= glCreateShader(GL_COMPUTE_SHADER);
+glShaderSource(shader, 1, strings, NULL);
+glCompileShader(shader);
+
+// creer et linker le program
+GLuint program= glCreateProgram();
+glAttachShader(program, shader);
+glLinkProgram(program);
+
+// verifier
+GLint status;
+glGetProgramiv(program, GL_LINK_STATUS, &status);
+if(status == GL_TRUE)
+	// pas d'erreur de link, le program est pret a etre utilise !
+else
+	// erreurs ...
+\endcode
+
+vous pouvez aussi utiliser `read_program( )` et `program_print_errors()` de program.h, le source du shader doit être dans un bloc `#ifdef COMPUTE_SHADER / #endif`.
+
+### paramétrer un compute shader 
+
+Les compute shaders ont les mêmes entrées que les autres shaders, des uniforms, des buffers, des textures et des samplers. c'est exactement la même chose. 
+Par contre, ils ne s'exécutent pas dans le pipeline graphique, donc ils n'écrivent pas leurs résultats automatiquement, il faut décrire ou stocker les résultats.
+
+les shaders peuvent écrire dans 2 types d'objets openGL :
+	- des buffers, plus précisement des storage buffers, cf \ref storage, déclarés `writeonly` ou `coherent` si les shaders écrivent et relisent les données du buffer,
+	- des textures, plus précisement des texture images, cf \ref storage_texture, déclarées `writeonly` ou `coherent` si les shaders écrivent et relisent les données de la texture.
+
+__remarque :__ les opérations atomiques lisent et écrivent dans les buffers (`atomicAdd()`, `atomicMin()`, etc.) et/ou les textures (`imageAtomicAdd()`, `imageAtomicMin()`, etc.).
+
+
+### exécuter un compute shader
+
+c'est `glComputeDispatch()` qui provoque l'exécution des shaders. Il faut fournir le nombre de groupes de shaders à lancer. Dernière précision, le nombre 
+de groupes est un ivec3, les shaders peuvent être organisés en 1d, 2d ou en 3d, selon la dimension des données à manipuler.
+
+\code
+// selectionner le program, si necessaire
+// glUseProgram(program);
+
+glComputeDispatch(groups_x, 1, 1);			// execution 1d
+glComputeDispatch(groups_x, groups_y, 1);		// execution 2d
+glComputeDispatch(groups_x, groups_y, groups_z);	// execution 3d
+\endcode
+
+Il est possible de récupérer le nombre de shaders par groupe déclaré dans le shader :
+\code
+GLint threads[3]= { };
+glGetProgramiv(program, GL_COMPUTE_WORK_GROUP_SIZE, threads);
+\endcode
+
+et de calculer le nombre de groupes à lancer en fonction du nombre de données à traiter.
+\code
+int N= { ... };
+int groups= N / threads[0];
+if(N % threads[0] > 0) 
+	groups= groups +1;	// un groupe supplémentaire, si N n'est pas un multiple de threads[0]
+
+glComputeDispatch(groups, 1, 1);
+\endcode
+
+Les shaders sont numérotés globalement en fonction de l'indice de leur groupe et localement, dans leur groupe.
+Plusieurs variables sont prédéfinies pour identifier un thread :
+	- `uvec3 gl_LocalInvocationID`, et `uvec3 gl_GlobalInvocationID`,
+	- `uvec3 gl_WorkGroupID`, l'identifiant d'un groupe, compris entre 0 et `gl_NumWorkGroups.xyz`,
+	- `uvec3 gl_NumWorkGroups`, le nombre de groupes de threads en cours d'exécution, cf `glComputeDispatch()`, 
+	
+	- `uint gl_LocalInvocationIndex`, l'identifiant 1d d'un thread : \n
+		`gl_LocalInvocationID.z * gl_WorkGroupSize.x * gl_WorkGroupSize.y` \n
+		`+ gl_LocalInvocationID.y * gl_WorkGroupSize.x` \n
+		`+ gl_LocalInvocationID.x`
+
+### attendre les résultats 
+
+En général, les résultats calculés par un compute shader sont utilisés par un autre shader, et il faut explicitement attendre que les résultats soient disponibles 
+avant d'exécuter le shader suivant, c'est `glMemoryBarrier()` qui permet de le faire. 
+
+Il existe plusieurs types de d'attente / de barrière, en fonction de la méthode utilisée pour relire les résultats :
+	- si les résultats sont écrits dans un (storage) buffer et que le cpu va relire ces données avec `glGetBufferSubData()`, 
+	il faut utiliser `glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT)`,
+	- si les résultats sont écrits dans un (storage) buffer et qu'un shader va relire ces données, 
+	il faut utiliser `glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)`,
+	- si les résultats sont écrits dans une (storage) texture et que le cpu va relire ces données avec `glGetTexImage()`, 
+	il faut utiliser `glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT)`,
+	- si les résultats sont écrits dans une (storage) texture et qu'un shader va relire ces données avec un sampler, 
+	il faut utiliser `glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)`
+	
+En cas de problèmes de synchronisation, il est possible d'utiliser une barrière globale, `glMemoryBarrier(GL_ALL_BARRIER_BITS)`.
+
+exemple complet \ref min_data.cpp
+
+
+## notions d'exécution cohérente
+
+\todo
+
+
+## limites d'ordonnancement
+
+Les ressources disponibles par processeur graphique sont limitées : le nombre de registres, la quantité de mémoire partagée, le nombre de groupes gérés par 
+l'ordonnanceur matériel.
+
+\todo
+
+
+*/
+
