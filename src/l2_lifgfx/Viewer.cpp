@@ -172,6 +172,9 @@ void Viewer::init_quad()
 void Viewer::draw_pacman(const Transform& T)
 {
     int i,j;
+    draw_cube( T*Translation( m_pacman.getConstPacman().getX(),m_pacman.getConstPacman().getY(),0), m_tex_pacman);
+    draw_cube( T*Translation( m_pacman.getConstFantome().getX(),m_pacman.getConstFantome().getY(),0), m_tex_fantome);
+
     for(i=0;i<m_pacman.getTerrain().getDimX();++i)
         for(j=0;j<m_pacman.getTerrain().getDimY();++j)
         {
@@ -180,11 +183,9 @@ void Viewer::draw_pacman(const Transform& T)
             else
             if (m_pacman.getTerrain().getXY(i,j)=='.')
                 draw_cube( T*Translation(i,j,0), m_tex_pastille);
-            else
-                draw_cube( T*Translation(i,j,0), 0);
+            //else
+//                draw_cube( T*Translation(i,j,0), 0);
         }
-    draw_cube( T*Translation( m_pacman.getConstPacman().getX(),m_pacman.getConstPacman().getY(),1), m_tex_pacman);
-    draw_cube( T*Translation( m_pacman.getConstFantome().getX(),m_pacman.getConstFantome().getY(),1), m_tex_fantome);
 }
 
 
@@ -200,12 +201,10 @@ int Viewer::render( )
     gl.camera(m_camera);
 
 
-    gl.texture(m_cube_texture);
-    gl.model(Translation( -3, 5, 0 ));
-    gl.draw(m_cube);
-
+    // pacman
     draw_pacman( RotationX(-90)*Translation(-m_pacman.getConstTerrain().getDimX()/2,-m_pacman.getConstTerrain().getDimY()/2,0) );
 
+    // papillon
     gl.texture(m_quad_texture);
     gl.model( Tquad );
     gl.draw(m_quad);

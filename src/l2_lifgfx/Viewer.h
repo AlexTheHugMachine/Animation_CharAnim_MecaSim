@@ -16,7 +16,7 @@
 #include "app.h"
 
 #include "AnimationCurve.h"
-#include "pacman_core/jeu.h"
+#include "pacman_core/Jeu.h"
 
 class Viewer : public App
 {
