@@ -70,6 +70,11 @@ Vector operator* ( const Vector& v, const float k )
     return k * v;
 }
 
+Vector operator* ( const Vector& a, const Vector& b )
+{
+    return Vector(a.x * b.x, a.y * b.y, a.z * b.z);
+}
+
 Vector operator/ ( const Vector& v, const float k )
 {
     float kk= 1 / k;

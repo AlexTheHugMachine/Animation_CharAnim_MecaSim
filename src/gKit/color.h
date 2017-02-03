@@ -17,6 +17,8 @@ struct Color
     //! cree une couleur avec les memes composantes que color, mais remplace sa composante alpha (color.r, color.g, color.b, alpha).
     Color( const Color& color, const float alpha ) : r(color.r), g(color.g), b(color.b), a(alpha) {}  // remplace alpha.
     
+    float power( ) const;
+    
     float r, g, b, a;
 };
 
