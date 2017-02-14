@@ -242,7 +242,7 @@ void release_window( Window window )
 //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
 static
 void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
-    const char *message, void *userParam )
+    const char *message, const void *userParam )
 {
     static std::set<std::string> log;
     if(log.insert(message).second == false)
@@ -303,9 +303,9 @@ Context create_context( Window window, const int major, const int minor )
     // configure l'affichage des messages d'erreurs opengl, si l'extension est disponible
     if(GLEW_ARB_debug_output)
     {
-        //~ printf("debug output enabled...\n");
+        printf("debug output enabled...\n");
         glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-        //~ glDebugMessageCallbackARB(debug, NULL);
+        glDebugMessageCallbackARB(debug, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
 #endif

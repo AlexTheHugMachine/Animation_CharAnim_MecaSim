@@ -148,7 +148,7 @@ int RGBE_ReadHeader( FILE *fp, int *width, int *height, rgbe_header_info *info )
     int found_format;
     float tempf;
     int i;
-    char sw, sh;
+    char sw[4], sh[4];
     
     found_format = 0;
     
@@ -223,8 +223,8 @@ int RGBE_ReadHeader( FILE *fp, int *width, int *height, rgbe_header_info *info )
         return rgbe_error( rgbe_read_error, NULL );
         
 // printf("rgbe header: '%s'", buf);
-    if ( sscanf( buf, "%[-+]Y %d %[-+]X %d", &sh, height, &sw, width ) != 4
-            && sscanf( buf, "%[-+]X %d %[-+]Y %d", &sh, height, &sw, width ) != 4 )
+    if ( sscanf( buf, "%[-+]Y %d %[-+]X %d", sh, height, sw, width ) != 4
+        && sscanf( buf, "%[-+]X %d %[-+]Y %d", sh, height, sw, width ) != 4 )
         return rgbe_error( rgbe_format_error, "missing image size specifier" );
         
 #if 0

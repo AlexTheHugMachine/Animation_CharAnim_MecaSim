@@ -161,7 +161,7 @@ Mesh read_mesh( const char *filename )
         {
            if(sscanf(line, "usemtl %[^\r\n]", tmp) == 1)
            {
-               for(size_t i= 0; i < materials.names.size(); i++)
+               for(unsigned int i= 0; i < (unsigned int) materials.names.size(); i++)
                 if(materials.names[i] == tmp)
                     // selectionne une matiere pour le prochain triangle
                     data.material(i);
