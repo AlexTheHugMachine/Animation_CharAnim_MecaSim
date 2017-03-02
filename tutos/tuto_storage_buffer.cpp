@@ -1,7 +1,7 @@
 
-//! \file tuto_storage_buffer.cpp  exemple direct d'utilisation d'un storage buffer.  le vertex shader recupere les attributs des sommets directement sans utiliser de vao.
+//! \file tuto_storage_buffer.cpp  exemple direct d'utilisation d'un storage buffer.  le vertex shader recupere les attributs des sommets dans un storage buffer sans utiliser de vao.
 
-#include "app.h"        // classe Application a deriver
+#include "app.h"
 
 #include "vec.h"
 #include "mat.h"
@@ -19,17 +19,10 @@
 // cf tuto_storage
 namespace glsl 
 {
-#ifdef _MSC_VER   // visual studio >= 2012 necessaire
-# define ALIGN(...) __declspec(align(__VA_ARGS__))
-
-#else   // gcc, clang, icc
-# define ALIGN(...) __attribute__((aligned(__VA_ARGS__)))
-#endif
-
     template < typename T >
-    struct ALIGN(8) gvec2
+    struct alignas(8) gvec2
     {
-        ALIGN(4) T x, y;
+        alignas(4) T x, y;
         
         gvec2( ) {}
         gvec2( const vec2& v ) : x(v.x), y(v.y) {}
@@ -41,9 +34,9 @@ namespace glsl
     typedef gvec2<int> bvec2;
     
     template < typename T >
-    struct ALIGN(16) gvec3
+    struct alignas(16) gvec3
     {
-        ALIGN(4) T x, y, z;
+        alignas(4) T x, y, z;
         
         gvec3( ) {}
         gvec3( const vec3& v ) : x(v.x), y(v.y), z(v.z) {}
@@ -57,9 +50,9 @@ namespace glsl
     typedef gvec3<int> bvec3;
     
     template < typename T >
-    struct ALIGN(16) gvec4
+    struct alignas(16) gvec4
     {
-        ALIGN(4) T x, y, z, w;
+        alignas(4) T x, y, z, w;
         
         gvec4( ) {}
         gvec4( const vec4& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
@@ -69,9 +62,8 @@ namespace glsl
     typedef gvec4<int> ivec4;
     typedef gvec4<unsigned int> uvec4;
     typedef gvec4<int> bvec4;
-    
-#undef ALIGN
 }
+
 
 class StorageBuffer : public App
 {
@@ -83,12 +75,6 @@ public:
     {
         m_mesh= read_mesh("data/cube.obj");
         
-        Point pmin, pmax;
-        m_mesh.bounds(pmin, pmax);
-        m_camera.lookat(pmin, pmax);
-
-        m_texture= read_texture(0, "data/debug2x2red.png");
-        
     #if 1
         // construit le storage buffer contenant les positions, les normales et les texcoords, en utilisant les types alignes
         struct vertex
@@ -99,6 +85,7 @@ public:
             
             vertex( ) : position(), normal(), texcoord() {}
         };
+        
     #else
         // ou a la main
         struct vertex
@@ -109,13 +96,15 @@ public:
             float pad1;
             vec2 texcoord;      // vec2 aligne sur 2 float
             
-            float pad2[2];      // donc la taille totale de la structure doit etre un mulitple de 4 floats
+            float pad2;
+            float pad3;      // donc la taille totale de la structure doit etre un mulitple de 4 floats
             
             vertex( ) : position(), normal(), texcoord() {}
         };
     #endif
         
         
+        // recupere les attributs du mesh
         std::vector<vertex> data(m_mesh.vertex_count());
         for(int i= 0; i < m_mesh.vertex_count(); i++)
         {
@@ -130,12 +119,20 @@ public:
         
         // storage buffer
         glGenBuffers(1, &m_buffer);
+        
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_buffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vertex) * data.size(), data.data(), GL_STATIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vertex) * data.size(), data.data(), GL_STREAM_READ);
         
         // 
         m_program= read_program("tutos/tuto_storage_buffer.glsl");
         program_print_errors(m_program);
+        
+        //
+        Point pmin, pmax;
+        m_mesh.bounds(pmin, pmax);
+        m_camera.lookat(pmin, pmax);
+
+        m_texture= read_texture(0, "data/debug2x2red.png");
         
         // etat openGL par defaut
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
@@ -158,16 +155,6 @@ public:
         return 0;
     }
     
-    int update( const float time, const float delta )
-    {
-        // modifier l'orientation du cube a chaque image. 
-        // time est le temps ecoule depuis le demarrage de l'application, en millisecondes,
-        // delta est le temps ecoule depuis l'affichage de la derniere image / le dernier appel a draw(), en millisecondes.
-        
-        m_model= RotationY(time / 20);
-        return 0;
-    }
-    
     // dessiner une nouvelle image
     int render( )
     {
@@ -186,9 +173,10 @@ public:
         glBindVertexArray(m_vao);
         glUseProgram(m_program);
 
+        Transform model= RotationY(global_time() / 20);
         Transform view= m_camera.view();
         Transform projection= m_camera.projection(window_width(), window_height(), 45);
-        Transform mv= view * m_model;
+        Transform mv= view * model;
         Transform mvp= projection * mv;
         
         program_uniform(m_program, "mvMatrix", mv);
@@ -197,6 +185,7 @@ public:
         
         program_use_texture(m_program, "diffuse_color", 0, m_texture, 0);
         
+        // selectionne le buffer comme storage buffer, numero 0
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_buffer);
         
         glDrawArrays(GL_TRIANGLES, 0, m_mesh.vertex_count());
@@ -206,7 +195,6 @@ public:
 
 protected:
     Mesh m_mesh;
-    Transform m_model;
     Orbiter m_camera;
 
     GLuint m_vao;

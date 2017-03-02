@@ -216,11 +216,15 @@ public:
     unsigned int mesh_material( const Material& m );
     //! ajoute un ensemble de description de matieres.
     void mesh_materials( const std::vector<Material>& m );
-
+    
     //! renvoie le nombre de matieres.
     int mesh_material_count( ) const;
     //! renvoie la description de matiere d'indice id.
     const Material& mesh_material( const unsigned int id ) const;
+    //! renvoie l'ensemble des matieres.
+    const std::vector<Material>& mesh_materials( ) const;
+    //! renvoie les indices des matieres des triangles.
+    const std::vector<unsigned int>& materials( ) const;
 
     //! definit la matiere du prochain triangle. id est l'indice d'une matiere ajoutee par mesh_material() ou mesh_materials( ). ne fonctionne que pour les primitives GL_TRIANGLES, indexees ou pas.
     Mesh& material( const unsigned int id );

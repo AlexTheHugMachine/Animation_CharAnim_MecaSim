@@ -78,11 +78,8 @@ int draw( )
         // deplace le point de rotation
         camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
     
-    //~ draw(objet, camera, texture);
-    DrawParam param;
-    param.alpha(0.5f);
-    param.camera(camera).texture(texture);
-    param.draw(objet);
+    // passer la texture en parametre 
+    draw(objet, camera, texture);
     return 1;
 }
 
@@ -90,6 +87,7 @@ int quit( )
 {
     // etape 3 : detruire la description de l'objet
     objet.release();
+    
     // et la texture
     glDeleteTextures(1, &texture);
 
@@ -102,12 +100,12 @@ int main( int argc, char **argv )
     // etape 1 : creer la fenetre
     Window window= create_window(1024, 640);
     if(window == NULL)
-        return 1;       // erreur lors de la creation de la fenetre ou de l'init de sdl2
+        return 1;
 
     // etape 2 : creer un contexte opengl pour pouvoir dessiner
     Context context= create_context(window);
     if(context == NULL)
-        return 1;       // erreur lors de la creation du contexte opengl
+        return 1;
 
     // etape 3 : creation des objets
     if(init() < 0)

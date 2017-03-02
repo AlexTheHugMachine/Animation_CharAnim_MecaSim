@@ -25,7 +25,10 @@ struct Point
     explicit Point( const vec3& v );   // l'implementation se trouve en fin de fichier, la structure vec3 n'est pas encore connue.
     //! cree un point a partir des coordonnes du vecteur (v.x, v.y, v.z).
     explicit Point( const Vector& v );   // l'implementation se trouve en fin de fichier, la structure vector n'est pas encore connue.
-
+    
+    //! renvoie la ieme composante du point.
+    float operator() ( const unsigned int i ) const; // l'implementation se trouve en fin de fichier
+    
     float x, y, z;
 };
 
@@ -50,7 +53,10 @@ struct Vector
     explicit Vector( const vec3& v );   // l'implementation se trouve en fin de fichier, la structure vec3 n'est pas encore connue.
     //! cree un vecteur a partir des coordonnes du vecteur (v.x, v.y, v.z).
     explicit Vector( const Point& a );   // l'implementation se trouve en fin de fichier.
-
+    
+    //! renvoie la ieme composante du vecteur.
+    float operator() ( const unsigned int i ) const; // l'implementation se trouve en fin de fichier
+    
     float x, y, z;
 };
 
@@ -86,6 +92,8 @@ Vector operator- ( const Vector& u, const Vector& v );
 Vector operator* ( const float k, const Vector& v );
 //! renvoie le vecteur k*v;
 Vector operator* ( const Vector& v, const float k );
+//! renvoie le vecteur (a.x*b.x, a.y*b.y, a.z*b.z ).
+Vector operator* ( const Vector& a, const Vector& b );
 //! renvoie le vecteur v/k;
 Vector operator/ ( const Vector& v, const float k );
 
@@ -149,6 +157,11 @@ inline vec3::vec3( const Vector& v ) : x(v.x), y(v.y), z(v.z) {}
 inline vec4::vec4( const Point& a ) : x(a.x), y(a.y), z(a.z), w(1.f) {}
 inline vec4::vec4( const Vector& v ) : x(v.x), y(v.y), z(v.z), w(0.f) {}
 
+//
+inline float Point::operator( ) ( const unsigned int i ) const { return (&x)[i]; }
+inline float Vector::operator( ) ( const unsigned int i ) const { return (&x)[i]; }
+
+//
 #include <iostream>
 
 inline std::ostream& operator<<(std::ostream& o, const Point& p)

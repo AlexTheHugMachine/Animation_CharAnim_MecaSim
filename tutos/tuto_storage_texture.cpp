@@ -1,7 +1,7 @@
 
 //! \file tuto_storage_texture.cpp  exemple direct d'utilisation d'une storage texture / image.  le fragment shader compte combien de fragments sont calcules par pixel.
 
-#include "app_time.h"        // classe Application a deriver
+#include "app_time.h"
 
 #include "vec.h"
 #include "mat.h"
@@ -35,8 +35,9 @@ public:
         glBindTexture(GL_TEXTURE_2D, m_texture);
         glTexImage2D(GL_TEXTURE_2D, 0,
             GL_R32UI, window_width(), window_height(), 0,
-            GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
+            GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);  // GL_RED_INTEGER, sinon normalisation implicite...
         
+        // pas la peine de construire les mipmaps / pas possible pour une texture int / uint
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
         
         // 
@@ -67,11 +68,7 @@ public:
     
     int update( const float time, const float delta )
     {
-        // modifier l'orientation du cube a chaque image. 
-        // time est le temps ecoule depuis le demarrage de l'application, en millisecondes,
-        // delta est le temps ecoule depuis l'affichage de la derniere image / le dernier appel a draw(), en millisecondes.
-        
-        m_model= RotationY(time / 20);
+
         return 0;
     }
     
@@ -80,7 +77,7 @@ public:
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // effacer la texture image, le sahder ajoute 1 a chaque fragment dessine...
+        // effacer la texture image / compteur, le shader ajoute 1 a chaque fragment dessine...
         GLuint zero= 0;
         glClearTexImage(m_texture, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &zero);
         
@@ -97,13 +94,15 @@ public:
         // passe 1 : compter le nombre de fragments par pixel
         glUseProgram(m_program);
         
+        Transform model= RotationY(global_time() / 20);
         Transform view= m_camera.view();
         Transform projection= m_camera.projection(window_width(), window_height(), 45);
-        Transform mv= view * m_model;
+        Transform mv= view * model;
         Transform mvp= projection * mv;
         
         program_uniform(m_program, "mvpMatrix", mvp);
         
+        // selectionne la texture sur l'unite image 0, operations atomiques / lecture + ecriture
         glBindImageTexture(0, m_texture, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
         program_uniform(m_program, "image", 0);
         
@@ -111,12 +110,13 @@ public:
         
         if(key_state(' ') == 0)
         {
-            // passe 2 : afficher le nombre de fragment par pixel
+            // passe 2 : afficher le compteur
             glUseProgram(m_program_display);
 
-            // attendre 
+            // attendre que les resultats de la passe 1 soit disponible
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
             
+            // RE-selectionne la texture sur l'unite image 0 / LECTURE SEULE
             glBindImageTexture(0, m_texture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_R32UI);
             program_uniform(m_program_display, "image", 0);
             
@@ -128,7 +128,6 @@ public:
 
 protected:
     Mesh m_mesh;
-    Transform m_model;
     Orbiter m_camera;
 
     GLuint m_program;

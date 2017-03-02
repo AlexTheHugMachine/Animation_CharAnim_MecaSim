@@ -194,6 +194,16 @@ const Material &Mesh::triangle_material( const unsigned int id ) const
     return m_materials[m_triangle_materials[id]];
 }
 
+const std::vector<Material>& Mesh::mesh_materials( ) const
+{
+    return m_materials;
+}
+
+const std::vector<unsigned int>& Mesh::materials( ) const
+{
+    return m_triangle_materials;
+}
+
 int Mesh::triangle_count( ) const
 {
     if(m_primitives != GL_TRIANGLES)
@@ -455,7 +465,7 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     program_uniform(m_program, "mesh_color", default_color());
 
     Transform mv= view * model;
-    Transform mvp= projection * view * model;
+    Transform mvp= projection * mv;
 
     program_uniform(m_program, "mvpMatrix", mvp);
     program_uniform(m_program, "mvMatrix", mv);

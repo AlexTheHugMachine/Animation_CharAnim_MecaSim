@@ -26,7 +26,7 @@ int init( )
     triangle.vertex(-0.5, -0.5, 0);
     triangle.vertex( 0.5,  0.5, 0);
     triangle.vertex(-0.5,  0.5, 0);
-
+    
     return 0;   // ras, pas d'erreur
 
 // on peut aussi donner des couleurs differentes aux sommets du triangle :

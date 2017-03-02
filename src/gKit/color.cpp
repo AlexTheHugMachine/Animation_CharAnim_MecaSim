@@ -1,6 +1,10 @@
 
 #include "color.h"
 
+float Color::power( ) const
+{
+    return r+g+b;
+}
 
 Color Black( )
 {

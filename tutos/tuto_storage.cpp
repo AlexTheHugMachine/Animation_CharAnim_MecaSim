@@ -1,5 +1,5 @@
 
-//! \file tuto_storage.cpp utilisation de storage buffers.
+//! \file tuto_storage.cpp alignement des donnees / storage buffers.
 
 #include <cstddef>
 #include <cassert>
@@ -14,17 +14,12 @@
 
 namespace glsl 
 {
-#ifdef _MSC_VER   // visual studio >= 2012 necessaire
-# define ALIGN(...) __declspec(align(__VA_ARGS__))
-
-#else   // gcc, clang, icc
-# define ALIGN(...) __attribute__((aligned(__VA_ARGS__)))
-#endif
-
     template < typename T >
-    struct ALIGN(8) gvec2
+    struct alignas(8) gvec2
     {
-        ALIGN(4) T x, y;
+        alignas(4) T x, y;
+        
+        gvec2( ) {}
         gvec2( const vec2& v ) : x(v.x), y(v.y) {}
     };
     
@@ -34,10 +29,11 @@ namespace glsl
     typedef gvec2<int> bvec2;
     
     template < typename T >
-    struct ALIGN(16) gvec3
+    struct alignas(16) gvec3
     {
-        ALIGN(4) T x, y, z;
+        alignas(4) T x, y, z;
         
+        gvec3( ) {}
         gvec3( const vec3& v ) : x(v.x), y(v.y), z(v.z) {}
         gvec3( const Point& v ) : x(v.x), y(v.y), z(v.z) {}
         gvec3( const Vector& v ) : x(v.x), y(v.y), z(v.z) {}
@@ -49,10 +45,11 @@ namespace glsl
     typedef gvec3<int> bvec3;
     
     template < typename T >
-    struct ALIGN(16) gvec4
+    struct alignas(16) gvec4
     {
-        ALIGN(4) T x, y, z, w;
+        alignas(4) T x, y, z, w;
         
+        gvec4( ) {}
         gvec4( const vec4& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
     };
     
@@ -60,8 +57,6 @@ namespace glsl
     typedef gvec4<int> ivec4;
     typedef gvec4<unsigned int> uvec4;
     typedef gvec4<int> bvec4;
-    
-#undef ALIGN
 }
 
 
@@ -135,12 +130,14 @@ int print_storage( const GLuint program )
             glGetProgramResourceiv(program, GL_SHADER_STORAGE_BLOCK, i, 1, prop, variable_count, NULL, variables.data());
         }
         
-        for(int k= 0; k < vcount; k++)
+        for(int k= 0; k < variable_count; k++)
         {
             // organisation des variables dans le buffer
             GLenum props[]= { GL_OFFSET, GL_TYPE, GL_ARRAY_SIZE, GL_ARRAY_STRIDE, GL_MATRIX_STRIDE, GL_IS_ROW_MAJOR, GL_TOP_LEVEL_ARRAY_STRIDE };
-            GLint params[sizeof(props) / sizeof(GLenum)];
-            glGetProgramResourceiv(program, GL_BUFFER_VARIABLE, variables[k], sizeof(props) / sizeof(GLenum), props, sizeof(props) / sizeof(GLenum), NULL, params);
+            const int size= sizeof(props) / sizeof(GLenum);
+            
+            GLint params[size];
+            glGetProgramResourceiv(program, GL_BUFFER_VARIABLE, variables[k], size, props, size, NULL, params);
             
             // nom de la variable
             char vname[1024]= { 0 };
@@ -148,7 +145,9 @@ int print_storage( const GLuint program )
             
             printf("    '%s %s': offset %d", glsl_string(params[1]), vname, params[0]);
             if(params[2] > 1)
-                printf(", array size %d, stride %d", params[2], params[3]);
+                printf(", array size %d", params[2]);
+            
+            printf(", stride %d", params[3]);
             
             // organisation des matrices
             if(params[1] == GL_FLOAT_MAT4 || params[1] == GL_FLOAT_MAT3) 
@@ -177,16 +176,18 @@ int init( )
     struct TriangleCPU
     {
         vec3 a;
-        vec3 ab;
-        vec3 ac;
+        vec3 b;
+        vec3 c;
     };
     
-    printf("a %d\n", (int) offsetof(TriangleCPU, a));
-    printf("a.x %d\n", (int) offsetof(TriangleCPU, a.x));
-    printf("a.y %d\n", (int) offsetof(TriangleCPU, a.y));
-    printf("a.z %d\n", (int) offsetof(TriangleCPU, a.z));
-    printf("ab %d\n", (int) offsetof(TriangleCPU, ab));
-    printf("ac %d\n", (int) offsetof(TriangleCPU, ac));
+    printf("cpu:\n");
+    printf("  a %d\n", (int) offsetof(TriangleCPU, a));
+    printf("    a.x %d\n", (int) offsetof(TriangleCPU, a.x));
+    printf("    a.y %d\n", (int) offsetof(TriangleCPU, a.y));
+    printf("    a.z %d\n", (int) offsetof(TriangleCPU, a.z));
+    printf("  b %d\n", (int) offsetof(TriangleCPU, b));
+    printf("  c %d\n", (int) offsetof(TriangleCPU, c));
+    printf("= %dB\n", (int) sizeof(TriangleCPU));
 
     
     struct TriangleGLSL
@@ -199,16 +200,14 @@ int init( )
         TriangleGLSL( const vec3& _a, const vec3& _b, const vec3& _c ) : a(_a), b(_b), c(_c) {}
     };
     
-    printf("a %d\n", (int) offsetof(TriangleGLSL, a));
-    printf("a.x %d\n", (int) offsetof(TriangleGLSL, a.x));
-    printf("a.y %d\n", (int) offsetof(TriangleGLSL, a.y));
-    printf("a.z %d\n", (int) offsetof(TriangleGLSL, a.z));
-    printf("b %d\n", (int) offsetof(TriangleGLSL, b));
-    printf("c %d\n", (int) offsetof(TriangleGLSL, c));    
-    
-    std::vector<TriangleGLSL> triangles;
-    
-    triangles.push_back( TriangleGLSL(Point(), Point(), Point())  );
+    printf("glsl:\n");
+    printf("  a %d\n", (int) offsetof(TriangleGLSL, a));
+    printf("    a.x %d\n", (int) offsetof(TriangleGLSL, a.x));
+    printf("    a.y %d\n", (int) offsetof(TriangleGLSL, a.y));
+    printf("    a.z %d\n", (int) offsetof(TriangleGLSL, a.z));
+    printf("  b %d\n", (int) offsetof(TriangleGLSL, b));
+    printf("  c %d\n", (int) offsetof(TriangleGLSL, c));    
+    printf("= %dB\n", (int) sizeof(TriangleGLSL));
     
     return 0;
 }

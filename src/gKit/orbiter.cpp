@@ -101,7 +101,7 @@ int Orbiter::read_orbiter( const char *filename )
         errors= true;
     if(fscanf(in, "r %f %f\n", &m_rotation.x, &m_rotation.y) != 2)
         errors= true;
-    if(fscanf(in, "s %f\n", &m_size) != 1)
+    if(fscanf(in, "s %f %f\n", &m_size, &m_radius) != 2)
         errors= true;
     
     fclose(in);
@@ -125,7 +125,7 @@ int Orbiter::write_orbiter( const char *filename )
     fprintf(out, "c %f %f %f\n", m_center.x, m_center.y, m_center.z);
     fprintf(out, "p %f %f\n", m_position.x, m_position.y);
     fprintf(out, "r %f %f\n", m_rotation.x, m_rotation.y);
-    fprintf(out, "s %f\n", m_size);
+    fprintf(out, "s %f %f\n", m_size, m_radius);
     
     fclose(out);
     return 0;

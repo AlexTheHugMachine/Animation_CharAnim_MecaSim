@@ -115,6 +115,7 @@ tutos = {
 	"tuto6",
 	"tuto7",
 	"tuto8",
+	"tuto9",
 	
 	"tuto_transform",
 	"tuto_pad",
@@ -131,6 +132,10 @@ tutos = {
 	"tuto6GL",
 	"tuto6GL_buffer",
 	"tuto_framebuffer",
+	"tuto_storage",
+	"tuto_storage_buffer",
+	"tuto_storage_texture",
+	"min_data",
 	
 --~ 	"ray_tuto1",
 --~ 	"ray_tuto2",
@@ -153,7 +158,10 @@ end
 -- description des tutos openGL avances / M2
 tutosM2 = {
 	"tuto_time",
-	"tuto_mdi"
+	"tuto_mdi",
+	"tuto_is",
+	"tuto_raytrace_fragment",
+	"tuto_nscompute"
 }
 
 for i, name in ipairs(tutosM2) do

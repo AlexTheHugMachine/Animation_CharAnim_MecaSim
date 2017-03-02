@@ -15,7 +15,7 @@ layout(binding= 1, std430) coherent buffer tmpData
 
 uniform uint N;
 
-#if 0
+#if 1
 shared int min_group;
 
 layout(local_size_x= 1024) in;
@@ -24,9 +24,10 @@ void main( )
 	uint id= gl_GlobalInvocationID.x;
 	
 	if(gl_LocalInvocationID.x == 0)
-		min_group= 1000000;
+		min_group= 1000000;	// max int
 	
 	barrier();
+	memoryBarrierShared();
 	
 	if(id < N)
 		atomicMin(min_group, data[id]);
