@@ -16,7 +16,7 @@
 @{
 */
 
-namespace simea {
+namespace chara {
 
 	class BVHJoint;
 
@@ -25,7 +25,7 @@ namespace simea {
 	*/
 	class BVH
 	{
-		friend class simea::BVHJoint;
+		friend class chara::BVHJoint;
 	public:
 		//! Default constructor
 		BVH();
@@ -42,22 +42,22 @@ namespace simea {
 		float getFrameTime(void) const		{ return m_frameTime;  }
 
 		//! Return the root joint
-		const simea::BVHJoint& getRoot(void) const;
+		const chara::BVHJoint& getRoot(void) const;
 		//! Return the root joint Id
 		int getRootId(void) const { return m_rootId; }
 
 		//! Return the number of joint
 		int getNumberOfJoint(void) const	{ return (int)m_joints.size(); }
 		//! Return the i-th joint
-		simea::BVHJoint& getJoint(int i) { assert(i >= 0); assert(i < (int)m_joints.size()); return m_joints[i]; }
+		chara::BVHJoint& getJoint(int i) { assert(i >= 0); assert(i < (int)m_joints.size()); return m_joints[i]; }
 		//! Return the i-th joint
-		const simea::BVHJoint& getJoint(int i) const  { assert(i >= 0); assert(i < (int)m_joints.size()); return m_joints[i]; }
+		const chara::BVHJoint& getJoint(int i) const  { assert(i >= 0); assert(i < (int)m_joints.size()); return m_joints[i]; }
 		//! Return a joint Id fro mhis name, -& if the joint does not exist
 		int getJointId(const std::string& name) const;
 		//! Return the i-th joint
-		simea::BVHJoint& operator[](int i) { return getJoint(i); }
+		chara::BVHJoint& operator[](int i) { return getJoint(i); }
 		//! Return the i-th joint
-		const simea::BVHJoint& operator[](int i) const { return getJoint(i); }
+		const chara::BVHJoint& operator[](int i) const { return getJoint(i); }
 		//! create and add a joint, return the joint Id of the created joint
 		int addJoint(const std::string& name, int parentId);
 
@@ -68,7 +68,7 @@ namespace simea {
 		//! Scaling the skeleton
 		void scaleSkeleton(float factor);
 		//! Rotate the BVH
-		void rotate90(simea::AXIS axis, bool cw);
+		void rotate90(chara::AXIS axis, bool cw);
 		//! Edit the animation in a multi resolution way
 		void multiResEditAnimation(const std::vector<float>& coef);
 
@@ -82,10 +82,10 @@ namespace simea {
 		float m_frameTime;
 
 		//! Vector of joint
-		std::vector<simea::BVHJoint> m_joints;
+		std::vector<chara::BVHJoint> m_joints;
 
 		//! Root Joint
-		//simea::BVHJoint* m_root;
+		//chara::BVHJoint* m_root;
 		int m_rootId;
 
 

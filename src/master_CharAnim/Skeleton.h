@@ -18,23 +18,23 @@ public:
 
    //! Créer un squelette ayant la même structure que définit dans le BVH c'est à dire
    //! creer le tableau de SkeletonJoint à la bonne taille, avec les parentId initialsé pour chaque case
-   void init(const simea::BVH& bvh);
+   void init(const chara::BVH& bvh);
 
    //! Renvoie la position de l'articulation i en multipliant le m_l2w par le Point(0,0,0)
    Vector getJointPosition(int i) const;
 
   //! Renvoie l'identifiant de l'articulation père de l'articulation numéro i
    int getParentId(const int i) const;
-   
+
    //! Renvoie le nombre d'articulation
    int numberOfJoint() const { return (int)m_joints.size();  }
 
-   //! Positionne ce squelette dans la position n du BVH. 
+   //! Positionne ce squelette dans la position n du BVH.
    //! Assez proche de la fonction récursive (question 1), mais range la matrice (Transform)
    //! dans la case du tableau. Pour obtenir la matrice allant de l'articulation local vers le monde,
    //! il faut multiplier la matrice allant de l'articulation vers son père à la matrice du père allant de
    //! l'articulation du père vers le monde.
-   void setPose(const simea::BVH& bvh, int frameNumber);
+   void setPose(const chara::BVH& bvh, int frameNumber);
 
 
    //! Positionne ce squelette entre la position frameNbSrc du BVH Src et la position frameNbDst du bvh Dst
@@ -45,9 +45,9 @@ public:
    //void setPoseInterpolationQ(const BVH& bvhSrc, int frameNbSrc, const BVH& bvhDst, int frameNbDst, float t);
 
 
-   
+
    //! Calcule la distance entre deux poses
-   //! precond: les deux squelettes doivent avoir le 
+   //! precond: les deux squelettes doivent avoir le
    //! même nombre d'articulations (même structure d'arbre)
    //! ==> Sera utile lors de la construction du graphe d'animation
    // friend float distance(const CASkeleton& a, const CASkeleton& b);

@@ -3,7 +3,7 @@
 #include <iostream>
 
 using namespace std;
-namespace simea {
+namespace chara {
 
 
 //=============================================================================
@@ -14,7 +14,7 @@ BVH::BVH()
 {
 }
 
-const simea::BVHJoint& BVH::getRoot(void) const { assert(m_rootId >= 0); assert(m_rootId < m_joints.size()); return m_joints[m_rootId]; }
+const chara::BVHJoint& BVH::getRoot(void) const { assert(m_rootId >= 0); assert(m_rootId < m_joints.size()); return m_joints[m_rootId]; }
 
 
 //-----------------------------------------------------------------------------
@@ -173,7 +173,7 @@ void BVH::scaleSkeleton(float factor)
         getJoint(i).scale(factor);
 }
 //----------------------------------------------------------------------------
-void BVH::rotate90(simea::AXIS axis, bool cw)
+void BVH::rotate90(chara::AXIS axis, bool cw)
 {
     for(int i=0; i<getNumberOfJoint(); ++i)
         getJoint(i).rotate90(axis, cw);

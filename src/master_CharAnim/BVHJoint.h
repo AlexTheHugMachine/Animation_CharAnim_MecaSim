@@ -16,7 +16,7 @@
 	@{
 */
 
-namespace simea {
+namespace chara {
 
 	class BVH;
 
@@ -27,7 +27,7 @@ namespace simea {
 */
 class BVHJoint
 {
-	friend class simea::BVH;
+	friend class chara::BVH;
 public:
 	//! @brief Constructor
 	BVHJoint(const std::string& name, int parent, BVH& bvh, int id);
@@ -50,23 +50,23 @@ public:
 	//! Return the number of channels in the Joint
 	int getNumberOfChannel(void) const { return (int)m_channels.size();  }
 	//! Return the i-th channel of the Joint
-	const simea::BVHChannel& getChannel(int i) const  { assert(i >= 0); assert(i < (int)m_channels.size()); return m_channels[i]; }
+	const chara::BVHChannel& getChannel(int i) const  { assert(i >= 0); assert(i < (int)m_channels.size()); return m_channels[i]; }
 
 	//! Return the i-th channel of the Joint
-	simea::BVHChannel& getChannel(int i) { assert(i >= 0); assert(i < (int)m_channels.size()); return m_channels[i]; }
+	chara::BVHChannel& getChannel(int i) { assert(i >= 0); assert(i < (int)m_channels.size()); return m_channels[i]; }
 	//! modify the i-th channel of the Joint
-	void setChannel(int i, const simea::BVHChannel& channel);
+	void setChannel(int i, const chara::BVHChannel& channel);
 	//! Add channel
-	void addChannel(const simea::BVHChannel& channel)	{ m_channels.push_back(channel);  }
+	void addChannel(const chara::BVHChannel& channel)	{ m_channels.push_back(channel);  }
 	//! Remove channel
-	void removeChannel(const simea::BVHChannel& channel);
+	void removeChannel(const chara::BVHChannel& channel);
 	//! Remove channel
 	void removeChannel(int i);
 
 	//! Return the number of child
 	int getNumberOfChildren(void) const		{ return (int)m_childs.size();  }
 	//! Return a child
-	const simea::BVHJoint& getChild(int i) const;
+	const chara::BVHJoint& getChild(int i) const;
 	//! Return the i-th child Id in the vector<Joint> store in the BVH
 	int getChildId(int i) const 	{ assert(i >= 0); assert(i < (int)m_childs.size()); return m_childs[i]; }
 	//! Add child
@@ -83,7 +83,7 @@ public:
 	void setParentId(int parent);
 
 	//! Return the bvh
-	const simea::BVH& getBVH(void) const;
+	const chara::BVH& getBVH(void) const;
 
 	//! Scaling the joint
 	void scale(float factor);
@@ -105,7 +105,7 @@ protected:
 	int m_parentId;
 
 	//! The BVH
-	simea::BVH& m_bvh;
+	chara::BVH& m_bvh;
 
 	//! Id in the vector<joint> of BVH
 	int m_id;
@@ -114,7 +114,7 @@ protected:
 	float m_offset[3];
 
 	//! Channels
-	std::vector<simea::BVHChannel> m_channels;
+	std::vector<chara::BVHChannel> m_channels;
 
 	//! Childs
 	std::vector<int> m_childs;

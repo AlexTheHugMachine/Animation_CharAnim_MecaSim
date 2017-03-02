@@ -46,7 +46,7 @@ int ViewerBasic::init()
         glEnable(GL_CULL_FACE);
     else
         glDisable(GL_CULL_FACE);        // good for debug
-    glEnable(GL_TEXTURE_2D);
+    //glEnable(GL_TEXTURE_2D);
 
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -157,7 +157,6 @@ void ViewerBasic::init_quad()
 }
 
 
-
 int ViewerBasic::render( )
 {
     // Efface l'ecran
@@ -172,8 +171,6 @@ int ViewerBasic::render( )
 
     return 1;
 }
-
-
 
 
 void ViewerBasic::draw_axe(const Transform& T)
@@ -196,7 +193,7 @@ void ViewerBasic::draw_grid(const Transform& T)
 
 void ViewerBasic::draw_cube(const Transform& T)
 {
-	gl.lighting(false);
+	gl.lighting(true);
 	gl.texture(0);
 	gl.model(T);
 	gl.draw(m_cube);
@@ -204,7 +201,7 @@ void ViewerBasic::draw_cube(const Transform& T)
 
 void ViewerBasic::draw_quad(const Transform& T)
 {
-	gl.lighting(false);
+	gl.lighting(true);
 	gl.texture(0);
 	gl.model(T);
 	gl.draw(m_quad);

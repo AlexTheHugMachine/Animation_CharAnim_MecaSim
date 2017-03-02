@@ -1,7 +1,7 @@
 
 #include "Skeleton.h"
 
-using namespace simea;
+using namespace chara;
 
 void Skeleton::init(const BVH& bvh)
 {

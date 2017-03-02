@@ -5,14 +5,14 @@
     @{
 */
 
-namespace simea {
+namespace chara {
 
 
 //! Axis
 enum AXIS
 {
     AXIS_X=0,
-    AXIS_Y, 
+    AXIS_Y,
     AXIS_Z,
 	AXIS_W,
 };

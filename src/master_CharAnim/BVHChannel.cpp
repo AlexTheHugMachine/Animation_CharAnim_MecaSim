@@ -5,7 +5,7 @@
 using namespace std;
 
 
-namespace simea {
+namespace chara {
 
 //=============================================================================
 BVHChannel::BVHChannel(BVHChannel::TYPE type, AXIS axis)

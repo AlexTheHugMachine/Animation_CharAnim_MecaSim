@@ -2,7 +2,7 @@
 #include <BVH.h>
 #include <iostream>
 using namespace std;
-namespace simea {
+namespace chara {
 
 
 //=============================================================================
@@ -28,7 +28,7 @@ void BVHJoint::removeChannel(const BVHChannel& channel)
 
 }
 
-const simea::BVHJoint& BVHJoint::getChild(int i) const { return m_bvh[getChildId(i)]; }
+const chara::BVHJoint& BVHJoint::getChild(int i) const { return m_bvh[getChildId(i)]; }
 void BVHJoint::addChild(int i) { assert(i >= 0); assert(i < m_bvh.getNumberOfJoint()); m_childs.push_back(i); }
 const BVHJoint& BVHJoint::getParent(void) const { assert(m_parentId >= 0); assert(m_parentId < m_bvh.getNumberOfJoint()); return m_bvh[m_parentId]; }
 void BVHJoint::setParentId(int parent) { assert(parent >= 0); assert(parent < m_bvh.getNumberOfJoint()); m_parentId = parent; }

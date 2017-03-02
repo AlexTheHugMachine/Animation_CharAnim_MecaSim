@@ -7,6 +7,7 @@
 #include "CharAnimViewer.h"
 
 using namespace std;
+using namespace chara;
 
 
 CharAnimViewer::CharAnimViewer() : Viewer(), m_frameNumber(0)
@@ -18,7 +19,13 @@ int CharAnimViewer::init()
 {
     Viewer::init();
     cout<<"==>master_CharAnim/CharAnimViewer"<<endl;
-    m_camera.lookat( Point(0,0,0), 50 );
+    m_camera.lookat( Point(0,0,0), 500 );
+    gl.light( Point(300, 300, 300 ) );
+
+    //b_draw_grid = false;
+
+    m_part.resize( 10 );
+
 
     init_cylinder();
     init_sphere();
@@ -33,19 +40,6 @@ int CharAnimViewer::init()
     cout<<m_bvh<<endl;
     cout<<endl<<"========================"<<endl;
 
-
-    m_angle_a=0;
-    m_angle_b=40;
-    m_angle_milieu_ab = (m_angle_a+m_angle_b)/2;
-
-
-    m_quat_a.setAxisAngleDegree(Vector(0,0,1),90);
-    Transform R;
-    m_quat_a.getMatrix44(R);
-    cout<<R<<endl;
-
-    R =RotationZ(90);
-    cout<<R<<endl;
     return 0;
 }
 
@@ -71,24 +65,14 @@ int CharAnimViewer::render()
 
     gl.camera(m_camera);
 
+
+    draw_quad( RotationX(-90)*Scale(500,500,1) );
+
 	// Affiche une pose du bvh
 	bvhDrawGL(m_bvh, m_frameNumber);
 
 
-	// affiche 3 cylindres dont l'angle est interpole
-    draw_cylinder( Translation(5,0,0)*RotationZ(m_angle_a)*Scale(0.1,2,0.1) );
-    draw_cylinder( Translation(5,0,0)*RotationZ(m_angle_b)*Scale(0.1,2,0.1) );
-    draw_cylinder( Translation(5,0,0)*RotationZ(m_angle_milieu_ab)*Scale(0.1,2,0.1) );
-
-	// affiche 3 cylindres dont le quaternion est interpole
-    Transform R;
-    m_quat_a.getMatrix44(R);
-    draw_cylinder( Translation(-5,0,0)*R*Scale(0.1,2,0.1) );
-    m_quat_b.getMatrix44(R);
-    draw_cylinder( Translation(-5,0,0)*R*Scale(0.1,2,0.1) );
-    m_quat_milieu_ab.getMatrix44(R);
-    draw_cylinder( Translation(-5,0,0)*R*Scale(0.1,2,0.1) );
-
+    draw_particles();
 
     return 1;
 }
@@ -102,16 +86,18 @@ int CharAnimViewer::update( const float time, const float delta )
 	if (key_state('n')) { m_frameNumber++; cout << m_frameNumber << endl; }
 	if (key_state('b')) { m_frameNumber--; cout << m_frameNumber << endl; }
 
-
-    m_angle_a = int(0.1*time)%360;
-    m_angle_b = int(0.1*time+40)%360;
-    m_angle_milieu_ab = (m_angle_a+m_angle_b)/2;
-
-    Vector Z(0,0,1);
-    m_quat_a.setAxisAngleDegree(Z,m_angle_a); //m_quat_a.invert();
-    m_quat_b.setAxisAngleDegree(Z,m_angle_b); //m_quat_b.invert();
-    m_quat_milieu_ab = Quaternion::slerp( m_quat_a, m_quat_b, 0.5);
+    m_part.update(0.1f);
 
     return 0;
 }
 
+
+
+void CharAnimViewer::draw_particles()
+{
+        int i;
+        for(i=0;i<m_part.size();++i)
+        {
+            draw_sphere( m_part[i].position(), m_part[i].radius() );
+        }
+}

@@ -8,7 +8,7 @@
 	@{
 */
 
-namespace simea {
+namespace chara {
 
 
 /** @brief Motion capture bone dof evolution
