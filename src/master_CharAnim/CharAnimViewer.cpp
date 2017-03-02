@@ -32,7 +32,8 @@ int CharAnimViewer::init()
 
 
     //m_bvh.init("data/bvh/Robot.bvh" );
-	m_bvh.init("data/bvh/danse.bvh");
+	//system("pwd");
+	m_bvh.init( smart_path("data/bvh/danse.bvh") );
 
     m_frameNumber = 0;
     cout<<endl<<"========================"<<endl;
@@ -65,14 +66,13 @@ int CharAnimViewer::render()
 
     gl.camera(m_camera);
 
-
+    draw_particles();
     draw_quad( RotationX(-90)*Scale(500,500,1) );
 
 	// Affiche une pose du bvh
 	bvhDrawGL(m_bvh, m_frameNumber);
 
 
-    draw_particles();
 
     return 1;
 }

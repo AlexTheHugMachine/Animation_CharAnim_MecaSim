@@ -35,8 +35,10 @@ public:
     {
         m = 1.0;      // 1kg
 
+		r = 3 + rand() % 5;
+
         p.x = rand()%400 - 200;
-        p.y = rand()%200 - 100;
+        p.y = r + 5 +rand()%100;
         p.z = rand()%400 - 200;
 
         r = 3+rand()%5;
@@ -59,7 +61,7 @@ public:
         {
             p.y = r + (r-p.y);
             v.y = -v.y;
-            v = 0.8f * v;       // FRICTION = 0.8
+            v = 0.99f * v;       // FRICTION = 0.8
         }
     }
 
@@ -95,7 +97,7 @@ public:
 
     const Particle& operator[](int i) const { return m_part[i]; }
 
-    int size() const { return m_part.size(); }
+    std::size_t size() const { return m_part.size(); }
     void resize(int ns) { m_part.resize(ns); }
 
     void update(const float dt)

@@ -4,7 +4,7 @@ using namespace std;
 
 
 
-
+#ifndef NO_MAIN
 
 
 int main( int argc, char **argv )
@@ -13,3 +13,5 @@ int main( int argc, char **argv )
     v.run();
     return 0;
 }
+
+#endif
