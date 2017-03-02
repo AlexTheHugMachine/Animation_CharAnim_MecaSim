@@ -48,8 +48,8 @@ int ViewerBasic::init()
         glDisable(GL_CULL_FACE);        // good for debug
     //glEnable(GL_TEXTURE_2D);
 
-    glEnable (GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glEnable (GL_BLEND);
+    //glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
     m_camera.lookat( Point(0,0,0), 30 );
