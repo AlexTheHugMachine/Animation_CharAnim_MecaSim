@@ -93,9 +93,10 @@ int CharAnimViewer::update( const float time, const float delta )
 
 void CharAnimViewer::draw_particles()
 {
-        int i;
-        for(i=0;i<m_part.size();++i)
-        {
-            draw_sphere( m_part[i].position(), m_part[i].radius() );
-        }
+    int i;
+    for(i=0;i<m_part.size();++i)
+    {
+		if (m_part[i].radius()>0)
+			draw_sphere( m_part[i].position(), m_part[i].radius() );
+    }
 }

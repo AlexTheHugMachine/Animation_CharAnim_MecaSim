@@ -33,59 +33,77 @@ public:
 
     Particle()
     {
-        m = 1.0;      // 1kg
+        m_mass = 1.0;      // 1kg
 
-		r = 3 + rand() % 5;
+		m_radius = 10 + rand() % 5;
 
-        p.x = rand()%400 - 200;
-        p.y = r + 5 +rand()%100;
-        p.z = rand()%400 - 200;
+        m_p.x = rand()%400 - 200;
+        m_p.y = m_radius + 5 +rand()%100;
+        m_p.z = rand()%400 - 200;
 
-        r = 3+rand()%5;
     }
 
     void update(const float dt=0.1f)		// advect
     {
-        //const float dt = 0.1;
-        if (m>0)
+        if (m_mass>0)
         {
-            v = v + (dt/m)*f;     // mise à jour de la vitesse
-            p = p + dt*v;                   // mise à jour de la position
-            f = Vector(0,0,0);
+            m_v = m_v + (dt/m_mass)*m_f;     // mise à jour de la vitesse
+            m_p = m_p + dt*m_v;                   // mise à jour de la position
+            m_f = Vector(0,0,0);
         }
     }
 
+	//! Collision with the ground
     void collision()
     {
-        if (p.y < r)
+		if (m_radius < 0) return;
+        if (m_p.y < m_radius)
         {
-            p.y = r + (r-p.y);
-            v.y = -v.y;
-            v = 0.99f * v;       // FRICTION = 0.8
+            m_p.y = m_radius + (m_radius-m_p.y);
+            m_v.y = -m_v.y;
+            m_v = 0.99f * m_v;       // FRICTION = 0.8
         }
     }
 
+	//! Collision with any other sphere of position p and radius 'radius'
+	void collision(const Point& p, const float radius)
+	{
+		if (m_radius < 0) return;
+		if (distance(m_p, p) < m_radius + radius)
+		{
+			//std::cout << "col" << std::endl;
+			//m_radius = -1;
+			float inside = m_radius+radius - distance(m_p, p);
+			Vector dir = normalize( m_p - p);
+			Point old_p = m_p;
+			m_p = m_p + inside * dir;
+			m_v = (m_p-old_p)/0.1f;
+			//m_v = 0.99f * m_v;       // FRICTION = 0.8
+			//m_v = 0.f;
+		}
+	}
 
+	//! Apply gravity
     void computeParticleForceGravityEarth()
     {
-        f = f + Vector(0, -m * 9.81f, 0);
+        m_f = m_f + Vector(0, -m_mass * 9.81f, 0);
     }
 
-    const Point& position() const { return p;}
-    float radius() const { return r;}
+    const Point& position() const { return m_p;}
+    float radius() const { return m_radius;}
 
     friend std::ostream& operator<<(std::ostream& o, const Particle& p)
     {
-        o<<" p=("<<p.p.x<<","<<p.p.y<<") v=("<<p.v.x<<","<<p.p.y<<") m="<<p.m<<std::endl;
+        o<<" p=("<<p.m_p.x<<","<<p.m_p.y<<") v=("<<p.m_v.x<<","<<p.m_p.y<<") m="<<p.m_mass<<std::endl;
         return o;
     }
 
 protected:
-    Point p;         // position(p.x, p.y)
-    float r;
-    Vector v;         // vitesse en m/s (v.x,v.y)
-    Vector f;         // force en N (f.x, f.y)
-    float m;        // masse en kg
+    Point m_p;				//!< position
+    float m_radius;			//!< radius
+    Vector m_v;				//!< velocity m/s
+    Vector m_f;				//!< force in N
+    float m_mass;			//!< mass in kg
 };
 
 
@@ -96,6 +114,7 @@ public:
     Particles(int n=0) : m_part(n) {}
 
     const Particle& operator[](int i) const { return m_part[i]; }
+	Particle& operator[](int i)  { return m_part[i]; }
 
     std::size_t size() const { return m_part.size(); }
     void resize(int ns) { m_part.resize(ns); }
