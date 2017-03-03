@@ -9,10 +9,10 @@ void Skeleton::init(const BVH& bvh)
 }
 
 
-Vector Skeleton::getJointPosition(int i) const
+Point Skeleton::getJointPosition(int i) const
 {
 	// TODO
-	return Vector(0, 0, 0);
+	return Point(0, 0, 0);
 }
 
 

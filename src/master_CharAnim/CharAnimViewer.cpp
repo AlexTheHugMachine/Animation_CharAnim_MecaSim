@@ -24,7 +24,7 @@ int CharAnimViewer::init()
 
     //b_draw_grid = false;
 
-    m_part.resize( 10 );
+    //m_part.resize( 10 );
 
 
     init_cylinder();
@@ -32,7 +32,6 @@ int CharAnimViewer::init()
 
 
     //m_bvh.init("data/bvh/Robot.bvh" );
-	//system("pwd");
 	m_bvh.init( smart_path("data/bvh/danse.bvh") );
 
     m_frameNumber = 0;
@@ -41,21 +40,19 @@ int CharAnimViewer::init()
     cout<<m_bvh<<endl;
     cout<<endl<<"========================"<<endl;
 
+    m_ske.init( m_bvh );
+    m_ske.setPose( m_bvh, -1);// met le skeleton a la pose au repos
+
     return 0;
 }
 
 
 
-void CharAnimViewer::bvhDrawGL(const BVH&, int frameNumber)
+void CharAnimViewer::draw_skeleton(const Skeleton& )
 {
-	// TODO
+    // TODO
 }
 
-
-void CharAnimViewer::bvhDrawGLRec(const BVHJoint&, int frameNumber, Transform& T) // la fonction récursive sur le squelette
-{
-	// TODO
-}
 
 
 int CharAnimViewer::render()
@@ -69,9 +66,8 @@ int CharAnimViewer::render()
     draw_particles();
     draw_quad( RotationX(-90)*Scale(500,500,1) );
 
-	// Affiche une pose du bvh
-	bvhDrawGL(m_bvh, m_frameNumber);
-
+	// Affiche le skeleton
+    draw_skeleton( m_ske );
 
 
     return 1;
@@ -85,6 +81,8 @@ int CharAnimViewer::update( const float time, const float delta )
 
 	if (key_state('n')) { m_frameNumber++; cout << m_frameNumber << endl; }
 	if (key_state('b')) { m_frameNumber--; cout << m_frameNumber << endl; }
+
+	m_ske.setPose( m_bvh, m_frameNumber );
 
     m_part.update(0.1f);
 

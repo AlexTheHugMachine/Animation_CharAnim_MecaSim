@@ -6,7 +6,6 @@
 #include "quaternion.h"
 #include "Viewer.h"
 #include "BVH.h"
-//using namespace chara;		// oui oui c'est moche, à ne pas faire dans la vraie vie
 #include "Skeleton.h"
 #include "TransformQ.h"
 
@@ -27,10 +26,11 @@ protected:
     chara::BVH m_bvh;
     int m_frameNumber;
 
+    Skeleton m_ske;
+
     Particles m_part;
 
-	void bvhDrawGL(const chara::BVH&, int frameNumber);
-	void bvhDrawGLRec(const chara::BVHJoint&, int frameNumber, Transform& T); // la fonction récursive sur le squelette
+	void draw_skeleton(const Skeleton& );
 	void draw_particles();
 };
 
