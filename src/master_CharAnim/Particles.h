@@ -47,8 +47,8 @@ public:
     {
         if (m_mass>0)
         {
-            m_v = m_v + (dt/m_mass)*m_f;     // mise à jour de la vitesse
-            m_p = m_p + dt*m_v;                   // mise à jour de la position
+            m_v = m_v + (dt/m_mass)*m_f;		 // mise à jour de la vitesse
+            m_p = m_p + dt*m_v;                  // mise à jour de la position
             m_f = Vector(0,0,0);
         }
     }
@@ -66,22 +66,11 @@ public:
     }
 
 	//! Collision with any other sphere of position p and radius 'radius'
-	void collision(const Point& p, const float radius)
-	{
-		if (m_radius < 0) return;
-		if (distance(m_p, p) < m_radius + radius)
-		{
-			//std::cout << "col" << std::endl;
-			//m_radius = -1;
-			float inside = m_radius+radius - distance(m_p, p);
-			Vector dir = normalize( m_p - p);
-			Point old_p = m_p;
-			m_p = m_p + inside * dir;
-			m_v = (m_p-old_p)/0.1f;
-			//m_v = 0.99f * m_v;       // FRICTION = 0.8
-			//m_v = 0.f;
-		}
-	}
+	void collision(const Point& p, const float radius);
+	//{
+	//	if (m_radius < 0) return;
+	//	if (... TODO
+	//}
 
 	//! Apply gravity
     void computeParticleForceGravityEarth()
