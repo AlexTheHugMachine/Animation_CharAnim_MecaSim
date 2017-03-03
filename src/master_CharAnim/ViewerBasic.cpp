@@ -230,7 +230,7 @@ void ViewerBasic::manageCameraLight()
 
 
     // Deplace la lumiere
-    const float step = m_camera.radius()*0.01f;
+    const float step = m_camera.radius()*0.005f;
     if (key_state(SDLK_RIGHT) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(step,0,0)); }
     if (key_state(SDLK_LEFT) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(-step,0,0)); }
     if (key_state(SDLK_UP) && key_state(SDLK_LCTRL)) { gl.light( gl.light()+Vector(0,0,-step)); }
