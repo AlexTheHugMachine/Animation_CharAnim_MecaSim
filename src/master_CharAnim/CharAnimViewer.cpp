@@ -40,8 +40,8 @@ int CharAnimViewer::init()
     cout<<m_bvh<<endl;
     cout<<endl<<"========================"<<endl;
 
-    m_ske.init( m_bvh );
-    m_ske.setPose( m_bvh, -1);// met le skeleton a la pose au repos
+    //m_ske.init( m_bvh );
+    //m_ske.setPose( m_bvh, -1);// met le skeleton a la pose au repos
 
     return 0;
 }
@@ -59,16 +59,15 @@ int CharAnimViewer::render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Viewer::manageCameraLight();
+    draw_quad( RotationX(-90)*Scale(500,500,1) );
 
+    Viewer::manageCameraLight();
     gl.camera(m_camera);
 
     draw_particles();
-    draw_quad( RotationX(-90)*Scale(500,500,1) );
 
 	// Affiche le skeleton
     draw_skeleton( m_ske );
-
 
     return 1;
 }

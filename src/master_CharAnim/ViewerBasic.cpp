@@ -36,20 +36,20 @@ int ViewerBasic::init()
     cout<<"==>ViewerBasic"<<endl;
     // etat par defaut openGL
     glClearColor(0.5f, 0.5f, 0.9f, 1);
-    glClearDepthf(1);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_DEPTH_TEST);
-    glFrontFace(GL_CCW);
-    glCullFace(GL_BACK);
-
-    if (mb_cullface)
-        glEnable(GL_CULL_FACE);
-    else
-        glDisable(GL_CULL_FACE);        // good for debug
-    //glEnable(GL_TEXTURE_2D);
-
-    //glEnable (GL_BLEND);
-    //glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//    glClearDepthf(1);
+//    glDepthFunc(GL_LESS);
+//    glEnable(GL_DEPTH_TEST);
+//    glFrontFace(GL_CCW);
+//    glCullFace(GL_BACK);
+//
+//    if (mb_cullface)
+//        glEnable(GL_CULL_FACE);
+//    else
+//        glDisable(GL_CULL_FACE);        // good for debug
+//    //glEnable(GL_TEXTURE_2D);
+//
+//    //glEnable (GL_BLEND);
+//    //glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
     m_camera.lookat( Point(0,0,0), 30 );
@@ -168,7 +168,6 @@ int ViewerBasic::render( )
     // donne notre camera au shader
     gl.camera(m_camera);
 
-
     return 1;
 }
 
@@ -256,7 +255,7 @@ void ViewerBasic::manageCameraLight()
     if (b_draw_grid) gl.draw(m_grid);
     if (b_draw_axe) gl.draw(m_axe);
 
-     // LIGHT
+    //  LIGHT
     gl.texture( 0 );
     gl.lighting(false);
 	gl.model(Translation(Vector(gl.light()))*Scale(step, step, step));

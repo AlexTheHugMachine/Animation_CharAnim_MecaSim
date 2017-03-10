@@ -10,6 +10,8 @@ using namespace std;
 int main( int argc, char **argv )
 {
     CharAnimViewer v;
+    //Viewer v;
+//    ViewerBasic v;
     v.run();
     return 0;
 }

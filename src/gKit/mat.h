@@ -25,25 +25,12 @@ struct Transform
         const float t10=0.f, const float t11=1.f, const float t12=0.f, const float t13=0.f,
         const float t20=0.f, const float t21=0.f, const float t22=1.f, const float t23=0.f,
         const float t30=0.f, const float t31=0.f, const float t32=0.f, const float t33=1.f );
-
-	//! constructeur a partir de 4 Vector colonnes, met (0, 0, 0, 1) dans la 4e ligne
+    
+	//! constructeur a partir de 4 Vector colonnes, met (0, 0, 0, 1) dans la 4e ligne 
 	Transform(const Vector& x, const Vector& y, const Vector& z, const Vector& w);
 
-
 	//! renvoie le Vector colonne c de la matrice
-	Transform(const Vector& tr);
-
-	//! constructeur a partir de 3 float : changement d'échelle
-	Transform(float sx, float sy, float sz);
-
-	//! constructeur a partir de 3 float : changement d'échelle
-	Transform(const Vector& axe, float angle);
-
-	//! retourne la colonne c comme Vector
 	Vector operator[](int c) const;
-
-    //! retourne la colonne c comme Vector
-	float* operator[](int c) { return m[c]; }
 
     //! renvoie le point transforme.
     Point operator() ( const Point& p ) const;
@@ -51,20 +38,17 @@ struct Transform
     Vector operator() ( const Vector& v ) const;
     //! renvoie le point/vecteur homogene transforme.
     vec4 operator() ( const vec4& v ) const;
-
+    
     //! renvoie la transposee de la matrice.
     Transform transpose( ) const;
     //! renvoie l'inverse de la matrice.
     Transform inverse( ) const;
     //! renvoie la transformation a appliquer aux normales d'un objet transforme par la matrice m.
-    Transform normal( ) const;
-
+    Transform normal( ) const;  
+    
     //! renvoie l'adresse de la premiere valeur de la matrice.
     const float *buffer( ) const { return &m[0][0]; }
-
-    //! renvoie l'adresse de la premiere valeur de la matrice.
-    float *buffer( ) { return &m[0][0]; }
-
+    
     float m[4][4];
 };
 

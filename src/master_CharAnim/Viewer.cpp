@@ -48,10 +48,10 @@ void Viewer::init_sphere()
             m_sphere.normal( Vector(cos(alpha)*cos(beta),  sin(alpha), cos(alpha)*sin(beta)) );
             m_sphere.vertex( Point(cos(alpha)*cos(beta),  sin(alpha), cos(alpha)*sin(beta)) );
 
-
             m_sphere.texcoord(beta/(2.0f*M_PI), 0.5f+alpha2/M_PI);
             m_sphere.normal( Vector(cos(alpha2)*cos(beta),  sin(alpha2), cos(alpha2)*sin(beta)) );
             m_sphere.vertex( Point(cos(alpha2)*cos(beta),  sin(alpha2), cos(alpha2)*sin(beta))   );
+
         }
 
         m_sphere.restart_strip();
