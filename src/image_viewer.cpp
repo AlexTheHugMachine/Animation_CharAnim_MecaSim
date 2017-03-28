@@ -167,7 +167,7 @@ struct ImageViewer : public App
         if(bmouse & SDL_BUTTON(1))
             program_uniform(m_program, "split", (int) xmouse);
         else
-            program_uniform(m_program, "split", (int) m_width +2);
+            program_uniform(m_program, "split", (int) window_width() +2);
         program_uniform(m_program, "channels", vec4(m_red, m_green, m_blue, m_alpha));
         program_uniform(m_program, "gray", (float) m_gray);
         program_uniform(m_program, "compression", m_compression);
