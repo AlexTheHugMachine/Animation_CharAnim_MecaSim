@@ -29,7 +29,7 @@ struct ImageViewer : public App
             
             if(is_hdr_image(m_filenames[i]))
                 image= read_image_hdr(m_filenames[i]);
-        else
+            else
                 image= read_image(m_filenames[i]);
         
             if(image == Image::error())
@@ -38,7 +38,7 @@ struct ImageViewer : public App
             m_textures.push_back(make_texture(0, image));
             m_width= std::max(m_width, image.width());
             m_height= std::max(m_height, image.height());
-    }
+        }
     
         // change le titre de la fenetre
         SDL_SetWindowTitle(m_window, m_filenames[0]);
@@ -190,6 +190,7 @@ struct ImageViewer : public App
             printf("writing '%s'...\n", file.c_str());
             screenshot(file.c_str());
         }
+        
         begin(m_widgets);
             value(m_widgets, "saturation", m_saturation, 0.f, m_saturation_max*4, m_saturation_step);
             value(m_widgets, "compression", m_compression, 1.f, 10.f, 1.f);
@@ -207,7 +208,6 @@ struct ImageViewer : public App
     }
     
 protected:
-    
     Widgets m_widgets;
     
     std::vector<const char *> m_filenames;
