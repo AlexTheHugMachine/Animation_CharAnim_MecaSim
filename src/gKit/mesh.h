@@ -92,7 +92,7 @@ struct Material
     Color emission;     //!< pour une source de lumiere
     float ns;           //!< exposant pour les reflets blinn-phong
     
-    Material( ) : diffuse(0.8f, 0.8f, 0.8f), specular(0.2f, 0.2f, 0.2f), emission(), ns(22) {}
+    Material( ) : diffuse(0.8f, 0.8f, 0.8f), specular(Black()), emission(), ns(0) {}
 };
 
 //! representation d'un triangle.

@@ -42,7 +42,7 @@ Mesh read_mesh( const char *filename )
     FILE *in= fopen(filename, "rt");
     if(in == NULL)
     {
-        printf("loading mesh '%s'... failed.\n", filename);
+        printf("[error] loading mesh '%s'...\n", filename);
         return Mesh::error();
     }
     
@@ -53,8 +53,8 @@ Mesh read_mesh( const char *filename )
     std::vector<vec3> positions;
     std::vector<vec2> texcoords;
     std::vector<vec3> normals;
-    std::vector<unsigned int> material_indices;
     MaterialLib materials;
+    int default_material_id= -1;
     
     std::vector<int> idp;
     std::vector<int> idt;
@@ -161,10 +161,22 @@ Mesh read_mesh( const char *filename )
         {
            if(sscanf(line, "usemtl %[^\r\n]", tmp) == 1)
            {
-               for(size_t i= 0; i < materials.names.size(); i++)
+               int id= -1;
+               for(unsigned int i= 0; i < (unsigned int) materials.names.size(); i++)
                 if(materials.names[i] == tmp)
+                        id= i;
+                
+                if(id == -1)
+                    id= default_material_id;
+                
+                if(id == -1)
+                {
+                    // creer une matiere par defaut
+                    default_material_id= data.mesh_material(Material());
+                    id= default_material_id;
+                }
                     // selectionne une matiere pour le prochain triangle
-                    data.material(i);
+                data.material(id);
            }
         }
     }
@@ -244,7 +256,7 @@ MaterialLib read_materials( const char *filename )
     FILE *in= fopen(filename, "rt");
     if(in == NULL)
     {
-        printf("[error] loading '%s'.\n", filename);
+        printf("[error] loading materials '%s'...\n", filename);
         return materials;
     }
     
