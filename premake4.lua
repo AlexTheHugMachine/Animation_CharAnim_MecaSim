@@ -160,7 +160,8 @@ tutosM2 = {
 	"tuto_time",
 	"tuto_mdi",
 	"tuto_is",
-	"tuto_raytrace_fragment"
+	"tuto_raytrace_fragment",
+	"tuto_nscompute"
 }
 
 for i, name in ipairs(tutosM2) do

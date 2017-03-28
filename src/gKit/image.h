@@ -27,6 +27,7 @@ protected:
     {
         return std::min(x, m_width-1) + std::min(y, m_height-1) * m_width;
     }
+    
 public:
     Image( ) : m_data(), m_width(0), m_height(0) {}
     Image( const int w, const int h, const Color& color= Black() ) : m_data(w*h, color), m_width(w), m_height(h) {}

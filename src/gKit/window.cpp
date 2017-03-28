@@ -345,7 +345,6 @@ void release_context( Context context )
 //! verifie l'existance d'un fichier.
 bool exists( const char *filename )
 {
-    //~ printf("file '%s'\n", filename);
 #ifndef _MSC_VER
     struct stat info;
     if(stat(filename, &info) < 0)
@@ -384,6 +383,8 @@ const char *smart_path( const char *filename )
     tmp= smartpath + "../" + filename;
     if(exists(tmp.c_str()))
         smartpath= tmp;
+    else
+        smartpath= filename;
     
     return smartpath.c_str();
 }

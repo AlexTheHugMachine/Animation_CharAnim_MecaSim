@@ -111,20 +111,15 @@ void main( )
     normal= normalize(cross(t, b));
 #endif
 
+#ifndef USE_ALPHATEST
     float cos_theta= 1;
-#ifdef USE_ALPHATEST
-    cos_theta= 1;
-#else
     #ifdef USE_LIGHT
         cos_theta= max(0, dot(normal, normalize(light - vertex_position)));         // eclairage, uniquement des faces bien orientees
         color= color * light_color;
     #else
         cos_theta= normal.z;
     #endif
-#endif
-
-    color.rgb= color.rgb * cos_theta;
-
+    
     // hachure les triangles mal orientes
     if(gl_FrontFacing == false) // if(!gl_FrontFacing) bug sur mac ?!
     {
@@ -132,6 +127,9 @@ void main( )
         if((pixel.x ^ pixel.y) == 0)
             color= vec4(0.8, 0.4, 0, 1);
     }
+    
+    color.rgb= color.rgb * cos_theta;
+#endif
     
     fragment_color= color;
 }
