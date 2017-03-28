@@ -89,7 +89,7 @@ void Gamepads::update( )
 
 int Gamepads::pads( )
 {
-    return m_pads.size();
+    return (int) m_pads.size();
 }
 
 Gamepad& Gamepads::pad( const unsigned int index )

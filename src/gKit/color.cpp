@@ -3,7 +3,7 @@
 
 float Color::power( ) const
 {
-    return r+g+b;
+    return (r+g+b) / 3.f;
 }
 
 Color Black( )
