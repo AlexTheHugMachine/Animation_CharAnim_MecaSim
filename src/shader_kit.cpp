@@ -107,6 +107,9 @@ int init( std::vector<const char *>& options )
     }
     
     vao= 0;
+    mesh_pmin= Point(normalize(Vector(-1, -1, 0)) * 2.5f);
+    mesh_pmax= Point(normalize(Vector( 1,  1, 0)) * 2.5f);
+    
     option= option_find(options, ".obj");
     if(option != NULL)
     {
@@ -329,6 +332,11 @@ int draw( void )
         clear_key_state('v');
         if(camera.read_orbiter("orbiter.txt") < 0)
             camera= Orbiter(mesh_pmin, mesh_pmax);
+    }
+    if(key_state('f'))
+    {
+        clear_key_state('f');
+        camera= Orbiter(mesh_pmin, mesh_pmax);        
     }
     
     return 1;
