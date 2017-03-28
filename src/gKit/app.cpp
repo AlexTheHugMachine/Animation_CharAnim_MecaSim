@@ -27,17 +27,13 @@ int App::run( )
     // configure openGL
     glViewport(0, 0, window_width(), window_height());
 
-    // utiliser SDL_GetPerformanceCounter() / SDL_GetPerformanceFrequency() si la precision n'est pas suffisante
-    m_time= SDL_GetTicks();
+    // gestion des evenements
     while(events(m_window))
     {
-        m_delta= SDL_GetTicks() - m_time;
         if(update(global_time(), delta_time()) < 0)
             break;
         if(render() < 1)
             break;
-
-        m_time= SDL_GetTicks();
 
         // presenter le resultat
         SDL_GL_SwapWindow(m_window);
@@ -50,10 +46,10 @@ int App::run( )
 
 float App::global_time( )
 {
-    return (float) m_time;
+    return ::global_time();
 }
 
 float App::delta_time( )
 {
-    return (float) m_delta;
+    return ::delta_time();
 }

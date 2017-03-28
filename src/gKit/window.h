@@ -56,6 +56,12 @@ SDL_TextInputEvent text_event( );
 //! desactive l'evenement.
 void clear_text_event( );
 
+
+//! renvoie le temps ecoule depuis le lancement de l'application, en millisecondes.
+float global_time( );
+//! renvoie le temps ecoule depuis la derniere frame, en millisecondes.
+float delta_time( );
+
 //! fonction principale. gestion des evenements et appel de la fonction draw de l'application.
 int run( Window window, int (*draw)( void ) );
 

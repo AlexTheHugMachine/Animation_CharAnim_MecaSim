@@ -24,7 +24,6 @@ public:
     virtual int quit( ) = 0;
 
     //! a deriver et redefinir pour animer les objets en fonction du temps.
-    //~ virtual int update( const float time, const float delta ) { return 0; }
     using App::update;
 
     //! a deriver pour afficher les objets.

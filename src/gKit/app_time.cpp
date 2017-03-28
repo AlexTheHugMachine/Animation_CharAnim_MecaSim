@@ -23,10 +23,8 @@ int AppTime::run( )
     glViewport(0, 0, window_width(), window_height());
     
     // remarque : utiliser std::chrono si la precision n'est pas suffisante
-    m_time= SDL_GetTicks();
     while(events(m_window))
     {
-        m_delta= SDL_GetTicks() - m_time;
         if(update(global_time(), delta_time()) < 0)
             break;
         
@@ -47,8 +45,6 @@ int AppTime::run( )
         
         if(code< 1)
             break;
-        
-        m_time= SDL_GetTicks();
         
         // attendre le resultat de la requete
         GLint64 gpu_time= 0;

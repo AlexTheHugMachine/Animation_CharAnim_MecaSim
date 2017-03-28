@@ -98,6 +98,28 @@ void clear_wheel_event( )
 }
 
 
+//
+static unsigned int last_time= 0;
+static unsigned int last_delta= 1;
+
+float global_time( )
+{
+    unsigned int now= SDL_GetTicks();
+    
+    // ecoulement du temps strictement croissant...
+    if(now <= last_time)
+        now= last_time +1;
+    
+    last_delta= now - last_time;
+    last_time= now;
+    return (float) last_time;
+}
+
+float delta_time( )
+{
+    return (float) last_delta;
+}
+
 // etat de l'application.
 static int stop= 0;
 //! boucle de gestion des evenements de l'application.
@@ -303,9 +325,9 @@ Context create_context( Window window, const int major, const int minor )
     // configure l'affichage des messages d'erreurs opengl, si l'extension est disponible
     if(GLEW_ARB_debug_output)
     {
-        //~ printf("debug output enabled...\n");
+        printf("debug output enabled...\n");
         glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-        //~ glDebugMessageCallbackARB(debug, NULL);
+        glDebugMessageCallbackARB(debug, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
 #endif

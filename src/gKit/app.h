@@ -35,7 +35,7 @@ public:
 
     //! execution de l'application.
     int run( );
-
+    
     //! renvoie le temps ecoule depuis le lancement de l'application, en millisecondes.
     float global_time( );
     //! renvoie le temps ecoule depuis la derniere frame, en millisecondes.
@@ -44,9 +44,6 @@ public:
 protected:
     Window m_window;
     Context m_context;
-
-    unsigned int m_time;
-    unsigned int m_delta;
 };
 
 
