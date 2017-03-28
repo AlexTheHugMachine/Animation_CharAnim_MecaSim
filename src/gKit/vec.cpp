@@ -16,12 +16,11 @@ float distance2( const Point& a, const Point& b )
 
 Point center( const Point& a, const Point& b )
 {
-    return Point((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f, (a.z + b.z) * 0.5f);
+    return Point((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
 }
 
 Vector operator- ( const Point& a, const Point& b )
 {
-    //~ return make_vector(a.x - b.x, a.y - b.y, a.z - b.z);
     return Vector(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
