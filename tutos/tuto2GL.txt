@@ -1,7 +1,7 @@
 
 /*! \addtogroup tuto2GL compiler et linker un shader program
 
-cf tuto2GL.cpp
+cf tuto2GL.cpp shader_kit.cpp
 
 un shader program est la même chose que d'habitude : le code exécutable crée par l'édition de liens des binaires obtenus 
 après la compilations des shaders.
@@ -275,9 +275,9 @@ void main( )
 \endcode
 
 
-## utilitaires : shader_kit 
+## utilitaires : shader_kit.cpp
 
-autre solution, shader_kit.cpp peut être utilisé comme compilateur de shader, il affiche les erreurs sous cette forme un peu 
+autre solution, \ref shader_kit.cpp peut être utilisé comme compilateur de shader, il affiche les erreurs sous cette forme un peu 
 plus lisible, et permet de recharger et de recompiler le shader en appuyant sur la touche R. ça permet de corriger
 interactivement le source du shader en le modifiant dans un éditeur.
 
@@ -299,11 +299,12 @@ il définit également les valeurs de plusieurs uniforms :
 	- uniform vec2 viewport; les dimensions de l'image / de la fenêtre,
 	- ainsi que les transformations standards et leurs inverses :
 		- uniform mat4 mvpMatrix, mvpInvMatrix; la transformation standard pour passer du repère local au repère projectif,
-		- uniform mat4 mvMatrix; la composition de model et view, repère local vers le repère caméra,
+		- uniform mat4 mvMatrix, mvInvMatrix; la composition de model et view, repère local vers le repère caméra,
 		- uniform mat4 normalMatrix; même transformation que mv, mais pour les normales des sommets,
 		- uniform mat4 modelMatrix, modelInvMatrix;
 		- uniform mat4 viewMatrix, viewInvMatrix;
 		- uniform mat4 projectionMatrix, projectionInvMatrix;
+		- uniform mat4 viewportMatrix, viewportInvMatrix;
 
 malgré ces limites, on peut écrire des choses interressantes :
 	- un shader qui éclaire un objet texturé :
