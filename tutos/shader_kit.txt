@@ -1,0 +1,40 @@
+
+/*! \addtogroup shader_kit prototyper un shader program
+
+autre solution, \ref shader_kit.cpp peut être utilisé comme compilateur de shader, il affiche les erreurs sous cette forme un peu 
+plus lisible, et permet de recharger et de recompiler le shader en appuyant sur la touche R. ça permet de corriger
+interactivement le source du shader en le modifiant dans un éditeur.
+
+shader_kit est un 'bac à sable' permettant d'écrire et de tester des shaders assez facilement. il permet aussi de charger 
+un objet .obj, des textures et permet de déplacer la camera à la souris. 
+
+comme il n'est pas possible d'écrire une solution totalement générique, shader_kit à des limites :
+	- 1 seul shader program, écrit dans un seul fichier .glsl, avec les \#ifdef VERTEX_SHADER, etc, voir plus haut,
+	- il n'est pas obligatoire de charger un objet, dans ce cas, il fonctionne comme [shadertoy.com](https://www.shadertoy.com/),
+	- charge 1 seul objet,
+	- plusieurs textures 2d rgba8, jusqu'à la limite d'openGL, 16 ou 32 selon les machines :
+		- uniform sampler2D texture0;
+		- uniform sampler2D texture1; etc, en fonction du nombre d'images chargées,
+	
+il définit également les valeurs de plusieurs uniforms :
+	- uniform float time; le temps en milli secondes,
+	- uniform vec3 mouse; la position x, y de la souris dans la fenêtre, et l'état du bouton gauche, mouse.z (!= 0 enfoncé, == 0 pas enfoncé),
+	- uniform vec3 motion; le déplacement x, y de la souris, et l'état du bouton gauche, motion.z (!= 0 enfoncé, == 0 pas enfoncé),
+	- uniform vec2 viewport; les dimensions de l'image / de la fenêtre,
+	- ainsi que les transformations standards et leurs inverses :
+		- uniform mat4 mvpMatrix, mvpInvMatrix; la transformation standard pour passer du repère local au repère projectif,
+		- uniform mat4 mvMatrix, mvInvMatrix; la composition de model et view, repère local vers le repère caméra,
+		- uniform mat4 normalMatrix; même transformation que mv, mais pour les normales des sommets,
+		- uniform mat4 modelMatrix, modelInvMatrix;
+		- uniform mat4 viewMatrix, viewInvMatrix;
+		- uniform mat4 projectionMatrix, projectionInvMatrix;
+		- uniform mat4 viewportMatrix, viewportInvMatrix;
+
+malgré ces limites, on peut écrire des choses interressantes :
+	- un shader qui éclaire un objet texturé :
+		\image html mesh_kit.png
+	- un lancer de rayons classique :
+		\image html trace_kit.png
+	- un lancer de rayons sur champ de distance :
+		\image html march_kit.png
+*/

@@ -116,6 +116,8 @@ tutos = {
 	"tuto7",
 	"tuto8",
 	"tuto9",
+	"tuto9_texture1",
+	"tuto9_textures",
 	
 	"tuto_transform",
 	"tuto_pad",
@@ -135,14 +137,7 @@ tutos = {
 	"tuto_storage",
 	"tuto_storage_buffer",
 	"tuto_storage_texture",
-	"min_data",
-	
---~ 	"ray_tuto1",
---~ 	"ray_tuto2",
---~ 	"ray_tuto3",
-	"ray_tuto4"
---~ 	
---~ 	"pipeline"
+	"min_data"
 }
 
 for i, name in ipairs(tutos) do
@@ -160,8 +155,7 @@ tutosM2 = {
 	"tuto_time",
 	"tuto_mdi",
 	"tuto_is",
-	"tuto_raytrace_fragment",
-	"tuto_nscompute"
+	"tuto_raytrace_fragment"
 }
 
 for i, name in ipairs(tutosM2) do
@@ -172,14 +166,3 @@ for i, name in ipairs(tutosM2) do
 		files ( gkit_files )
 		files { gkit_dir .. "/tutos/M2/" .. name..'.cpp' }
 end
-
-project("tp2")
-	language "C++"
-	kind "ConsoleApp"
-	targetdir "bin"
-	files ( gkit_files )
-	files { gkit_dir .. "/opengl_tp2/tp2.cpp" }
-
-
-
-
