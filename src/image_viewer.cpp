@@ -88,10 +88,10 @@ struct ImageViewer : public App
             bins[b]++;
         }
 
-        printf("[%f..%f]\n", ymin, ymax);
-        for(int i= 0; i < 100; i++)
-            printf("%f ", ((float) bins[i] * 100.f / (m_width * m_height)));
-        printf("\n");
+        printf("range [%f..%f]\n", ymin, ymax);
+        //~ for(int i= 0; i < 100; i++)
+            //~ printf("%f ", ((float) bins[i] * 100.f / (m_width * m_height)));
+        //~ printf("\n");
         
         float qbins= 0;
         for(int i= 0; i < 100; i++)
@@ -192,8 +192,8 @@ struct ImageViewer : public App
         }
         
         begin(m_widgets);
-            value(m_widgets, "saturation", m_saturation, 0.f, m_saturation_max*4, m_saturation_step);
-            value(m_widgets, "compression", m_compression, 1.f, 10.f, 1.f);
+            value(m_widgets, "saturation", m_saturation, 0.f, m_saturation_max*10, m_saturation_step);
+            value(m_widgets, "compression", m_compression, .1f, 10.f, .1f);
         
         begin_line(m_widgets);
             button(m_widgets, "R", m_red);
