@@ -2,6 +2,7 @@
 #include <chrono>
 
 #include "app_time.h"
+#include "texture.h"
 
 
 AppTime::AppTime( const int width, const int height, const int major, const int minor ) : App(width, height, major, minor) {}
@@ -56,6 +57,12 @@ int AppTime::run( )
         printf(m_console, 0, 2, "gpu  %02dms %03dus", (int) (gpu_time / 1000000), (int) ((gpu_time / 1000) % 1000));        
         
         draw(m_console, window_width(), window_height());
+        
+        if(key_state('s'))
+        {
+            clear_key_state('s');
+            screenshot("gkit2app.png");
+        }
         
         // presenter le resultat
         SDL_GL_SwapWindow(m_window);
