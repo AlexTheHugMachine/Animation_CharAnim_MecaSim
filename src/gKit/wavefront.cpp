@@ -147,7 +147,7 @@ Mesh read_mesh( const char *filename )
             }
         }
         
-        else if(line_buffer[0] == 'm')
+        else if(line[0] == 'm')
         {
            if(sscanf(line, "mtllib %[^\r\n]", tmp) == 1)
            {
@@ -157,7 +157,7 @@ Mesh read_mesh( const char *filename )
            }
         }
         
-        else if(line_buffer[0] == 'u')
+        else if(line[0] == 'u')
         {
            if(sscanf(line, "usemtl %[^\r\n]", tmp) == 1)
            {
