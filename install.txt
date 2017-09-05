@@ -3,9 +3,12 @@
 
 ## obtenir les sources :
 
-hg clone https://forge.univ-lyon1.fr/hg/gkit2light
+créer un répertoire de travail, puis :
 
-_remarque :_ si vous avez un problème d'authentification avec la forge, consultez la faq et modifiez la configuration de mercurial.
+    git clone git@forge.univ-lyon1.fr:Alexandre.Meyer/gkit2light.git
+
+
+_remarque :_ si vous avez un problème d'authentification avec la forge, consultez https://forge.univ-lyon1.fr/help/ssh/README.md et modifiez la configuration de git pour utiliser une clé `ssh`.
 
 
 ## installer les dépendances :
