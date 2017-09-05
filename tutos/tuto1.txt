@@ -203,11 +203,34 @@ int main( int argc, char **argv )
 }
 \endcode
 
-ces fonctions sont documentées dans \ref window.h et utilisent la librairie [SDL2](http://libsdl.org) pour rester portable sur les mêmes
-systèmes qu'openGL.
+Si cette version typée C ne vous convient pas, il y a également une classe de base à dériver, App. voici un exemple équivalent :
+\code
+#include "app.h"
 
-il est aussi possible d'utiliser directement sdl, sans passer par ces fonctions prédéfinies. une application crée une fenêtre et traite
-les evènements clavier, souris et d'autres générés par le système d'exploitation. la fonction run( ) les traite pour vous.
+class TP : public App
+{
+public:
+    // constructeur : donner les dimensions de la fenetre, et eventuellement la version d'openGL.
+    TP( ) : App(1024, 640) {}
+    
+    // creation des objets openGL de l'application
+    int init( ) { ... }
+    
+    // destruction des objets openGL, à la fin de l'application
+    int quit( ) { ... }
+    
+    // dessiner une nouvelle image.
+    int render( ) { ... }
+};
+
+int main( int argc, char **argv )
+{
+    TP tp;
+    tp.run();
+    
+    return 0;
+}
+\endcode
 
 dans la mesure du possible, les fonctions de window.h ne dupliquent pas / n'abstraient pas les fonctionnalités de sdl2, vous pouvez 
 les utiliser directement. par exemple :
@@ -216,7 +239,7 @@ les utiliser directement. par exemple :
 
 window.h définit par contre des utilitaires pour simplifier l'écriture d'applications interactives. par exemple, si vous voulez modifier
 la position d'un objet en appuyant sur une touche, les fonctions key_state( ) et clear_key_state( ) permettent de le faire très 
-simplement.
+simplement, sans avoir besoin de modifier la gestion des évènements (cf run(), App::run() et events()).
 
 autre exemple d'utilisation : faire une capture d'écran de l'application
 
