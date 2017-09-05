@@ -1,7 +1,7 @@
 
 /*! \addtogroup tuto2GL compiler et linker un shader program
 
-cf tuto2GL.cpp
+cf tuto2GL.cpp et tuto1GL.cpp
 
 un shader program est la même chose que d'habitude : le code exécutable crée par l'édition de liens des binaires obtenus 
 après la compilations des shaders.
@@ -145,7 +145,7 @@ et éventuellement récupérer et afficher les erreurs...
 
 voila, rien de bien compliqué, mais c'est un peu long.
 
-un exemple minimaliste est dispo tuto2GL.cpp
+un exemple minimaliste est dispo tuto2GL.cpp (qui utilise les utilitaires de window.h), et tuto1GL.cpp qui montre la totalité du code.
 
 une fois que le program est correctement compilé et linké, avant de dessiner avec glDraw( ), il faut donner une valeur à
 tous ses uniforms et associer un buffer à ses attributs cf \ref tuto3GL et \ref tuto4GL. 
