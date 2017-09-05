@@ -113,7 +113,7 @@ GLenum buffers[]= { GL_COLOR_ATTACHMENT0 };
 glDrawBuffers(1, buffers);
 
 Color color(1, 0, 0);
-glClearBufferfv(GL_COLOR, /* draw buffer */ GL_DRAW_BUFFER0, /* value */ &color.x);
+glClearBufferfv(GL_COLOR, /* draw buffer */ 0, /* value */ &color.x);
 \endcode
 
 `DRAW_BUFFER0` est l'indice dans le tableau `buffers`, `buffers[0]` contient `COLOR_ATTACHMENT0`, et c'est la texture `color_texture` qui sera 
@@ -212,6 +212,9 @@ mipmap 0 a ete modifie, et le résultat sera faux.
 
 il y a 2 solutions, soit utiliser un filtrage `NEAREST_MIPMAP_LINEAR` et `MAX_LEVEL` = 0 qui n'utilise que le mipmap 0, soit 
 recalculer tous les mipmaps de la texture, cf glGenerateMipmap( ).
+## attention ##
+Autre subtilité, si une texture est active sur une unité de texture et attachée en même temps au framebuffer actif, glDraw()
+génèrera une erreur : le pipeline ne peut pas lire et écrire la même texture en même temps. il faut donc bien penser à nettoyer les unités de texture pour eviter ce problème...
 
 \code
 GLuint color= { ... };
@@ -255,6 +258,9 @@ render( )
 	glUseProgram( ... );
 	glUniform( ... );
 	glDraw( ... );
+
+// nettoyage *obligatoire*, la texture color *ne doit pas* etre active sur une unite de texture et attachee au framebuffer selectionne
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 \endcode
 

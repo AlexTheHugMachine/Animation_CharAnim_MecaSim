@@ -50,7 +50,7 @@ le vertex shader déclare : `in vec3 position;`
 	// selectionner le vertex array object a configurer, si necessaire
 	// glBindVertexArray(vao);
 	
-	// recuperer l'identifiant de l'attribut 
+	// recuperer l'identifiant de l'attribut declare dans le vertex shader
 	GLint attribute= glGetAttribLocation(program, "position");
 	if(attribute < 0)
 		// probleme, l'attribut n'existe pas... erreur de compilation / link du program ?
@@ -266,7 +266,7 @@ pour récupérer les infos nécessaires :
 	// selectionner le buffer comme un vertex buffer
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
 	
-	// dimensionner et intialiser le buffer selectionne sur array_buffer
+	// dimensionner et initialiser le buffer selectionne sur array_buffer
 	glBufferData(GL_ARRAY_BUFFER, mesh.vertex_buffer_size(), mesh.vertex_buffer(), GL_STATIC_DRAW);
 \endcode
 
