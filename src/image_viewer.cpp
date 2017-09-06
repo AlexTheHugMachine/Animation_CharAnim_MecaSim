@@ -1,4 +1,6 @@
 
+//! \file image_viewer.cpp permet de visualiser les images aux formats reconnus par gKit2 light bmp, jpg, tga, png, hdr, etc.
+
 #include <cfloat>
 
 #include "app.h"
