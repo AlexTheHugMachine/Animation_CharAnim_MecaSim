@@ -1,8 +1,12 @@
 
-#include "app.h"
-#include "glcore.h"
+//! \file app.cpp
+
 #include <cstdio>
 #include <cstring>
+
+#include "app.h"
+#include "glcore.h"
+
 
 App::App( const int width, const int height, const int major, const int minor )
     : m_window(nullptr), m_context(nullptr)
@@ -42,14 +46,4 @@ int App::run( )
     if(quit() < 0)
         return -1;
     return 0;
-}
-
-float App::global_time( )
-{
-    return ::global_time();
-}
-
-float App::delta_time( )
-{
-    return ::delta_time();
 }
