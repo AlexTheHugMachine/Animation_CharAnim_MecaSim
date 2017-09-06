@@ -1,4 +1,6 @@
 
+//! \file window.cpp
+
 #ifndef _MSC_VER
     #include <sys/stat.h>
 #else
