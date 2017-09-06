@@ -3,13 +3,34 @@
 
 cf pipeline.cpp
 
-la solution présentée dans \ref intro3d fonctionne correctement dans les cas simples lorsque tous les triangles sont devant la 
-camera. un grand triangle dont les sommets ne sont pas visibles dans l'image mais dont l'interieur est visible ne sera pas 
-dessiné... le test de visibilité du triangle n'est pas suffisant.
+la solution présentée dans \ref intro3d fonctionne correctement, dans les cas simples, lorsque les 3 sommets du triangle sont devant la 
+camera. 
+
+_indication :_
+les points derrière la caméra peuvent se projetter aussi sur l'image... par exemple, que se passe-t-il si un point à des coordonnées z et w négatives ? 
+lorsque l'on calcule le point réel on divise z par w, et le résultat est positif... un sommet derriere la camera peut très bien se projetter dans l'image,
+il faut détecter ce problème avant de faire la projection, ou ne pas faire de projection...
+
+il y a 2 types de solutions, soit decouper le triangle pour ne garder que la partie que l'on peut dessiner, soit ne pas faire de projection,
+puisque c'est elle qui introduit le probleme.
 
 
-sans rentrer dans les détails, la projection utilisée est _juste_ une transformation comme une autre, et les points derrière
-la caméra se projettent aussi sur l'image... il faut donc trouver une approche différente qui ne fait pas de projection.
+## découper le triangle
+en regardant plus en détails, on s'apercoit qu'il n'y a qu'un cas qui est vraiment génant, c'est lorsqu'un sommet est derrière la camera. 
+un sommet trop à gauche, ou trop à droite (trop haut, trop bas, et trop loin) n'est pas vraiment génant.
+
+\image html clipped.png
+
+la solution est relativement simple : soit 1 sommet est derriere la camera, soit 2 sommets sont derrière (si les 3 sont derriere, 
+il n'y a rien a dessiner). mais on se retrouve dans les 2 cas, avec un sommet d'un cote et les 2 de l'autre du plan proche de la projection.
+il suffit de couper les 2 aretes partant du sommet par le plan, pour obtenir soit un triangle que l'on peut dessiner directement, soit
+un trapeze, que l'on decoupe en 2 triangles que l'on peut ensuite dessiner.
+
+_remarque :_ pourquoi ne pas couper par le plan qui passe par la camera ? les sommet sur ce plan ont par definition, z = 0, 
+qui va etre genant pour calculer l'intersection des aretes et du plan... ou pour trouver le point homogène associé...
+
+## sans projection
+l'autre categorie de solution utilise une approche différente qui ne fait pas de projection.
 
 les tests d'inclusion des pixels se font en 2d, dans le plan image, après la projection. si on ne veut pas calculer la projection, 
 il faut faire un test équivalent en 3d, avant la projection.

@@ -1,4 +1,6 @@
 
+//! \file tuto4GL_normals.glsl
+
 #version 330
 
 #ifdef VERTEX_SHADER

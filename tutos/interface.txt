@@ -10,9 +10,9 @@ une interface C++ pourrait ressembler à ça :
 \code
 Context *context= new Context();
 
-Point positions[]= { ... };
+std::vector<Point> positions= { ... };
 Buffer *buffer= context->createBuffer();
-buffer->data(sizeof(positions), positions);
+buffer->data(positions);
 \endcode
 
 tout est explicite, on connait le contexte, le buffer, etc.
@@ -33,11 +33,11 @@ d'abord "sélectionnée" pour une opération particulière, puis manipulée impl
 \code
 createContext();                                // crée un contexte, et le sélectionne, 
 
-uint buffer= createBuffer();                    // crée un buffer, représenté par un identifiant numérique
-bindBuffer(0, buffer);                          // sélectionne le buffer, pour une utilisation particulière
+uint buffer= createBuffer();                    // crée un buffer, représenté par un identifiant numérique, parametre implicite, context
+bindBuffer(0, buffer);                          // sélectionne le buffer, pour une utilisation particulière, parametre implicite, buffer
 
 Point positions[]= { ... };
-bufferData(0, sizeof(positions), positions);    // alloue le buffer et l'initialise avec le contenu de positions.
+bufferData(0, sizeof(positions), positions);    // alloue le buffer et l'initialise avec le contenu de positions, parametre implicite, buffer.
 // le buffer manipulé est celui sélectionné sur l'attribut 0...
 \endcode
 
@@ -51,7 +51,6 @@ autre détail important, il n'y a pas de surchage en C, on ne peut écrire ça p
 Program *program= context->createProgram( ... );
 program->uniform("color", Color(1, 1, 0));      // affecter une couleur
 program->uniform("time", 12);                   // affecter un float
-
 \endcode
 
 ni ça :
@@ -63,9 +62,14 @@ program_uniform(program, "time", 12);
 
 mais plutot ça :
 \code
+// creer le shader program
 uint program= createProgram( ... );
-program_uniform3f(program, "color", 1.0f, 1.0f, 0.0f);
-program_uniform1f(program, "time", 12.0f);
+// selectionner le shader program
+use_program(program);
+
+// modifier les uniforms
+uniform3f("color", 1.0f, 1.0f, 0.0f);   // parametre implicite, program, surcharge 3 float
+uniform1f("time", 12.0f);               // parametre implicite, program, surcharge 1 float
 \endcode
 
 chaque surcharge est nommée explicitement, puisque seul le nom de la fonction est utilisé. selon le type de valeur à manipuler,

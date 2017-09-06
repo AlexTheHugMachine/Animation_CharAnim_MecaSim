@@ -13,7 +13,8 @@ la configuration minimale est :
         - la couleur par défaut de l'image, cf glClearColor( ),
         - la profondeur par défaut du zbuffer, cf glClearDepthf( ),
         - le test de profondeur, cf glEnable/Disable(GL_DEPTH_TEST),
-        - l'élimination des faces arrières, cf glEnable/Disable(GL_CULL_FACE),
+        - l'orientation des faces *avant*, cf glFrontFace(),
+        - l'élimination des faces *arrière*, cf glEnable/Disable(GL_CULL_FACE),
         - la description des attributs des sommets, sélectionner un vertex array, cf glBindVertexArray( ),
     - le pipeline programmable, les shaders :
         - un shader program, sélectionner un shader program, cf glUseProgram( )

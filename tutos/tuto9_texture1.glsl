@@ -1,4 +1,6 @@
 
+//! \file tuto9_texture1.glsl
+
 #version 330
 
 #ifdef VERTEX_SHADER

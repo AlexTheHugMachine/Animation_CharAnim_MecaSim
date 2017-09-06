@@ -1,4 +1,6 @@
 
+//! \file tuto1GL_vertex.glsl
+
 #version 330
 
 /*  vec3 et vec4 sont des types de base, ils sont equivalents a :

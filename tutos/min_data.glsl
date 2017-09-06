@@ -1,4 +1,6 @@
 
+//! \file min_data.glsl
+
 #version 430
 
 #ifdef COMPUTE_SHADER

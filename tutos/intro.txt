@@ -70,7 +70,7 @@ sommets.
 
 ## pipeline géométrique
 
-le role de la première partie est préparer le dessin des triangles, et son principal travail est de transformer les positions
+le role de la première partie est de préparer le dessin des triangles, et son principal travail est de transformer les positions
 des sommets pour déterminer sur quel pixel de l'image ils se projettent.
 
 _pourquoi faut-il transformer les positions des sommets ?_
@@ -129,9 +129,9 @@ par rapport aux autres... et tout ca  serait beaucoup plus difficile ou limité 
 
 _et openGL ?_
 
-openGL à besoin de connaitre les coordonnées des sommets des triangles dans le repère _projectif_ pour pouvoir
-ensuite dessiner les triangles, et comme on écrit une fonction qui fait le calcul, on est libre d'utiliser des matrices, 
-ou pas... il faut "juste" l'expliquer à openGL, et écrire le _vertex shader_ responsable de cette partie du pipeline. 
+openGL à besoin de connaitre les coordonnées des sommets des triangles dans le repère _projectif_ homogène de la 
+camera pour pouvoir ensuite dessiner les triangles, et comme on écrit une fonction qui fait le calcul, on est libre d'utiliser 
+des matrices, ou pas... il faut "juste" l'expliquer à openGL, et écrire le _vertex shader_ responsable de cette partie du pipeline. 
 
 si on souhaite écrire une fonction en C/C++ qui déplace un sommet, on aura quelque chose comme ca :
 
@@ -207,8 +207,9 @@ Point vertex_shader( const int vertex_id )
     int gl_VertexID= vertex_id;
     Point gl_Position;
     
-    // appelle le main du vertex shader
-    main( );    
+    // execute la fonction main() du vertex shader
+    { ... }
+    // renvoie la position transformee
     return gl_Position;
 }
 
@@ -216,7 +217,7 @@ void draw( const int count )
 {
     for(int i= 0; i +2 < count; i= i +3)
     {
-        // transforme les 3 sommets du triangle 
+        // transforme les 3 sommets du triangle en utilisant le vertex shader
         Point a= vertex_shader(i);
         Point b= vertex_shader(i +1);
         Point c= vertex_shader(i +2);
@@ -264,7 +265,7 @@ void main( )
 }
 \endcode
 
-le mot-clé _uniform_, indique que le tableau positions ne change pas entre 2 exécutions du shader. 
+le mot-clé _uniform_, indique que le tableau positions ne change pas pendant l'exécution du pipeline. 
 c'est bien ce que l'on veut, du point de vue du vertex shader le tableau est une constante et le shader doit transformer 
 tous les sommets du tableau pour pouvoir dessiner les triangles. par contre, l'application peut changer le contenu du 
 tableau pour afficher un autre ensemble de triangles.
@@ -297,16 +298,27 @@ pour écrire une première application openGL qui utilise les 2 premières solut
 ## pipeline pixels
 
 le role de la deuxième partie du pipeline est de dessiner les triangles en connaissant les coordonnées des sommets dans le 
-repère projectif homogène de la caméra. ces coordonnées sont calculées par la première partie du pipeline.
+repère projectif homogène de la caméra. et ces coordonnées sont calculées par la première partie du pipeline.
 
 ### comment ça marche ?
 
 une fois que les vertex shaders ont été exécutés, le pipeline connait les coordonnées des sommets des triangles dans le 
-repère projectif. mais il reste un test de visibilité à faire, pour déterminer si le triangle est, au moins, en partie visible, ainsi
-qu'un dernier changement de repère, le passage vers le repère image.
+repère projectif homogene. mais il reste un test de visibilité à faire, pour déterminer si le triangle est, au moins, en partie visible, 
+ainsi qu'un dernier changement de repère, le passage vers le repere projectif reel et, enfin, vers le repère image.
 
 tous les sommets ont des coordonnées dans le repère projectif, mais, par convention, seuls ceux qui se trouvent dans le cube 
-[-1 1] sur x, y, et z correspondent à des pixels de l'image.
+[-1 1] sur x, y, et z correspondent à des pixels de l'image :
+    - -1 < x < 1
+    - -1 < y < 1
+    - -1 < z < 1
+
+les points homogenes wx, wy, wz, sont donc visibles si :
+    - -w < wx < w
+    - -w < wy < w
+    - -w < wz < w
+
+_rappel :_  on peut retrouver le point *réel* p = (x, y, z, 1) associé à un point *homogène* h = (wx, wy, wz, w) en divisant par w, le poids 
+homogene : p = h / h.w. 
 
 le premier traitement réalisé est donc ce test de visibilité, suivi, ou pas, de la dernière transformation vers le repère image, et
 enfin du test qui détermine quels pixels permettent de dessiner le triangle.
@@ -315,19 +327,19 @@ on peut écrire le test de visibilité d'un sommet comme ça :
 \code
 bool visible( const Point p )
 {
-    if(p.x < -1 || p.x > 1) return false;   // trop à droite, ou à gauche
-    if(p.y < -1 || p.y > 1) return false;   // trop haut, ou trop bas
-    if(p.z < -1 || p.z > 1) return false;   // trop loin ou derrière
+    if(p.x < -p.w || p.x > p.w) return false;   // trop à droite, ou à gauche
+    if(p.y < -p.w || p.y > p.w) return false;   // trop haut, ou trop bas
+    if(p.z < -p.w || p.z > p.w) return false;   // trop loin ou derrière
     
-    // le sommet est bien dans le cube -1 1, il est visible
+    // le sommet reel est bien dans le cube -1 1, il est visible par la camera
     return true;
 }
 \endcode
 
-si aucun des 3 sommets d'un triangle n'est visible, le triangle n'est pas visible non plus et n'est pas dessiné (_remarque :_ ce test 
-n'est pas exact, certains triangles doivent etre dessinés même si leurs sommets ne sont pas visibles... pourquoi ?). 
-sinon, les coordonnées sont transformées en position de pixels dans l'image, et le _fragment shader_, la fonction responsable 
-de donner une couleur au pixel est exécutée, puis la couleur est écrite dans l'image.
+si les sommets du triangle ne sont pas tous les 3 visibles, il faudra découper le triangle pour trouver quelle partie est visible.
+sinon, les coordonnées sont transformées d'abord dans le repere projectif réel, puis en position de pixels dans l'image, 
+et le _fragment shader_, la fonction responsable de donner une couleur au pixel est exécutée, puis la couleur est écrite 
+dans l'image.
 
 \code
 /*
@@ -345,27 +357,27 @@ struct Color { float r, g, b; };        // representation d'une couleur
 
 void draw_triangle( const Point a, const Point b, const Point c )
 {
-    if( visible(a) == false && visible(b) == false && visible(c) == false)
-        // aucun sommet n'est visible, pas la peine de dessiner le triangle
-        return;
+    if(!visible(a) || !visible(b) || !visible(c))
+        // le triangle est en partie non visible, il faudra le decouper et ne dessiner que la partie visible
+        return; // todo
+    
+    // passage dans le repere projectif reel
+    a= a / a.w;
+    b= b / b.w;
+    c= c / c.w;
     
     // passage dans le repère image, de [-1 1]x[-1 1] vers [0 width]x[0 height]
-    Point a_pixel;
-    Point b_pixel;
-    Point c_pixel;
-    a_pixel.x= (a.x + 1) * width / 2;
-    b_pixel.x= (b.x + 1) * width / 2;
-    c_pixel.x= (c.x + 1) * width / 2;
-    a_pixel.y= (a.y + 1) * height / 2;
-    b_pixel.y= (b.y + 1) * height / 2;
-    c_pixel.y= (c.y + 1) * height / 2;
+    Point pa= (a + 1) * Point(with, height, 1) / 2;
+    Point pb= (b + 1) * Point(with, height, 1) / 2;
+    Point pc= (c + 1) * Point(with, height, 1) / 2;
     
-    // dessiner le triangle
+    // dessiner le triangle, parcourir tous les pixels de l'image... 
+    // todo : comment eviter de tous les parcourir ?
     for(int y= 0; y < height; y++)
     for(int x= 0; x < width; x++)
     {
         // verifier que le pixel x, y fait partie du triangle...
-        if(inside(x, y, a_pixel, b_pixel, c_pixel))
+        if(inside(x, y, pa, pb, pc))
         {
             // executer le fragment shader pour connaitre la couleur du pixel
             Fragment gl_FragCoord;      // position du fragment
@@ -377,8 +389,9 @@ void draw_triangle( const Point a, const Point b, const Point c )
             gl_FragColor.g= 0;
             gl_FragColor.b= 0;
             
-            // execute la fonction / fragment shader
-            main();
+            // execute la fonction main() du fragment shader
+            { ... }
+            // renvoie la couleur du fragment
             // ecrit la couleur dans l'image
             image(x, y)= gl_FragColor;
         }
@@ -471,45 +484,41 @@ struct Color { float r, g, b; };        // representation d'une couleur
 
 void draw_triangle( const Point a, const Point b, const Point c )
 {
-    if( visible(a) == false && visible(b) == false && visible(c) == false)
-        // aucun sommet n'est visible, pas la peine de dessiner le triangle
-        return;
+    if(!visible(a) || !visible(b) || !visible(c))
+        // le triangle est en partie non visible, il faudra le decouper et ne dessiner que la partie visible
+        return; // todo
+    
+    // passage dans le repere projectif reel
+    a= a / a.w;
+    b= b / b.w;
+    c= c / c.w;
     
     // passage dans le repère image, de [-1 1]x[-1 1]x[-1 1] vers [0 width]x[0 height]x[0 1]
-    Point a_pixel;
-    Point b_pixel;
-    Point c_pixel;
-    a_pixel.x= (a.x + 1) * width / 2;
-    b_pixel.x= (b.x + 1) * width / 2;
-    c_pixel.x= (c.x + 1) * width / 2;
-    a_pixel.y= (a.y + 1) * height / 2;
-    b_pixel.y= (b.y + 1) * height / 2;
-    c_pixel.y= (c.y + 1) * height / 2;
-    a_pixel.z= (a.z + 1) / 2;
-    b_pixel.z= (b.z + 1) / 2;
-    c_pixel.z= (c.z + 1) / 2;
+    Point pa= (a + 1) * Point(with, height, 1) / 2;
+    Point pb= (b + 1) * Point(with, height, 1) / 2;
+    Point pc= (c + 1) * Point(with, height, 1) / 2;
     
     // dessiner le triangle
     for(int y= 0; y < height; y++)
     for(int x= 0; x < width; x++)
     {
         // verifier que le pixel x, y fait partie du triangle...
-        if(inside(x, y, a_pixel, b_pixel, c_pixel))
+        if(inside(x, y, pa, pb, pc))
         {
             // executer le fragment shader pour connaitre la couleur du pixel
             Fragment gl_FragCoord;      // position du fragment
             gl_FragCoord.x= x;
             gl_FragCoord.y= y;
             // interpoler la profondeur du fragment
-            gl_FragCoord.z= z_interpolate(x, y, a_pixel, b_pixel, c_pixel);
+            gl_FragCoord.z= fragment_depth(x, y, pa, pb, pc);
             
             Color gl_FragColor;         // couleur du fragment
             gl_FragColor.r= 0;
             gl_FragColor.g= 0;
             gl_FragColor.b= 0;
             
-            // execute la fonction / fragment shader
-            main();
+            // execute la fonction main() du fragment shader
+            { ... }
             
             // ecrit la couleur dans l'image, si le fragment est plus proche == test de profondeur
             if(gl_FragCoord.z < zbuffer(x, y))
@@ -522,7 +531,7 @@ void draw_triangle( const Point a, const Point b, const Point c )
 }
 \endcode
 
-_remarque :_ le code complet est disponible dans \ref pipeline_c.
+_remarque :_ un code complet et fonctionnel est disponible dans \ref pipeline_c.
 
 implication directe pour l'application, il plutôt important d'initialiser correctement les valeurs du zbuffer avant de dessiner des triangles, sinon
 le test de profondeur ne conservera pas le bon triangle pour chaque pixel. 
@@ -583,6 +592,7 @@ void main( )
 \endcode
 
 \image html mesh_uvgrid.png
+
 
 # résumé
 

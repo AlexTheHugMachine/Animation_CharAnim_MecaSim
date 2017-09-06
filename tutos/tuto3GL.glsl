@@ -1,5 +1,6 @@
 
 //! \file tuto3GL.glsl affichage d'un cube, 12 triangles, 36 sommets
+
 #version 330
 
 #ifdef VERTEX_SHADER

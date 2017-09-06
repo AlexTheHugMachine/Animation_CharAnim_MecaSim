@@ -1,7 +1,7 @@
 
 /*! \addtogroup tuto2GL compiler et linker un shader program
 
-cf tuto2GL.cpp et tuto1GL.cpp
+cf tuto2GL.cpp (+ tuto2GL_vertex.glsl et tuto2GL_fragment.glsl) et tuto1GL.cpp (+ tuto1GL_vertex.glsl et tuto1GL_fragment.glsl)
 
 un shader program est la même chose que d'habitude : le code exécutable crée par l'édition de liens des binaires obtenus 
 après la compilations des shaders.
