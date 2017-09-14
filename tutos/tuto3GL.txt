@@ -184,7 +184,7 @@ de les affecter à un uniform, c'est le role du parametre _transpose_ de glUnifo
 
 \code
 Transform t;
-GLint location= glGetUniformLocation(program, "matrix);
+GLint location= glGetUniformLocation(program, "matrix");        // cf declaration dans un shader : uniform mat4 matrix;
 glUniformMatrix4fv(location, /* count */ 1, /* transpose */ GL_TRUE, t.buffer());
 \endcode
 
@@ -198,6 +198,11 @@ program_uniform(program, "color", Color(1, 1, 1));
 program_uniform(program, "matrix", Transform());
 \endcode
 
+__attention :__ vérifiez que la bonne surchage soit utilisee, si l'uniform est un scalaire : int, uint ou float, n'hesitez pas utiliser les notations litterales ou les constructeurs explicites :
+    - `12.5f` ou `float(12.5)` ou `(float) 12.5`,
+    - `4` ou `int(4)` ou `(int) 4`,
+    - `6u` ou `unsigned(6)` ou `(unsigned) 6`.
+    
 
 ## glDraw( )
 
