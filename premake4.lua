@@ -68,7 +68,21 @@ solution "gKit2light"
 			system "Windows"
 			architecture "x64"
 			disablewarnings { "4244", "4305" }
+			flags { "MultiProcessorCompile", "NoMinimalRebuild" }
 		end
+		includedirs { "extern/visual2015/include" }
+		libdirs { "extern/visual2015/lib" }
+		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
+		
+	configuration { "windows", "vs2017" }
+		if _PREMAKE_VERSION >="5.0" then
+			system "Windows"
+			architecture "x64"
+			disablewarnings { "4244", "4305" }
+			flags { "MultiProcessorCompile", "NoMinimalRebuild" }
+		end
+
+		-- memes librairies que pour la version 2015
 		includedirs { "extern/visual2015/include" }
 		libdirs { "extern/visual2015/lib" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
@@ -90,6 +104,7 @@ gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h" }
 if no_project then
 	do return end
 end
+
  -- description des projets		 
 projects = {
 	"shader_kit",
@@ -124,6 +139,7 @@ tutos = {
 	
 	"tuto1GL",
 	"tuto2GL",
+	"tuto2GL_app",
 	"tuto3GL",
 	"tuto3GL_reflect",
 	"tuto4GL",
@@ -167,3 +183,5 @@ for i, name in ipairs(tutosM2) do
 		files ( gkit_files )
 		files { gkit_dir .. "/tutos/M2/" .. name..'.cpp' }
 end
+
+	
