@@ -149,11 +149,8 @@ void quit( )
 void draw( )
 {
     // effacer la fenetre : copier la couleur par defaut dans tous les pixels de la fenetre
-    //~ // cf init(): glClearColor(0.2, 0.2, 0.2, 1); 
-    //~ glClear(GL_COLOR_BUFFER_BIT);
-    
-    float black[]= { .2f, .2f, .2f, 1.f };
-    glClearBufferfv(GL_COLOR, 0, black);
+    // cf init(): glClearColor(0.2, 0.2, 0.2, 1); 
+    glClear(GL_COLOR_BUFFER_BIT);
     
     // configurer le pipeline, selectionner le vertex array a utiliser
     glBindVertexArray(vao);
@@ -188,9 +185,13 @@ int main( int argc, char **argv )
         return 1;       // erreur lors de la creation de la fenetre ou de l'init de sdl2
     }
 
-    // etape 2 : creer un contexte opengl core profile pour dessiner, uitlise sdl
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    // etape 2 : creer un contexte opengl core profile pour dessiner, utilise sdl2
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);                               // version 3.3
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);    
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);               // infos de debug
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);      // version moderne
+    
+    // dessiner dans une image differente de celle affichee par la fenetre de l'application
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     SDL_GLContext context= SDL_GL_CreateContext(window);
@@ -200,10 +201,10 @@ int main( int argc, char **argv )
         return 1;
     }
 
-    SDL_GL_SetSwapInterval(1);  // attendre l'ecran
+    SDL_GL_SetSwapInterval(1);  // attendre l'ecran pour echanger les images affichee et buffer de dessin
 
 #ifndef NO_GLEW
-    // initialise les extensions opengl
+    // initialise les extensions opengl, si necessaire
     glewExperimental= 1;
     GLenum err= glewInit();
     if(err != GLEW_OK)

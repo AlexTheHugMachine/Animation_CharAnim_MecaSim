@@ -74,17 +74,21 @@ Pour obtenir un affichage "propre", il faut pouvoir dessiner dans une image qui 
 de cisaillement (cf screen tearing [wikipedia](https://en.wikipedia.org/wiki/Screen_tearing)) assez désagréable, c'est encore 
 SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, ...) qui permet de sélectionner cette option. Il faut également indiquer que le changement entre les 
 2 images, celle qui est affichée et celle dans laquelle openGL dessine, se fait en fonction de la vitesse d'affichage de l'écran, cf SDL_GL_SetSwapInterval(1);
+et utiliser SDL_GL_SwapWindow(); pour provoquer l'echange, lorsque l'application a fini de dessiner.
 
 Dernière étape, avant de pouvoir utiliser les fonctions d'openGL, il faut finir d'importer les symboles définis par la librairie dynamique openGL... 
 selon les systèmes c'est inutile (mac os) ou obligatoire (windows). c'est la librairie GLEW qui s'en charge.
 
 \code
+    // version 3.3
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);    
     // activer le mode debug
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-    // choisir une version moderne d'openGL, les versions core profile, a partir de openGL 3.2
+    // choisir une version moderne d'openGL, les versions core profile
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     
-    // 
+    // dessiner et afficher des images differentes, il faudra 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     // creer le contexte
@@ -148,6 +152,8 @@ int main( )
     ...
 }
 \endcode
+
+_attention :_ ne pas oublier le SDL_GL_SwapWindow(), qui permet d'afficher ce que l'on vient de dessiner.
 
 code complet dans tuto1.cpp et tuto1GL.cpp.
 
