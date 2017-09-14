@@ -151,7 +151,7 @@ glUniform4f(location, 1, 1, 1, 1);
 \endcode
 
 pour le tableau positions, les éléments du tableau sont des vec3. pour un seul vec3, on utiliserait glUniform3f( ), pour un tableau, les valeurs
-sont passées par pointeur, et c'est la variante glUniform3fv(location, size, data) qu'il faut utiliser. size indique le nombre d'élements vec3 à transférer.
+sont passées par pointeur, et c'est la variante glUniform3fv(location, count, data) qu'il faut utiliser. _count_ indique le nombre d'élements vec3 à transférer.
 
 \code
 #include "vec.h"
@@ -159,7 +159,7 @@ sont passées par pointeur, et c'est la variante glUniform3fv(location, size, da
 vec3 data[36]= { ... };
 
 GLint location= glGetUniformLocation(program, "positions");
-glUniform3fv(location, 36, data);
+glUniform3fv(location, /* count */ 36, data);
 \endcode
 
 _remarque :_ on peut utiliser les variantes pointeurs pour une valeur unique, il suffit de donner 1 comme nombre d'éléments à affecter.
@@ -167,7 +167,7 @@ par exemple :
 \code
 float data= 12;
 GLint location= glGetUniformLocation(program, "time");
-glUniform1fv(location, 1, &data);
+glUniform1fv(location, /* count */ 1, &data);
 \endcode
 ou encore 
 \code
@@ -175,16 +175,29 @@ ou encore
 
 Color data= Color(1, 1, 1);
 GLint location= glGetUniformLocation(program, "color");
-glUniform4fv(location, 1, &data);
+glUniform4fv(location,  /* count */ 1, &data);
 \endcode
+
+pour un uniform, ou un tableau, de type matrice 4x4, comme les Transform, par exemple, il faut utiliser glUniformMatrix4fv(). Transform represente 
+les matrices par 16 floats, organises par ligne, mais openGL utilise l'autre organisation, par colonne, il faut donc transposer les matrices avant 
+de les affecter à un uniform, c'est le role du parametre _transpose_ de glUniformMatrix().
+
+\code
+Transform t;
+GLint location= glGetUniformLocation(program, "matrix);
+glUniformMatrix4fv(location, /* count */ 1, /* transpose */ GL_TRUE, t.buffer());
+\endcode
+
 
 \ref uniforms.h définit plusieurs surcharges de la famille glUniform() pour les types les plus courants.
 \code
 #include "uniforms.h"
 
-program_uniform(program, "time", 12);
+program_uniform(program, "time", float(12));
 program_uniform(program, "color", Color(1, 1, 1));
+program_uniform(program, "matrix", Transform());
 \endcode
+
 
 ## glDraw( )
 
