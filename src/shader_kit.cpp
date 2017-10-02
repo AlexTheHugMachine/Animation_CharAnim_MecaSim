@@ -81,7 +81,7 @@ const char *option_find( std::vector<const char *>& options, const char *ext )
         if(std::string(options[i]).rfind(ext) != std::string::npos)
         {
             const char *option= options[i];
-            options[i]= options.back();
+            options[i]= options.back(); // ne preserve pas l'ordre des arguments... peut mieux faire
             options.pop_back();
             return option;
         }
@@ -306,7 +306,10 @@ int draw( void )
     if(key_state('s'))
     {
         clear_key_state('s');
-        screenshot("shader_kit.png");
+        
+        static int calls= 1;
+        printf("screenshot %d...\n", calls);
+        screenshot("shader_kit", calls++);
     }
     
     static bool video= false;

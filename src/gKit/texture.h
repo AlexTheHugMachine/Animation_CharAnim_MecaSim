@@ -32,6 +32,9 @@ int miplevels( const int width, const int height );
 //! enregistre le contenu de la fenetre dans un fichier filename nom de l'image a ecrire. doit etre de type .png / .bmp
 int screenshot( const char *filename );
 
+//! enregistre le contenu de la fenetre dans un fichier numerote prefixXX.png nom de l'image a ecrire. id est le numero de la capture.
+int screenshot( const char *prefix, const int id );
+
 /*! capture video. enregistre le contenu de la fenetre dans un fichier prefix%04d.bmp.
 
 pour obtenir une video 30 images par secondes, compresser avec :

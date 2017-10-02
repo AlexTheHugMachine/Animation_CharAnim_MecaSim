@@ -122,6 +122,13 @@ int screenshot( const char *filename )
     return write_image_data(image, filename);
 }
 
+int screenshot( const char *prefix, const int id )
+{
+    char tmp[4096];
+    sprintf(tmp,"%s%02d.png", prefix, id);
+    return screenshot(tmp);
+}
+
 int capture( const char *prefix )
 {
     static int id= 1;
