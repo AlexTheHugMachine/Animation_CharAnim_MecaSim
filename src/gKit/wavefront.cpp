@@ -3,38 +3,36 @@
 #include <ctype.h>
 #include <climits>
 
+#include <algorithm>
+
 #include "wavefront.h"
 
 /*! renvoie le chemin d'acces a un fichier. le chemin est toujours termine par /
+    pathname("path\to\file") == "path/to/"
+    pathname("path\to/file") == "path/to/"
     pathname("path/to/file") == "path/to/"
     pathname("file") == "./"
  */
 static
 std::string pathname( const std::string& filename )
 {
-    size_t slash = filename.find_last_of( '/' );    // separateur linux
-    size_t bslash = filename.find_last_of( '\\' );  // separateur windows
-
-    if(slash == std::string::npos && bslash != std::string::npos)
-        slash= bslash;
-    else if(slash != std::string::npos && bslash != std::string::npos && bslash > slash)
-        slash= bslash;
-    
+    std::string path= filename;
+#ifndef WIN32
+    std::replace(path.begin(), path.end(), '\\', '/');   // linux, macos : remplace les \ par /.
+    size_t slash = path.find_last_of( '/' );
     if(slash != std::string::npos)
-        return filename.substr(0, slash +1); // inclus le slash
+        return path.substr(0, slash +1); // inclus le slash
     else
         return "./";
+#else
+    std::replace(path.begin(), path.end(), '/', '\\');   // windows : remplace les / par \.
+    size_t slash = path.find_last_of( '\\' );
+    if(slash != std::string::npos)
+        return path.substr(0, slash +1); // inclus le slash
+    else
+        return ".\\";
+#endif
 }
-
-
-struct MaterialLib
-{
-    std::vector<std::string> names;
-    std::vector<Material> data;
-};
-
-//! charge un fichier .mtl, description des matieres.
-MaterialLib read_materials( const char *filename );
 
 
 Mesh read_mesh( const char *filename )
@@ -55,6 +53,7 @@ Mesh read_mesh( const char *filename )
     std::vector<vec3> normals;
     MaterialLib materials;
     int default_material_id= -1;
+    int material_id= -1;
     
     std::vector<int> idp;
     std::vector<int> idt;
@@ -129,6 +128,19 @@ Mesh read_mesh( const char *filename )
                     break;
             }
             
+            // force une matiere par defaut, si necessaire
+            if(material_id == -1)
+            {
+                if(default_material_id == -1)
+                    // creer une matiere par defaut
+                    default_material_id= data.mesh_material(Material());
+                
+                material_id= default_material_id;
+                data.material(material_id);
+                
+                printf("usemtl default\n");
+            }
+            
             for(int v= 2; v +1 < (int) idp.size(); v++)
             {
                 int idv[3]= { 0, v -1, v };
@@ -161,22 +173,22 @@ Mesh read_mesh( const char *filename )
         {
            if(sscanf(line, "usemtl %[^\r\n]", tmp) == 1)
            {
-               int id= -1;
+               material_id= -1;
                for(unsigned int i= 0; i < (unsigned int) materials.names.size(); i++)
                 if(materials.names[i] == tmp)
-                        id= i;
+                    material_id= i;
                 
-                if(id == -1)
-                    id= default_material_id;
-                
-                if(id == -1)
+                if(material_id == -1)
                 {
-                    // creer une matiere par defaut
-                    default_material_id= data.mesh_material(Material());
-                    id= default_material_id;
+                    // force une matiere par defaut, si necessaire
+                    if(default_material_id == -1)
+                        default_material_id= data.mesh_material(Material());
+                    
+                    material_id= default_material_id;
                 }
-                    // selectionne une matiere pour le prochain triangle
-                data.material(id);
+                
+                // selectionne une matiere pour le prochain triangle
+                data.material(material_id);
            }
         }
     }

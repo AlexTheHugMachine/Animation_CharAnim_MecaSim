@@ -264,9 +264,9 @@ TriangleData Mesh::triangle( const unsigned int id ) const
     else
     {
         // coordonnees barycentriques des sommets, convention p(u, v)= w*a + u*b + v*c, avec w= 1 - u -v
-        triangle.ta= vec2(0, 0);
-        triangle.tb= vec2(1, 0);
-        triangle.tc= vec2(0, 1);
+        triangle.ta= vec2(0, 0);        // w= 1
+        triangle.tb= vec2(1, 0);        // w= 0
+        triangle.tc= vec2(0, 1);        // w= 0
     }
     
     return triangle;

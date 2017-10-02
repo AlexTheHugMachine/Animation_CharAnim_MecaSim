@@ -1,0 +1,113 @@
+
+/*! \addtogroup wavefront charger et preparer un objet wavefront .obj
+
+cf mesh_viewer.cpp mesh_data.h mesh_buffer.h
+
+## lire un fichier wavefront `.obj`
+
+un objet 3d est décrit par un ensemble de triangles, associes à des matières. chaque sommet est décrit par une position, et 
+éventuellement une normale et des coordonnées de textures.
+
+un ficher .obj est un fichier texte qui représente ces informations ligne par ligne, en séquence. les sommets sont décrits par une ou plusieurs lignes, en fonction des attributs présents :
+    - `v x y z` : position,
+    - `vt u v` : coordonnées de texture,
+    - `vn x y z` : normale
+    
+les attributs sont indexés séparement.
+les faces sont décrites par une liste de sommets, et chaque sommet est décrit par un tuple d'indices d'attributs, dans l'ordre position, texcoord, normale :
+    - `f p0/t0/n0 p1/t1/n1 p2/t2/n2` : décrit la face / le triangle p0, p1, p2 associé aux attributs position, texcoord et normale.
+
+les attributs texcoord et normale sont optionnels (position est obligatoire), il est donc possible de représenter un sommet par :
+    - `p/t` : position + texcoord,
+    - `p//n` : position + normale,
+    - `p/t/n` : position + texcoord + normale.
+
+_remarque :_ les indices sont numerotés à partir de 1... ou de la fin du tableau, les indices sont négatifs dans ce cas et -1 designe le dernier élément.
+
+lire un fichier .obj est assez simple, il suffit de déterminer quelle donnée est décrite par chaque ligne, de l'analyser puis de stocker les données dans un vecteur stl.
+
+analyser la description d'une face est un petit peu plus complexe, puisqu'il est nécessaire d'analyser le tuple décrivant chaque sommet. de plus, des faces
+avec plus de 3 sommets sont autorisées, il faudra donc les trianguler...
+
+les matières sont décrites dans un fichier séparé, extension `.mtl`, son nom est indiqué par une ligne dans fichier `.obj` par `mtllib materials.mtl`.
+la matière associée à la prochaine face est indiquée par `usemtl nom_matiere` dans le fichier `.obj`.
+
+c'est read_mesh_data( ) de mesh_data.h qui réalise le chargement. la fonction renvoie une structure MeshData contenant les vecteurs de données.
+et c'est read_materials( ) de wavefront.h qui charge l'ensemble de matières décrit par un fichier `.mtl` et renvoie une structure MaterialLib.
+
+_rappel :_ représentation indexée ou pas d'un maillage. il y a 2 solutions, avec openGL, pour décrire un maillage. soit un triangle est décrit par les attributs de 3 sommets,
+et affiché avec glDrawArrays(), soit par 3 indices de sommets et affiché par glDrawElements(). cf \ref draw
+
+
+_remarque :_ read_mesh() de wavefront.h est une version simplifiée qui charge les données et construit une structure Mesh, sans utiliser la représentation indexée, pour un 
+affichage direct avec glDrawArrays().
+
+## glDrawElements() et indexation unique.
+
+les sommets du fichier `.obj` sont décrits par un tuple d'indices. pour afficher un objet avec openGL, il faut une indexation unique des attributs des sommets : 
+le sommet d'indice `VertexID` correspond aux attributs `positions[VertexID]`, `texcoords[VertexID]` et `normals[VertexID]` alors que la description du fichier `.obj`
+est plus souple. il faut donc identifier les tuples uniques, et copier les attributs correspondants. c'est la fonction buffers() de mesh_buffer.h qui transforme l'indexation,
+et qui permet d'utiliser glDrawElements()  pour afficher le maillage indexé.
+
+exemple : un cube 
+un cube est décrit par 8 positions. mais selon les attributs associés à ces positions, plus de 8 sommets sont nécessaires pour décrire l'objet à openGL. 
+par exemple, la position d'un coin du cube peut être associée à 3 normales différentes, en fonction de la face. pour openGL, il faudra décrire 3 sommets différents par triangle.
+dans cet exemple, chaque sommet de chaque face est unique et il faudra décrire les 24 sommets des 6 faces du cube. alors que 8 auraient pu suffire avec une indexation plus
+souple.
+
+## plusieurs matières par maillage.
+
+les objets sont souvent composés de plusieurs parties chacune associée à une matière. pour dessiner efficacement ce type d'objet, il faut limiter le nombre de draw (et ne pas 
+faire un draw par triangle en changeant les proprietes de la matière à chaque fois). une solution classique consiste à identifier les groupes de triangles associés à la 
+même matière et à les dessiner ensemble, avec un seul appel à glDrawElements() par groupe.
+
+buffers( ) de mesh_buffer.h prépare les données de cette manière, d'abord en triant les triangles par matière puis en construisant une indexation unique des attributs des sommets.
+la liste des groupes de triangles est egalement construite, cf MeshGroup. ce sont les champs MeshGroup::first et MeshGroup::count qui permettent ensuite d'afficher la sequence 
+de triangles avec :
+\code
+MeshBuffer mesh;
+
+init( ):
+    MeshData data= read_mesh_data( ... );
+    mesh= buffers(data);
+    
+    // creer les buffers openGL et configurer un format de sommet, un vao \ref tuto4GL
+    ...
+    
+draw( ):
+    glBindVertexArray( ... );
+    glUseProgram( ... );
+    glUniform( ... );
+    
+    for(int i= 0; i < mesh.groups.size(); i++)
+        glDrawElements(GL_TRIANGLES, /* count */ mesh.groups[i].count, /* index type */ GL_UNSIGNED_INT, /* offset */ mesh.groups[i].first * sizeof(unsigned int));
+\endcode
+
+exemple complet dans mesh_viewer.cpp
+
+## recalculer les normales des sommets, si necessaire...
+
+cf normals() de mesh_data.h
+
+pas mal de fichiers `.obj` ne décrivent pas les normales des sommets, cette information est pourtant essentielle à l'affichage de l'objet. il est possible d'utiliser blender par exemple, 
+pour les calculer et de re-exporter le fichier. mais il est assez simple de les calculer lorsqu'elles ne sont pas présentes.
+
+connaissant 2 aretes d'un triangle, un produit vectoriel permet d'obtenir un vecteur orthogonal aux aretes, ce qui est nous donne la normale géométrique du triangle. pour calculer
+la normale aux sommets du maillage, il faut trouver les triangles adjacents à chaque sommet, calculer leurs normales, et les moyenner. ce qui est assez pénible. 
+
+une solution simple existe lorsque le maillage est indexé. dans ce cas, chaque triangle connait l'indice de la position de chacun de ses sommets et il suffit de créer une normale 
+par position, de parcourir les triangles et d'accumuler les normales géométriques. 
+
+cf normals( ) de mesh_data.h
+
+exemple d'utilisation :
+\code
+MeshData data= read_mesh_data( ... );
+normals(data);
+...
+MeshBuffer mesh= buffers(data);
+...
+\endcode
+
+ */
+ 

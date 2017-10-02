@@ -332,7 +332,6 @@ public:
     GLuint create_buffers( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
     
 protected:    
-
     /*! construit un shader program configure.
     \param use_texcoord force l'utilisation des coordonnees de texture
     \param use_normal force l'utilisation des normales

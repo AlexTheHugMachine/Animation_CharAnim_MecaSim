@@ -166,6 +166,14 @@ for i, name in ipairs(tutos) do
 		files { gkit_dir .. "/tutos/" .. name..'.cpp' }
 end
 
+project("mesh_viewer")
+	language "C++"
+	kind "ConsoleApp"
+	targetdir "bin"
+	files ( gkit_files )
+	files { gkit_dir .. "/tutos/mesh_*.cpp"}
+	files { gkit_dir .. "/tutos/mesh_*.h"}
+
 
 -- description des tutos openGL avances / M2
 tutosM2 = {
@@ -183,5 +191,3 @@ for i, name in ipairs(tutosM2) do
 		files ( gkit_files )
 		files { gkit_dir .. "/tutos/M2/" .. name..'.cpp' }
 end
-
-	
