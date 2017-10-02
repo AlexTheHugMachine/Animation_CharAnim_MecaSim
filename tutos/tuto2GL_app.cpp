@@ -11,6 +11,8 @@
 
 
 /* une application opengl est composee de plusieurs composants :
+** version utilisant la classe App
+
     1. une fenetre pour voir ce que l'on dessine
     2. un contexte openGL pour dessiner
     3. 3 fonctions : 
@@ -24,8 +26,6 @@
     ca permet de reagir a ces evenements et de modifier / deplacer / animer ce que l'on dessine.
     
     le shader sera compile dans init( ), utilise dans draw( ) et detruit a la fin de l'application dans quit( ).
-    
-    version utilisant la classe App
  */
 
 
@@ -94,6 +94,13 @@ public:
         glAttachShader(program, fragment_shader);
         // linker les shaders
         glLinkProgram(program);
+
+        /* ou, plus court avec les utilitaires de program.h
+            #include "program.h"
+            
+            program= read_program("tuto2GL.glsl");
+            program_print_errors(program);
+         */
         
         // verifier que tout c'est bien passe, si les shaders ne se sont pas compiles correctement, le link du program va echouer.
         GLint status;
@@ -106,15 +113,6 @@ public:
             return 0;
         else 
             return -1;
-        
-        
-        /* ou, plus court avec les utilitaires de program.h
-            #include "program.h"
-            
-            program= read_program("tuto2GL.glsl");
-            program_prin_errors(program);
-            return 0;
-         */
     }
 
 
@@ -124,6 +122,11 @@ public:
         glDeleteShader(vertex_shader);
         glDeleteShader(fragment_shader);
         glDeleteProgram(program);
+        
+        /* ou 
+            release_program(program);
+         */
+        
         glDeleteVertexArrays(1, &vao);
         return 0;   // ras, pas d'erreur
     }
