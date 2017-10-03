@@ -29,8 +29,8 @@ lire un fichier .obj est assez simple, il suffit de déterminer quelle donnée e
 analyser la description d'une face est un petit peu plus complexe, puisqu'il est nécessaire d'analyser le tuple décrivant chaque sommet. de plus, des faces
 avec plus de 3 sommets sont autorisées, il faudra donc les trianguler...
 
-les matières sont décrites dans un fichier séparé, extension `.mtl`, son nom est indiqué par une ligne dans fichier `.obj` par `mtllib materials.mtl`.
-la matière associée à la prochaine face est indiquée par `usemtl nom_matiere` dans le fichier `.obj`.
+les matières sont décrites dans un fichier séparé, extension `.mtl`, son nom est indiqué par une ligne dans le fichier `.obj` par une ligne `mtllib materials.mtl`.
+la matière associée à la prochaine face est indiquée par la ligne `usemtl nom_matiere` dans le fichier `.obj`.
 
 c'est read_mesh_data( ) de mesh_data.h qui réalise le chargement. la fonction renvoie une structure MeshData contenant les vecteurs de données.
 et c'est read_materials( ) de wavefront.h qui charge l'ensemble de matières décrit par un fichier `.mtl` et renvoie une structure MaterialLib.
@@ -49,11 +49,11 @@ le sommet d'indice `VertexID` correspond aux attributs `positions[VertexID]`, `t
 est plus souple. il faut donc identifier les tuples uniques, et copier les attributs correspondants. c'est la fonction buffers() de mesh_buffer.h qui transforme l'indexation,
 et qui permet d'utiliser glDrawElements()  pour afficher le maillage indexé.
 
-exemple : un cube 
+_exemple : un cube_
 un cube est décrit par 8 positions. mais selon les attributs associés à ces positions, plus de 8 sommets sont nécessaires pour décrire l'objet à openGL. 
-par exemple, la position d'un coin du cube peut être associée à 3 normales différentes, en fonction de la face. pour openGL, il faudra décrire 3 sommets différents par triangle.
-dans cet exemple, chaque sommet de chaque face est unique et il faudra décrire les 24 sommets des 6 faces du cube. alors que 8 auraient pu suffire avec une indexation plus
-souple.
+la position d'un coin du cube peut être associée à 3 normales différentes, en fonction de la face adjacente. pour openGL, il faudra décrire 3 sommets différents.
+dans cet exemple, chaque sommet de chaque face est unique et il faudra décrire les 24 sommets des 6 faces du cube, soit 24 sommets et 12 triangles. alors que 8 
+auraient pu suffire avec une indexation plus souple.
 
 ## plusieurs matières par maillage.
 
@@ -63,12 +63,15 @@ même matière et à les dessiner ensemble, avec un seul appel à glDrawElements
 
 buffers( ) de mesh_buffer.h prépare les données de cette manière, d'abord en triant les triangles par matière puis en construisant une indexation unique des attributs des sommets.
 la liste des groupes de triangles est egalement construite, cf MeshGroup. ce sont les champs MeshGroup::first et MeshGroup::count qui permettent ensuite d'afficher la sequence 
-de triangles avec :
+de triangles en utilisant les paramètres `count` et `offset` de glDrawElements().
+
 \code
 MeshBuffer mesh;
 
 init( ):
+    // charger les donnees
     MeshData data= read_mesh_data( ... );
+    // constuire les buffers indexes et les sequences de triangles triees par matiere
     mesh= buffers(data);
     
     // creer les buffers openGL et configurer un format de sommet, un vao \ref tuto4GL
@@ -80,10 +83,11 @@ draw( ):
     glUniform( ... );
     
     for(int i= 0; i < mesh.groups.size(); i++)
+        // afficher chaque sequence de triangles
         glDrawElements(GL_TRIANGLES, /* count */ mesh.groups[i].count, /* index type */ GL_UNSIGNED_INT, /* offset */ mesh.groups[i].first * sizeof(unsigned int));
 \endcode
 
-exemple complet dans mesh_viewer.cpp
+exemple complet dans mesh_viewer.cpp, avec la creation des buffers d'attributs, du buffer d'indexation, et la configuration du format de sommet.
 
 ## recalculer les normales des sommets, si necessaire...
 
@@ -102,12 +106,135 @@ cf normals( ) de mesh_data.h
 
 exemple d'utilisation :
 \code
+// lire les donnees
 MeshData data= read_mesh_data( ... );
-normals(data);
+if(data.normals.size() == 0)
+    // calculer les normales, si necessaire
+    normals(data);
 ...
+// preparer les buffers pour l'affichage
 MeshBuffer mesh= buffers(data);
 ...
 \endcode
+
+## afficher toutes les matieres avec un seul draw ?
+
+trier et afficher par matière est une solution interressante, mais elle n'exploite pas completement le pipeline programmable d'openGL. une autre solution permet de dessiner tous
+les triangles avec un seul draw. 
+
+__comment ?__
+
+l'idee est de récupérer la description de la matière de chaque triangle lors de sa fragmentation. on pourrait stocker une copie de la matiere par triangle, mais cette solution utilise trop
+de mémoire. une solution plus interressante utilise 2 tableaux : un pour stocker les matieres et un autre qui stocke, pour chaque triangle, l'indice de la matière associée.
+
+on peut déclarer des tableaux d'uniforms dans le fragment shader :
+\code
+uniform vec4 colors[M];
+uniform int color_indices[T];
+
+out vec4 fragment_color;
+void main( )
+{
+    int color_index= color_indices[gl_PrimitiveID];
+    vec4 color= colors[color_index];
+    
+    fragment_color= color;
+}
+\endcode
+
+_rappel :_ gl_PrimitiveID permet au fragment shader de connaitre la primitive en cours de dessin, gl_VertexID permet au vertex shader de connaitre le sommet à transformer.
+
+cette solution n'est pas directement exploitable, il faut définir les valeurs de M et T pour compiler le shader. et autre détail, les uniforms ne permettent pas de stocker beaucoup de valeurs, 
+seulement 64KB sont utilisables.
+
+mais il est possible d'associer un buffer à un tableau d'uniforms ou d'utiliser directement les shader storage buffers, cf \ref storage.
+la déclaration d'un uniform associé à un buffer ressemble à une déclaration de struture, appellé un uniform block dans la doc de GLSL :
+\code
+uniform MaterialBlock
+{
+    vec4 colors[];
+};
+
+uniform IndexBlock
+{
+    int color_indices[];
+};
+
+out vec4 fragment_color;
+void main( )
+{
+    int color_index= color_indices[gl_PrimitiveID];
+    vec4 color= colors[color_index];
+    
+    fragment_color= color;
+}
+\endcode
+
+le nom du block permet à l'application d'associer l'uniform à un buffer. et comme plusieurs buffers peuvent être utilisés simultanément par un shader, ils sont numérotés, et c'est
+l'application qui choisit le numero :
+\code
+// creer et remplir le buffer avec les parametres des matieres.
+GLuint material_buffer= .... ;
+
+// recuperer l'identifiant du block a associer au buffer
+GLuint material_block= glGetUniformBlockIndex(program, "MaterialBlock");
+
+// les uniform blocks sont numerotes, et c'est l'application qui doit choisir le numero...
+
+// associe le numero 0 au bloc "MaterialBLock"
+glUniformBlockBinding(program, material_block, 0);      
+// associe le contenu d'un buffer au block numero 0
+glBindBufferBase(GL_UNIFORM_BUFFER, 0, material_buffer);
+
+// on recommence pour les indices, avec un autre numero
+
+// creer et remplir le buffer contenant l'indice de la matiere de chaque triangle
+GLuint material_index_buffer= ... ;
+GLuint index_block= glGetUniformBlockIndex(program, "IndexBlock");
+glUniformBlockBinding(program, index_block, 1);
+glBindBufferBase(GL_UNIFORM_BUFFER, 1, material_index_buffer);
+\endcode
+
+et voila, il ne reste qu'à dessiner l'objet avec un seul draw, et le fragment peut récupérer directement la description de la matière de chaque triangle.
+
+## autre chose ?
+
+il y a une autre solution, sans doute, plus simple à utiliser, il suffit d'associer un attribut (entier) supplémentaire aux sommets : l'indice de la matière. mais il faut que les sommets 
+soient dupliqués lorsqu'ils sont sur une arete associée à 2 matières, mais cette opération est faite par buffers() de mesh_buffer.h.
+par contre, il n'est pas possible d'interpoler un attribut entier dans un fragment shader, il faut le déclarer explicitement non interpolable avec le mot clé `flat` :
+
+\code
+// vertex shader
+in vec3 position;
+in int material_index;
+
+uniform mat4 mvpMatrix;
+
+out int vertex_material_index;
+
+void main( )
+{
+    gl_Position= mvpMatrx * vec4(position, 1);
+    vertex_material_index= material_index;
+}
+
+// fragment shader
+in flat int vertex_material_index;      //!< !! decoration flat !!
+
+uniform vec4 colors[M];
+
+out vec4 fragment_color;
+
+void main( )
+{
+    vec4 color= colors[vertex_material_index];
+    
+    fragment_color= color;
+}
+\endcode
+
+mais cette solution à toujours l'inconvénient de devoir compiler un shader par objet en fonction du nombre de matieres necessaire à son affichage...
+il suffit d'utiliser un tableau assez gros, mais de ne pas l'utiliser entièrement...
 
  */
  
