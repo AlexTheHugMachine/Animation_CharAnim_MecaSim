@@ -1,6 +1,4 @@
-
 //! \file mesh_buffer.h representation d'un objet openGL.
-
 
 #ifndef _MESH_BUFFER_H
 #define _MESH_BUFFER_H
@@ -29,7 +27,7 @@ struct MeshBuffer
     std::vector<int> material_indices;          //!< indice de la matiere des triangles
     std::vector<int> indices;                   //!< indices des sommets des triangles
     
-    std::vector<Material> materials;            //!< ensemble de matieres
+    std::vector<MaterialData> materials;        //!< ensemble de matieres
     std::vector<MeshGroup> material_groups;     //!< sequence de triangles groupes par matiere
     
     const void *vertex_buffer( ) const { return positions.data(); }

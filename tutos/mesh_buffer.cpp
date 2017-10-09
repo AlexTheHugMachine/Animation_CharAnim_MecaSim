@@ -1,7 +1,6 @@
-
 //! \file mesh_buffer.cpp
 
-
+#include <cassert>
 #include <map>
 #include <algorithm>
 
@@ -21,6 +20,7 @@ struct compareMaterial
         return material_buffer[a] < material_buffer[b];
     }
 };
+
 
 //! representation de l'indexation complete d'un sommet
 struct MeshVertex
@@ -68,6 +68,9 @@ MeshBuffer buffers( const MeshData& data )
     int material_id= data.material_indices[triangles[0]];
     mesh.material_groups.push_back( MeshGroup(material_id, 0) );
     
+    bool has_texcoords= !data.texcoords.empty();
+    bool has_normals= !data.normals.empty();
+    
     // re ordonne les triangles et les attributs
     std::map<MeshVertex, int> remap;
     for(int i= 0; i < (int) triangles.size(); i++)
@@ -86,7 +89,6 @@ MeshBuffer buffers( const MeshData& data )
                 mesh.material_groups.back().count= 3*i - mesh.material_groups.back().first;
                 mesh.material_groups.push_back( MeshGroup(material_id, 3*i) );
             }
-            
             // indice du kieme sommet du ieme triangle re-ordonne
             int index= 3*triangles[i] + k;
             MeshVertex vertex= MeshVertex(material_id, data.position_indices[index], data.texcoord_indices[index], data.normal_indices[index]);
@@ -95,9 +97,22 @@ MeshBuffer buffers( const MeshData& data )
             if(found.second)
             {
                 // copie les attributs
+                assert(data.position_indices[index] != -1);
                 mesh.positions.push_back( data.positions[data.position_indices[index]] );
-                mesh.texcoords.push_back( data.texcoords[data.texcoord_indices[index]] );
-                mesh.normals.push_back( data.normals[data.normal_indices[index]] );
+                
+                if(data.texcoord_indices[index] != -1)
+                    // copie les texcoord du sommet, si elles sont definies
+                    mesh.texcoords.push_back( data.texcoords[data.texcoord_indices[index]] );
+                else if(has_texcoords)
+                    // copie une valeur par defaut, tous les sommets n'ont pas de texcoord
+                    mesh.texcoords.push_back( vec2() );
+                
+                if(data.normal_indices[index] != -1) 
+                    // copie la normale du sommet, si ell est definie
+                    mesh.normals.push_back( data.normals[data.normal_indices[index]] );
+                else if(has_normals)
+                    // copie une valeur par defaut, tous les sommets n'ont pas de normale
+                    mesh.normals.push_back( vec3() );
             }
             
             // construit l'index buffer
@@ -107,6 +122,10 @@ MeshBuffer buffers( const MeshData& data )
 
     // termine la description du dernier groupe de triangles
     mesh.material_groups.back().count= 3*triangles.size() - mesh.material_groups.back().first;
+    
+    printf("buffers : %d positions, %d texcoords, %d normals, %d indices, %d groups\n", 
+        (int) mesh.positions.size(), (int) mesh.texcoords.size(), (int) mesh.normals.size(), (int) mesh.indices.size(), (int) mesh.material_groups.size());
+    
     
     return mesh;
 }

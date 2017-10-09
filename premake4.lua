@@ -150,6 +150,7 @@ tutos = {
 	"tuto5GL_multi",
 	"tuto6GL",
 	"tuto6GL_buffer",
+	"mesh_viewer_sort",
 	"tuto_framebuffer",
 	"tuto_storage",
 	"tuto_storage_buffer",
@@ -171,8 +172,13 @@ project("mesh_viewer")
 	kind "ConsoleApp"
 	targetdir "bin"
 	files ( gkit_files )
-	files { gkit_dir .. "/tutos/mesh_*.cpp"}
-	files { gkit_dir .. "/tutos/mesh_*.h"}
+	files { gkit_dir .. "/tutos/mesh_viewer.cpp"}
+	files { gkit_dir .. "/tutos/mesh_buffer.cpp"}
+	files { gkit_dir .. "/tutos/mesh_buffer.h"}
+	files { gkit_dir .. "/tutos/mesh_data.cpp"}
+	files { gkit_dir .. "/tutos/mesh_data.h"}
+	files { gkit_dir .. "/tutos/material_data.cpp"}
+	files { gkit_dir .. "/tutos/material_data.h"}
 
 
 -- description des tutos openGL avances / M2

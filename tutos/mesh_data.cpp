@@ -1,6 +1,4 @@
-
 //! \file mesh_data.cpp
-
 
 #include <cstdio>
 #include <ctype.h>
@@ -9,7 +7,7 @@
 #include <algorithm>
 #include <map>
 
-#include "wavefront.h"
+#include "material_data.h"
 #include "mesh_data.h"
 
 
@@ -19,7 +17,6 @@
     pathname("path/to/file") == "path/to/"
     pathname("file") == "./"
  */
-static
 std::string pathname( const std::string& filename )
 {
     std::string path= filename;
@@ -53,7 +50,7 @@ MeshData read_mesh_data( const char *filename )
     printf("loading mesh '%s'...\n", filename);
     
     MeshData data;
-    MaterialLib materials;
+    MaterialDataLib materials;
     int default_material_id= -1;
     int material_id= -1;
     
@@ -137,7 +134,7 @@ MeshData read_mesh_data( const char *filename )
                 {
                     // creer une matiere par defaut
                     default_material_id= data.materials.size();
-                    data.materials.push_back( Material() );
+                    data.materials.push_back( MaterialData() );
                 }
                 
                 material_id= default_material_id;
@@ -173,7 +170,7 @@ MeshData read_mesh_data( const char *filename )
         {
            if(sscanf(line, "mtllib %[^\r\n]", tmp) == 1)
            {
-                materials= read_materials( std::string(pathname(filename) + tmp).c_str() );
+                materials= read_material_data( std::string(pathname(filename) + tmp).c_str() );
                 data.materials= materials.data;
            }
         }
@@ -194,7 +191,7 @@ MeshData read_mesh_data( const char *filename )
                     {
                         // creer une matiere par defaut
                         default_material_id= data.materials.size();
-                        data.materials.push_back( Material() );
+                        data.materials.push_back( MaterialData() );
                     }
                     
                     material_id= default_material_id;
@@ -207,9 +204,113 @@ MeshData read_mesh_data( const char *filename )
     
     if(error)
         printf("loading mesh '%s'...\n[error]\n%s\n\n", filename, line_buffer);
+
+    printf("  %d positions, %d texcoords, %d normals, %d triangles\n", 
+        (int) data.positions.size(), (int) data.texcoords.size(), (int) data.normals.size(), (int) data.material_indices.size());
     
     return data;
 }
+
+
+static
+std::string normalize_path( std::string file )
+{
+#ifndef WIN32
+    std::replace(file.begin(), file.end(), '\\', '/');   // linux, macos : remplace les \ par /.
+#else
+    std::replace(file.begin(), file.end(), '/', '\\');   // windows : remplace les / par \.
+#endif
+    return file;
+}
+
+
+MaterialDataLib read_material_data( const char *filename )
+{
+    MaterialDataLib materials;
+    
+    FILE *in= fopen(filename, "rt");
+    if(in == NULL)
+    {
+        printf("[error] loading materials '%s'...\n", filename);
+        return materials;
+    }
+    
+    printf("loading materials '%s'...\n", filename);
+    
+    MaterialData *material= NULL;
+    std::string path= pathname(filename);
+    
+    char tmp[1024];
+    char line_buffer[1024];
+    bool error= true;
+    for(;;)
+    {
+        // charge une ligne du fichier
+        if(fgets(line_buffer, sizeof(line_buffer), in) == NULL)
+        {
+            error= false;       // fin du fichier, pas d'erreur detectee
+            break;
+        }
+        
+        // force la fin de la ligne, au cas ou
+        line_buffer[sizeof(line_buffer) -1]= 0;
+        
+        // saute les espaces en debut de ligne
+        char *line= line_buffer;
+        while(*line && isspace(*line))
+            line++;
+        
+        if(line[0] == 'n')
+        {
+            if(sscanf(line, "newmtl %[^\r\n]", tmp) == 1)
+            {
+                materials.names.push_back( tmp );
+                materials.data.push_back( MaterialData() );
+                material= &materials.data.back();
+            }
+        }
+        
+        if(material == NULL)
+            continue;
+        
+        if(line[0] == 'K')
+        {
+            float r, g, b;
+            if(sscanf(line, "Kd %f %f %f", &r, &g, &b) == 3)
+                material->diffuse= Color(r, g, b);
+            else if(sscanf(line, "Ks %f %f %f", &r, &g, &b) == 3)
+                material->specular= Color(r, g, b);
+            else if(sscanf(line, "Ke %f %f %f", &r, &g, &b) == 3)
+                material->emission= Color(r, g, b);
+        }
+        
+        else if(line[0] == 'N')
+        {
+            float n;
+            if(sscanf(line, "Ns %f", &n) == 1)          // Ns, puissance / concentration du reflet, modele blinn phong
+                material->ns= n;
+        }
+        
+        else if(line[0] == 'm')
+        {
+            if(sscanf(line, "map_Kd %[^\r\n]", tmp) == 1)
+                material->diffuse_filename= normalize_path(path + tmp);
+            
+            if(sscanf(line, "map_Ks %[^\r\n]", tmp) == 1)
+                material->ns_filename= normalize_path(path + tmp);
+            
+            //~ if(sscanf(line, "map_bump %[^\r\n]", tmp) == 1)
+                //~ material->normal_filename= tmp;
+        }
+    }
+    
+    fclose(in);
+    if(error)
+        printf("[error] parsing line :\n%s\n", line_buffer);
+    
+    return materials;
+}
+
 
 void bounds( const MeshData& data, Point& pmin, Point& pmax )
 {
@@ -240,7 +341,7 @@ void normals( MeshData& data )
         Point c= Point(data.positions[data.position_indices[i +2]]);
         
         // normale geometrique
-        Vector n= cross(normalize(b - a), normalize(c - a));
+        Vector n= normalize(cross(normalize(b - a), normalize(c - a)));
         
         // somme la normale sur les sommets du triangle
         normals[data.position_indices[i]]=    normals[data.position_indices[i]] + n;
