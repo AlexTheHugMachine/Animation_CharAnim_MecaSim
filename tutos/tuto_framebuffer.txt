@@ -212,7 +212,27 @@ mipmap 0 a ete modifie, et le résultat sera faux.
 
 il y a 2 solutions, soit utiliser un filtrage `NEAREST_MIPMAP_LINEAR` et `MAX_LEVEL` = 0 qui n'utilise que le mipmap 0, soit 
 recalculer tous les mipmaps de la texture, cf glGenerateMipmap( ).
-## attention ##
+
+_remarque :_ pour les textures de profondeur, il n'est pas possible d'utiliser glGenerateMipmap(), donc il faut utiliser un mode de filtrage (cf GL_NEAREST)
+qui n'accède qu'aux données disponibles : le niveau de mipmap dans lequel on vient de dessiner.
+
+\code
+// selectionner l'unite de texture a modifier, si necessaire
+// glActiveTExture(GL_TEXTURE0 + unit);
+
+// desactiver le filtrage (pour les textures de profondeur, mais pas que... )
+// acces direct aux donnes sans interpolation :
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+// equivalent, avec un sampler, à utiliser avec glBindSampler(unit, sampler);
+GLuint sampler= { ... };
+glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+\endcode
+
+
+### attention ###
 Autre subtilité, si une texture est active sur une unité de texture et attachée en même temps au framebuffer actif, glDraw()
 génèrera une erreur : le pipeline ne peut pas lire et écrire la même texture en même temps. il faut donc bien penser à nettoyer les unités de 
 texture pour eviter ce problème...
