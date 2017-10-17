@@ -26,6 +26,12 @@ int AppTime::run( )
     // remarque : utiliser std::chrono si la precision n'est pas suffisante
     while(events(m_window))
     {
+        if(laptop_mode() && last_event_count() == 0)
+        {
+            SDL_Delay(16);
+            continue;
+        }
+        
         if(update(global_time(), delta_time()) < 0)
             break;
         
@@ -37,12 +43,15 @@ int AppTime::run( )
         std::chrono::high_resolution_clock::time_point cpu_start= std::chrono::high_resolution_clock::now();
         
         int code= render();
-        
+       
         std::chrono::high_resolution_clock::time_point cpu_stop= std::chrono::high_resolution_clock::now();
         // conversion des mesures en duree...
         int cpu_time= std::chrono::duration_cast<std::chrono::nanoseconds>(cpu_stop - cpu_start).count();
         
         glEndQuery(GL_TIME_ELAPSED);
+        
+        // force openGL a finir d'executer toutes les commandes, cf App::run()
+        glFinish();
         
         if(code< 1)
             break;
@@ -61,7 +70,9 @@ int AppTime::run( )
         if(key_state('s'))
         {
             clear_key_state('s');
-            screenshot("gkit2app.png");
+            
+            static int calls= 1;
+            screenshot("gkit2app", calls++);
         }
         
         // presenter le resultat

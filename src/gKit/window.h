@@ -65,6 +65,10 @@ float delta_time( );
 //! fonction principale. gestion des evenements et appel de la fonction draw de l'application.
 int run( Window window, int (*draw)( void ) );
 
+int last_event_count( );
+bool laptop_mode( );
+
+
 //! fonction interne de gestion d'evenements.
 int events( Window window );
 
