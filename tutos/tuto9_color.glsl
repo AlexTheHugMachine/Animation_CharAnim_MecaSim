@@ -1,4 +1,3 @@
-
 //! \file tuto9_color.glsl
 
 #version 330

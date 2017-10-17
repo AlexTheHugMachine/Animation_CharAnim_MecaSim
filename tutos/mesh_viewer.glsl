@@ -1,3 +1,4 @@
+//! \file mesh_viewer.glsl
 
 #version 330
 
