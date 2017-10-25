@@ -26,11 +26,13 @@ int AppTime::run( )
     // remarque : utiliser std::chrono si la precision n'est pas suffisante
     while(events(m_window))
     {
+    #if 0
         if(laptop_mode() && last_event_count() == 0)
         {
             SDL_Delay(16);
             continue;
         }
+    #endif
         
         if(update(global_time(), delta_time()) < 0)
             break;

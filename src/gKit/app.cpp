@@ -34,6 +34,7 @@ int App::run( )
     // gestion des evenements
     while(events(m_window))
     {
+    #if 0
         if(laptop_mode() && last_event_count() == 0)
         {
             // ne pas redessiner si pas d'evenements...
@@ -41,7 +42,8 @@ int App::run( )
             SDL_Delay(16);
             continue;
         }
-
+    #endif
+        
         if(update(global_time(), delta_time()) < 0)
             break;
         if(render() < 1)
