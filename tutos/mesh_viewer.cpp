@@ -103,7 +103,6 @@ public:
         glSamplerParameteri(m_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glSamplerParameteri(m_sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glSamplerParameteri(m_sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        //~ glSamplerParameterf(m_sampler, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8.0f);
         
         // creer le shader program
         m_program= read_program("tutos/mesh_viewer.glsl");
@@ -152,11 +151,20 @@ public:
         unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
         if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
             m_camera.rotation(mx, my);
-        else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
-            m_camera.move(mx);
-        else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
+        else if(mb & SDL_BUTTON(2))         // le bouton milieu est enfonce
             m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
-    
+            //~ m_camera.move(mx);
+        else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
+            m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
+
+        SDL_MouseWheelEvent wheel= wheel_event();
+        if(wheel.y != 0)
+        {
+            clear_wheel_event();
+            m_camera.move(16.f * wheel.y);
+        }
+
+        
         // etape 2 : dessiner m_objet avec le shader program
         // configurer le pipeline 
         glUseProgram(m_program);

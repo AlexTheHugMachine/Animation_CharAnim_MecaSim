@@ -215,6 +215,13 @@ int draw( void )
     else if(mb & SDL_BUTTON(3))
         camera.move(mx);           // approche / eloigne l'objet
     
+    SDL_MouseWheelEvent wheel= wheel_event();
+    if(wheel.y != 0)
+    {
+        clear_wheel_event();
+        camera.move(16.f * wheel.y);  // approche / eloigne l'objet
+    }
+    
     // recupere les transformations
     Transform model= Identity();
     Transform view= camera.view();
