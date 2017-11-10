@@ -25,21 +25,13 @@ Image read_image( const char *filename )
     
     // verifier le format, rgb ou rgba
     const SDL_PixelFormat format= *surface->format;
-    if(format.BitsPerPixel != 24 && format.BitsPerPixel != 32)
-    {
-        printf("[error] loading image '%s'... format failed. (bpp %d)\n", filename, format.BitsPerPixel);
-        SDL_FreeSurface(surface);
-        return Image::error();
-    }
-    
     int width= surface->w;
     int height= surface->h;
-    int channels= (format.BitsPerPixel == 32) ? 4 : 3;
-
-    Image image(surface->w, surface->h);
-
+    int channels= format.BitsPerPixel / 8;
+    
     printf("loading image '%s' %dx%d %d channels...\n", filename, width, height, channels);
-
+    
+    Image image(surface->w, surface->h);
     // converti les donnees en pixel rgba, et retourne l'image, origine en bas a gauche.
     if(format.BitsPerPixel == 32)
     {
@@ -61,7 +53,7 @@ Image read_image( const char *filename )
         }
     }
 
-    else if(format.BitsPerPixel == 24)
+    else
     {
         int py= 0;
         for(int y= height -1; y >= 0; y--, py++)
@@ -70,9 +62,12 @@ Image read_image( const char *filename )
 
             for(int x= 0; x < surface->w; x++)
             {
-                const Uint8 r= pixel[format.Rshift / 8];
-                const Uint8 g= pixel[format.Gshift / 8];
-                const Uint8 b= pixel[format.Bshift / 8];
+                Uint8 r= 0;
+                Uint8 g= 0;
+                Uint8 b= 0;
+                if(format.BitsPerPixel >=  8) { r= pixel[format.Rshift / 8]; g= r; b= r; }      // rgb= rrr
+                if(format.BitsPerPixel >= 16) { g= pixel[format.Gshift / 8]; b= 0; }    // rgb= rg0
+                if(format.BitsPerPixel >= 24) { b= pixel[format.Bshift / 8]; }  // rgb
 
                 image(x, y)= Color((float) r / 255.f, (float) g / 255.f, (float) b / 255.f);
                 pixel= pixel + format.BytesPerPixel;
@@ -152,18 +147,13 @@ ImageData read_image_data( const char *filename )
     }
 
     // verifier le format, rgb ou rgba
-    const SDL_PixelFormat format= *surface->format;
-    if(format.BitsPerPixel != 24 && format.BitsPerPixel != 32)
-    {
-        printf("[error] loading image '%s'... format failed. (bpp %d)\n", filename, format.BitsPerPixel);
-        SDL_FreeSurface(surface);
-        return ImageData();
-    }
+    SDL_PixelFormat format= *surface->format;
 
     int width= surface->w;
     int height= surface->h;
-    int channels= (format.BitsPerPixel == 32) ? 4 : 3;
-
+    int channels= format.BitsPerPixel / 8;
+    
+    if(channels < 3) channels= 3;
     ImageData image(width, height, channels);
 
     printf("loading image '%s' %dx%d %d channels...\n", filename, width, height, channels);
@@ -193,7 +183,7 @@ ImageData read_image_data( const char *filename )
         }
     }
 
-    else if(format.BitsPerPixel == 24)
+    else 
     {
         int py= 0;
         for(int y= height -1; y >= 0; y--, py++)
@@ -202,9 +192,13 @@ ImageData read_image_data( const char *filename )
 
             for(int x= 0; x < surface->w; x++)
             {
-                const Uint8 r= pixel[format.Rshift / 8];
-                const Uint8 g= pixel[format.Gshift / 8];
-                const Uint8 b= pixel[format.Bshift / 8];
+                Uint8 r= 0;
+                Uint8 g= 0;
+                Uint8 b= 0;
+                
+                if(format.BitsPerPixel >=  8) { r= pixel[format.Rshift / 8]; g= r; b= r; }      // rgb= rrr
+                if(format.BitsPerPixel >= 16) { g= pixel[format.Gshift / 8]; b= 0; }    // rgb= rg0
+                if(format.BitsPerPixel >= 24) { b= pixel[format.Bshift / 8]; }  // rgb
 
                 std::size_t offset= image.offset(x, y);
                 image.data[offset]= r;
