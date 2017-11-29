@@ -197,6 +197,17 @@ int Viewer::init()
     // Etats par defaut openGL
     glClearColor(0.5f, 0.6f, 0.8f, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearDepthf(1);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_DEPTH_TEST);
+    glFrontFace(GL_CCW);
+    glCullFace(GL_BACK);
+    
+    if (mb_cullface)
+        glEnable(GL_CULL_FACE);
+    else
+        glDisable(GL_CULL_FACE);        // good for debug
+    glEnable(GL_TEXTURE_2D);
     
     // Camera
     m_camera.lookat( Point(0,0,0), 15 );
