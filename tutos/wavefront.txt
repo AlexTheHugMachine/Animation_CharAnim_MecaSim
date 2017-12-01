@@ -20,6 +20,7 @@ texcoord, normale :
     - `f p0/t0/n0 p1/t1/n1 p2/t2/n2` : décrit la face / le triangle p0, p1, p2 associé aux attributs position, texcoord et normale.
 
 les attributs texcoord et normale sont optionnels (position est obligatoire), il est donc possible de représenter un sommet par :
+    - `p` : position seule,
     - `p/t` : position + texcoord,
     - `p//n` : position + normale,
     - `p/t/n` : position + texcoord + normale.
@@ -33,19 +34,19 @@ les données dans un ou plusieurs vecteur stl.
 analyser la description d'une face est un petit peu plus complexe, puisqu'il est nécessaire d'analyser le tuple décrivant chaque sommet. de plus,
 des faces avec plus de 3 sommets sont autorisées, il faudra donc les trianguler... 
 
-les matières sont décrites dans un fichier séparé, extension `.mtl`, son nom est indiqué par une ligne dans le fichier `.obj` par une ligne 
-`mtllib materials.mtl`. la matière associée à la prochaine face est indiquée par la ligne `usemtl nom_matiere` dans le fichier `.obj`.
+les matières sont décrites dans un fichier séparé, extension `.mtl`, son nom est indiqué par une ligne `mtllib materials.mtl`. la matière associée 
+à la prochaine face est indiquée par une ligne `usemtl nom_matiere`. chaque triangle est aussi associé à un indice de matière.
 
 c'est `read_mesh_data( )` de mesh_data.h qui réalise le chargement du fichier `.obj`. la fonction renvoie une structure `MeshData` contenant 
-les vecteurs de données et d'indices. c'est `read_material_data( )` qui charge l'ensemble de matières décrit par un fichier `.mtl` et renvoie 
-un ensemble de matières `MaterialDataLib`.
+les vecteurs de données, les indices des attributs de sommets ainsi que l'indice de la matière de chaque triangle. `read_material_data( )` 
+charge les matières décrites par le fichier `.mtl` et renvoie un ensemble de matières `MaterialDataLib`.
 
 _rappel :_ représentation indexée ou pas d'un maillage. il y a 2 solutions, avec openGL, pour décrire un maillage. soit un triangle est décrit 
 par les attributs de 3 sommets, et affiché avec glDrawArrays(), soit par 3 indices de sommets et affiché par glDrawElements(). cf \ref draw
 
 
-_remarque :_ `read_mesh()` et `read_materials()` de wavefront.h sont une version simplifiée qui charge les données et construit une structure 
-Mesh, sans utiliser la représentation indexée, pour un affichage direct avec glDrawArrays().
+_remarque :_ `read_mesh()` et `read_materials()` de wavefront.h font la même chose, mais ne construisent que la version non indexée du maillage 
+de l'objet, pour un affichage direct avec glDrawArrays().
 
 ## glDrawElements() et indexation unique.
 
@@ -99,25 +100,25 @@ draw( ):
 
 exemple complet dans `mesh_viewer.cpp`, avec la creation des buffers d'attributs, du buffer d'indexation, et la configuration du format de sommet.
 
-_remarque :_ le paramètre offset de glDrawElements() est exprimé en octets,il indique ou trouver les indices des triangles à dessiner par rapport
+_remarque :_ le paramètre offset de glDrawElements() est exprimé en octets, il indique ou trouver les indices des triangles à dessiner par rapport
 au début de l'index buffer (cf configuration du vertex array object), la fonction MeshBuffer::index_buffer_offset( ) est également disponible.
 
 ## recalculer les normales des sommets, si necessaire...
 
 cf normals() de mesh_data.h
 
-pas mal de fichiers `.obj` ne décrivent pas les normales des sommets, cette information est pourtant essentielle aux calculs d'éclairage de 
+pas mal de fichiers `.obj` ne décrivent pas les normales des sommets, cette information est pourtant essentielle aux calculs d'éclairage 
 pour afficher l'objet. il est possible d'utiliser blender par exemple, pour calculer les normales et de re-exporter le fichier. mais il est 
 assez simple de les calculer lorsqu'elles ne sont pas présentes.
 
 connaissant 2 aretes d'un triangle, un produit vectoriel permet d'obtenir un vecteur orthogonal aux aretes, ce qui est nous donne la normale 
 géométrique du triangle. pour calculer la normale aux sommets du maillage, il faut trouver les triangles adjacents à chaque sommet, et calculer 
-la moeynne des leurs normales. ce qui est assez pénible à écrire sur un ensemble de triangles.
+la moyenne de leurs normales. ce qui est assez pénible à faire sur un ensemble de triangles non indexé.
 
 une solution simple existe lorsque le maillage est indexé. dans ce cas, chaque triangle connait l'indice de la position de chacun de ses 
-sommets et il suffit de créer une normale par position, de parcourir les triangles et d'accumuler la normale géométrique sur sommet du triangle. 
-Lorsque tous les triangles sont parcourus, la normale associée à chaque sommet est la somme des normales des triangles adjacents.
-la fonction `normals( )` de mesh_data.h est également disponible.
+sommets et il suffit de créer une normale par position, de parcourir les triangles et d'accumuler la normale géométrique sur les sommets du triangle. 
+A la fin du parcours, la normale associée à chaque position est la somme des normales des triangles adjacents, il ne reste plus qu'à la normaliser.
+la fonction `normals( )` de mesh_data.h réalise ce calcul, pour les maillages indexés.
 
 exemple d'utilisation :
 \code
@@ -213,7 +214,7 @@ glUniformBlockBinding(program, index_block, 1);
 glBindBufferBase(GL_UNIFORM_BUFFER, 1, material_index_buffer);
 \endcode
 
-et voila, il ne reste qu'à dessiner l'objet avec un seul draw, et le fragment peut récupérer directement la description de la matière de chaque 
+et voila, il ne reste qu'à dessiner l'objet avec un seul draw, et le fragment shader peut récupérer directement la description de la matière de chaque 
 triangle.
 
 
