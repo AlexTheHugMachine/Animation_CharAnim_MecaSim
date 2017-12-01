@@ -295,11 +295,11 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
 
 #if 1
     if(m_texcoords.size() > 0 && m_texcoords.size() < m_positions.size() && use_texcoord)
-        printf("[error] invalid texcoords array...\n");
+        printf("[oops] mesh: invalid texcoords array...\n");
     if(m_normals.size() > 0 && m_normals.size() < m_positions.size() && use_normal)
-        printf("[error] invalid normals array...\n");
+        printf("[oops] mesh: invalid normals array...\n");
     if(m_colors.size() > 0 && m_colors.size() < m_positions.size() && use_color)
-        printf("[error] invalid colors array...\n");
+        printf("[oops] mesh: invalid colors array...\n");
 #endif
     
     glGenVertexArrays(1, &m_vao);
@@ -435,6 +435,7 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     bool use_normal= (m_normals.size() == m_positions.size());
     bool use_color= (m_colors.size() == m_positions.size());
     
+    // etape 1 : construit le program en fonction des attributs du mesh et des options choisies
     unsigned int key= 0;
     if(use_texcoord) key= key | 1;
     if(use_normal) key= key | 2;
@@ -485,13 +486,33 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     if(use_alpha_test)
         program_uniform(m_program, "alpha_min", alpha_min);
     
-    draw(m_program, use_texcoord, use_normal, use_color);
+    // etape  2 : cree les buffers et le vao
+    if(m_vao == 0)
+        create_buffers(true, true, true);
+    
+    assert(m_vao != 0);
+    if(m_update_buffers)
+        update_buffers(true, true, true);
+    
+    glBindVertexArray(m_vao);
+    
+    // etape 3 : dessiner
+    if(m_indices.size() > 0)
+        glDrawElements(m_primitives, (GLsizei) m_indices.size(), GL_UNSIGNED_INT, 0);
+    else
+        glDrawArrays(m_primitives, 0, (GLsizei) m_positions.size());
 }
 
 void Mesh::draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color )
 {
+    if(program == 0)
+    {
+        printf("[oops]  no program... can't draw !!");
+        return;
+    }
+    
     if(m_vao == 0)
-        // cree les buffers demandes
+        // cree les buffers demandes, inclus toujours position
         create_buffers(use_texcoord, use_normal, use_color);
     assert(m_vao != 0);
     
@@ -499,7 +520,70 @@ void Mesh::draw( const GLuint program, const bool use_position, const bool use_t
         update_buffers(use_texcoord, use_normal, use_color);
     
     glBindVertexArray(m_vao);
-    glUseProgram(program);
+    
+#ifndef GK_RELEASE
+    // verifie que le program est selectionne
+    GLuint current;
+    glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *) &current);
+    if(current != program)
+    {
+    #ifdef GL_VERSION_4_3
+        {
+            char label[1024];
+            glGetObjectLabel(GL_PROGRAM, program, sizeof(label), nullptr, label);
+            
+            printf("[oops] program( %u '%s' ): not active... can't draw !!\n", program, label); 
+        }
+    #else
+        printf("[oops] program( %u ): not active... can't draw !!", program); 
+    #endif
+    }
+    
+    // verifie que les attributs necessaires a l'execution du shader sont presents dans le mesh...
+
+    // etape 1 : recuperer le nombre d'attributs
+    GLint n= 0;
+    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &n);
+
+    // recuperer la longueur max occuppee par un nom d'attribut
+    GLint length_max= 0;
+    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &length_max);
+    char name[1024];
+    
+    // etape 2 : recuperer les infos de chaque attribut
+    bool has_position= false;
+    bool has_texcoord= false;
+    bool has_normal= false;
+    for(int index= 0; index < n; index++)
+    {
+        GLint glsl_size;
+        GLenum glsl_type;
+        glGetActiveAttrib(program, index, sizeof(name), nullptr, &glsl_size, &glsl_type, name);
+
+        GLint location= glGetAttribLocation(program, name);
+        if(location == 0)       // attribut position necessaire a l'execution du shader
+        {
+            if(!use_position || !vertex_buffer_size())
+                printf("[oops]  no position '%s' attribute in mesh... can't draw !!\n", name);
+            if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC3)
+                printf("[oops]  attribute '%s' is not declared as a vec3... can't draw !!\n", name);
+        }
+        else if(location == 1)  // attribut texcoord necessaire 
+        {
+            if(!use_texcoord || !texcoord_buffer_size())
+                printf("[oops]  no texcoord '%s' attribute in mesh... can't draw !!\n", name);
+            if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC2)
+                printf("[oops]  attribute '%s' is not declared as a vec2... can't draw !!\n", name);
+        }
+        else if(location == 2)  // attribut normal necessaire
+        {
+            if(!use_normal || !normal_buffer_size())
+                printf("[oops]  no normal '%s' attribute in mesh... can't draw !!\n", name);
+            if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC3)
+                printf("[oops]  attribute '%s' is not declared as a vec3... can't draw !!\n", name);
+        }
+    }
+#endif
     
     if(m_indices.size() > 0)
         glDrawElements(m_primitives, (GLsizei) m_indices.size(), GL_UNSIGNED_INT, 0);
