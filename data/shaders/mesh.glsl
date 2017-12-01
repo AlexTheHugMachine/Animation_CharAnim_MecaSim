@@ -28,7 +28,7 @@ out vec3 vertex_position;
 void main( )
 {
     gl_Position= mvpMatrix * vec4(position, 1);
-
+    
     vertex_position= vec3(mvMatrix * vec4(position, 1));
 
 #ifdef USE_TEXCOORD
@@ -72,7 +72,7 @@ uniform vec3 light;
 uniform vec4 light_color;
 #endif
 
-uniform vec4 mesh_color;
+uniform vec4 mesh_color= vec4(1, 1, 1, 1);
 
 out vec4 fragment_color;
 
@@ -117,7 +117,7 @@ void main( )
         cos_theta= max(0, dot(normal, normalize(light - vertex_position)));         // eclairage, uniquement des faces bien orientees
         color= color * light_color;
     #else
-        cos_theta= normal.z;
+        cos_theta= abs(dot(normal, normalize(vertex_position)));
     #endif
     
     // hachure les triangles mal orientes
