@@ -175,8 +175,8 @@ Mesh read_mesh( const char *filename )
            {
                material_id= -1;
                for(unsigned int i= 0; i < (unsigned int) materials.names.size(); i++)
-                if(materials.names[i] == tmp)
-                    material_id= i;
+                    if(materials.names[i] == tmp)
+                        material_id= i;
                 
                 if(material_id == -1)
                 {

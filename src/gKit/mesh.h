@@ -326,7 +326,7 @@ public:
         const bool use_alpha_test, const float alpha_min );
     
     //! dessine l'objet avec un shader fourni par l'application. les uniforms du shader doivent deja etre configure, cf transformations...
-    void draw( const GLuint program );
+    void draw( const GLuint program, const bool use_position= true, const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
     
     //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).\n
     GLuint create_buffers( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );

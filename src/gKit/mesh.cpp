@@ -485,18 +485,18 @@ void Mesh::draw( const Transform& model, const Transform& view, const Transform&
     if(use_alpha_test)
         program_uniform(m_program, "alpha_min", alpha_min);
     
-    draw(m_program);
+    draw(m_program, use_texcoord, use_normal, use_color);
 }
 
-void Mesh::draw( const GLuint program )
+void Mesh::draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color )
 {
     if(m_vao == 0)
-        // force la creation de tous les buffers
-        create_buffers(true, true, true);
+        // cree les buffers demandes
+        create_buffers(use_texcoord, use_normal, use_color);
     assert(m_vao != 0);
     
     if(m_update_buffers)
-        update_buffers(true, true, true);
+        update_buffers(use_texcoord, use_normal, use_color);
     
     glBindVertexArray(m_vao);
     glUseProgram(program);

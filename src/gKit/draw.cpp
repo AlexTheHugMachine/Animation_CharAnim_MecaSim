@@ -92,8 +92,7 @@ void draw( Mesh& m, const GLuint program, const bool use_position, const bool us
     delete [] name;
 #endif
     
-    m.create_buffers(use_position, use_texcoord, use_normal);
-    m.draw(program);
+    m.draw(program, use_position, use_texcoord, use_normal);
 }
 
 void DrawParam::draw( Mesh& mesh ) const
