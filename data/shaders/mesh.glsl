@@ -117,7 +117,7 @@ void main( )
         cos_theta= max(0, dot(normal, normalize(light - vertex_position)));         // eclairage, uniquement des faces bien orientees
         color= color * light_color;
     #else
-        cos_theta= abs(dot(normal, normalize(vertex_position)));
+        cos_theta= normal.z; //abs(dot(normal, normalize(vertex_position)));
     #endif
     
     // hachure les triangles mal orientes
