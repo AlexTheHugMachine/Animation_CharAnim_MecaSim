@@ -58,6 +58,7 @@ void ObjetSimuleSPH::CalculDensite()
 
 /**
  * Calcul des forces d interaction entre particules.
+  * Attention - Calcul direct de fij / rho_i
  */
 void ObjetSimuleSPH::CalculInteraction(float visco)
 {
