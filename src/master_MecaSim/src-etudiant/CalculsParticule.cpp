@@ -44,9 +44,9 @@ using namespace std;
 
 
 /**
- * Gestion des collisions avec le sol - plan (x,y,z) et bords de la fenetre - rebond.
+ * Gestion des collisions avec le sol et bords de la fenetre - rebond.
  */
-void ObjetSimuleParticule::CollisionPlan(float x, float y, float z)
+void ObjetSimuleParticule::CollisionPlan()
 {
  
     // Collision juste par rapport au plan horizontal passant par le y

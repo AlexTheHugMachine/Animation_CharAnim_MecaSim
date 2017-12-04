@@ -56,9 +56,9 @@ void ObjetSimuleMSS::CalculForceSpring()
 
 
 /**
- * Gestion des collisions avec le sol - plan (x,y,z).
+ * Gestion des collisions avec le sol.
  */
-void ObjetSimuleMSS::CollisionPlan(float x, float y, float z)
+void ObjetSimuleMSS::CollisionPlan()
 {
     /// Arret de la vitesse quand touche le plan
    

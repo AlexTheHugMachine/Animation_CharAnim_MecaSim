@@ -93,9 +93,9 @@ void ObjetSimuleRigidBody::Solve(float visco)
 
 
 /**
- * Gestion des collisions avec le sol - plan (x,y,z).
+ * Gestion des collisions avec le sol.
  */
-void ObjetSimuleRigidBody::CollisionPlan(float x, float y, float z)
+void ObjetSimuleRigidBody::CollisionPlan()
 {
 
    
