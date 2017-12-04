@@ -37,6 +37,7 @@
 #include "ObjetSimuleMSS.h"
 #include "ObjetSimuleParticule.h"
 #include "ObjetSimuleRigidBody.h"
+#include "ObjetSimuleSPH.h"
 #include "Matrix.h"
 
 
