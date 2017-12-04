@@ -200,7 +200,7 @@ int Viewer::init()
     glClearDepthf(1);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
-    glFrontFace(GL_CCW);
+    glFrontFace(GL_CW);
     glCullFace(GL_BACK);
     
     if (mb_cullface)
