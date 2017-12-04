@@ -84,8 +84,8 @@ public:
 	/*! Action de simulation */
 	void Simulation(int Tps);
     
-    //* ! Gestion des collisions avec plan (x,y,z) */
-    void CollisionPlan(float x, float y, float z);
+    /*! Gestion des collisions. Rajoutez des parametres si besoin. */
+    void CollisionPlan();
 	
 	/*! Interation de l utilisateur avec chacun des enfants */
 	void Interaction(Vector MousePos);
