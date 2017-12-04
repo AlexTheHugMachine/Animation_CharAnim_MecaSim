@@ -142,7 +142,7 @@ void Scene::initMeshObjet()
 
 
 /**
-* Simulation des enfants du graphe de scene.
+ * Simulation des enfants du graphe de scene.
  */
 void Scene::Simulation(int Tps)
 {
@@ -158,9 +158,9 @@ void Scene::Simulation(int Tps)
 
 
 /**
- * Gestion des collisions avec plan (x,y,z).
+ * Gestion des collisions.
  */
-void Scene::CollisionPlan(float x, float y, float z)
+void Scene::CollisionPlan()
 {
     //std::cout << "----------------- Scene::CollisionPlan()-------------" << std::endl;
     
@@ -168,7 +168,7 @@ void Scene::CollisionPlan(float x, float y, float z)
     
     for(e=_enfants.begin(); e!=_enfants.end(); e++)
     {
-        (*e)->CollisionPlan(x, y, z);
+        (*e)->CollisionPlan();
     }
 }
 
