@@ -24,7 +24,11 @@ Masses=./data/vache/masses.eti;
 #Masses=./data/sphere/masses.eti;
 
 k=15000.0;
-nu=0.01; 
+nu=0.01;
+
+rho0=1000;
+bulk=1e3;
+h=5e-2;
 
 positionX=0.0;
 positionY=2.0;
