@@ -16,6 +16,7 @@
 #include "ObjetSimuleMSS.h"
 #include "ObjetSimuleRigidBody.h"
 #include "ObjetSimuleParticule.h"
+#include "ObjetSimuleSPH.h"
 
 
 
