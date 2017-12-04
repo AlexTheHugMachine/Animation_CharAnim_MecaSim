@@ -62,6 +62,9 @@ b_draw_axe(true) // Par defaut - affiche les axes
         else if (_Simu->_type_objet[i-1] == "rigid")
             _Simu->attache(new ObjetSimuleRigidBody(Fichier_Param[i]));
         
+        else if(_Simu->_type_objet[i-1] == "sph")
+            _Simu->attache(new ObjetSimuleSPH(Fichier_Param[i]));
+        
     }
     
     /// Initialisation des objets pour l'animation
@@ -183,7 +186,7 @@ int Viewer::render( )
         }//mss
         
          // Cas systeme de particules non connectees
-        else if (_Simu->_type_objet[num] == "particule")
+        else if (_Simu->_type_objet[num] == "particule" || _Simu->_type_objet[num] == "sph")
         {
             // Affichage des particules
             for (int i =0; i<(*e)->_Nb_Sommets; i++)
