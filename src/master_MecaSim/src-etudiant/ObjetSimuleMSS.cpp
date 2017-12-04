@@ -206,11 +206,12 @@ void ObjetSimuleMSS::initObjetSimule()
     for (int i=0; i<_Nb_Sommets; ++i)
     {
         /** Vecteur nulle pour initialiser les vitesses,
-         accel, forces des sommets **/
+         accel, forces, des normales des sommets **/
         V.push_back(Vector(0.0,0.0,0.0));
         A.push_back(Vector(0.0,0.0,0.0));
         Force.push_back(Vector(0.0,0.0,0.0));
-        
+        _vectNormals.push_back(Vector(0, 0, 0));
+
         
         /** Ajout du sommet dans le systeme masses-ressorts **/
         /* Construction d une particule */
@@ -345,7 +346,8 @@ void ObjetSimuleMSS::setNormals()
     for(unsigned int i=0; i<_Nb_Sommets; ++i)
     {
         // Initialisation des normales
-        _vectNormals.push_back(Vector(0, 0, 0));
+        _vectNormals[i] = Vector(0, 0, 0);
+
     }
     
     /* Parcours des faces du maillage */
@@ -436,10 +438,10 @@ void ObjetSimuleMSS::Simulation(Vector gravite, float viscosite, int Tps)
     else if (_Integration == "implicite")
         _SolveurImpl->Solve(viscosite, _Nb_Sommets, Tps, Force, A, V, P, M, gravite, _SytemeMasseRessort);
     
-    /* ! Gestion des collisions avec plan (x,y,z)  */
-    // Reponse : reste a la position du plan - arret des vitesses
+    /* ! Gestion des collisions  */
+    // Reponse : reste a la position du sol - arret des vitesses
     // Penser au Translate de l objet dans la scene pour trouver plan coherent
-    //CollisionPlan(-10, -10, -10);
+    //CollisionPlan();
     
     // Affichage des positions
    //  AffichagePos(Tps);

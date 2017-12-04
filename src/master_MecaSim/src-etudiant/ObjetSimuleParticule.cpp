@@ -186,10 +186,10 @@ void ObjetSimuleParticule::Simulation(Vector gravite, float viscosite, int Tps)
     //std::cout << "Vit.... " << std::endl;
     _SolveurExpl->Solve(viscosite, _Nb_Sommets, Tps, A, V, P);
     
-    /* ! Gestion des collisions avec plan (x,y,z) et bords de la fenetre */
+    /* ! Gestion des collisions avec sol et bords de la fenetre */
     // Reponse : rebond
     // Penser au Translate de l objet dans la scene pour trouver plan coherent
-    CollisionPlan(0, 0, 0);
+    CollisionPlan();
     
     // Affichage des positions
     // AffichagePos(Tps);

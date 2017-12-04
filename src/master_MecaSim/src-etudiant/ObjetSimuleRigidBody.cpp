@@ -144,10 +144,10 @@ void ObjetSimuleRigidBody::Simulation(Vector gravite, float viscosite, int Tps)
     // P(t+dt) - quantite mouvement
     Solve(viscosite);
  
-    /* ! Gestion des collisions avec plan (x,y,z)  */
-    // Reponse : reste a la position du plan - arret des vitesses
+    /* ! Gestion des collisions */
+    // Reponse : reste a la position du sol par exemple - arret des vitesses
     // Penser au Translate de l objet dans la scene pour trouver plan coherent
-  //  CollisionPlan(0, 0, 0);
+    //  CollisionPlan();
     
     // Affichage des positions
     //cout << " Position du centre de masse de l objet rigide :" << _Position << endl;

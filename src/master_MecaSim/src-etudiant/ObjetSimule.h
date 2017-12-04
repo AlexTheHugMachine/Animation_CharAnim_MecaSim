@@ -81,8 +81,8 @@ public:
     /*! Operation de creation du maillage (servant a l affichage) */
     virtual void initMeshObjet() = 0;
     
-    /*! Gestion des collisions avec plan (x,y,z) */
-    virtual void CollisionPlan(float x, float y, float z) = 0;
+    /*! Gestion des collisions */
+    virtual void CollisionPlan() = 0;
     
     /*! Simulation de l objet */
     virtual void Simulation(Vector gravite, float viscosite, int Tps) = 0;

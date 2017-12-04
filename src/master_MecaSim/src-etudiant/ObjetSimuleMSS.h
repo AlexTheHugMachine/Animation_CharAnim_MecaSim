@@ -52,8 +52,8 @@ public:
     /*! Simulation de l objet */
     void Simulation(Vector gravite, float viscosite, int Tps);
     
-    /* ! Gestion des collisions avec plan (x,y,z) */
-    void CollisionPlan(float x, float y, float z);
+    /*! Gestion des collisions */
+    void CollisionPlan();
     
     /*! Mise a jour du Mesh (pour affichage) de l objet en fonction des nouvelles positions calculees */
     void updateVertex();

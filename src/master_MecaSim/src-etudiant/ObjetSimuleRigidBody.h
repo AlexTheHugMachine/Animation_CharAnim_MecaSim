@@ -47,7 +47,7 @@ public:
     /*! Calcul de la masse de l objet rigide */
     void CalculMasse();
     
-    /*! Calcul du IBody */
+    /*! Calcul du IBody - partie constante du tenseur d'inertie */
     void CalculIBody();
     
     /*! Calcul de l etat de l objet rigide */
@@ -62,8 +62,8 @@ public:
     /*! Simulation de l objet */
     void Simulation(Vector gravite, float viscosite, int Tps);
     
-    /* ! Gestion des collisions avec plan (x,y,z) */
-    void CollisionPlan(float x, float y, float z);
+    /*! Gestion des collisions. Rajoutez parametre si besoin. */
+    void CollisionPlan();
     
     /*! Creation du maillage (pour l affichage) de l objet simule de type RigidBody */
     void initMeshObjet();
@@ -73,6 +73,7 @@ public:
     void updateVertex();
     
     
+    ///---- Info relatives a l etat du systeme
     /// Etat du systeme : X(t)
     // - position : x(t) - position du baycentre
     // - rotation : R(t)
@@ -98,7 +99,7 @@ public:
     /// Moment Cinetique : L(t)
     Vector _MomentCinetique;
     
-    // On a aussi besoin
+    ///--- On a aussi besoin
     // masse : m
     // tenseur inertie : I(t)
     // vitesse angulaire : w(t)
@@ -112,20 +113,22 @@ public:
     /// Inverse du tenseur d inertie - Partie constante
     Matrix _IbodyInv;
     
-    // Inverse du tenseur d inertie
+    /// Inverse du tenseur d inertie
     Matrix _InertieTenseurInv;
     
     /// Vitesse angulaire w(t)
     Vector _VitesseAngulaire;
     
-    // Derivee de l etat du systeme : x'(t) = d/dt X(t)
+    
+    ///---- Info relatives a la derivee de l etat du systeme
+    // Derivee de l etat du systeme : X'(t) = d/dt X(t)
     // - d/dt x(t) = v(t) - vitesse du baycentre
     // - d/dt R(t) = r'(t) = w(t) x R(t)
     // - d/dt P(t) = F(t) - les forces
     // - d/dt L(t) = moment de la force (torque) = sum_i (ri(t) - x(t)) x Fi(t)
     
 
-    /// x't) = vitesse du centre de masse
+    /// x'(t) = vitesse du centre de masse
     Vector _Vitesse;
     
     /// Derivee de la rotation
@@ -134,7 +137,7 @@ public:
     /// P'(t) = Force appliquee
     Vector _Force;
     
-    // L'(t) = Moment de la force
+    /// L'(t) = Moment de la force
     Vector _Torque;
     
     // Intervalle de temps
