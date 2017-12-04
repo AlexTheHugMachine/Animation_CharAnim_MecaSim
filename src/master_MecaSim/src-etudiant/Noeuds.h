@@ -68,8 +68,8 @@ public:
 	/*! Operation de simulation */
 	virtual void Simulation(Vector gravite, float viscosite, int Tps) = 0;
     
-    /*! Gestion des collisions avec plan (x,y,z) */
-    virtual void CollisionPlan(float x, float y, float z) = 0;
+    /*! Gestion des collisions */
+    virtual void CollisionPlan() = 0;
     
 	/*! Operation d'interaction */
 	virtual void Interaction(Vector MousePos) = 0;
