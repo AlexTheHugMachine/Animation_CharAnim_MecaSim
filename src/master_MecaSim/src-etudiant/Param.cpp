@@ -124,6 +124,39 @@ void ObjetSimule::Param_mesh(std::string Fichier_Param)
 
 
 /**
+ * Lecture des parametres de l execution relatfs au fluide de type SPH.
+ */
+void ObjetSimuleSPH::Param_sph(std::string Fichier_Param)
+{
+    /** Donnees du fichier contenant les parametres de l execution **/
+    /* Proprietes du fichier */
+    Properties Prop;
+    
+    /* Chargement du fichier */
+    Prop.load(Fichier_Param);
+    
+    /// Choix du solveur
+    _SolveurExpl = new SolveurExpl();
+    
+    std::cout << "Utilisation du schema d integration d'Euler semi-implicite"
+    << std::endl;
+    
+    /* Intervalle de temps */
+    GET_PARAM("dt", _SolveurExpl->_delta_t);
+    
+    /* Densite de reference */
+    GET_PARAM("rho0", rho0);
+    
+    /* Module de Bulk */
+    GET_PARAM("bulk", bulk);
+    
+    /* Taille des particules */
+    GET_PARAM("h", h);
+    
+}
+
+
+/**
  * Lecture des parametres de l execution relatfs au systeme de particules.
  */
 void ObjetSimuleParticule::Param_particule(std::string Fichier_Param)
@@ -229,7 +262,7 @@ void ObjetSimuleRigidBody::Param_rigid(std::string Fichier_Param)
     // Utilisation des textures ou non
     GET_PARAM("usetexture", _use_texture);
     
-    // Position
+    // Position du centre de gravite
     GET_PARAM("positionx", _Position.x);
     GET_PARAM("positiony", _Position.y);
     GET_PARAM("positionz", _Position.z);
