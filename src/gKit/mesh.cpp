@@ -551,9 +551,6 @@ void Mesh::draw( const GLuint program, const bool use_position, const bool use_t
     char name[1024];
     
     // etape 2 : recuperer les infos de chaque attribut
-    bool has_position= false;
-    bool has_texcoord= false;
-    bool has_normal= false;
     for(int index= 0; index < n; index++)
     {
         GLint glsl_size;
@@ -581,6 +578,13 @@ void Mesh::draw( const GLuint program, const bool use_position, const bool use_t
                 printf("[oops]  no normal '%s' attribute in mesh... can't draw !!\n", name);
             if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC3)
                 printf("[oops]  attribute '%s' is not declared as a vec3... can't draw !!\n", name);
+        }
+        else if(location == 3)  // attribut color necessaire
+        {
+            if(!use_color || !color_buffer_size())
+                printf("[oops]  no color '%s' attribute in mesh... can't draw !!\n", name);
+            if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC4)
+                printf("[oops]  attribute '%s' is not declared as a vec4... can't draw !!\n", name);
         }
     }
 #endif
