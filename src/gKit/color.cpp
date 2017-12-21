@@ -31,6 +31,11 @@ Color Blue( )
     return Color(0, 0, 1);
 }
 
+Color Yellow( )
+{
+    return Color(1, 1, 0);
+}
+
 
 Color operator+ ( const Color& a, const Color& b )
 {
