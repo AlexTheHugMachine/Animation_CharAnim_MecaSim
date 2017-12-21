@@ -32,6 +32,9 @@ struct Point
     float x, y, z;
 };
 
+//! renvoie le point origine (0, 0, 0)
+Point Origin( );
+
 //! renvoie la distance etre 2 points.
 float distance( const Point& a, const Point& b );
 //! renvoie le carre de la distance etre 2 points.

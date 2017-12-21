@@ -3,6 +3,11 @@
 
 #include "vec.h"
 
+Point Origin( )
+{
+    return Point(0, 0, 0);
+}
+
 
 float distance( const Point& a, const Point& b )
 {
