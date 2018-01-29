@@ -29,19 +29,18 @@ along with Simea.  If not, see <http://www.gnu.org/licenses/>.
 
 
 
-
-
 class PhysicalWorld
 {
 public:
     PhysicalWorld(int np=0) : m_part(np) {}
 
-    const Particle& operator[](int i) const { return m_part[i]; }
-	Particle& operator[](int i)  { return m_part[i]; }
-
     std::size_t particlesCount() const { return m_part.size(); }
     void setParticlesCount(int ns) { m_part.resize(ns); }
 
+	//TODO
+	//int addParticle(const Vector& p);
+	//void addLine(const Vector& p1, const Vector& p2);
+	//void addCube(const Vector& center, float l);
 	//void addCube(float l);
 
 	void update(const float dt);
