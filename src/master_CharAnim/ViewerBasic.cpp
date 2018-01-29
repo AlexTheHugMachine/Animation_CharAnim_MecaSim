@@ -37,8 +37,8 @@ int ViewerBasic::init()
     // etat par defaut openGL
     glClearColor(0.5f, 0.5f, 0.9f, 1);
 //    glClearDepthf(1);
-//    glDepthFunc(GL_LESS);
-//    glEnable(GL_DEPTH_TEST);
+    //glDepthFunc(GL_LESS);
+    glEnable(GL_DEPTH_TEST);
 //    glFrontFace(GL_CCW);
 //    glCullFace(GL_BACK);
 //

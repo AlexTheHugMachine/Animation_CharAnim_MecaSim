@@ -24,7 +24,7 @@ int CharAnimViewer::init()
 
     //b_draw_grid = false;
 
-    //m_part.resize( 10 );
+    m_world.resize( 10 );
 
 
     init_cylinder();
@@ -83,7 +83,7 @@ int CharAnimViewer::update( const float time, const float delta )
 
 	m_ske.setPose( m_bvh, m_frameNumber );
 
-    m_part.update(0.1f);
+    m_world.update(0.1f);
 
     return 0;
 }
@@ -93,9 +93,9 @@ int CharAnimViewer::update( const float time, const float delta )
 void CharAnimViewer::draw_particles()
 {
     int i;
-    for(i=0;i<m_part.size();++i)
+    for(i=0;i<m_world.size();++i)
     {
-		if (m_part[i].radius()>0)
-			draw_sphere( m_part[i].position(), m_part[i].radius() );
+		if (m_world[i].radius()>0)
+			draw_sphere( m_world[i].position(), m_world[i].radius() );
     }
 }

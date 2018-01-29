@@ -9,7 +9,7 @@
 #include "Skeleton.h"
 #include "TransformQ.h"
 
-#include <Particles.h>
+#include <PhysicalWorld.h>
 
 class CharAnimViewer : public Viewer
 {
@@ -28,7 +28,7 @@ protected:
 
     Skeleton m_ske;
 
-    Particles m_part;
+    PhysicalWorld m_world;
 
 	void draw_skeleton(const Skeleton& );
 	void draw_particles();
