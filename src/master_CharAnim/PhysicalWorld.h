@@ -34,13 +34,13 @@ along with Simea.  If not, see <http://www.gnu.org/licenses/>.
 class PhysicalWorld
 {
 public:
-    PhysicalWorld(int n=0) : m_part(n) {}
+    PhysicalWorld(int np=0) : m_part(np) {}
 
     const Particle& operator[](int i) const { return m_part[i]; }
 	Particle& operator[](int i)  { return m_part[i]; }
 
-    std::size_t size() const { return m_part.size(); }
-    void resize(int ns) { m_part.resize(ns); }
+    std::size_t particlesCount() const { return m_part.size(); }
+    void setParticlesCount(int ns) { m_part.resize(ns); }
 
     void update(const float dt)
     {

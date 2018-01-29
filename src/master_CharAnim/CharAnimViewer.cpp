@@ -24,7 +24,7 @@ int CharAnimViewer::init()
 
     //b_draw_grid = false;
 
-    m_world.resize( 10 );
+    m_world.setParticlesCount( 10 );
 
 
     init_cylinder();
@@ -93,7 +93,7 @@ int CharAnimViewer::update( const float time, const float delta )
 void CharAnimViewer::draw_particles()
 {
     int i;
-    for(i=0;i<m_world.size();++i)
+    for(i=0;i<m_world.particlesCount();++i)
     {
 		if (m_world[i].radius()>0)
 			draw_sphere( m_world[i].position(), m_world[i].radius() );
