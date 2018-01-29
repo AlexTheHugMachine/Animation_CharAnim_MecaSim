@@ -31,6 +31,13 @@ public:
     int render();
     int update( const float time, const float delta );
 
+
+	void draw_cylinder(const Transform& T);
+	void draw_cone(const Transform& T);
+	void draw_sphere(const Transform& T);
+	void draw_cylinder(const Point& a, const Point& b, float r = 1.f);
+	void draw_sphere(const Point& a, float r = 1.f);
+
 protected:
 
     Mesh m_cylinder;
@@ -41,12 +48,6 @@ protected:
     void init_cone();
     void init_cylinder();
     void init_sphere();
-
-    void draw_cylinder(const Transform& T);
-    void draw_cone(const Transform& T);
-	void draw_sphere(const Transform& T);
-	void draw_cylinder(const Point& a, const Point& b, float r=1.f);
-	void draw_sphere(const Point& a, float r = 1.f);
 };
 
 

@@ -10,8 +10,12 @@ using namespace std;
 using namespace chara;
 
 
+CharAnimViewer* CharAnimViewer::psingleton = NULL;
+
+
 CharAnimViewer::CharAnimViewer() : Viewer(), m_frameNumber(0)
 {
+	psingleton = this;
 }
 
 
@@ -64,7 +68,7 @@ int CharAnimViewer::render()
     Viewer::manageCameraLight();
     gl.camera(m_camera);
 
-    draw_particles();
+    m_world.draw();
 
 	// Affiche le skeleton
     draw_skeleton( m_ske );
@@ -90,12 +94,3 @@ int CharAnimViewer::update( const float time, const float delta )
 
 
 
-void CharAnimViewer::draw_particles()
-{
-    int i;
-    for(i=0;i<m_world.particlesCount();++i)
-    {
-		if (m_world[i].radius()>0)
-			draw_sphere( m_world[i].position(), m_world[i].radius() );
-    }
-}

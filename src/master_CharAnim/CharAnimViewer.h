@@ -20,6 +20,7 @@ public:
     int render();
     int update( const float time, const float delta );
 
+	static CharAnimViewer& singleton() { return *psingleton;  }
 
 protected:
 
@@ -31,7 +32,9 @@ protected:
     PhysicalWorld m_world;
 
 	void draw_skeleton(const Skeleton& );
-	void draw_particles();
+
+private:
+	static CharAnimViewer* psingleton;
 };
 
 

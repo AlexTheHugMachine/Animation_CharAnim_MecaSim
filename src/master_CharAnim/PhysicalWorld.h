@@ -42,17 +42,11 @@ public:
     std::size_t particlesCount() const { return m_part.size(); }
     void setParticlesCount(int ns) { m_part.resize(ns); }
 
-    void update(const float dt)
-    {
-        int i;
-        for(i=0;i<m_part.size();++i)
-        {
-			//TODO
-			// i_eme particule update
-			// i_eme particule collision
-			// i_eme particule add gravirty
-        }
-    }
+	//void addCube(float l);
+
+	void update(const float dt);
+	void draw();
+
 protected:
     std::vector<Particle> m_part;
 };
