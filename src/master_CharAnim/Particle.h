@@ -67,11 +67,17 @@ public:
 	//	if (... TODO
 	//}
 
+	//! add force to the particles
+	void addForce(const Vector& force)
+	{
+		//TODO: add force
+	}
+
 
 	//! Apply gravity
-	void computeParticleForceGravityEarth()
+	void addEarthGravity()
 	{
-		//TODO: gravity
+		//TODO: apply gravity, call addForce
 	}
 
 	const Point& position() const { return m_p; }
