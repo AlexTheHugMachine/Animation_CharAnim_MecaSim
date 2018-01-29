@@ -52,7 +52,8 @@ public:
 		//}
 	}
 
-	void collision()
+	//! Collision with the ground (y=0)
+	void groundCollision()
 	{
 		if (m_radius < 0) return;
 		//if (m_p.y < m_radius)
@@ -61,6 +62,7 @@ public:
 		}
 	}
 
+	//! Collision with any point p of radius radius (this will be used for kicking with the character's bones)
 	void collision(const Point& p, const float radius);
 	//{
 	//	if (m_radius < 0) return;
