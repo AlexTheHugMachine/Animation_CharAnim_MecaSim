@@ -3,7 +3,6 @@
 
 #include "mat.h"
 #include "wavefront.h"
-#include "texture.h"
 
 #include "orbiter.h"
 #include "program.h"
@@ -26,8 +25,6 @@ public:
         m_objet.bounds(pmin, pmax);
         m_camera.lookat(pmin, pmax);
 
-        m_texture= read_texture(0, "data/debug2x2red.png");
-
         // etape 1 : creer le shader program
         m_program= read_program("tutos/tuto9_color.glsl");
         program_print_errors(m_program);
@@ -47,10 +44,7 @@ public:
     {
         // etape 3 : detruire le shader program
         release_program(m_program);
-
         m_objet.release();
-        glDeleteTextures(1, &m_texture);
-        
         return 0;
     }
     

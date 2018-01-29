@@ -1,4 +1,6 @@
 
+//! \file tuto2GL_vertex.glsl
+
 #version 330
 
 const float dx= 0;

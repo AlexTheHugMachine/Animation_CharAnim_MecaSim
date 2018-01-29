@@ -21,7 +21,9 @@ uniform float saturation= 1;
 uniform vec4 channels= vec4(1, 1, 1, 1);
 uniform float gray= 0;
 
+uniform int split;
 uniform sampler2D image;
+uniform sampler2D image_next;
 
 in vec2 vertex_texcoord;
 out vec4 fragment_color;
@@ -32,8 +34,12 @@ void main(void)
     float k1= 1.0 / pow(saturation, 1.0 / compression); // normalisation : saturation == blanc
     
     vec4 color= texture(image, vertex_texcoord);
+    vec4 color_next= texture(image_next, vertex_texcoord);
     
-    if(any(isnan(color)))
+    if(gl_FragCoord.x >= split)
+        color= color_next;
+    
+    if(any(isnan(color)) || any(isinf(color)))
     {
         fragment_color= vec4(1, 0, 1, 1);
         return;
@@ -58,6 +64,8 @@ void main(void)
     else
         // visualisation du canal alpha seul
         color.rgb= color.aaa;
+    if(abs(gl_FragCoord.x - split) < 1)
+        color= vec4(0.8, 0.5, 0, 1);
     
     fragment_color= vec4(clamp(color.rgb, vec3(0.0), vec3(1.0)), 1.0);
 }

@@ -1,4 +1,6 @@
 
+//! \file pipeline.cpp
+
 #include <cstdio>
 #include <cmath>
 

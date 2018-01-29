@@ -68,7 +68,21 @@ solution "gKit2light"
 			system "Windows"
 			architecture "x64"
 			disablewarnings { "4244", "4305" }
+			flags { "MultiProcessorCompile", "NoMinimalRebuild" }
 		end
+		includedirs { "extern/visual2015/include" }
+		libdirs { "extern/visual2015/lib" }
+		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
+		
+	configuration { "windows", "vs2017" }
+		if _PREMAKE_VERSION >="5.0" then
+			system "Windows"
+			architecture "x64"
+			disablewarnings { "4244", "4305" }
+			flags { "MultiProcessorCompile", "NoMinimalRebuild" }
+		end
+
+		-- memes librairies que pour la version 2015
 		includedirs { "extern/visual2015/include" }
 		libdirs { "extern/visual2015/lib" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
@@ -90,6 +104,7 @@ gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h" }
 if no_project then
 	do return end
 end
+
  -- description des projets		 
 projects = {
 	"shader_kit",
@@ -116,11 +131,15 @@ tutos = {
 	"tuto7",
 	"tuto8",
 	"tuto9",
+	"tuto9_texture1",
+	"tuto9_textures",
 	
 	"tuto_transform",
 	"tuto_pad",
 	
+	"tuto1GL",
 	"tuto2GL",
+	"tuto2GL_app",
 	"tuto3GL",
 	"tuto3GL_reflect",
 	"tuto4GL",
@@ -131,18 +150,12 @@ tutos = {
 	"tuto5GL_multi",
 	"tuto6GL",
 	"tuto6GL_buffer",
+	"mesh_viewer_sort",
 	"tuto_framebuffer",
 	"tuto_storage",
 	"tuto_storage_buffer",
 	"tuto_storage_texture",
-	"min_data",
-	
---~ 	"ray_tuto1",
---~ 	"ray_tuto2",
---~ 	"ray_tuto3",
-	"ray_tuto4"
---~ 	
---~ 	"pipeline"
+	"min_data"
 }
 
 for i, name in ipairs(tutos) do
@@ -154,14 +167,26 @@ for i, name in ipairs(tutos) do
 		files { gkit_dir .. "/tutos/" .. name..'.cpp' }
 end
 
+project("mesh_viewer")
+	language "C++"
+	kind "ConsoleApp"
+	targetdir "bin"
+	files ( gkit_files )
+	files { gkit_dir .. "/tutos/mesh_viewer.cpp"}
+	files { gkit_dir .. "/tutos/mesh_buffer.cpp"}
+	files { gkit_dir .. "/tutos/mesh_buffer.h"}
+	files { gkit_dir .. "/tutos/mesh_data.cpp"}
+	files { gkit_dir .. "/tutos/mesh_data.h"}
+	files { gkit_dir .. "/tutos/material_data.cpp"}
+	files { gkit_dir .. "/tutos/material_data.h"}
+
 
 -- description des tutos openGL avances / M2
 tutosM2 = {
 	"tuto_time",
 	"tuto_mdi",
 	"tuto_is",
-	"tuto_raytrace_fragment",
-	"tuto_nscompute"
+	"tuto_raytrace_fragment"
 }
 
 for i, name in ipairs(tutosM2) do
@@ -172,14 +197,3 @@ for i, name in ipairs(tutosM2) do
 		files ( gkit_files )
 		files { gkit_dir .. "/tutos/M2/" .. name..'.cpp' }
 end
-
-project("tp2")
-	language "C++"
-	kind "ConsoleApp"
-	targetdir "bin"
-	files ( gkit_files )
-	files { gkit_dir .. "/opengl_tp2/tp2.cpp" }
-
-
-
-

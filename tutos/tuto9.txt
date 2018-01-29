@@ -66,4 +66,72 @@ objet.draw(program);
 \endcode
 
 cf \ref tuto9.cpp pour un exemple complet qui utilise un uniform supplémentaire, qui permet de donner la même couleur aux pixels de l'objet.
+
+## et avec une texture ?
+
+Il y a plusieurs étapes :
+    - d'abord charger la texture, cf GLuint texture= read_texture(0, fichier ); documenté dans texture.h,
+    - vérifier que les sommets de l'objet à dessiner sont bien associés à des coordonnées de texture, cf Mesh::texcoord() pour décrire les attributs 
+    de sommet, ou Mesh::texcoord_buffer_size(), pour vérifier que les coordonnées de texture sont bien présentes,
+    - déclarer l'attribut dans le vertex shader, cf layout(location= 1) in vec2 texcoord;
+    - transmettre les texcoord au fragment shader,
+    - lire la texture dans la fragment shader, aux bonnes coordonnées.
+    
+Lisez la section "écrire le fragment shader (et le vertex shader)" dans \ref tuto5GL pour comprendre comment les différents morceaux se connectent ensemble.
+
+Dernière étape, configurer le pipeline pour utiliser la texture, vous pouvez lire les détails dans \ref tuto5GL ou utiliser l'utilitaire program_use_texture( );
+\code
+// init( ) :
+    // verifie que l'objet a bien des coordonnées de texture
+    if(m_objet.texcoord_buffer_size() == 0)
+        return "erreur, pas de texcoords...";
+    
+    // charge une texture sur l'unite 0
+    m_texture= read_texture(0, "...");
+
+// render( ) :
+    // selectionner le shader program, si necessaire
+    // glUseProgram(program);
+
+    // . parametres "supplementaires" :
+    //   . utilisation d'une texture configuree sur l'unite 0, cf texture= read_texture(0, "...");
+    program_use_texture(program, "texture0", 0, m_texture);
+
+    // go !
+    m_objet.draw(m_program);
+\endcode
+cf \ref tuto9_texture1.cpp pour un exemple complet qui charge une texture.
+
+## et avec plusieurs textures ?
+
+C'est la même chose, par contre, il faut charger et configurer une unité de texture par image / texture à utiliser et déclarer un sampler2D par texture dans le shader.
+\code
+// init( ) :
+    // verifie que l'objet a bien des coordonnées de texture
+    if(m_objet.texcoord_buffer_size() == 0)
+        return "erreur, pas de texcoords...";
+
+    // charge une texture sur l'unite 0
+    m_texture0= read_texture(0, "...");
+
+    // charge une texture sur l'unite 1
+    m_texture1= read_texture(1, "...");
+
+// render( ) :
+    // selectionner le shader program, si necessaire
+    // glUseProgram(program);
+
+    // . parametres "supplementaires" :
+    //   . utilisation d'une texture configuree sur l'unite 0, cf texture= read_texture(0, "...");
+    program_use_texture(program, "texture0", 0, m_texture0);    // le shader déclare un uniform sampler2D texture0;
+    
+    //   . utilisation d'une texture configuree sur l'unite 1, cf texture= read_texture(1, "...");
+    program_use_texture(program, "texture1", 1, m_texture1);    // le shader déclare un uniform sampler2D texture1;
+
+    // go !
+    m_objet.draw(m_program);
+\endcode
+
+cf \ref tuto9_textures.cpp pour un exemple complet qui charge et utilise 2 textures.
+
 */

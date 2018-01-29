@@ -1,4 +1,6 @@
 
+//! \file window.cpp
+
 #ifndef _MSC_VER
     #include <sys/stat.h>
 #else
@@ -14,6 +16,8 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+
+#include <SDL2/SDL_power.h>
 
 #include "glcore.h"
 #include "window.h"
@@ -98,8 +102,31 @@ void clear_wheel_event( )
 }
 
 
+//
+static unsigned int last_time= 0;
+static unsigned int last_delta= 1;
+
+float global_time( )
+{
+    unsigned int now= SDL_GetTicks();
+    
+    // ecoulement du temps strictement croissant...
+    if(now <= last_time)
+        now= last_time +1;
+    
+    last_delta= now - last_time;
+    last_time= now;
+    return (float) last_time;
+}
+
+float delta_time( )
+{
+    return (float) last_delta;
+}
+
 // etat de l'application.
 static int stop= 0;
+
 //! boucle de gestion des evenements de l'application.
 int run( Window window, int (*draw)() )
 {
@@ -120,12 +147,22 @@ int run( Window window, int (*draw)() )
     return 0;
 }
 
+static int event_count= 0;
+int last_event_count( ) { return event_count; }
+
+static bool laptop= false;
+bool laptop_mode( ) { return laptop; }
+
 int events( Window window )
 {
+    event_count= 0;
+    
     // gestion des evenements
     SDL_Event event;
     while(SDL_PollEvent(&event))
     {
+        event_count++;
+        
         switch(event.type)
         {
             case SDL_WINDOWEVENT:
@@ -242,7 +279,7 @@ void release_window( Window window )
 //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
 static
 void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
-    const char *message, const void *userParam )
+    const char *message, void *userParam )
 {
     static std::set<std::string> log;
     if(log.insert(message).second == false)
@@ -283,8 +320,24 @@ Context create_context( Window window, const int major, const int minor )
         return NULL;
     }
 
-    SDL_GL_SetSwapInterval(1);
-
+    // 
+    SDL_GL_SetSwapInterval(-1);
+    if(SDL_GL_GetSwapInterval() != -1)
+    {
+        printf("Vsync ON\n");
+        SDL_GL_SetSwapInterval(1);
+    }
+    else
+        printf("Vsync-late ON\n");
+    
+    laptop= false;
+    SDL_PowerState power= SDL_GetPowerInfo(nullptr, nullptr);
+    if(power != SDL_POWERSTATE_NO_BATTERY)
+    {
+        laptop= true;
+        printf("running on a laptop...\n");
+    }
+    
 #ifndef NO_GLEW
     // initialise les extensions opengl
     glewExperimental= 1;
@@ -323,7 +376,6 @@ void release_context( Context context )
 //! verifie l'existance d'un fichier.
 bool exists( const char *filename )
 {
-    //~ printf("file '%s'\n", filename);
 #ifndef _MSC_VER
     struct stat info;
     if(stat(filename, &info) < 0)
@@ -362,6 +414,7 @@ const char *smart_path( const char *filename )
     tmp= smartpath + "../" + filename;
     if(exists(tmp.c_str()))
         smartpath= tmp;
-
+    else
+        smartpath= filename;
     return smartpath.c_str();
 }

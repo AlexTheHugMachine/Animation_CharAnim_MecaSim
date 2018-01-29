@@ -1,4 +1,6 @@
 
+//! \file tuto_storage_buffer.glsl
+
 #version 430
 
 #ifdef VERTEX_SHADER

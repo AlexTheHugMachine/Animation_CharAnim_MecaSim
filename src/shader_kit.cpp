@@ -81,7 +81,7 @@ const char *option_find( std::vector<const char *>& options, const char *ext )
         if(std::string(options[i]).rfind(ext) != std::string::npos)
         {
             const char *option= options[i];
-            options[i]= options.back();
+            options[i]= options.back(); // ne preserve pas l'ordre des arguments... peut mieux faire
             options.pop_back();
             return option;
         }
@@ -107,6 +107,9 @@ int init( std::vector<const char *>& options )
     }
     
     vao= 0;
+    mesh_pmin= Point(normalize(Vector(-1, -1, 0)) * 2.5f);
+    mesh_pmax= Point(normalize(Vector( 1,  1, 0)) * 2.5f);
+    
     option= option_find(options, ".obj");
     if(option != NULL)
     {
@@ -212,6 +215,13 @@ int draw( void )
     else if(mb & SDL_BUTTON(3))
         camera.move(mx);           // approche / eloigne l'objet
     
+    SDL_MouseWheelEvent wheel= wheel_event();
+    if(wheel.y != 0)
+    {
+        clear_wheel_event();
+        camera.move(16.f * wheel.y);  // approche / eloigne l'objet
+    }
+    
     // recupere les transformations
     Transform model= Identity();
     Transform view= camera.view();
@@ -250,11 +260,12 @@ int draw( void )
         program_uniform(program, "mvpInvMatrix", mvpInv);
         
         program_uniform(program, "mvMatrix", mv);
+        program_uniform(program, "mvInvMatrix", mv.inverse());
         program_uniform(program, "normalMatrix", mv.normal());
         
         // interactions
         program_uniform(program, "viewport", vec2(window_width(), window_height()));
-        program_uniform(program, "time", (float) SDL_GetTicks());
+        program_uniform(program, "time", (float) global_time());
         program_uniform(program, "motion", vec3(mx, my, mb & SDL_BUTTON(1)));
         program_uniform(program, "mouse", vec3(mousex, mousey, mb & SDL_BUTTON(1)));
         
@@ -302,7 +313,10 @@ int draw( void )
     if(key_state('s'))
     {
         clear_key_state('s');
-        screenshot("shader_kit.png");
+        
+        static int calls= 1;
+        printf("screenshot %d...\n", calls);
+        screenshot("shader_kit", calls++);
     }
     
     static bool video= false;
@@ -329,6 +343,11 @@ int draw( void )
         clear_key_state('v');
         if(camera.read_orbiter("orbiter.txt") < 0)
             camera= Orbiter(mesh_pmin, mesh_pmax);
+    }
+    if(key_state('f'))
+    {
+        clear_key_state('f');
+        camera= Orbiter(mesh_pmin, mesh_pmax);        
     }
     
     return 1;

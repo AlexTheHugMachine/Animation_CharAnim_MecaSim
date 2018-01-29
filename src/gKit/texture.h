@@ -29,8 +29,11 @@ GLuint read_texture( const int unit, const char *filename, const GLenum texel_ty
 //! renvoie le nombre de mipmap d'une image width x height.
 int miplevels( const int width, const int height );
 
-//! enregistre le contenu de la fenetre dans un fichier filename nom de l'image a ecrire. doit etre de type .png / .bmp
+//! enregistre le contenu de la fenetre dans un fichier. doit etre de type .png / .bmp
 int screenshot( const char *filename );
+
+//! enregistre le contenu de la fenetre dans un fichier numerote prefixXXX.png. id est le numero de la capture.
+int screenshot( const char *prefix, const int id );
 
 /*! capture video. enregistre le contenu de la fenetre dans un fichier prefix%04d.bmp.
 
@@ -54,7 +57,7 @@ exemple d'utilisation : cf shader_kit.cpp
         video= !video;
         
         if(video) printf("start video capture...\n");
-        else      printf("stop video cpature.\n");
+        else      printf("stop video capture.\n");
     }
     
     if(video) capture("shader_kit");

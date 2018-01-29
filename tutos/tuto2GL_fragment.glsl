@@ -1,4 +1,6 @@
 
+//! \file tuto2GL_fragment.glsl
+
 #version 330
 
 out vec4 fragment_color;

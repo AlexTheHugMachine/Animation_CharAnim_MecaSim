@@ -8,22 +8,29 @@ pour pouvoir dessiner quelque chose, il faut commencer par configurer le pipelin
 
 la configuration minimale est :
     - le pipeline "fixe", des options :
+        - l'image dans laquelle dessiner, cf glBindFramebuffer() et glDrawBuffer(),
         - les dimensions de l'image, cf glViewport( ),
         - la couleur par défaut de l'image, cf glClearColor( ),
         - la profondeur par défaut du zbuffer, cf glClearDepthf( ),
         - le test de profondeur, cf glEnable/Disable(GL_DEPTH_TEST),
-        - l'élimination des faces arrières, cf glEnable/Disable(GL_CULL_FACE),
+        - l'orientation des faces *avant*, cf glFrontFace(),
+        - l'élimination des faces *arrière*, cf glEnable/Disable(GL_CULL_FACE),
         - la description des attributs des sommets, sélectionner un vertex array, cf glBindVertexArray( ),
     - le pipeline programmable, les shaders :
         - un shader program, sélectionner un shader program, cf glUseProgram( )
     
 glClearColor() et glClearDepthf() définissent les valeurs par défaut utilisées pour "éffacer" l'image et le zbuffer, avec glClear( ). 
 la taille de l'image est fournie par glViewport( ). 
+Les images associées à la fenêtre s'appellent GL_BACK et GL_FRONT, c'est GL_FRONT qui est affichée dans la fenêtre, on dessine donc dans GL_BACK. 
 pour une application simple, il suffit de fixer les valeurs une seule fois dans init( ) :
 \code
+glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+glDrawBuffer(GL_BACK);
+
+glViewport(0, 0, window_width(), window_height());
+
 glClearColor(0.2f, 0.2f, 0.2f);
 glClearDepthf(1.0f);
-glViewport(0, 0, window_width(), window_height());
 \endcode
 
 _remarque :_ si la fenetre de l'application change de dimension, il ne faut pas oublier de modifier glViewport(). 
@@ -144,7 +151,7 @@ glUniform4f(location, 1, 1, 1, 1);
 \endcode
 
 pour le tableau positions, les éléments du tableau sont des vec3. pour un seul vec3, on utiliserait glUniform3f( ), pour un tableau, les valeurs
-sont passées par pointeur, et c'est la variante glUniform3fv(location, size, data) qu'il faut utiliser. size indique le nombre d'élements vec3 à transférer.
+sont passées par pointeur, et c'est la variante glUniform3fv(location, count, data) qu'il faut utiliser. _count_ indique le nombre d'élements vec3 à transférer.
 
 \code
 #include "vec.h"
@@ -152,7 +159,7 @@ sont passées par pointeur, et c'est la variante glUniform3fv(location, size, da
 vec3 data[36]= { ... };
 
 GLint location= glGetUniformLocation(program, "positions");
-glUniform3fv(location, 36, data);
+glUniform3fv(location, /* count */ 36, data);
 \endcode
 
 _remarque :_ on peut utiliser les variantes pointeurs pour une valeur unique, il suffit de donner 1 comme nombre d'éléments à affecter.
@@ -160,7 +167,7 @@ par exemple :
 \code
 float data= 12;
 GLint location= glGetUniformLocation(program, "time");
-glUniform1fv(location, 1, &data);
+glUniform1fv(location, /* count */ 1, &data);
 \endcode
 ou encore 
 \code
@@ -168,16 +175,34 @@ ou encore
 
 Color data= Color(1, 1, 1);
 GLint location= glGetUniformLocation(program, "color");
-glUniform4fv(location, 1, &data);
+glUniform4fv(location,  /* count */ 1, &data);
 \endcode
+
+pour un uniform, ou un tableau, de type matrice 4x4, comme les Transform, par exemple, il faut utiliser glUniformMatrix4fv(). Transform represente 
+les matrices par 16 floats, organises par ligne, mais openGL utilise l'autre organisation, par colonne, il faut donc transposer les matrices avant 
+de les affecter à un uniform, c'est le role du parametre _transpose_ de glUniformMatrix().
+
+\code
+Transform t;
+GLint location= glGetUniformLocation(program, "matrix");        // cf declaration dans un shader : uniform mat4 matrix;
+glUniformMatrix4fv(location, /* count */ 1, /* transpose */ GL_TRUE, t.buffer());
+\endcode
+
 
 \ref uniforms.h définit plusieurs surcharges de la famille glUniform() pour les types les plus courants.
 \code
 #include "uniforms.h"
 
-program_uniform(program, "time", 12);
+program_uniform(program, "time", float(12));
 program_uniform(program, "color", Color(1, 1, 1));
+program_uniform(program, "matrix", Transform());
 \endcode
+
+__attention :__ vérifiez que la bonne surchage soit utilisee, si l'uniform est un scalaire : int, uint ou float, n'hesitez pas utiliser les notations litterales ou les constructeurs explicites :
+    - `12.5f` ou `float(12.5)` ou `(float) 12.5`,
+    - `4` ou `int(4)` ou `(int) 4`,
+    - `6u` ou `unsigned(6)` ou `(unsigned) 6`.
+    
 
 ## glDraw( )
 
@@ -194,12 +219,15 @@ l'exemple complet est dans \ref tuto3GL.cpp
 
 il faut fixer les paramètres, pour les applications simples, une seule fois dans init( ) :
 \code
+    // choisir dans quelle image dessiner, celle qui n'est pas affichée, GL_BACK
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glDrawBuffer(GL_BACK);
     // definir la taille de l'image a dessiner, 
-    // glViewport(0, 0, width, height);    
+    glViewport(0, 0, width, height);    
     // fait par run( ) de window.h
     
     glClearColor(0.2, 0.2, 0.2, 1);     // definir la couleur par defaut
-    glClearDepth(1.f);                  // profondeur par defaut
+    glClearDepthf(1.f);                 // profondeur par defaut
 
     glDepthFunc(GL_LESS);               // ztest, conserver l'intersection la plus proche de la camera
     glEnable(GL_DEPTH_TEST);            // activer le ztest

@@ -1,4 +1,6 @@
 
+//! \file texcoords.glsl
+
 #version 330
 
 #ifdef VERTEX_SHADER

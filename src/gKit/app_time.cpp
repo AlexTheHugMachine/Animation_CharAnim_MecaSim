@@ -2,6 +2,7 @@
 #include <chrono>
 
 #include "app_time.h"
+#include "texture.h"
 
 
 AppTime::AppTime( const int width, const int height, const int major, const int minor ) : App(width, height, major, minor) {}
@@ -23,10 +24,16 @@ int AppTime::run( )
     glViewport(0, 0, window_width(), window_height());
     
     // remarque : utiliser std::chrono si la precision n'est pas suffisante
-    m_time= SDL_GetTicks();
     while(events(m_window))
     {
-        m_delta= SDL_GetTicks() - m_time;
+    #if 0
+        if(laptop_mode() && last_event_count() == 0)
+        {
+            SDL_Delay(16);
+            continue;
+        }
+    #endif
+        
         if(update(global_time(), delta_time()) < 0)
             break;
         
@@ -38,17 +45,18 @@ int AppTime::run( )
         std::chrono::high_resolution_clock::time_point cpu_start= std::chrono::high_resolution_clock::now();
         
         int code= render();
-        
+       
         std::chrono::high_resolution_clock::time_point cpu_stop= std::chrono::high_resolution_clock::now();
         // conversion des mesures en duree...
         int cpu_time= std::chrono::duration_cast<std::chrono::nanoseconds>(cpu_stop - cpu_start).count();
         
         glEndQuery(GL_TIME_ELAPSED);
         
+        // force openGL a finir d'executer toutes les commandes, cf App::run()
+        glFinish();
+        
         if(code< 1)
             break;
-        
-        m_time= SDL_GetTicks();
         
         // attendre le resultat de la requete
         GLint64 gpu_time= 0;
@@ -60,6 +68,14 @@ int AppTime::run( )
         printf(m_console, 0, 2, "gpu  %02dms %03dus", (int) (gpu_time / 1000000), (int) ((gpu_time / 1000) % 1000));        
         
         draw(m_console, window_width(), window_height());
+        
+        if(key_state('s'))
+        {
+            clear_key_state('s');
+            
+            static int calls= 1;
+            screenshot("gkit2app", calls++);
+        }
         
         // presenter le resultat
         SDL_GL_SwapWindow(m_window);

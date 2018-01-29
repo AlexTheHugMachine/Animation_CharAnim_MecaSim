@@ -113,7 +113,7 @@ GLenum buffers[]= { GL_COLOR_ATTACHMENT0 };
 glDrawBuffers(1, buffers);
 
 Color color(1, 0, 0);
-glClearBufferfv(GL_COLOR, /* draw buffer */ GL_DRAW_BUFFER0, /* value */ &color.x);
+glClearBufferfv(GL_COLOR, /* draw buffer */ 0, /* value */ &color.x);
 \endcode
 
 `DRAW_BUFFER0` est l'indice dans le tableau `buffers`, `buffers[0]` contient `COLOR_ATTACHMENT0`, et c'est la texture `color_texture` qui sera 
@@ -213,6 +213,30 @@ mipmap 0 a ete modifie, et le résultat sera faux.
 il y a 2 solutions, soit utiliser un filtrage `NEAREST_MIPMAP_LINEAR` et `MAX_LEVEL` = 0 qui n'utilise que le mipmap 0, soit 
 recalculer tous les mipmaps de la texture, cf glGenerateMipmap( ).
 
+_remarque :_ pour les textures de profondeur, il n'est pas possible d'utiliser glGenerateMipmap(), donc il faut utiliser un mode de filtrage (cf GL_NEAREST)
+qui n'accède qu'aux données disponibles : le niveau de mipmap dans lequel on vient de dessiner.
+
+\code
+// selectionner l'unite de texture a modifier, si necessaire
+// glActiveTExture(GL_TEXTURE0 + unit);
+
+// desactiver le filtrage (pour les textures de profondeur, mais pas que... )
+// acces direct aux donnes sans interpolation :
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+// equivalent, avec un sampler, à utiliser avec glBindSampler(unit, sampler);
+GLuint sampler= { ... };
+glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+\endcode
+
+
+### attention ###
+Autre subtilité, si une texture est active sur une unité de texture et attachée en même temps au framebuffer actif, glDraw()
+génèrera une erreur : le pipeline ne peut pas lire et écrire la même texture en même temps. il faut donc bien penser à nettoyer les unités de 
+texture pour eviter ce problème...
+
 \code
 GLuint color= { ... };
 GLuint framebuffer= { ... };
@@ -255,9 +279,132 @@ render( )
 	glUseProgram( ... );
 	glUniform( ... );
 	glDraw( ... );
+
+// nettoyage *obligatoire*, la texture color *ne doit pas* etre active sur une unite de texture et attachee au framebuffer selectionne
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 \endcode
 
 exemple complet dans cf \ref tuto_framebuffer.cpp.
+
+
+# et avec plusieurs textures ?
+
+dans certains cas, il est nécessaire de stocker plusieurs informations, en plus de la couleur et de la profondeur du fragment. la démarche est la meme,
+il suffit de déclarer les sorties dans le fragment shader (8 au maximum), de créer des textures pour stocker les résultats, de les attacher au 
+framebuffer, et enfin de les associer aux sorties du fragment shader avec glDrawBuffers().
+
+comme d'habitude, les différentes sorties sont numérotées. l'application peut choisir l'identifiant de chaque sortie avec glBindFragDataLocation(program, numero, varying ), 
+mais il faut ensuite (re-) linker le shader program, ce qui n'est pas très pratique. il est aussi possible d'indiquer le numéro directement 
+dans le source du fragment shader avec `layout(location= ...)`, ce qui est plus simple à manipuler (c'est la même chose pour les attributs des 
+sommets dans le vertex shader).
+
+\code
+// fragment shader
+layout(location= 0) out vec4 fragment_color;		// declare la sortie 0
+layout(location= 1) out vec3 fragment_normal;		// declare la sortie 1
+
+void main( ) 
+{
+	fragment_normal= { ... };
+	fragment_color= { ... };
+}
+
+
+// application
+GLuint color_texture= { ... };
+GLuint normal_texture= { ... };
+GLuint depth_texture= { ... };
+GLuint framebuffer= { ... };
+
+// selectionner le framebuffer, si necessaire
+// glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+
+// attacher les textures au framebuffer
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER,  /* attachment */ GL_COLOR_ATTACHMENT0, /* texture */ color_texture, /* mipmap level */ 0);
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER,  /* attachment */ GL_COLOR_ATTACHMENT1, /* texture */ normal_texture, /* mipmap level */ 0);
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER,  /* attachment */ GL_DEPTH_ATTACHMENT, /* texture */ depth_texture, /* mipmap level */ 0);
+
+// associer les sorties du fragment shader aux textures attachees au framebuffer
+GLenum buffers[]= { /* sortie / location 0 */ GL_COLOR_ATTACHMENT0, /* sortie / location 1 */ GL_COLOR_ATTACHMENT1 };
+glDrawBuffers(2, buffers);
+\endcode
+
+bien sur, on peut utiliser glGetFragDataLocation( ) pour récupérer l'identifiant d'une sortie du fragment shader, mais par construction, le résultat 
+est la valeur que l'on a indiqué avec la déclaration `layout(location= ...)`.
+
+_rappel :_ le paramètre attachment de glFramebufferTexture est libre, on obtient exactement le meme résultat de cette maniere :
+\code
+// selectionner le framebuffer, si necessaire
+// glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+// attacher les textures au framebuffer
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER,  /* attachment */ GL_COLOR_ATTACHMENT4, /* texture */ color_texture, /* mipmap level */ 0);
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER,  /* attachment */ GL_COLOR_ATTACHMENT2, /* texture */ normal_texture, /* mipmap level */ 0);
+glFramebufferTexture(GL_DRAW_FRAMEBUFFER,  /* attachment */ GL_DEPTH_ATTACHMENT, /* texture */ depth_texture, /* mipmap level */ 0);
+
+// associer les sorties du fragment shader aux textures attachees au framebuffer
+GLenum buffers[]= { /* sortie / location 0 */ GL_COLOR_ATTACHMENT4, /* sortie / location 1 */ GL_COLOR_ATTACHMENT2 };
+glDrawBuffers(2, buffers);
+\endcode
+
+## vérifier la configuration du framebuffer 
+
+pour vérifier que le framebuffer est correctement configuré et que le pipeline est capable d'écrire toutes les données aux formats demandés, 
+on peut utiliser glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER). 
+
+\code
+// selectionner le framebuffer, si necessaire
+// glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
+GLenum code= glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+switch(code)
+{
+	case GL_FRAMEBUFFER_COMPLETE; /* ok */ break;
+	case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: /* un draw buffer n'a pas de texture associee */ break;
+	case GL_FRAMEBUFFER_UNSUPPORTED: /* cet ensemble de formats de textures n'est pas compatible avec la carte graphique */ break;
+	
+	...
+}
+\endcode
+
+les autres erreurs possibles sont dans la doc openGL.
+
+# formats de textures pour stocker des données, profondeur, position, normale, etc.
+
+les textures couleurs classiques stockent des entiers sur 8bits re-normalisés entre 0 et 1. si on souhaite stocker des réels, il faut utiliser un format
+de texture avec assez de précision. les floats sur 16 bits (suffixe 16F) et sur 32 bits (suffixe 32F) sont supportés par la plupart des cartes graphiques.
+voila les formats courants :
+	- float : GL_R32F, GL_R16F
+	- vec2 : GL_RG32F, GL_RG16F,
+	- vec3 : GL_RGB32F, GL_RGB16F,
+	- vec4 : GL_RGBA32F, GL_RGBA16F
+	- zbuffer :  GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT
+
+__attention :__ toutes les combinaisons de formats ne sont pas supportées par la carte graphique. vérifiez avec glCheckFramebufferStatus().
+
+
+# effacer le framebuffer / valeurs par défaut
+
+les framebuffers classiques sont "effacés" / (re-) initialisés par glClear() avec les valeurs fournies par glClearColor(), glClearDepthf().
+lorsque plusieurs textures de formats différents sont utilisées et que l'on souhaite les initialiser avec des valeurs différentes, il faut utiliser 
+la famille de fonctions glClearBuffer(). les formats de textures entiers utilisent glClearBufferiv(), les formats float, glClearBufferfv(). 
+
+Les textures attachées au framebuffer ne sont pas identifiées directement, mais à travers leur association à une sortie du fragment shader, 
+cf les paramètres passés à glDrawBuffers() lors de la configuration du framebuffer. Les valeurs par défaut sont toujours fournies par un vec4, 
+même si la texture utilise un format avec moins de composantes. Le zbuffer est un cas particulier, il suffit de passer un seul float.
+
+\code
+// couleur par défaut : gris, pour la texture associee à la sortie 0 du fragment shader
+vec4 color= vec4(.2, .2, .2, 1);
+glClearBufferfv(GL_COLOR, /* draw buffer / sortie / location */ 0, /* const float[4] */ &color.r);
+
+// normale par défaut : vec3(0, 0, 0), pour la texture associee à la sortie 1 du framgent shader
+vec4 normal= vec4(0, 0, 0, 0);
+glClearBufferfv(GL_COLOR, /* draw buffer / sortie / location */ 1, /* const float[4] */ &normal.x);
+
+// profondeur par defaut
+float one= 1;
+glClearBufferfv(GL_DEPTH, /* draw buffer 0 */ 0, /* const float* */ &one);
+\endcode
+
 
 */

@@ -19,7 +19,7 @@ struct Vector;
 struct Point
 {
     //! constructeur par defaut.
-    Point( const float _x= 0, const float _y= 0, const float _z= 0 ) : x(_x), y(_y), z(_z) {}
+    explicit Point( const float _x= 0, const float _y= 0, const float _z= 0 ) : x(_x), y(_y), z(_z) {}
 
     //! cree un point a partir des coordonnees du vecteur generique (v.x, v.y, v.z).
     explicit Point( const vec3& v );   // l'implementation se trouve en fin de fichier, la structure vec3 n'est pas encore connue.
@@ -31,6 +31,9 @@ struct Point
     
     float x, y, z;
 };
+
+//! renvoie le point origine (0, 0, 0)
+Point Origin( );
 
 //! renvoie la distance etre 2 points.
 float distance( const Point& a, const Point& b );
@@ -45,7 +48,7 @@ Point center( const Point& a, const Point& b );
 struct Vector
 {
     //! constructeur par defaut.
-    Vector( const float _x= 0, const float _y= 0, const float _z= 0) : x(_x), y(_y), z(_z) {}
+    explicit Vector( const float _x= 0, const float _y= 0, const float _z= 0) : x(_x), y(_y), z(_z) {}
     //! cree le vecteur ab.
     Vector( const Point& a, const Point& b ) : x(b.x - a.x), y(b.y - a.y), z(b.z - a.z) {}
 
@@ -102,7 +105,7 @@ Vector operator/ ( const Vector& v, const float k );
 struct vec2
 {
     //! constructeur par defaut.
-    vec2( const float _x= 0, const float _y= 0 ) : x(_x), y(_y) {}
+    explicit vec2( const float _x= 0, const float _y= 0 ) : x(_x), y(_y) {}
 
     float x, y;
 };
@@ -112,9 +115,9 @@ struct vec2
 struct vec3
 {
     //! constructeur par defaut.
-    vec3( const float _x= 0, const float _y= 0, const float _z= 0 ) : x(_x), y(_y), z(_z) {}
+    explicit vec3( const float _x= 0, const float _y= 0, const float _z= 0 ) : x(_x), y(_y), z(_z) {}
     //! constructeur par defaut.
-    vec3( const vec2& a, const float _z ) : x(a.x), y(a.y), z(_z) {}
+    explicit vec3( const vec2& a, const float _z ) : x(a.x), y(a.y), z(_z) {}
 
     //! cree un vecteur generique a partir des coordonnees du point a.
     explicit vec3( const Point& a );    // l'implementation se trouve en fin de fichier.
@@ -129,11 +132,11 @@ struct vec3
 struct vec4
 {
     //! constructeur par defaut.
-    vec4( const float _x= 0, const float _y= 0, const float _z= 0, const float _w= 0 ) : x(_x), y(_y), z(_z), w(_w) {}
+    explicit vec4( const float _x= 0, const float _y= 0, const float _z= 0, const float _w= 0 ) : x(_x), y(_y), z(_z), w(_w) {}
     //! constructeur par defaut.
-    vec4( const vec2& v, const float _z= 0, const float _w= 0 ) : x(v.x), y(v.y), z(_z), w(_w) {}
+    explicit vec4( const vec2& v, const float _z= 0, const float _w= 0 ) : x(v.x), y(v.y), z(_z), w(_w) {}
     //! constructeur par defaut.
-    vec4( const vec3& v, const float _w= 0 ) : x(v.x), y(v.y), z(v.z), w(_w) {}
+    explicit vec4( const vec3& v, const float _w= 0 ) : x(v.x), y(v.y), z(v.z), w(_w) {}
 
     //! cree un vecteur generique a partir des coordonnees du point a, (a.x, a.y, a.z, 1).
     explicit vec4( const Point& a );    // l'implementation se trouve en fin de fichier.

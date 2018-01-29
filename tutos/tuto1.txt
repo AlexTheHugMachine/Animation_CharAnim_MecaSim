@@ -16,7 +16,152 @@ ces 3 fonctions sont appelées dans le main.
 La classe App permet également d'écrire une application avec une conception légèrement différente mais avec les mêmes fonctionnalités. 
 cf tuto7.cpp pour un exemple.
 
-## création de la fenêtre et du contexte openGL :
+## création de la fenêtre et du contexte openGL
+
+La création d'une fenêtre et la gestion des évènements clavier / souris dépend du système : windows, mac os, linux, etc. la librairie 
+[SDL2](http://libsdl.org) permet d'écrire un seul code qui fonctionnera sur tous ces systèmes. 
+
+La démarche est plutot directe, il faut initialiser SDL2, créer la fenêtre, créer un contexte openGL et traiter les évènements claviers / souris.
+
+### étape 1 : intialiser SDL2
+
+\code
+#include "SDL2/SDL.h"
+
+int main( )
+{
+    // init SDL
+    if(SDL_Init(SDL_INIT_VIDEO) < 0)
+        return 1;       // erreur lors de l'init de sdl
+
+    // enregistre le destructeur de sdl
+    atexit(SDL_Quit);
+
+    ...
+}
+\endcode
+
+### étape 2 : créer une fenêtre
+
+C'est la fonction SDL_CreateWindow( ) qui s'en charge, il faut lui fournir plusieurs paramètres : un titre, la position et la taille de la fenêtre et une 
+option indiquant qu'openGL doit pouvoir dessiner dedans.
+
+\code
+int main( )
+{
+    ...
+    int width= 1024;
+    int height= 640;
+    
+    SDL_Window *window= SDL_CreateWindow("gKit",                // titre        
+        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,       // position choisie par le système
+        width, height,                                          // dimensions
+        SDL_WINDOW_OPENGL);                                     // option pour openGL
+    
+    if(window == NULL)
+        return 1;       // erreur lors de la creation de la fenetre ou de l'init de sdl2
+    
+    ...
+}
+\endcode
+
+### étape 3 : créer et configurer le contexte openGL
+
+Il existe plusieurs versions d'openGL, il faut indiquer laquelle choisir, ainsi qu'activer ou pas, le mode debug pour obtenir des messages d'erreurs. 
+c'est la fonction SDL_GL_SetAttribute( ) qui permet de passer tous les paramètres.
+
+Pour obtenir un affichage "propre", il faut pouvoir dessiner dans une image qui n'est pas affichée dans la fenêtre, sinon on peut observer un effet 
+de cisaillement (cf screen tearing [wikipedia](https://en.wikipedia.org/wiki/Screen_tearing)) assez désagréable, c'est encore 
+SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, ...) qui permet de sélectionner cette option. Il faut également indiquer que le changement entre les 
+2 images, celle qui est affichée et celle dans laquelle openGL dessine, se fait en fonction de la vitesse d'affichage de l'écran, cf SDL_GL_SetSwapInterval(1);
+et utiliser SDL_GL_SwapWindow(); pour provoquer l'echange, lorsque l'application a fini de dessiner.
+
+Dernière étape, avant de pouvoir utiliser les fonctions d'openGL, il faut finir d'importer les symboles définis par la librairie dynamique openGL... 
+selon les systèmes c'est inutile (mac os) ou obligatoire (windows). c'est la librairie GLEW qui s'en charge.
+
+\code
+    // version 3.3
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);    
+    // activer le mode debug
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+    // choisir une version moderne d'openGL, les versions core profile
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    
+    // dessiner et afficher des images differentes, il faudra 
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+    // creer le contexte
+    SDL_GLContext context= SDL_GL_CreateContext(window);
+    if(context == NULL)
+        return 1;
+
+    // attendre l'ecran
+    SDL_GL_SetSwapInterval(1);  
+
+#ifndef NO_GLEW
+    // importer les fonctions d'openGL sur les systemes ou c'est necessaire.
+    // utilise la librairie GLEW
+    glewExperimental= 1;
+    GLenum err= glewInit();
+    if(err != GLEW_OK)
+    {
+        SDL_GL_DeleteContext(context);
+        SDL_DestroyWindow(window);        
+        return 1;       // erreur lors de l'init de glew / import des fonctions opengl
+    }
+
+    // purge les erreurs opengl generees par glew !
+    while(glGetError() != GL_NO_ERROR) {;}
+#endif
+\endcode
+
+
+### étape 4 : traiter les évènements
+
+La fenêtre est ouverte, le contexte openGL est crée, il ne reste plus qu'à dessiner quelquechose, mais il faut aussi savoir quand s'arreter ! et savoir 
+que l'utilisateur a bougé la souris, cliqué, ou enfoncé une touche sur le clavier, ce qui permettra de déplacer la camera, des objets, etc.
+
+C'est SDL_PollEvents() qui récupère ces informations. il ne reste plus qu'à réagir en fonction. Au minimum, il faut fermer la fenêtre :
+
+\code
+int main( )
+{
+    ...
+    
+    bool done= false;
+    while(!done)
+    {
+        SDL_Event event;
+        // recuperer un evenement a la fois, poll event renvoie faux lorsqu'ils ont tous ete traite
+        while(SDL_PollEvent(&event))
+        {
+            if(event.type == SDL_QUIT)
+                done= true;  // sortir si click sur le bouton 'fermer' de la fenetre
+            else if(event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)
+                done= true;  // sortir si la touche esc / echapp est enfoncee
+        }
+        
+        // dessiner quelquechose avec openGL
+        { ... }
+        
+        // presenter / montrer le resultat, echanger les images associees a la fenetre. 
+        SDL_GL_SwapWindow(window);
+    }
+    
+    ...
+}
+\endcode
+
+_attention :_ ne pas oublier le SDL_GL_SwapWindow(), qui permet d'afficher ce que l'on vient de dessiner.
+
+code complet dans tuto1.cpp et tuto1GL.cpp.
+
+
+### résumé :
+voila, c'est un peu long, il y a pas mal de doc à lire sur le fonctionnement de SDL2, mais ce n'est pas bien compliqué. et comme c'est toujours la même chose, 
+les fonctions create_window( ), create_context(), run() et events() documentées dans window.h font exactement ca. ce qui permet de simplifier pas mal le code
+et de se concentrer sur openGL.
 
 \code
 #include "window.h"
@@ -64,11 +209,34 @@ int main( int argc, char **argv )
 }
 \endcode
 
-ces fonctions sont documentées dans \ref window.h et utilisent la librairie [SDL2](http://libsdl.org) pour rester portable sur les mêmes
-systèmes qu'openGL.
+Si cette version typée C ne vous convient pas, il y a également une classe de base à dériver, App. voici un exemple équivalent :
+\code
+#include "app.h"
 
-il est aussi possible d'utiliser directement sdl, sans passer par ces fonctions prédéfinies. une application crée une fenêtre et traite
-les evènements clavier, souris et d'autres générés par le système d'exploitation. la fonction run( ) les traite pour vous.
+class TP : public App
+{
+public:
+    // constructeur : donner les dimensions de la fenetre, et eventuellement la version d'openGL.
+    TP( ) : App(1024, 640) {}
+    
+    // creation des objets openGL de l'application
+    int init( ) { ... }
+    
+    // destruction des objets openGL, à la fin de l'application
+    int quit( ) { ... }
+    
+    // dessiner une nouvelle image.
+    int render( ) { ... }
+};
+
+int main( int argc, char **argv )
+{
+    TP tp;
+    tp.run();
+    
+    return 0;
+}
+\endcode
 
 dans la mesure du possible, les fonctions de window.h ne dupliquent pas / n'abstraient pas les fonctionnalités de sdl2, vous pouvez 
 les utiliser directement. par exemple :
@@ -77,7 +245,7 @@ les utiliser directement. par exemple :
 
 window.h définit par contre des utilitaires pour simplifier l'écriture d'applications interactives. par exemple, si vous voulez modifier
 la position d'un objet en appuyant sur une touche, les fonctions key_state( ) et clear_key_state( ) permettent de le faire très 
-simplement.
+simplement, sans avoir besoin de modifier la gestion des évènements (cf run(), App::run() et events()).
 
 autre exemple d'utilisation : faire une capture d'écran de l'application
 

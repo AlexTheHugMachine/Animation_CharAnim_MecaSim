@@ -12,8 +12,11 @@ gKit2light est composé de plusieurs utilitaires :
     - image.h et color.h permettent de charger, d'enregistrer et de manipuler des images, pixel par pixel,
     - vec.h et mat.h définissent des vecteurs, des matrices pour manipuler des transformations, des points, des vecteurs,
     - program.h permet de compiler facilement des shaders,
-    - orbiter.h permet de déplacer une caméra autour d'un objet pour l'observer, draw.h affiche un mesh pour une caméra, 
+    - uniforms.h permet de définir les valeurs des uniforms des shaders,
+    - orbiter.h permet de déplacer une caméra autour d'un objet pour l'observer, 
+    - draw.h affiche un mesh pour le point de vue d'une caméra, 
     - wavefront.h permet de charger et d'enregistrer des fichiers .obj,
+    - texture.h permet de charger une image et de la plaquer sur un objet,
     - text.h permet d'afficher directement du texte sur la fenetre de l'application,
     - widgets.h permet de controler l'application avec une interface graphique minimaliste.
 
@@ -28,7 +31,10 @@ mais il y a aussi pas mal de tutos :
     - tuto7.cpp, idem tuto6 mais utilise la classe App pour construire l'application,
     - tuto8.cpp, exemple d'utilisation de App::update() pour modifier la transformation de l'objet en fonction du temps,
     
-    - \ref tuto_mesh_shader, dessine un objet Mesh avec un shader 'utilisateur', sans utiliser le shader par défaut.
+    - \ref tuto_mesh_shader, dessine un objet Mesh avec un shader 'utilisateur', sans utiliser le shader par défaut, montre 
+    aussi comment utiliser simplement une, ou plusieurs, textures,
+    
+    - \ref shader_kit.cpp est un utilitaire pour prototyper rapidement des shaders.
     
 plus ceux dédiés à openGL :
     - \ref intro3d,
@@ -46,6 +52,6 @@ plus ceux dédiés à openGL :
     - \ref storage_texture,
     - \ref compute
     
-et un utilitaire pour jouer avec les shaders, shader_kit, décrit dans \ref tuto2GL
+et un utilitaire pour jouer avec les shaders, \ref shader_kit.cpp \ref shader_kit.
 
  */

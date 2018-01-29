@@ -28,6 +28,9 @@ void draw( Mesh& m, const Orbiter& camera, const GLuint texture );
 //! dessine l'objet avec une transformation model. les transformations vue et projection sont celles de la camera. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
 void draw( Mesh& m, const Transform& model, const Orbiter& camera, const GLuint texture );
 
+//! dessine l'objet avec un shader program "specifique"
+void draw( Mesh& m, const GLuint program, const bool use_position= true, const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
+
 /*! representation des options / parametres d'un draw.
     permet de donner tous les parametres d'un draw de maniere flexible.
 

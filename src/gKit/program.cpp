@@ -215,16 +215,17 @@ int release_program( const GLuint program )
     // recupere les shaders
     int shaders_max= 0;
     glGetProgramiv(program, GL_ATTACHED_SHADERS, &shaders_max);
-	if(shaders_max > 0)
-	{
-		std::vector<GLuint> shaders(shaders_max, 0);
-		glGetAttachedShaders(program, shaders_max, NULL, &shaders.front());
-		for (int i = 0; i < shaders_max; i++)
-		{
-			glDetachShader(program, shaders[i]);
-			glDeleteShader(shaders[i]);
-		}
-	}
+
+    if(shaders_max > 0)
+    {
+        std::vector<GLuint> shaders(shaders_max, 0);
+        glGetAttachedShaders(program, shaders_max, NULL, &shaders.front());
+        for(int i= 0; i < shaders_max; i++)
+        {
+            glDetachShader(program, shaders[i]);
+            glDeleteShader(shaders[i]);
+        }
+    }
 
     glDeleteProgram(program);
     return 0;
@@ -333,11 +334,11 @@ int program_format_errors( const GLuint program, std::string& errors )
     // recupere les shaders
     int shaders_max= 0;
     glGetProgramiv(program, GL_ATTACHED_SHADERS, &shaders_max);
-	if(shaders_max == 0)
-	{
-		errors.append("[error] no shaders...\n");
-		return 0;
-	}
+    if(shaders_max == 0)
+    {
+        errors.append("[error] no shaders...\n");
+        return 0;
+    }
 
     std::vector<GLuint> shaders(shaders_max, 0);
     glGetAttachedShaders(program, shaders_max, NULL, &shaders.front());

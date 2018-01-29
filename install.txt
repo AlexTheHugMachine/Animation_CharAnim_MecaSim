@@ -1,6 +1,18 @@
 /*! \addtogroup installation
 
 
+## obtenir les sources :
+
+créer un répertoire de travail, puis :
+
+    git clone git@forge.univ-lyon1.fr:Alexandre.Meyer/gkit2light.git
+
+
+_remarque :_ si vous avez un problème d'authentification avec la forge, consultez https://forge.univ-lyon1.fr/help/ssh/README.md et modifiez la configuration de git pour utiliser une clé `ssh`.
+
+
+## installer les dépendances :
+
 gKit2 utilise 3 librairies : sdl2 et sdl2_image, et glew, il faut les installer avant de pouvoir compiler les exemples.
 
 les étapes sont légèrement différentes d'un système à l'autre. une fois les librairies installées, il faut générer les projets pour 

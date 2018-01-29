@@ -39,6 +39,9 @@ struct Transform
     //! renvoie le point/vecteur homogene transforme.
     vec4 operator() ( const vec4& v ) const;
     
+    //! renvoie la composition de la transformation this et b, t = this * b. permet de transformer un point sans "ambiguite" Point q= a(b(c(p)));
+    Transform operator() ( const Transform& b ) const;
+    
     //! renvoie la transposee de la matrice.
     Transform transpose( ) const;
     //! renvoie l'inverse de la matrice.

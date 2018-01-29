@@ -1,5 +1,5 @@
 
-//! \file tuto6GL.cpp utilisation de glDrawArraysInstanced() et attributs d'instance 
+//! \file tuto6GL_buffer.cpp utilisation de glDrawArraysInstanced() et attributs d'instance sotckes dans un buffer
 
 #include <cstdlib>
 

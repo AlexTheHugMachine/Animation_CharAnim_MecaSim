@@ -2,6 +2,7 @@
 #ifndef _IMAGE_H
 #define _IMAGE_H
 
+#include <cmath>
 #include <vector>
 #include <cassert>
 
@@ -22,6 +23,11 @@ protected:
     int m_width;
     int m_height;
 
+    unsigned int offset (const int x, const int y ) const
+    {
+        return std::min(x, m_width-1) + std::min(y, m_height-1) * m_width;
+    }
+    
 public:
     Image( ) : m_data(), m_width(0), m_height(0) {}
     Image( const int w, const int h, const Color& color= Black() ) : m_data(w*h, color), m_width(w), m_height(h) {}
@@ -37,17 +43,27 @@ public:
     */
     Color& operator() ( const int x, const int y )
     {
-        std::size_t offset= y * m_width + x;
-        assert(offset < m_data.size());
-        return m_data[offset];
+        return m_data[offset(x, y)];
     }
     
     //! renvoie la couleur d'un pixel de l'image (image non modifiable).
     Color operator() ( const int x, const int y ) const
     {
-        std::size_t offset= y * m_width + x;
-        assert(offset < m_data.size());
-        return m_data[offset];
+        return m_data[offset(x, y)];
+    }
+    
+    //! renvoie la couleur interpolee a la position (x, y).
+    Color sample( const float x, const float y ) const
+    {
+        // interpolation bilineaire 
+        float u= x - std::floor(x);
+        float v= y - std::floor(y);
+        int ix= x;
+        int iy= y;
+        return (*this)(ix, iy)    * ((1 - u) * (1 - v))
+            + (*this)(ix+1, iy)   * (u       * (1 - v))
+            + (*this)(ix, iy+1)   * ((1 - u) * v)
+            + (*this)(ix+1, iy+1) * (u       * v);
     }
     
     //! renvoie un pointeur sur le stockage des couleurs des pixels.

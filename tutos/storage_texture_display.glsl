@@ -1,4 +1,6 @@
 
+//! \file storage_texture_display.glsl
+
 #version 430
 
 #ifdef VERTEX_SHADER

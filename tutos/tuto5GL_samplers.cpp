@@ -1,5 +1,5 @@
 
-//! \file tuto5GL.cpp
+//! \file tuto5GL_samplers.cpp
 
 #include "window.h"
 #include "vec.h"

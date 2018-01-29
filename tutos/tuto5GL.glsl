@@ -1,4 +1,6 @@
 
+//! \file tuto5GL.glsl
+
 #version 330
 
 #ifdef VERTEX_SHADER

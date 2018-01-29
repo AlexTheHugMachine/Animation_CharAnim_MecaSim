@@ -3,13 +3,37 @@
 
 cf pipeline.cpp
 
-la solution présentée dans \ref intro3d fonctionne correctement dans les cas simples lorsque tous les triangles sont devant la 
-camera. un grand triangle dont les sommets ne sont pas visibles dans l'image mais dont l'interieur est visible ne sera pas 
-dessiné... le test de visibilité du triangle n'est pas suffisant.
+la solution présentée dans \ref intro3d fonctionne correctement, dans les cas simples, lorsque les 3 sommets du triangle sont devant la 
+camera. 
+
+_indication :_
+les points derrière la caméra peuvent se projetter aussi sur l'image... par exemple, que se passe-t-il si un point à des coordonnées z et w négatives ? 
+lorsque l'on calcule le point réel on divise z par w, et le résultat est positif... un sommet derriere la camera peut très bien se projetter dans l'image,
+il faut détecter ce problème avant de faire la projection, ou ne pas faire de projection...
+
+il y a 2 types de solutions, soit decouper le triangle pour ne garder que la partie que l'on peut dessiner, soit ne pas faire de projection,
+puisque c'est elle qui introduit le probleme.
 
 
-sans rentrer dans les détails, la projection utilisée est _juste_ une transformation comme une autre, et les points derrière
-la caméra se projettent aussi sur l'image... il faut donc trouver une approche différente qui ne fait pas de projection.
+## découper le triangle
+en regardant plus en détails, on s'apercoit qu'il n'y a qu'un cas qui est vraiment génant, c'est lorsqu'un sommet est derrière la camera. 
+un sommet trop à gauche, ou trop à droite (trop haut, trop bas, et trop loin) n'est pas vraiment génant.
+
+\image html clipped.png
+
+la solution est relativement simple : soit 1 sommet est derriere la camera, soit 2 sommets sont derrière (si les 3 sont derriere, 
+il n'y a rien a dessiner). mais on se retrouve dans les 2 cas, avec un sommet d'un cote et les 2 de l'autre du plan proche de la projection.
+il suffit de couper les 2 aretes partant du sommet par le plan, pour obtenir soit un triangle que l'on peut dessiner directement, soit
+un trapeze, que l'on decoupe en 2 triangles que l'on peut ensuite dessiner.
+
+_remarque :_ pourquoi ne pas couper par le plan qui passe par la camera ? les sommet sur ce plan ont par definition, z = 0, 
+qui va etre genant pour calculer l'intersection des aretes et du plan... ou pour trouver le point homogène associé...
+
+comment calculer l'intersection d'une arete avec le plan near dans l'espace homogene ? cf ["homogenous clipping"](http://fabiensanglard.net/polygon_codec/clippingdocument/Clipping.pdf), 
+sections 8 et 9
+
+## sans projection
+l'autre categorie de solution utilise une approche différente qui ne fait pas de projection.
 
 les tests d'inclusion des pixels se font en 2d, dans le plan image, après la projection. si on ne veut pas calculer la projection, 
 il faut faire un test équivalent en 3d, avant la projection.
@@ -17,7 +41,8 @@ il faut faire un test équivalent en 3d, avant la projection.
 la solution est logique, au lieu de tester un pixel par rapport à un triangle, et de calculer des aires, il faut tester un point 3d 
 par rapport à un... tetrahèdre et calculer des volumes.
 
-_remarque :_ pour les curieux, toutes les explications sont dans cet [article](http://cg.ivd.kit.edu/publications/p2012/3dr/gi2012.pdf)
+_remarque :_ pour les curieux, toutes les explications sont dans ["3D Rasterization"](http://cg.ivd.kit.edu/publications/p2012/3dr/gi2012.pdf) 
+T. Davidovic, T. Engelhardt, I. Georgiev, 2012
 
 le test d'inclusion d'un pixel p dans un triangle abc calcule les aires signées des triangles pab, pbc, pca. ce qui permet de vérifier 
 que le pixel se trouve du "bon" coté de chaque arête du triangle.
@@ -26,5 +51,14 @@ pour le test 3d, la camera est le sommet du tetrahedre, e, et sa base est le tri
 en calcul du volume signé des tetrahedres formés par le point p et les faces abc, eba ecb, eac. s'ils sont tous du même signe, p à 
 est l'interieur du volume eabc, et le pixel fait parti du triangle. c'est le même test qu'avec l'aire, le volume sera positif si p se trouve
 du "bon" coté de chaque face du tetrahedre.
+
+## sans projection et dans l'espace homogene
+une derniere solution réalise le test "est ce que le centre du pixel est inclus dans le triangle" sans faire de projection, directement 
+dans l'espace projectif homogène. cf ["Triangle scan conversion using 2D Homogeneous coordinate"](http://diglib.eg.org/bitstream/handle/10.2312/EGGH.EGGH97.089-095/089-095.pdf?sequence=1&isAllowed=y) M. Olano, T. Greer, 1997
+
+une solution directe teste tous les pixels de l'image, ce qui n'est pas tres efficace. pour limiter le nombre de pixels teste, il possible 
+de parcourir l'image de manière hiérarchique, en utilisant une grille, ou en suivant une courbe de remplissage, comme la 
+[courbe en Z](https://en.wikipedia.org/wiki/Z-order_curve), ou la [courbe de Hilbert](https://en.wikipedia.org/wiki/Hilbert_curve), cf
+["Incremental and Hierarchical Hilbert Order Edge Equation Polygon Rasterization"](http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M2PROIMA/2007/incremental_and_hierarchical_hilbert_order_edge_equation_polygon_rasterization.pdf) M.D. McCool, C. Wales, K. Moule, 2001
 
  */

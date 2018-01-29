@@ -4,20 +4,17 @@
 #include <cmath>
 #include <algorithm>
 
-//#define _USE_MATH_DEFINES
 #include "mat.h"
 
 
 float radians( const float deg )
 {
-    const float pi = 3.1415926535f;
-    return (pi  / 180.f) * deg;
+    return ((float) M_PI  / 180.f) * deg;
 }
 
 float degrees( const float rad )
 {
-    const float pi = 3.1415926535f;
-    return (180.f / pi) * rad;
+    return (180.f / (float) M_PI) * rad;
 }
 
 Transform::Transform (
@@ -32,7 +29,7 @@ Transform::Transform (
     m[3][0]= t30; m[3][1]= t31; m[3][2]= t32; m[3][3]= t33;
 }
 
-Transform::Transform(const Vector& x, const Vector& y, const Vector& z, const Vector& w)
+Transform::Transform( const Vector& x, const Vector& y, const Vector& z, const Vector& w )
 {
 	m[0][0] = x.x;	m[0][1] = y.x;	m[0][2] = z.x;	m[0][3] = w.x;
 	m[1][0] = x.y;	m[1][1] = y.y;	m[1][2] = z.y;	m[1][3] = w.y;
@@ -40,7 +37,7 @@ Transform::Transform(const Vector& x, const Vector& y, const Vector& z, const Ve
 	m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
 }
 
-Vector Transform::operator[](int c) const
+Vector Transform::operator[]( int c ) const
 {
 	assert(c >= 0 && c <= 3);
 	return Vector(m[0][c], m[1][c], m[2][c]);
@@ -106,6 +103,12 @@ Transform Transform::transpose( ) const
         m[0][1], m[1][1], m[2][1], m[3][1],
         m[0][2], m[1][2], m[2][2], m[3][2],
         m[0][3], m[1][3], m[2][3], m[3][3]);
+}
+
+
+Transform Transform::operator() ( const Transform& b ) const
+{
+    return compose_transform(*this, b);
 }
 
 //! renvoie la transformation a appliquer aux normales d'un objet transforme par la matrice m.
