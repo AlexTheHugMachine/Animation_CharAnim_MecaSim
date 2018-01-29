@@ -5,7 +5,7 @@
 #include <cmath>
 #include <vector>
 #include <cassert>
-
+#include <algorithm>
 #include "color.h"
 
 
