@@ -438,7 +438,9 @@ along with gkit2light.  If not, see <http://www.gnu.org/licenses/>.
             m[3][3] = 1.0l;
         }
 
+#ifdef _WIN32
 		template<>
+#endif
 		void getMatrix44(Transform& m) const
 		{
 			const Real q00 = 2.0l * q[0] * q[0];
