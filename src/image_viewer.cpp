@@ -2,6 +2,7 @@
 //! \file image_viewer.cpp permet de visualiser les images aux formats reconnus par gKit2 light bmp, jpg, tga, png, hdr, etc.
 
 #include <cfloat>
+#include <algorithm>
 
 #include "app.h"
 #include "widgets.h"
@@ -33,11 +34,15 @@ struct ImageViewer : public App
                 image= read_image_hdr(m_filenames[i]);
             else
                 image= read_image(m_filenames[i]);
-        
+            
             if(image == Image::error())
                 return -1;
             
             m_textures.push_back(make_texture(0, image));
+            
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
             m_width= std::max(m_width, image.width());
             m_height= std::max(m_height, image.height());
         }
@@ -65,6 +70,8 @@ struct ImageViewer : public App
         m_saturation_step= 1;
         m_saturation_max= 1000;
         m_index= 0;
+        m_zoom= 4;
+        m_graph= 0;
         
         //
         int bins[100] = {};
@@ -134,6 +141,7 @@ struct ImageViewer : public App
     
     int render( )
     {
+        // effacer l'image
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         if(key_state('r'))
@@ -160,6 +168,7 @@ struct ImageViewer : public App
         
         int xmouse, ymouse;
         unsigned int bmouse= SDL_GetMouseState(&xmouse, &ymouse);
+        
         glBindVertexArray(m_vao);
         glUseProgram(m_program);
         
@@ -170,10 +179,39 @@ struct ImageViewer : public App
             program_uniform(m_program, "split", (int) xmouse);
         else
             program_uniform(m_program, "split", (int) window_width() +2);
+        
         program_uniform(m_program, "channels", vec4(m_red, m_green, m_blue, m_alpha));
-        program_uniform(m_program, "gray", (float) m_gray);
+        program_uniform(m_program, "gray", float(m_gray));
         program_uniform(m_program, "compression", m_compression);
         program_uniform(m_program, "saturation", m_saturation);
+        
+        if(bmouse & SDL_BUTTON(3))
+        {
+            SDL_MouseWheelEvent wheel= wheel_event();
+            if(wheel.y != 0)
+            {
+                //~ clear_wheel_event();
+                m_zoom= m_zoom + float(wheel.y) / 4.f;
+                if(m_zoom < .1f) m_zoom= .1f;
+                if(m_zoom > 10.f) m_zoom= 10.f;
+            }
+        }
+    
+        if(bmouse & SDL_BUTTON(3))
+            program_uniform(m_program, "zoom", m_zoom);
+        else
+            program_uniform(m_program, "zoom", 1.f);
+        
+        program_uniform(m_program, "center", vec2( float(xmouse) / float(window_width()), float(window_height() - ymouse +1) / float(window_height())));
+        
+        if(key_state('g'))
+        {
+            clear_key_state('g');
+            m_graph= (m_graph +1) % 2;
+        }
+
+        program_uniform(m_program, "graph", int(m_graph));
+        program_uniform(m_program, "line", vec2(float(window_height() - ymouse +1) / float(window_height()), float(window_height() - ymouse +1)));
         
         // dessine 1 triangle plein ecran
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -215,15 +253,20 @@ protected:
     std::vector<const char *> m_filenames;
     std::vector<GLuint> m_textures;
     int m_width, m_height;
+
     GLuint m_program;
     GLuint m_vao;
+    
     int m_red, m_green, m_blue, m_alpha, m_gray;
+    
     float m_compression;
     float m_saturation;
     float m_saturation_step;
     float m_saturation_max;
 
+    float m_zoom;
     int m_index;
+    int m_graph;
 };
 
 
