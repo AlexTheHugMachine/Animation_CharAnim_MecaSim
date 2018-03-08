@@ -3,8 +3,9 @@
 #define _IMAGE_H
 
 #include <cmath>
-#include <vector>
 #include <cassert>
+#include <vector>
+#include <algorithm>
 
 #include "color.h"
 

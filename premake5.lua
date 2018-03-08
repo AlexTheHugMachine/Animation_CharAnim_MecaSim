@@ -4,6 +4,7 @@ workspace "gkit2"
 	platforms { "x64", "x32" }
 	
 	location "build"
+	debugdir "./"
 	
 	includedirs { ".", "src/gKit"}
 	
