@@ -544,13 +544,9 @@ void Mesh::draw( const GLuint program, const bool use_position, const bool use_t
     // etape 1 : recuperer le nombre d'attributs
     GLint n= 0;
     glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &n);
-
-    // recuperer la longueur max occuppee par un nom d'attribut
-    GLint length_max= 0;
-    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &length_max);
-    char name[1024];
     
     // etape 2 : recuperer les infos de chaque attribut
+    char name[1024];
     for(int index= 0; index < n; index++)
     {
         GLint glsl_size;
