@@ -7,6 +7,9 @@
 #include "app.h"
 #include "glcore.h"
 
+#ifdef __EMSCRIPTEN__
+#include "emscripten.h"
+#endif
 
 App::App( const int width, const int height, const int major, const int minor, const int samples )
     : m_window(nullptr), m_context(nullptr)
@@ -23,6 +26,22 @@ App::~App( )
         release_window(m_window);
 }
 
+#ifdef __EMSCRIPTEN__
+void App::loop_iteration(void* instance) {
+  App* app = (App*) instance ;
+  if(!events(app->m_window)) {
+    emscripten_cancel_main_loop() ;
+  }
+  if(app->update(global_time(), delta_time()) < 0) {
+    emscripten_cancel_main_loop() ;
+  }
+  if(app->render() < 1) {
+    emscripten_cancel_main_loop() ;
+  }
+  SDL_GL_SwapWindow(app->m_window);
+}
+#endif
+
 int App::run( )
 {
     if(init() < 0)
@@ -30,7 +49,10 @@ int App::run( )
     
     // configure openGL
     glViewport(0, 0, window_width(), window_height());
-    
+
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop_arg(App::loop_iteration, this, 0, 1) ;
+#else
     // gestion des evenements
     while(events(m_window))
     {
@@ -54,7 +76,6 @@ int App::run( )
     
     if(quit() < 0)
         return -1;
-    
-    // tout c'est bien passe...
+#endif
     return 0;
 }

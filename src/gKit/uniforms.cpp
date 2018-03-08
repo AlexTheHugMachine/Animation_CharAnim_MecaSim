@@ -187,12 +187,11 @@ void program_uniform( const GLuint program, const char *uniform, const std::vect
 
 void program_uniform( const GLuint program, const char *uniform, const Transform& v )
 {
-    glUniformMatrix4fv( location(program, uniform), 1, GL_TRUE, v.data() );
-}
-
-void program_uniform( const GLuint program, const char *uniform, const std::vector<Transform>& v )
-{
-    glUniformMatrix4fv( location(program, uniform, v.size()), v.size(), GL_TRUE, v[0].data() );
+#ifdef __EMSCRIPTEN__
+    glUniformMatrix4fv( location(program, uniform), 1, GL_FALSE, v.transpose().buffer() );
+#else
+    glUniformMatrix4fv( location(program, uniform), 1, GL_TRUE, v.buffer() );
+#endif
 }
 
 void program_use_texture( const GLuint program, const char *uniform, const int unit, const GLuint texture, const GLuint sampler )
@@ -207,8 +206,10 @@ void program_use_texture( const GLuint program, const char *uniform, const int u
     // configure la texture
     glBindTexture(GL_TEXTURE_2D, texture);
     
+#ifndef __EMSCRIPTEN__
     // les parametres de filtrage
     glBindSampler(unit, sampler);
+#endif
     
     // transmet l'indice de l'unite de texture au shader
     glUniform1i(id, unit);

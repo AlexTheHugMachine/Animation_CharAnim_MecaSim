@@ -33,6 +33,10 @@ public:
     //! a deriver pour afficher les objets. renvoie 1 pour continuer, 0 pour fermer l'application.
     virtual int render( ) = 0;
 
+#ifdef __EMSCRIPTEN__
+    static void loop_iteration(void* instance) ;
+#endif
+
     //! execution de l'application.
     int run( );
     

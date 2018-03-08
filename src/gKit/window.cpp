@@ -16,8 +16,9 @@
 #include "window.h"
 #include "files.h"
 
-
-static float aspect= 1;
+#ifdef __EMSCRIPTEN__
+#include "emscripten.h"
+#endif
 
 static int width= 0;
 static int height= 0;
@@ -126,6 +127,24 @@ float delta_time( )
     return (float) last_delta;
 }
 
+#ifdef __EMSCRIPTEN__
+struct run_data {
+  Window w ;
+  int(*draw)() ;
+} ;
+
+void run_iter(void* data) {
+  struct run_data* d = (struct run_data*) data ;
+  if(!events(d->w)) {
+    emscripten_cancel_main_loop() ;
+  }
+  if(d->draw() < 1) {
+    emscripten_cancel_main_loop() ;
+  }
+  SDL_GL_SwapWindow(d->w);
+}
+#endif
+
 // etat de l'application.
 static int stop= 0;
 
@@ -135,6 +154,12 @@ int run( Window window, int (*draw)() )
     // configure openGL
     glViewport(0, 0, width, height);
 
+#ifdef __EMSCRIPTEN__
+    static struct run_data data ;
+    data.w = window ;
+    data.draw = draw ;
+    emscripten_set_main_loop_arg(run_iter, &data, 0, true) ;
+#else
     // run
     while(events(window))
     {
@@ -145,7 +170,7 @@ int run( Window window, int (*draw)() )
         // presenter le resultat
         SDL_GL_SwapWindow(window);
     }
-
+#endif
     return 0;
 }
 
@@ -243,7 +268,11 @@ int events( Window window )
 Window create_window( const int w, const int h, const int major, const int minor, const int samples )
 {
     // init sdl
+#ifdef __EMSCRIPTEN__
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0)
+#else
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
+#endif
     {
         printf("[error] SDL_Init() failed:\n%s\n", SDL_GetError());
         return nullptr;
@@ -329,9 +358,27 @@ void DEBUGCALLBACK debug_print( GLenum source, GLenum type, unsigned int id, GLe
 //! cree et configure un contexte opengl
 Context create_context( Window window )
 {
-    if(window == nullptr)
-        return nullptr;
-    
+    if(window == NULL)
+        return NULL;
+
+#ifndef __EMSCRIPTEN__
+    // configure la creation du contexte opengl core profile, debug profile
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
+#ifndef GK_RELEASE
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 15);
+#else
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+#endif
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
     Context context= SDL_GL_CreateContext(window);
     if(context == nullptr)
     {
@@ -376,13 +423,14 @@ Context create_context( Window window )
     if(GLEW_ARB_debug_output)
     {
         printf("debug output enabled...\n");
-        // selectionne tous les messages
+#ifndef __EMSCRIPTEN__
         glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
         // desactive les messages du compilateur de shaders
         glDebugMessageControlARB(GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
 
         glDebugMessageCallbackARB(debug_print, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+#endif
     }
 #endif
 #endif
