@@ -150,7 +150,6 @@ tutos = {
 	"tuto5GL_multi",
 	"tuto6GL",
 	"tuto6GL_buffer",
-	"mesh_viewer_sort",
 	"tuto_framebuffer",
 	"tuto_storage",
 	"tuto_storage_buffer",
@@ -197,3 +196,5 @@ for i, name in ipairs(tutosM2) do
 		files ( gkit_files )
 		files { gkit_dir .. "/tutos/M2/" .. name..'.cpp' }
 end
+
+include "Runner"
