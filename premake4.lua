@@ -11,14 +11,22 @@ solution "gKit2light"
 	configuration "debug"
 		targetdir "bin/debug"
 		defines { "DEBUG" }
-		flags { "Symbols" }
+		if _PREMAKE_VERSION >="5.0" then
+			symbols "on"
+		else
+			flags { "Symbols" }
+		end
 
 	configuration "release"
 		targetdir "bin/release"
 --~ 		defines { "NDEBUG" }
 --~ 		defines { "GK_RELEASE" }
-		flags { "OptimizeSpeed" }
-
+		if _PREMAKE_VERSION >="5.0" then
+			optimize "speed"
+		else
+			flags { "OptimizeSpeed" }
+		end
+		
 	configuration "linux"
 		buildoptions { "-mtune=native -march=native" }
 		buildoptions { "-std=c++11" }
@@ -51,29 +59,6 @@ solution "gKit2light"
 		libdirs { "extern/mingw/lib" }
 		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
 		
-	configuration { "windows", "vs2013" }
-		if _PREMAKE_VERSION >="5.0" then
-			system "Windows"
-			architecture "x64"
-			disablewarnings { "4244", "4305" }
-		end
-		includedirs { "extern/visual2013/include" }
-		libdirs { "extern/visual2013/lib" }
-		platforms { "x64" }
-		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
-
-		
-	configuration { "windows", "vs2015" }
-		if _PREMAKE_VERSION >="5.0" then
-			system "Windows"
-			architecture "x64"
-			disablewarnings { "4244", "4305" }
-			flags { "MultiProcessorCompile", "NoMinimalRebuild" }
-		end
-		includedirs { "extern/visual2015/include" }
-		libdirs { "extern/visual2015/lib" }
-		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
-		
 	configuration { "windows", "vs2017" }
 		if _PREMAKE_VERSION >="5.0" then
 			system "Windows"
@@ -82,9 +67,8 @@ solution "gKit2light"
 			flags { "MultiProcessorCompile", "NoMinimalRebuild" }
 		end
 
-		-- memes librairies que pour la version 2015
-		includedirs { "extern/visual2015/include" }
-		libdirs { "extern/visual2015/lib" }
+		includedirs { "extern/visual/include" }
+		libdirs { "extern/visual/lib" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 		
 	configuration "macosx"
@@ -166,6 +150,22 @@ for i, name in ipairs(tutos) do
 		files ( gkit_files )
 		files { gkit_dir .. "/tutos/" .. name..'.cpp' }
 end
+
+ -- description des tutos serie 2
+ tutos2 = {
+	"tuto1",
+	"tuto2"
+}
+
+for i, name in ipairs(tutos2) do
+	project(name .. "_serie2")
+		language "C++"
+		kind "ConsoleApp"
+		targetdir "bin"
+		files ( gkit_files )
+		files { gkit_dir .. "/tutos/serie2/" .. name..'.cpp' }
+end
+
 
 project("mesh_viewer")
 	language "C++"
