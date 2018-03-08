@@ -210,16 +210,16 @@ int draw( void )
     // deplace la camera
     if(mb & SDL_BUTTON(1))
         camera.rotation(mx, my);      // tourne autour de l'objet
-    else if(mb & SDL_BUTTON(2))
-        camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height()); // deplace le point de rotation
     else if(mb & SDL_BUTTON(3))
+        camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height()); // deplace le point de rotation
+    else if(mb & SDL_BUTTON(2))
         camera.move(mx);           // approche / eloigne l'objet
     
     SDL_MouseWheelEvent wheel= wheel_event();
     if(wheel.y != 0)
     {
         clear_wheel_event();
-        camera.move(16.f * wheel.y);  // approche / eloigne l'objet
+        camera.move(8.f * wheel.y);  // approche / eloigne l'objet
     }
     
     // recupere les transformations
