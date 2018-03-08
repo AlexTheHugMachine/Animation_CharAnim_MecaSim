@@ -1,31 +1,21 @@
-solution "gKit2light"
-	configurations { "debug", "release" }
+workspace "gkit2"
 
+	configurations { "debug", "release" }
 	platforms { "x64", "x32" }
 	
-	includedirs { ".", "src/gKit" }
+	location "build"
 	
+	includedirs { ".", "src/gKit"}
+	
+	 -- description des fichiers communs
 	gkit_dir = path.getabsolute(".")
-	
-	
-	configuration "debug"
-		targetdir "bin/debug"
-		defines { "DEBUG" }
-		if _PREMAKE_VERSION >="5.0" then
-			symbols "on"
-		else
-			flags { "Symbols" }
-		end
+	gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h" }
 
+	configuration "debug"
+		symbols "on"
+	
 	configuration "release"
-		targetdir "bin/release"
---~ 		defines { "NDEBUG" }
---~ 		defines { "GK_RELEASE" }
-		if _PREMAKE_VERSION >="5.0" then
-			optimize "speed"
-		else
-			flags { "OptimizeSpeed" }
-		end
+		optimize "speed"
 		
 	configuration "linux"
 		buildoptions { "-mtune=native -march=native" }
@@ -36,40 +26,39 @@ solution "gKit2light"
 		links { "GLEW", "SDL2", "SDL2_image", "GL" }
 
 	configuration { "linux", "debug" }
-		buildoptions { "-g"}
-		linkoptions { "-g"}
-		
+		linkoptions { "-g"}	-- bug : premake ne genere pas l'option "-g" pour le linker
+
 	configuration { "linux", "release" }
 		buildoptions { "-fopenmp" }
 		linkoptions { "-fopenmp" }
 
 	configuration { "windows" }
-		defines { "WIN32", "NVWIDGETS_EXPORTS", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
-		defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
-
+		defines { "WIN32", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
+		defines { "NOMINMAX" }	-- bug visual studio : autoriser explicitement les fonctions std::min et std::max...
+	
 	configuration { "windows", "gmake", "x32" }
 		buildoptions { "-std=c++11"}
 		includedirs { "extern/mingw/include" }
 		libdirs { "extern/mingw/lib" }
 		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
-
+	
 	configuration { "windows", "codeblocks", "x32" }
 		buildoptions { "-std=c++11"}
 		includedirs { "extern/mingw/include" }
 		libdirs { "extern/mingw/lib" }
 		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
-		
+	
+	
 	configuration { "windows", "vs2017" }
-		if _PREMAKE_VERSION >="5.0" then
-			system "Windows"
-			architecture "x64"
-			disablewarnings { "4244", "4305" }
-			flags { "MultiProcessorCompile", "NoMinimalRebuild" }
-		end
-
+		system "Windows"
+		architecture "x64"
+		disablewarnings { "4244", "4305" }
+		flags { "MultiProcessorCompile", "NoMinimalRebuild" }
+	
 		includedirs { "extern/visual/include" }
 		libdirs { "extern/visual/lib" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
+
 		
 	configuration "macosx"
 		frameworks= "-F /Library/Frameworks/"
@@ -78,18 +67,13 @@ solution "gKit2light"
 		buildoptions { frameworks }
 		linkoptions { frameworks .. " -framework OpenGL -framework SDL2 -framework SDL2_image" }
 
-
- -- description des fichiers communs
-gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h" }
-
-
--- quand ce premake4.lua est inclus par un autre premake qui definit no_project=true (donc quand gkit2light est utilisé comme une lib),
--- ceci stoppe la creation des projects suivants (tuto, etc.)
+ -- \todo reprendre la logique d'inclusion		
 if no_project then
 	do return end
 end
 
- -- description des projets		 
+		
+ -- description des projets
 projects = {
 	"shader_kit",
 	"image_viewer"
@@ -103,6 +87,7 @@ for i, name in ipairs(projects) do
 		files ( gkit_files )
 		files { gkit_dir .. "/src/" .. name..'.cpp' }
 end
+
 
  -- description des tutos
 tutos = {
@@ -134,6 +119,7 @@ tutos = {
 	"tuto5GL_multi",
 	"tuto6GL",
 	"tuto6GL_buffer",
+	
 	"tuto_framebuffer",
 	"tuto_storage",
 	"tuto_storage_buffer",
