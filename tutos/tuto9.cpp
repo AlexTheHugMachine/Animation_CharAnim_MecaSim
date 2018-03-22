@@ -2,11 +2,13 @@
 //! \file tuto9.cpp utilisation d'un shader 'utilisateur' pour afficher un objet Mesh
 
 #include "mat.h"
+#include "mesh.h"
 #include "wavefront.h"
 
 #include "orbiter.h"
 #include "program.h"
 #include "uniforms.h"
+#include "draw.h"
 
 #include "app.h"        // classe Application a deriver
 
@@ -86,7 +88,7 @@ public:
         // ou program_uniform(m_program, "color", Color(1, 1, 0, 1));
         
         // go !
-        m_objet.draw(m_program);
+        draw(m_objet, m_program);
         
         return 1;
     }

@@ -4,16 +4,18 @@
 cf \ref tuto9.cpp
 
 Mesh::draw( ) et les utilitaires DrawParam de draw.h dessinent l'objet avec un shader crée en fonction de la description de l'objet et des paramètres. Il est aussi 
-très simple de continuer à utiliser Mesh pour décrire l'objet et de le dessiner avec un shader différent, cf Mesh::draw( const GLuint program ). Il faut par contre
-créer et configurer le shader avant de pouvoir dessiner l'objet.
+très simple de continuer à utiliser Mesh pour décrire l'objet et de le dessiner avec un shader différent, cf Mesh::draw( const GLuint program, ... ). Il faut par contre
+créer et configurer le shader avant de pouvoir dessiner l'objet, ainsi que respecter la même convention que Mesh pour décrire les sommets.
 
 repassez dans \ref intro3d et \ref glsl, si nécessaire.
 
 ## créer un shader program
 
-repassez dans \ref tuto2GL, si nécessaire.
+les détails sont dans \ref tuto2GL, le plus simple est d'utiliser l'utilitaire read_program() fournit par program.h :
 
 \code
+#include "program.h"
+
 GLuint program= 0;
 
 program= read_program("...");
@@ -22,13 +24,47 @@ program_print_errors(program);
 
 ## configurer un shader program
 
-les attributs des sommets sont configurés par Mesh, il faut respecter la convention utilisée par Mesh :
+les shaders sont des fonctions comme les autres, pour produire leurs résultats, il faut d'abord affecter une valeur à leurs paramètres avant de pouvoir les exécuter.
+par exemple, un vertex shader déclare, en général, 2 types de paramètres : les uniforms et les attributs de sommet (la position, la couleur, la normale, etc...)
+
+_pourquoi ?_
+
+
+\code
+#ifdef VERTEX_SHADER
+
+uniform mat4 mvpMatrix;	// la transformation à appliquer aux sommets, mot-clé : uniform
+
+in vec3 position;	    // la position d'un sommet, mot-clé : in
+
+void main( )
+{
+    gl_Position= mvpMatrix * vec4(position, 1);
+}
+#endif
+\endcode
+
+Les shaders (et le reste du pipeline graphique) sont exécutés par les processeurs de la carte graphique au moment ou l'application utilise 
+`glDrawArrays(GL_TRIANGLES, 0, n);` ce qui signifie "dessine des triangles avec les sommets d'indice 0 à n-1", soit n/3 triangles.
+
+Les processeurs de la carte graphique transforment tous les sommets en parallèle : un vertex shader (la fonction ci-dessus) est exécutée pour transformer un seul 
+sommet. il faut donc affecter une valeur aux paramètres `mvpMatrix` et `position` pour chaque appel de la fonction afin de transformer tous les sommets. La matrice 
+de transformation est la même pour tous les sommets, par contre, la position du sommet change chaque fois que la fonction est appellée... et comme tous les appels 
+sont fait en même temps, toutes les valeurs de `position` doivent être accessibles, quelquepart dans la mémoire de la carte graphique (ce sont les buffers d'openGL 
+qui permettent de stocker ces valeurs).
+
+C'est pour cette raison que les paramètres `mvpMatrix` et `position` sont déclarés avec des mots-clés différents, `uniform` pour indiquer que tous les vertex shaders 
+utilisent la même transformation (la même matrice) et le mot-clé `in` pour indiquer que la valeur de la position change à chaque appel, pour chaque sommet. Et 
+bien sur, affecter une (seule) valeur à un uniform est différent d'affecter un ensemble de valeurs à un attribut. Mesh s'occuppe des attributs, le plus "complique", 
+mais il reste les uniforms... 
+
+Par contre, il faut respecter la convention utilisée par Mesh, qui numérote les attributs des sommets et impose un type qu'il faut respecter :
     - attribut 0, `vec3 position`,
     - attribut 1, `vec2 texcoord`,
     - attribut 2, `vec3 normal`,
     - attribut 3, `vec4 color`.
     
-voila la déclaration à utiliser dans le vertex shader :
+voila la déclaration à utiliser dans le vertex shader, en fonction des attributs nécessaires :
 \code
 layout(location= 0) in vec3 position;
 layout(location= 1) in vec2 texcoord;
@@ -36,8 +72,12 @@ layout(location= 2) in vec3 normal;
 layout(location= 3) in vec4 color;
 \endcode
 
-Le vertex shader aura probablement besoin d'appliquer une transformation aux sommets, il faut donc la lui transmettre. repassez dans \ref tuto3GL, si nécessaire.
+relisez le résumé de GLSL, le langage des shaders, \ref glsl si nécessaire, et \ref tuto3GL également qui explique comment openGL permet d'affecter une valeur à chaque 
+uniform déclaré dans les shaders.
+
+sinon, uniforms.h fournit plusieurs utilitaires simplifiés :
 \code
+#include "uniforms.h"
 // selectionner le shader program, si necessaire
 // glUseProgram(program);
 
@@ -45,27 +85,87 @@ Transform mvp= { ... };
 program_uniform(program, "mvpMatrix", mvp);
 \endcode
 
-En général c'est un Orbiter qui fournit les transformations `view` et `projection`:
+Pour calculer la transformation mvp, qui permet de projeter directement un sommet sur la camera, il faut savoir ou se trouve l'objet dans le monde, ou se trouve la
+camera et quelle est sa projection, c'est à dire les transformations / matrices model, view et projection. Jusqu'à présent afficher un objet ressemblait à ça :
 \code
-Orbiter camera= { ... };
+#include "mat.h"
+#include "mesh.h"
+#include "orbiter.h"
+#include "draw.h"
 
-Transform model= { ... };
-Transform view= camera.view();
-Transform projection= camera.projection(window_width(), window_height(), 45);
-Transform mvp= projection * view * model;
+Mesh mesh= { ... };
+Transform model= { ... };   // placer l'objet dans le monde
+Orbiter camera= { ... };    // une camera qui observe l'obet 
+
+draw(mesh, model, camera);
 \endcode
+
+La camera calcule les transformations view et projection, il suffit de les recupérer et de composer model, view, et projection pour obtenir une seule matrice qui 
+enchaine les 3 changements de repères :
+\code
+Orbiter camera= { ... };    // une camera qui observe l'obet 
+
+Transform view= camera.view();
+Transform projection= camera.projection();
+Transform model= { ... };
+
+// composition des 3 changements de repères
+Transform mvp= projection * view * model;   // P(V(M*p))
+\endcode
+
 
 ## dessiner
 
 Une fois le shader program complètement paramétré, il ne reste plus qu'à dessiner l'objet :
 \code
-Mesh objet= { ... };
-GLuint program= { ... };
+#include "color.h"
+#include "mesh.h"
+#include "uniforms.h"
+#include "draw.h"
 
-objet.draw(program);
+Mesh mesh= { ... };
+GLuint program= { ... };
+program_uniform(program, "mvpMatrix", mvp);
+program_uniform(program, "color", Red());
+
+draw(mesh, program);
 \endcode
 
 cf \ref tuto9.cpp pour un exemple complet qui utilise un uniform supplémentaire, qui permet de donner la même couleur aux pixels de l'objet.
+
+par défaut, Mesh transfère tous les attributs, il est possible d'indiquer à draw( ) de n'utiliser que les attributs déclarés que le vertex shader :
+\code
+draw(mesh, program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false);
+\endcode
+
+draw( ) vérifie (en mode debug, en tout cas) que les attributs déclarés dans le vertex shader sont disponibles dans le Mesh. par exemple, si le vertex 
+shader déclare un attribut normale par sommet mais que ces valeurs ne sont pas dans le Mesh, le shader ne peut pas fonctionner...
+
+## debugger un shader
+
+relancer l'application à chaque fois qu'un shader plante, n'est pas très pratique, il est possible de recharger les shaders à la volée, sans quitter l'application, cf 
+reload_program() de `program.h`.
+
+\code
+#include "program.h"
+#include "window.h"
+
+GLuint program;
+
+// init( ) :
+    program=read_program("tutos/tuto9_color.glsl");
+    program_print_errors(program);
+    
+// draw( ) :
+    if(key_state('r'))
+    {
+        clear_key_state('r');
+        reload_program(program, "tutos/tuto9_color.glsl");
+        program_print_errors(program);
+    }
+\endcode
+
+__attention :__ les uniforms sont re-initialisés à 0 par la compilation d'un shader.
 
 ## et avec une texture ?
 
