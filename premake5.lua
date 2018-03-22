@@ -19,8 +19,9 @@ workspace "gkit2"
 		optimize "speed"
 		
 	configuration "linux"
+		removeplatforms { "x32" }
 		buildoptions { "-mtune=native -march=native" }
-		buildoptions { "-std=c++11" }
+		cppdialect "c++11"
 		buildoptions { "-W -Wall -Wextra -Wsign-compare -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable", "-pipe" }
 		buildoptions { "-flto"}
 		linkoptions { "-flto"}
@@ -36,21 +37,23 @@ workspace "gkit2"
 	configuration { "windows" }
 		defines { "WIN32", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
 		defines { "NOMINMAX" }	-- bug visual studio : autoriser explicitement les fonctions std::min et std::max...
+		cppdialect "c++11"
 	
-	configuration { "windows", "gmake", "x32" }
-		buildoptions { "-std=c++11"}
+	configuration { "windows", "gmake" }
+		removeplatforms { "x64" }
 		includedirs { "extern/mingw/include" }
 		libdirs { "extern/mingw/lib" }
 		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
 	
-	configuration { "windows", "codeblocks", "x32" }
-		buildoptions { "-std=c++11"}
+	configuration { "windows", "codeblocks" }
+		removeplatforms { "x64" }
 		includedirs { "extern/mingw/include" }
 		libdirs { "extern/mingw/lib" }
 		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
 	
 	
 	configuration { "windows", "vs2017" }
+		removeplatforms { "x32" }
 		system "Windows"
 		architecture "x64"
 		disablewarnings { "4244", "4305" }
@@ -125,6 +128,7 @@ tutos = {
 	"tuto_storage",
 	"tuto_storage_buffer",
 	"tuto_storage_texture",
+	
 	"min_data"
 }
 
