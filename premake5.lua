@@ -106,6 +106,7 @@ tutos = {
 	"tuto9",
 	"tuto9_texture1",
 	"tuto9_textures",
+	"tuto10",
 	
 	"tuto_transform",
 	"tuto_pad",
@@ -139,6 +140,19 @@ for i, name in ipairs(tutos) do
 		targetdir "bin"
 		files ( gkit_files )
 		files { gkit_dir .. "/tutos/" .. name..'.cpp' }
+end
+
+tutos_m1 = {
+	"tp1"
+}
+
+for i, name in ipairs(tutos_m1) do
+	project(name .. "m1")
+		language "C++"
+		kind "ConsoleApp"
+		targetdir "bin"
+		files ( gkit_files )
+		files { gkit_dir .. "/m1/" .. name..'.cpp' }
 end
 
 --~  -- description des tutos serie 2
