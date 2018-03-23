@@ -78,16 +78,15 @@ const char *option_find( std::vector<const char *>& options, const char *ext )
 {
     for(unsigned int i= 0; i < (unsigned int) options.size() ; i++)
     {
-        if(std::string(options[i]).rfind(ext) != std::string::npos)
+        if(options[i] != nullptr && std::string(options[i]).rfind(ext) != std::string::npos)
         {
             const char *option= options[i];
-            options[i]= options.back(); // ne preserve pas l'ordre des arguments... peut mieux faire
-            options.pop_back();
+            options[i]= nullptr;
             return option;
         }
     }
     
-    return NULL;
+    return nullptr;
 }
 
 //! compile les shaders et construit le programme + les buffers + le vertex array.
@@ -100,7 +99,7 @@ int init( std::vector<const char *>& options )
     program= 0;
     const char *option;
     option= option_find(options, ".glsl");
-    if(option != NULL)
+    if(option != nullptr)
     {
         program_filename= Filename(option);
         reload_program();
@@ -111,10 +110,10 @@ int init( std::vector<const char *>& options )
     mesh_pmax= Point(normalize(Vector( 1,  1, 0)) * 2.5f);
     
     option= option_find(options, ".obj");
-    if(option != NULL)
+    if(option != nullptr)
     {
         mesh= read_mesh(option);
-        if(mesh.vertex_buffer_size() > 0)
+        if(mesh.vertex_count() > 0)
         {
             mesh_filename= Filename(option);
             
@@ -133,8 +132,11 @@ int init( std::vector<const char *>& options )
     }
     
     // charge les textures, si necessaire
-    for(unsigned int i= 0; i < (unsigned int) options.size(); i++)
+    for(int i= 0; i < int(options.size()); i++)
     {
+        if(options[i] == nullptr)
+            continue;
+        
         GLuint texture= read_texture(0, options[i]);
         if(texture > 0)
         {
@@ -172,8 +174,7 @@ int quit( )
     release_program(program);
     mesh.release();
     
-    for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
-        glDeleteTextures(1, &textures[i]);
+    glDeleteTextures(textures.size(), textures.data());
     return 0;
 }
 
@@ -270,7 +271,7 @@ int draw( void )
         program_uniform(program, "mouse", vec3(mousex, mousey, mb & SDL_BUTTON(1)));
         
         // textures
-        for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
+        for(int i= 0; i < int(textures.size()); i++)
         {
             char uniform[1024];
             sprintf(uniform, "texture%d", i);
@@ -363,11 +364,11 @@ int main( int argc, char **argv )
     }
     
     Window window= create_window(1024, 640);
-    if(window == NULL) 
+    if(window == nullptr) 
         return 1;
     
     Context context= create_context(window);
-    if(context == NULL) 
+    if(context == nullptr) 
         return 1;
     
     // creation des objets opengl
