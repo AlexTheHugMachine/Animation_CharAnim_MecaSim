@@ -26,14 +26,6 @@ int AppTime::run( )
     // remarque : utiliser std::chrono si la precision n'est pas suffisante
     while(events(m_window))
     {
-    #if 0
-        if(laptop_mode() && last_event_count() == 0)
-        {
-            SDL_Delay(16);
-            continue;
-        }
-    #endif
-        
         if(update(global_time(), delta_time()) < 0)
             break;
         
@@ -78,6 +70,12 @@ int AppTime::run( )
         }
         
         // presenter le resultat
+#if 0
+        // force openGL a finir d'executer toutes les commandes, 
+        // cf https://www.khronos.org/opengl/wiki/Swap_Interval#GPU_vs_CPU_synchronization
+        // devrait limiter la consommation sur portable
+        glFinish();
+#endif
         SDL_GL_SwapWindow(m_window);
     }
     
