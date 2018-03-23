@@ -150,8 +150,6 @@ int run( Window window, int (*draw)() )
 static int event_count= 0;
 int last_event_count( ) { return event_count; }
 
-static bool laptop= false;
-bool laptop_mode( ) { return laptop; }
 
 int events( Window window )
 {
@@ -310,7 +308,7 @@ Context create_context( Window window, const int major, const int minor )
 #endif
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 15);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     Context context= SDL_GL_CreateContext(window);
@@ -324,19 +322,11 @@ Context create_context( Window window, const int major, const int minor )
     SDL_GL_SetSwapInterval(-1);
     if(SDL_GL_GetSwapInterval() != -1)
     {
-        printf("Vsync ON\n");
+        printf("vsync ON\n");
         SDL_GL_SetSwapInterval(1);
     }
     else
-        printf("Vsync-late ON\n");
-    
-    laptop= false;
-    SDL_PowerState power= SDL_GetPowerInfo(nullptr, nullptr);
-    if(power != SDL_POWERSTATE_NO_BATTERY)
-    {
-        laptop= true;
-        printf("running on a laptop...\n");
-    }
+        printf("vsync-late ON\n");
     
 #ifndef NO_GLEW
     // initialise les extensions opengl
