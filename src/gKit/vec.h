@@ -28,6 +28,7 @@ struct Point
     
     //! renvoie la ieme composante du point.
     float operator() ( const unsigned int i ) const; // l'implementation se trouve en fin de fichier
+    float& operator() ( const unsigned int i ); // l'implementation se trouve en fin de fichier
     
     float x, y, z;
 };
@@ -59,6 +60,7 @@ struct Vector
     
     //! renvoie la ieme composante du vecteur.
     float operator() ( const unsigned int i ) const; // l'implementation se trouve en fin de fichier
+    float& operator() ( const unsigned int i ); // l'implementation se trouve en fin de fichier
     
     float x, y, z;
 };
@@ -162,7 +164,9 @@ inline vec4::vec4( const Vector& v ) : x(v.x), y(v.y), z(v.z), w(0.f) {}
 
 //
 inline float Point::operator( ) ( const unsigned int i ) const { return (&x)[i]; }
+inline float &Point::operator( ) ( const unsigned int i ) { return (&x)[i]; }
 inline float Vector::operator( ) ( const unsigned int i ) const { return (&x)[i]; }
+inline float &Vector::operator( ) ( const unsigned int i ) { return (&x)[i]; }
 
 //
 #include <iostream>
