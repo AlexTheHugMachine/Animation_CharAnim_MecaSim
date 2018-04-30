@@ -10,11 +10,13 @@
 
 #include <cassert>
 #include <cstdio>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+
 #include <vector>
 #include <set>
 #include <string>
-#include <cstdio>
-#include <cstring>
 #include <iostream>
 
 #include <SDL2/SDL_power.h>
@@ -23,6 +25,8 @@
 #include "window.h"
 
 
+
+static float aspect= 1;
 
 static int width= 0;
 static int height= 0;
@@ -155,6 +159,10 @@ int events( Window window )
 {
     event_count= 0;
     
+    // proportions de la fenetre
+    SDL_GetWindowSize(window, &width, &height);
+    aspect= float(width) / float(height);
+    
     // gestion des evenements
     SDL_Event event;
     while(SDL_PollEvent(&event))
@@ -167,8 +175,10 @@ int events( Window window )
                 // redimensionner la fenetre...
                 if(event.window.event == SDL_WINDOWEVENT_RESIZED)
                 {
-                    // conserve les dimensions de la fenetre
-                    width= event.window.data1;
+                    // conserve les proportions de la fenetre
+                    //~ width= event.window.data1;
+                    //~ height= event.window.data2;
+                    width= std::floor(event.window.data2 * aspect);
                     height= event.window.data2;
                     SDL_SetWindowSize(window, width, height);
 
