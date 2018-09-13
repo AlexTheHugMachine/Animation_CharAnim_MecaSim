@@ -63,15 +63,49 @@ int CharAnimViewer::render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    draw_quad( RotationX(-90)*Scale(500,500,1) );
+    //draw_quad( RotationX(-90)*Scale(500,500,1) );
 
     Viewer::manageCameraLight();
     gl.camera(m_camera);
 
-    m_world.draw();
+    //m_world.draw();
 
 	// Affiche le skeleton
-    draw_skeleton( m_ske );
+    //draw_skeleton( m_ske );
+
+	const int MAX = 5;
+	float A[] = { -10, -20, -30, -40, -50 };
+	float B[] = { -15, -10, 0, 10, 45 };
+	float C[] = { -55, -30, 20, -30, -45 };
+
+	static int t = 0;
+	t = (t + 1) % MAX;
+	float c = 0.5;
+	float a = (1-c) * A[t] + c*A[(t+1)%MAX];
+	float b = B[t];
+	float ac = C[t];
+
+	Transform S = Scale(10, 100, 10);
+	Transform A2W = RotationZ(a);
+	draw_cylinder( A2W*S );
+
+	Transform B2A = Translation(0, 100, 0) * RotationZ( b);
+	Transform B2W = A2W * B2A;
+	draw_cylinder(  B2W*S);
+
+	Transform C12B = Translation(0, 100, 0) * RotationZ(ac);
+	Transform C12W = B2W * C12B;
+	Transform S1 = Scale(6, 30, 6);
+	draw_cylinder(C12W*S1);
+
+	Transform C22B = Translation(0, 100, 0) * RotationZ(-ac);
+	Transform C22W = B2W * C22B;
+	draw_cylinder(C22W*S1);
+
+
+	//draw_cylinder(Point(0, 0, 0), Point(0, 100, 0), 20);
+	//draw_cylinder()
+	//draw_sphere()
 
     return 1;
 }
