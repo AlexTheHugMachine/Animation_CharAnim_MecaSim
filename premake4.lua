@@ -117,6 +117,7 @@ tutos = {
 	"tuto9",
 	"tuto9_texture1",
 	"tuto9_textures",
+	"tuto9_buffers",
 	"tuto10",
 	
 	"tuto_transform",
