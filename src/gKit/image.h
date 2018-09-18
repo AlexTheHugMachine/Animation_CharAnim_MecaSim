@@ -26,7 +26,17 @@ protected:
 
     unsigned int offset (const int x, const int y ) const
     {
-        return std::min(x, m_width-1) + std::min(y, m_height-1) * m_width;
+        int px= x;
+        if(px < 0) px= 0;
+        if(px > m_width-1) px= m_width-1;
+        int py= y;
+        if(py < 0) py= 0;
+        if(py > m_height-1) py= m_height-1;
+        
+        assert(py * m_width + px < int(m_data.size()));
+        assert(py * m_width + px >= 0);
+        
+        return py * m_width + px;
     }
     
 public:
