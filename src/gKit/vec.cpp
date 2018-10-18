@@ -29,6 +29,27 @@ Vector operator- ( const Point& a, const Point& b )
     return Vector(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
+Point operator* ( const float k, const Point& a )
+{
+    return Point(k * a.x, k * a.y, k * a.z);
+}
+
+Point operator* ( const Point& a, const float k )
+{
+    return k * a;
+}
+
+Point operator/ ( const Point& a, const float k )
+{ 
+    float kk= 1.f / k; 
+    return kk * a; 
+}
+
+Point operator+ ( const Point& a, const Point& b )
+{
+    return Point(a.x + b.x, a.y + b.y, a.z + b.z);
+}
+
 Vector operator- ( const Vector& v )
 {
     return Vector(-v.x, -v.y, -v.z);
