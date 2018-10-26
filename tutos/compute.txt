@@ -414,6 +414,7 @@ En cas de problèmes de synchronisation, il est possible d'utiliser une barrièr
 
 exemple complet \ref min_data.cpp
 
+exemple complet \ref tuto_vertex_compute.cpp, illustration des principes : passe 1. compute shader, synchronisation, passe 2. pipeline graphique.
 
 ## notions d'exécution cohérente
 

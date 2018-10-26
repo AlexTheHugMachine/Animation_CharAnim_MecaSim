@@ -44,7 +44,7 @@ solution "gKit2light"
 		linkoptions { "-fopenmp" }
 
 	configuration { "windows" }
-		defines { "WIN32", "NVWIDGETS_EXPORTS", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
+		defines { "WIN32", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
 		defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
 
 	configuration { "windows", "gmake", "x32" }
@@ -140,7 +140,8 @@ tutos = {
 	"tuto_storage",
 	"tuto_storage_buffer",
 	"tuto_storage_texture",
-	"min_data"
+	"min_data",
+	"tuto_vertex_compute"
 }
 
 for i, name in ipairs(tutos) do
