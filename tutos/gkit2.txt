@@ -51,6 +51,7 @@ plus ceux dédiés à openGL :
     - \ref storage,
     - \ref storage_texture,
     - \ref compute
+    - \ref mdi
     
 et un utilitaire pour jouer avec les shaders, \ref shader_kit.cpp \ref shader_kit.
 

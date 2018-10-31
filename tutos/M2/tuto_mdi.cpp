@@ -13,7 +13,7 @@
 #include "orbiter.h"
 #include "draw.h"
 
-#include "app.h"        // classe Application a deriver
+#include "app.h"
 #include "text.h"
 
 
@@ -27,36 +27,21 @@ public:
         m_objet= read_mesh("data/bigguy.obj");
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
-        m_camera.lookat(pmin - Vector(20, 20,  0), pmax + Vector(20, 20, 0));
-
-        m_texture = read_texture(0, "data/debug2x2red.png");
-
-        // affichage du temps de glDraw
+        m_camera.lookat(pmin - Vector(200, 200,  0), pmax + Vector(200, 200, 0));
+        
+        // affichage du temps cpu / gpu
         m_console= create_text();
 
         // mesure du temps gpu de glDraw
         glGenQueries(1, &m_time_query);
         
-        // stockage des parametres du multi draw indirect, pour 25 draws
+        // stockage des parametres du multi draw indirect
         glGenBuffers(1, &m_indirect_buffer);
-        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect_buffer);
-        // dimensionne le buffer
-        glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(unsigned int) * 4 * 25, NULL, GL_STREAM_DRAW);
-        // remarque : usage == stream draw, le contenu du buffer va etre modifie regulierement.
         
-        // todo comparer avec glBufferStorage
-
-        glGenBuffers(1, &m_model_buffer);
-    #if 1
-        glBindBuffer(GL_UNIFORM_BUFFER, m_model_buffer);
-       // dimensionne le buffer        
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(Transform) * 25, NULL, GL_STREAM_DRAW);
-        // remarque : usage == stream draw, le contenu du buffer va etre modifie regulierement.
-    #endif
-    
-        // creation des vertex buffer
+        // creation des vertex buffer, uniquement les positions
         m_vao= m_objet.create_buffers(false, false, false);
-        // et du shader program
+        
+        // shader program
         m_program= read_program("tutos/M2/indirect.glsl");
         program_print_errors(m_program);
 
@@ -73,14 +58,11 @@ public:
     int quit( )
     {
         glDeleteQueries(1, &m_time_query);
-        glDeleteBuffers(1, &m_indirect_buffer);
-        glDeleteBuffers(1, &m_model_buffer);
-        
         release_text(m_console);
+
         release_program(m_program);
-        
         m_objet.release();
-        glDeleteTextures(1, &m_texture);
+        glDeleteBuffers(1, &m_indirect_buffer);
         
         return 0;
     }
@@ -110,16 +92,28 @@ public:
         std::chrono::high_resolution_clock::time_point cpu_start= std::chrono::high_resolution_clock::now();    // pour le cpu
         
     #if 0
-        // dessine 25 fois l'objet avec 25 draw
-        for(int y= -2; y <= 2; y++)
-        for(int x= -2; x <= 2; x++)
+        // dessine n copies de l'objet avec 1 appel a glDraw par copie
+        glBindVertexArray(m_vao);
+        glUseProgram(m_program);
+        
+        program_uniform(m_program, "vpMatrix", m_camera.projection(window_width(), window_height(), 45) * m_camera.view());
+        program_uniform(m_program, "viewMatrix", m_camera.view());
+        
+        // dessine l'objet avec 1 draw par copie
+        for(int y= -15; y <= 15; y++)
+        for(int x= -15; x <= 15; x++)
         {
-            Transform t= Translation(x *20, y *20, 0);
-            draw(m_objet, t * m_model, m_camera, m_texture);
+            Transform t= Translation(x *20, y *20, 0) * m_model;
+            
+            program_uniform(m_program, "model[0]", t);
+            glDrawArrays(GL_TRIANGLES, 0, m_objet.vertex_count());
         }
         
+        // dans ce cas particulier, on pourrait utiliser un draw instancie, mais ce n'est pas le but du tuto...
+        // multi draw indirect, peut emettre beaucoup de draws que cette boucle... le cpu n'intervient presque pas
+        
     #else
-        // dessine 25 fois l'objet avec 1 seul appel a glMultiDrawIndirect
+        // dessine n copies de l'objet avec 1 seul appel a glMultiDrawIndirect
         
         // representation des parametres d'un draw pour glMultiDrawIndirect
         struct IndirectParam
@@ -132,16 +126,17 @@ public:
             IndirectParam( const unsigned int count ) : index_count(count), instance_count(1), first_index(0), first_instance(0) {}
         };
         
+        // prepare les parametres des draws
         std::vector<IndirectParam> indirect;
-        indirect.reserve(25);
+        indirect.reserve(1024);
         
         // stocke aussi les transformations pour placer / orienter chaque objet
         std::vector<Transform> model;
-        model.reserve(25);
+        model.reserve(1024);
         
-        // genere les parametres des 25 draws
-        for(int y= -2; y <= 2; y++)
-        for(int x= -2; x <= 2; x++)
+        // genere les parametres des draws et les transformations
+        for(int y= -15; y <= 15; y++)
+        for(int x= -15; x <= 15; x++)
         {
             model.push_back( Translation(x *20, y *20, 0) * m_model );
             indirect.push_back( IndirectParam(m_objet.vertex_count()) );
@@ -151,31 +146,24 @@ public:
         glBindVertexArray(m_vao);
         glUseProgram(m_program);
         
-        // transfere les donnees des draws dans un buffer
-        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect_buffer);
-        //~ glInvalidateBufferData(GL_DRAW_INDIRECT_BUFFER);   // detruit le contenu du buffer
-        glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectParam) * indirect.size(), NULL, GL_STREAM_DRAW);   // detruit le contenu du buffer
-        glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(IndirectParam) * indirect.size(), &indirect.front());
-
-    #if 1
-        // transfere les transformations dans un uniform buffer
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_model_buffer);
-        //~ glInvalidateBufferData(GL_UNIFORM_BUFFER);   // detruit le contenu du buffer
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(Transform) * model.size(), NULL, GL_STREAM_DRAW);    // detruit le contenu du buffer
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Transform) * model.size(), model.front().buffer());
-    #else
-        
-        // transfere les transformations dans un tableau d'uniform "classique"
-        GLint location= glGetUniformLocation(m_program, "model");
-        glUniformMatrix4fv(location, model.size(), GL_TRUE, model.front().buffer());
-    #endif
-        
         program_uniform(m_program, "vpMatrix", m_camera.projection(window_width(), window_height(), 45) * m_camera.view());
         program_uniform(m_program, "viewMatrix", m_camera.view());
+        
+        // transfere les parametres 
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect_buffer);
+        glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectParam) * indirect.size(), &indirect.front(), GL_STREAM_DRAW);   
+        // detruit le contenu du buffer et le remplace, chaque fois...
+        
+        // transfere les transformations dans un tableau d'uniform
+        GLint location= glGetUniformLocation(m_program, "model");
+        glUniformMatrix4fv(location, model.size(), GL_TRUE, model.front().buffer());
+        // pas de version de program_uniform( std::vector<T> ) pour les tableaux
         
         glMultiDrawArraysIndirect(m_objet.primitives(), 0, indirect.size(), 0);
     #endif
         
+        
+        // affiche le temps 
         std::chrono::high_resolution_clock::time_point cpu_stop= std::chrono::high_resolution_clock::now();
         long long int cpu_time= std::chrono::duration_cast<std::chrono::nanoseconds>(cpu_stop - cpu_start).count();
         
@@ -185,23 +173,20 @@ public:
         GLint64 gpu_time= 0;
         glGetQueryObjecti64v(m_time_query, GL_QUERY_RESULT, &gpu_time);
         
-        // affiche le temps mesure
         clear(m_console);
         printf(m_console, 0, 0, "cpu  %02dms %03dus", (int) (cpu_time / 1000000), (int) ((cpu_time / 1000) % 1000));
         printf(m_console, 0, 1, "gpu  %02dms %03dus", (int) (gpu_time / 1000000), (int) ((gpu_time / 1000) % 1000));
         
-        // affiche le texte
         draw(m_console, window_width(), window_height());
         
-        printf("cpu  %02dms %03dus    ", (int) (cpu_time / 1000000), (int) ((cpu_time / 1000) % 1000));
-        printf("gpu  %02dms %03dus\n", (int) (gpu_time / 1000000), (int) ((gpu_time / 1000) % 1000));
-
+        printf("cpu    %02dms %03dus    ", (int) (cpu_time / 1000000), (int) ((cpu_time / 1000) % 1000));
+        printf("gpu    %02dms %03dus\n", (int) (gpu_time / 1000000), (int) ((gpu_time / 1000) % 1000));
+        
         return 1;
     }
     
 protected:
     GLuint m_indirect_buffer;
-    GLuint m_model_buffer;
     GLuint m_time_query;
     
     GLuint m_vao;
@@ -211,7 +196,6 @@ protected:
 
     Transform m_model;
     Mesh m_objet;
-    GLuint m_texture;
     Orbiter m_camera;
 };
 

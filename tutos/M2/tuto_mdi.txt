@@ -1,0 +1,57 @@
+
+/*!  \addtogroup mdi openGL 4.3 : multi draw indirect
+
+cf \ref tuto_mdi.cpp + \ref indirect.glsl
+
+Les fonctions d'affichage classiques, cf \ref draw, sont relativement efficaces pour dessiner quelques objets, glDrawInstanced( ) permet d'afficher de nombreuses 
+copies du même objet, mais openGL 3.3 ne fournit pas de méthode pour afficher un grand nombre d'objets différents.
+
+En effet, la préparation de chaque draw nécessite pas mal de travail au driver openGL, et c'est finalement le cpu qui limite le nombre d'objets affichables, alors que 
+la carte graphique est sous exploitée. Le tuto \ref time présente une méthode pour mesurer le temps cpu utilisé pour préparer N commandes d'affichage pour la 
+carte graphique, en comparant les solutions précédentes : N commandes ou 1 commande instanciée avec N copies.
+
+openGL 4.3 a introduit une nouvelle variante de draw : glMultiDrawIndirect( ) qui permet de décrire les paramètres d'affichage de plusieurs objets. Le gain d'efficacité 
+se trouve du coté du driver qui ne réalise qu'une seule préparation et soumet toutes les commandes d'affichage à la carte graphique en une seule fois.
+
+Le principe est relativement simple, les paramètres de chaque commande d'affichage sont décrits par une structure, et un tableau de structures est passé en paramètre :
+\code
+    struct IndirectParam
+    {
+        unsigned int index_count;
+        unsigned int instance_count;
+        unsigned int first_index;
+        unsigned int first_instance;
+    };
+\endcode
+
+cette structure permet de décrire les paramétres de glDrawArrays(), glDrawArraysInstanced(), glDrawElements(), glDrawElementsInstanced(), y compris les variantes permettant
+de préciser les indices de la première instance et du premier sommet, cf \ref draw glDrawElementsBaseVertex() et glDrawElementsInstancedBaseVertexBaseInstance() (!!)
+
+\code
+MultiDrawArraysIndirect( GLenum primitives, std::vector<IndirectParam>& params )
+{
+    for(int i= 0; i < params.size(); i++)
+        if(params[i].instance_count > 0)
+            // draw instancie
+            glDrawArraysInstanced(primitives, 0, params[i].index_count, params[i].instance_count, params[i].first_instance);
+        else
+            // draw "normal"
+            glDrawArray(primitives, 0, params[i].index_count);
+}
+\endcode
+
+Dernier détail, le tableau de structures doit être dans un buffer sélectionné sur `GL_DRAW_INDIRECT_BUFFER`.
+
+Le code d'exemple \ref tuto_mdi.cpp construit le contenu du buffer sur cpu et le transfère à chaque image, mais les meilleures performances sont obtenues lorsqu'un compute 
+shader construit le tableau de paramètres... 
+
+Voici les temps mesurés par les 2 techniques :
+    - afficher ~1000 bigguy, avec 1000 draws : 10ms pour le cpu, ~10ms pour le gpu,
+    - glMultiDrawArraysIndirect(), 100us pour le cpu, ~3ms pour le gpu...
+
+Un shader peut réaliser des tests de visibilité afin de décider d'afficher (ou pas) plusieurs objets. Dans ce cas,
+un problème se pose : il faut connaitre, dans l'application, le nombre de commandes stockées dans le buffer pour utiliser glMultiDrawArraysIndirect( )... La encore, il suffit d'indiquer
+que la valeur du paramètre `drawcount` se trouve dans un buffer sélectionné sur `GL_PARAMETER_BUFFER_ARB` et d'utiliser la variante `glMultiDrawArraysIndirectCountARB( )` 
+introduite par l'extension `GL_ARB_indirect_parameters`. cf \ref tuto_mdi_parameter.cpp pour un exemple complet, avec un compute shader qui decide de dessiner un objet sur 2...
+
+*/
