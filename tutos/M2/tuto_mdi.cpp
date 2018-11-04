@@ -17,6 +17,19 @@
 #include "text.h"
 
 
+// representation des parametres 
+struct IndirectParam
+{
+    unsigned int vertex_count;
+    unsigned int instance_count;
+    unsigned int first_vertex;
+    unsigned int first_instance;
+    
+    IndirectParam( const unsigned int count ) : vertex_count(count), instance_count(1), first_vertex(0), first_instance(0) {}
+};
+
+
+
 class TP : public App
 {
 public:
@@ -25,33 +38,51 @@ public:
     int init( )
     {
         m_objet= read_mesh("data/bigguy.obj");
+        //~ m_objet= read_mesh("data/cube.obj");
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
         m_camera.lookat(pmin - Vector(200, 200,  0), pmax + Vector(200, 200, 0));
         
-        // affichage du temps cpu / gpu
-        m_console= create_text();
+        // genere les parametres des draws et les transformations
+        for(int y= -15; y <= 15; y++)
+        for(int x= -15; x <= 15; x++)
+        {
+            m_multi_model.push_back( Translation(x *20, y *20, 0) );
+            m_multi_indirect.push_back( IndirectParam(m_objet.vertex_count()) );
+        }
+        // oui c'est la meme chose qu'un draw instancie, mais c'est juste pour comparer les 2 solutions...
 
-        // mesure du temps gpu de glDraw
-        glGenQueries(1, &m_time_query);
-        
         // stockage des parametres du multi draw indirect
         glGenBuffers(1, &m_indirect_buffer);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect_buffer);
+        
+        glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectParam) * m_multi_indirect.size(), &m_multi_indirect.front(), GL_DYNAMIC_DRAW);   
         
         // creation des vertex buffer, uniquement les positions
-        m_vao= m_objet.create_buffers(false, false, false);
+        m_vao= m_objet.create_buffers(/* texcoords */ false, /* normals */ false, /* colors */ false);
         
         // shader program
         m_program= read_program("tutos/M2/indirect.glsl");
         program_print_errors(m_program);
-
+        
+        // transfere les transformations dans un tableau d'uniform
+        GLint location= glGetUniformLocation(m_program, "model");
+        glUniformMatrix4fv(location, m_multi_model.size(), GL_TRUE, m_multi_model.front().buffer());
+        // pas program_uniform( std::vector<T>& )...
+        
+        // affichage du temps cpu / gpu
+        m_console= create_text();
+        
+        // mesure du temps gpu de glDraw
+        glGenQueries(1, &m_time_query);
+        
         // etat openGL par defaut
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
         
         glClearDepth(1.f);                          // profondeur par defaut
         glDepthFunc(GL_LESS);                       // ztest, conserver l'intersection la plus proche de la camera
         glEnable(GL_DEPTH_TEST);                    // activer le ztest
-
+        
         return 0;   // ras, pas d'erreur
     }
     
@@ -59,7 +90,7 @@ public:
     {
         glDeleteQueries(1, &m_time_query);
         release_text(m_console);
-
+        
         release_program(m_program);
         m_objet.release();
         glDeleteBuffers(1, &m_indirect_buffer);
@@ -92,74 +123,50 @@ public:
         std::chrono::high_resolution_clock::time_point cpu_start= std::chrono::high_resolution_clock::now();    // pour le cpu
         
     #if 0
-        // dessine n copies de l'objet avec 1 appel a glDraw par copie
+        // dessine n copies de l'objet avec 1 glDrawArrays par copie
         glBindVertexArray(m_vao);
         glUseProgram(m_program);
         
+        program_uniform(m_program, "modelMatrix", m_model);
         program_uniform(m_program, "vpMatrix", m_camera.projection(window_width(), window_height(), 45) * m_camera.view());
         program_uniform(m_program, "viewMatrix", m_camera.view());
         
         // dessine l'objet avec 1 draw par copie
-        for(int y= -15; y <= 15; y++)
-        for(int x= -15; x <= 15; x++)
+        for(int i= 0; i < int(m_multi_model.size()); i++)
         {
-            Transform t= Translation(x *20, y *20, 0) * m_model;
-            
-            program_uniform(m_program, "model[0]", t);
+            // utilise le meme shader que multi draw indirect, gl_DrawID == 0 dans un draw "classique"
+            program_uniform(m_program, "model[0]", m_multi_model[i]);
             glDrawArrays(GL_TRIANGLES, 0, m_objet.vertex_count());
         }
-        
         // dans ce cas particulier, on pourrait utiliser un draw instancie, mais ce n'est pas le but du tuto...
-        // multi draw indirect, peut emettre beaucoup de draws que cette boucle... le cpu n'intervient presque pas
         
     #else
-        // dessine n copies de l'objet avec 1 seul appel a glMultiDrawIndirect
-        
-        // representation des parametres d'un draw pour glMultiDrawIndirect
-        struct IndirectParam
-        {
-            unsigned int index_count;
-            unsigned int instance_count;
-            unsigned int first_index;
-            unsigned int first_instance;
-            
-            IndirectParam( const unsigned int count ) : index_count(count), instance_count(1), first_index(0), first_instance(0) {}
-        };
-        
-        // prepare les parametres des draws
-        std::vector<IndirectParam> indirect;
-        indirect.reserve(1024);
-        
-        // stocke aussi les transformations pour placer / orienter chaque objet
-        std::vector<Transform> model;
-        model.reserve(1024);
-        
-        // genere les parametres des draws et les transformations
-        for(int y= -15; y <= 15; y++)
-        for(int x= -15; x <= 15; x++)
-        {
-            model.push_back( Translation(x *20, y *20, 0) * m_model );
-            indirect.push_back( IndirectParam(m_objet.vertex_count()) );
-        }
-        
-        //
+        // dessine n copies de l'objet avec 1 seul appel a glMultiDrawArraysIndirect
         glBindVertexArray(m_vao);
         glUseProgram(m_program);
         
+        program_uniform(m_program, "modelMatrix", m_model);
         program_uniform(m_program, "vpMatrix", m_camera.projection(window_width(), window_height(), 45) * m_camera.view());
         program_uniform(m_program, "viewMatrix", m_camera.view());
         
-        // transfere les parametres 
-        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect_buffer);
-        glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectParam) * indirect.size(), &indirect.front(), GL_STREAM_DRAW);   
-        // detruit le contenu du buffer et le remplace, chaque fois...
+        //~ // transfere les parametres 
+        //~ std::chrono::high_resolution_clock::time_point update_start= std::chrono::high_resolution_clock::now();    // pour le cpu
         
-        // transfere les transformations dans un tableau d'uniform
-        GLint location= glGetUniformLocation(m_program, "model");
-        glUniformMatrix4fv(location, model.size(), GL_TRUE, model.front().buffer());
-        // pas de version de program_uniform( std::vector<T> ) pour les tableaux
+        //~ glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect_buffer);
+        //~ glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectParam) * m_multi_indirect.size(), &m_multi_indirect.front(), GL_DYNAMIC_DRAW);   
+        //~ // detruit le contenu du buffer et le remplace, chaque fois...
         
-        glMultiDrawArraysIndirect(m_objet.primitives(), 0, indirect.size(), 0);
+        //~ // transfere les transformations dans un tableau d'uniform
+        //~ GLint location= glGetUniformLocation(m_program, "model");
+        //~ glUniformMatrix4fv(location, m_multi_model.size(), GL_TRUE, m_multi_model.front().buffer());
+        //~ // pas de version de program_uniform( std::vector<T> ) pour les tableaux
+
+        //~ // affiche le temps de transfert
+        //~ std::chrono::high_resolution_clock::time_point update_stop= std::chrono::high_resolution_clock::now();
+        //~ long long int update_time= std::chrono::duration_cast<std::chrono::nanoseconds>(update_stop - update_start).count();
+        //~ printf("update %02dms %03dus    ", (int) (update_time / 1000000), (int) ((update_time / 1000) % 1000));
+        
+        glMultiDrawArraysIndirect(m_objet.primitives(), 0, m_multi_indirect.size(), 0);
     #endif
         
         
@@ -197,6 +204,10 @@ protected:
     Transform m_model;
     Mesh m_objet;
     Orbiter m_camera;
+    
+    std::vector<IndirectParam> m_multi_indirect;
+    std::vector<Transform> m_multi_model;
+
 };
 
 

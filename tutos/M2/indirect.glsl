@@ -7,15 +7,16 @@
 layout(location= 0) in vec3 position;
 out vec3 vertex_position;
 
+uniform mat4 modelMatrix;
 uniform mat4 vpMatrix;
 uniform mat4 viewMatrix;
 
-uniform mat4 model[1024];
+uniform mat4 model[1000];
 
 void main( )
 {
-    gl_Position= vpMatrix * model[gl_DrawIDARB] * vec4(position, 1);
-    vertex_position= vec3(viewMatrix * model[gl_DrawIDARB] * vec4(position, 1));
+    gl_Position= vpMatrix * model[gl_DrawIDARB] * modelMatrix * vec4(position, 1);
+    vertex_position= vec3(viewMatrix * model[gl_DrawIDARB] * modelMatrix * vec4(position, 1));
 }
 #endif
 
