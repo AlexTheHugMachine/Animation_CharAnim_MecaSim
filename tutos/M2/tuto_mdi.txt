@@ -17,27 +17,27 @@ d'affichage de plusieurs objets. Le gain d'efficacité se trouve du coté du dri
 Le principe est relativement simple, les paramètres de chaque commande d'affichage sont décrits par une structure, et un tableau de structures est passé en 
 paramètre à MultiDraw().
 \code
-	// parametres pour MultiDrawArraysIndirect
-	struct ArraysParam
-	{
-		unsigned int vertex_count;
-		unsigned int instance_count;
-		unsigned int vertex_base;
-		unsigned int instance_base;
-	};
+    // parametres pour MultiDrawArraysIndirect
+    struct ArraysParam
+    {
+        unsigned int vertex_count;
+        unsigned int instance_count;
+        unsigned int vertex_base;
+        unsigned int instance_base;
+    };
 \endcode
 
-cette structure permet de décrire les paramétres de glDrawArrays(), glDrawArraysInstanced(). En gros, voila ce que fait MultiDrawArraysIndirect( ) :
+cette structure permet de décrire les paramétres de glDrawArrays(), glDrawArraysInstanced|BaseInstance(). En gros, voila ce que fait MultiDrawArraysIndirect( ) :
 \code
 MultiDrawArraysIndirect( GLenum primitives, std::vector<ArraysParam>& params )
 {
-	for(int i= 0; i < params.size(); i++)
-		if(params[i].instance_count > 0)
-			// draw instancie
-			glDrawArraysInstanced(primitives, params[i].vertex_base, params[i].vertex_count, params[i].instance_count, params[i].instance_base);
-		else
-			// draw normal
-			glDrawArray(primitives, params[i].vertex_base, params[i].vertex_count);
+    for(int i= 0; i < params.size(); i++)
+        if(params[i].instance_count > 0)
+            // draw instancie
+            glDrawArraysInstancedBaseInstance(primitives, params[i].vertex_base, params[i].vertex_count, params[i].instance_count, params[i].instance_base);
+        else
+            // draw normal
+            glDrawArray(primitives, params[i].vertex_base, params[i].vertex_count);
 }
 \endcode
 
@@ -45,15 +45,15 @@ Pour glDrawElements(), glDrawElementsInstanced(), y compris les variantes permet
 premier sommet, cf \ref draw glDrawElementsBaseVertex() et glDrawElementsInstancedBaseVertexBaseInstance() (!!)
 la structure est :
 \code
-	// parametres pour MultiDrawElementsIndirect
-	struct ElementsParam
-	{
-		unsigned int index_count;
-		unsigned int instance_count;
-		unsigned int first_index;		// cf parametre offset de glDrawElements()
-		unsigned int vertex_base;
-		unsigned int instance_base;
-	};
+    // parametres pour MultiDrawElementsIndirect
+    struct ElementsParam
+    {
+        unsigned int index_count;
+        unsigned int instance_count;
+        unsigned int first_index;		// cf parametre offset de glDrawElements()
+        unsigned int vertex_base;
+        unsigned int instance_base;
+    };
 \endcode
 
 
@@ -61,8 +61,8 @@ Dernier détail, le tableau de structures doit être dans un buffer sélectionn�
 
 Le code d'exemple \ref tuto_mdi.cpp transfere un tableau de ~1000 draws et permet de comparer le temps d'excécution des 2 solutions.
 Voici les temps mesurés :
-	- afficher ~1000 bigguy, avec 1000 glDrawArrays() : 10ms pour le cpu, <2ms pour le gpu,
-	- glMultiDrawArraysIndirect(), 50us pour le cpu, <2ms pour le gpu...
+    - afficher ~1000 bigguy, avec 1000 glDrawArrays() : 10ms pour le cpu, <2ms pour le gpu,
+    - glMultiDrawArraysIndirect(), 50us pour le cpu, <2ms pour le gpu...
 
 L'utilisation la plus interressante de MultiDraw() est de remplir le buffer directement sur la carte graphique avec un shader, ce qui évite de le transférer 
 à chaque affichage. Le (compute) shader peut, par exemple, faire quelques tests de visibilité et déterminer s'il est nécessaire de dessiner chaque objet.
@@ -77,10 +77,10 @@ __remarque :__ vérifier que l'extension est bien disponible avant de l'utiliser
 #include "glcore.h"	// deja inclut par window.h, app.h, etc.
 
 init( ) :
-	// verifier la presence de l'extension
-	if(GLEW_ARB_indirect_parameters == 0)
-		// erreur, extension non disponible
-		return -1;
+    // verifier la presence de l'extension
+    if(GLEW_ARB_indirect_parameters == 0)
+        // erreur, extension non disponible
+        return -1;
 \endcode
 
 
@@ -91,9 +91,10 @@ de MultiDraw() doivent être décrits par les mêmes buffers et le même VAO... 
 uniforms, etc.
 
 La variable gl_DrawIDARB de GLSL numérote les commandes, ce qui permet de retrouver toutes les informations de l'objet, mais il faut les organiser sous 
-cette forme. En gros, les paramètres `uniform` deviennent des tableaux, indexés par gl_DrawIDARB. 
+cette forme. En gros, les paramètres `uniform` deviennent des tableaux, indexés par gl_DrawIDARB. En pratique on utilisera des uniform buffers ou des storage buffers 
+pour ne pas être bloqué par la limite de taille des uniforms.
 
-De même, il faut concaténer les attributs des objets dans un seul (gros) buffer et configurer le vao correspondant. L'objectif n'est pas de dessiner toute la scène
+De même, il faut concaténer les attributs des objets dans un (gros) buffer et configurer le vao correspondant. L'objectif n'est pas de dessiner toute la scène
 avec un seul MultiDraw(), mais de limiter leur nombre à une valeur raisonnable. Par exemple, les objets animés ne seront pas transformés par le même vertex shader
 que les objets statiques, les objets opaques ne seront pas dessinés avec le même fragment shader que les objets transparents... et comme il n'est pas possible de 
 changer de shader program objet par objet avec MultiDraw(), il faudra nécessairement plusieurs appels pour afficher ces différents types d'objets.
@@ -101,6 +102,7 @@ changer de shader program objet par objet avec MultiDraw(), il faudra nécessair
 Voici le vertex shader utilisé par l'exemple, cf \ref indirect.glsl :
 \code
 #extension GL_ARB_shader_draw_parameters : require
+// necessaire pour utiliser gl_DrawIDARB
 
 layout(location= 0) in vec3 position;
 
@@ -109,24 +111,26 @@ uniform mat4 model[1000];	// model
 
 void main( )
 {
-	// recupere la transformation model de l'objet et transforme le sommet...
+    // recupere la transformation model de l'objet et transforme le sommet...
     gl_Position= vpMatrix * model[gl_DrawIDARB] * vec4(position, 1);
 }
 \endcode
 
-__remarque :__ il faut aussi activer l'extension GLSL, dans le source du shader, en ajoutant une ligne donnant le nom de chaque extension nécessaire :
+__remarque :__ la variable gl_DrawID n'est pas encore inclue dans une version standard d'openGL, il faut donc utiliser une extension GLSL. Il suffit d'ajouter, dans 
+le source du shader, une ligne donnant le nom de chaque extension nécessaire :
 \code
 #extension GL_ARB_shader_draw_parameters : require
 \endcode
+
 Pour etre complet, il faut aussi vérifier la présence de l'extension openGL dans l'init de l'application :
 \code
 #include "glcore.h"	// deja inclut par window.h, app.h, etc.
 
 init( ) :
-	// verifier la presence de l'extension
-	if(GLEW_ARB_shader_draw_parameters == 0)
-		// erreur, extension non disponible
-		return -1;
+    // verifier la presence de l'extension
+    if(GLEW_ARB_shader_draw_parameters == 0)
+        // erreur, extension non disponible
+        return -1;
 \endcode
 
 */

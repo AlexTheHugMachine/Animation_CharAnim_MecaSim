@@ -25,10 +25,16 @@ layout(binding= 1, std430) writeonly buffer paramData
     } params[];
 };
 
-layout(binding= 2) buffer counterData
+layout(binding= 2, std430) writeonly buffer remapData
+{
+    uint remap[];
+};
+
+layout(binding= 3) buffer counterData
 {
     uint count;
 };
+
 
 uniform vec3 bmin;
 uniform vec3 bmax;
@@ -40,15 +46,17 @@ void main( )
     if(id > objects.length())
         return;
     
+    // recupere la bbox du ieme objet...
     vec3 pmin= objects[id].pmin;
     vec3 pmax= objects[id].pmax;
     
+    // test d'inclusion avec la bbox...
     if(any(lessThan(pmax, bmin))        // trop a gauche pour x, etc
     || any(greaterThan(pmin, bmax)))    // trop a droite pour x, etc.
         // pas d'intersection...
         return;
     
-    // emettre les parametres du draw
+    // l'objet est dans la bbox, il faut le dessiner : emettre les parametres du draw
     // etape 1 : position dans le buffer de sortie
     uint index= atomicAdd(count, 1);
     
@@ -57,6 +65,9 @@ void main( )
     params[index].instance_count= 1;
     params[index].vertex_base= objects[id].vertex_base;
     params[index].instance_base= 0;
+    
+    // etape 3 : conserve aussi l'indice de l'objet...
+    remap[index]= id;
 }
 
 #endif

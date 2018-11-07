@@ -145,8 +145,7 @@ public:
         program_uniform(m_program, "viewMatrix", m_camera.view());
         
         
-        glMultiDrawArraysIndirect(m_objet.primitives(), 0, m_multi_indirect.size(), 0);
-        
+        glMultiDrawArraysIndirectCountARB(m_objet.primitives(), 0, 0, m_multi_indirect.size(), 0);
         
         // affiche le temps 
         std::chrono::high_resolution_clock::time_point cpu_stop= std::chrono::high_resolution_clock::now();

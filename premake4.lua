@@ -187,6 +187,7 @@ project("mesh_viewer")
 tutosM2 = {
 	"tuto_time",
 	"tuto_mdi",
+	"tuto_mdi_count",
 	"tuto_is",
 	"tuto_raytrace_fragment"
 }
