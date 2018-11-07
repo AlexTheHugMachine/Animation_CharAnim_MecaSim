@@ -1,11 +1,9 @@
 
-//! \file indirect.glsl
+//! \file indirect_direct.glsl
 
 #version 430
 
 #ifdef VERTEX_SHADER
-
-#extension GL_ARB_shader_draw_parameters : require
 
 layout(location= 0) in vec3 position;
 out vec3 vertex_position;
@@ -14,18 +12,14 @@ uniform mat4 modelMatrix;
 uniform mat4 vpMatrix;
 uniform mat4 viewMatrix;
 
-// row_major : organisation des matrices par lignes...
-layout(binding= 0, row_major, std430) readonly buffer modelData
-{
-    mat4 objectMatrix[];
-};
+uniform mat4 objectMatrix;
 
 void main( )
 {
-    gl_Position= vpMatrix * objectMatrix[gl_DrawIDARB] * modelMatrix * vec4(position, 1);
-        
+    gl_Position= vpMatrix * objectMatrix * modelMatrix * vec4(position, 1);
+    
     // position dans le repere camera
-    vertex_position= vec3(viewMatrix * objectMatrix[gl_DrawIDARB] * modelMatrix * vec4(position, 1));
+    vertex_position= vec3(viewMatrix * objectMatrix * modelMatrix * vec4(position, 1));
 }
 #endif
 

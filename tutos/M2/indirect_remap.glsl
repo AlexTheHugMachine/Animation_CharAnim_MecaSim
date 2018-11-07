@@ -1,5 +1,5 @@
 
-//! \file indirect.glsl
+//! \file indirect_remap.glsl
 
 #version 430
 
@@ -20,12 +20,18 @@ layout(binding= 0, row_major, std430) readonly buffer modelData
     mat4 objectMatrix[];
 };
 
+layout(binding= 1, std430) readonly buffer remapData
+{
+    uint remap[];
+};
+
 void main( )
 {
-    gl_Position= vpMatrix * objectMatrix[gl_DrawIDARB] * modelMatrix * vec4(position, 1);
-        
+    uint id= remap[gl_DrawIDARB];
+    gl_Position= vpMatrix * objectMatrix[id] * modelMatrix * vec4(position, 1);
+    
     // position dans le repere camera
-    vertex_position= vec3(viewMatrix * objectMatrix[gl_DrawIDARB] * modelMatrix * vec4(position, 1));
+    vertex_position= vec3(viewMatrix * objectMatrix[id] * modelMatrix * vec4(position, 1));
 }
 #endif
 
