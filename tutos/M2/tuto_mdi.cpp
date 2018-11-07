@@ -37,6 +37,10 @@ public:
     
     int init( )
     {
+        // utilise l'extension GLSL, cf gl_DrawIDARB
+	if(GLEW_ARB_shader_draw_parameters == 0)
+            return -1;
+            
         m_objet= read_mesh("data/bigguy.obj");
         //~ m_objet= read_mesh("data/cube.obj");
         Point pmin, pmax;

@@ -1,4 +1,6 @@
 
+//! \file indirect.glsl
+
 #version 430
 
 #ifdef VERTEX_SHADER

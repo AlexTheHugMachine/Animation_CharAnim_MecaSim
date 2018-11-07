@@ -72,8 +72,7 @@ La encore, il suffit d'indiquer que la valeur du paramètre `drawcount` se trouv
 variante `glMultiDrawArraysIndirectCountARB( )` de l'extension `GL_ARB_indirect_parameters`. cf \ref tuto_mdi_count.cpp pour un exemple complet, 
 avec un compute shader qui decide de dessiner un objet, ou pas, et qui comptabilise les objets à dessiner par `glMultiDrawArraysIndirectCountARB( )`.
 
-remarque : vérifier que l'extension est bien disponible avant de l'utiliser, sinon c'est segfault... 
-la librairie GLEW utilisée par gKit permet d'écrire directement le test.
+__remarque :__ vérifier que l'extension est bien disponible avant de l'utiliser, sinon c'est segfault, la librairie GLEW utilisée par gKit permet d'écrire directement le test
 \code
 #include "glcore.h"	// deja inclut par window.h, app.h, etc.
 
@@ -87,6 +86,47 @@ init( ) :
 
 ## organisation des données
 
+Le seul problème de la famille MultiDraw() est la nécessité d'organiser les données : par exemple, tous les objets que l'on souhaite dessiner avec un appel
+de MultiDraw() doivent être décrits par les mêmes buffers et le même VAO... toutes les textures nécessaires doivent être sélectionnées, les transformations, les 
+uniforms, etc.
 
+La variable gl_DrawIDARB de GLSL numérote les commandes, ce qui permet de retrouver toutes les informations de l'objet, mais il faut les organiser sous 
+cette forme. En gros, les paramètres `uniform` deviennent des tableaux, indexés par gl_DrawIDARB. 
+
+De même, il faut concaténer les attributs des objets dans un seul (gros) buffer et configurer le vao correspondant. L'objectif n'est pas de dessiner toute la scène
+avec un seul MultiDraw(), mais de limiter leur nombre à une valeur raisonnable. Par exemple, les objets animés ne seront pas transformés par le même vertex shader
+que les objets statiques, les objets opaques ne seront pas dessinés avec le même fragment shader que les objets transparents... et comme il n'est pas possible de 
+changer de shader program objet par objet avec MultiDraw(), il faudra nécessairement plusieurs appels pour afficher ces différents types d'objets.
+
+Voici le vertex shader utilisé par l'exemple, cf \ref indirect.glsl :
+\code
+#extension GL_ARB_shader_draw_parameters : require
+
+layout(location= 0) in vec3 position;
+
+uniform mat4 vpMatrix;		// projection * view
+uniform mat4 model[1000];	// model
+
+void main( )
+{
+	// recupere la transformation model de l'objet et transforme le sommet...
+    gl_Position= vpMatrix * model[gl_DrawIDARB] * vec4(position, 1);
+}
+\endcode
+
+__remarque :__ il faut aussi activer l'extension GLSL, dans le source du shader, en ajoutant une ligne donnant le nom de chaque extension nécessaire :
+\code
+#extension GL_ARB_shader_draw_parameters : require
+\endcode
+Pour etre complet, il faut aussi vérifier la présence de l'extension openGL dans l'init de l'application :
+\code
+#include "glcore.h"	// deja inclut par window.h, app.h, etc.
+
+init( ) :
+	// verifier la presence de l'extension
+	if(GLEW_ARB_shader_draw_parameters == 0)
+		// erreur, extension non disponible
+		return -1;
+\endcode
 
 */
