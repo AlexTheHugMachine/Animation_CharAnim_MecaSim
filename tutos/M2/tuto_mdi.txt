@@ -59,7 +59,7 @@ la structure est :
 
 Dernier détail, le tableau de structures doit être dans un buffer sélectionné sur `GL_DRAW_INDIRECT_BUFFER`.
 
-Le code d'exemple \ref tuto_mdi.cpp transfere un tableau de ~1000 draws et permet de comparer le temps d'excécution des 2 solutions.
+Le code d'exemple \ref tuto_mdi.cpp + \ref indirect.glsl transfere un tableau de ~1000 draws et permet de comparer le temps d'excécution des 2 solutions.
 Voici les temps mesurés :
     - afficher ~1000 bigguy, avec 1000 glDrawArrays() : 10ms pour le cpu, <2ms pour le gpu,
     - glMultiDrawArraysIndirect(), 50us pour le cpu, <2ms pour le gpu...
@@ -67,10 +67,13 @@ Voici les temps mesurés :
 L'utilisation la plus interressante de MultiDraw() est de remplir le buffer directement sur la carte graphique avec un shader, ce qui évite de le transférer 
 à chaque affichage. Le (compute) shader peut, par exemple, faire quelques tests de visibilité et déterminer s'il est nécessaire de dessiner chaque objet.
 
-Mais, dans ce cas un problème se pose : il faut connaitre, dans l'application, le nombre de commandes stockées dans le buffer pour utiliser glMultiDrawArraysIndirect( )... 
-La encore, il suffit d'indiquer que la valeur du paramètre `drawcount` se trouve dans un buffer sélectionné sur `GL_PARAMETER_BUFFER_ARB` et d'utiliser la 
-variante `glMultiDrawArraysIndirectCountARB( )` de l'extension `GL_ARB_indirect_parameters`. cf \ref tuto_mdi_count.cpp pour un exemple complet, 
-avec un compute shader qui decide de dessiner un objet, ou pas, et qui comptabilise les objets à dessiner par `glMultiDrawArraysIndirectCountARB( )`.
+Mais, dans ce cas, un problème se pose : il faut connaitre, dans l'application, le nombre de commandes / d'objets à dessiner pour utiliser glMultiDrawArraysIndirect( )... 
+La solution est fournie par une variante de MultiDraw() : `glMultiDrawArraysIndirectCountARB( )`. Le nombre de commandes / d'objets à dessiner se trouve dans (une variable d) 
+un buffer sélectionné sur `GL_PARAMETER_BUFFER_ARB`. Cette fonction n'est pas encore standard, mais elle est disponible sur toutes les cartes graphiques. C'est 
+l'extension `GL_ARB_indirect_parameters` qui permet de l'utiliser.
+
+cf \ref tuto_mdi_count.cpp + \ref indirect_cull.glsl + \ref indirect_remap.glsl pour un exemple complet, 
+avec un compute shader qui décide de dessiner un objet, ou pas, et qui comptabilise les objets à dessiner par `glMultiDrawArraysIndirectCountARB( )`.
 
 __remarque :__ vérifier que l'extension est bien disponible avant de l'utiliser, sinon c'est segfault, la librairie GLEW utilisée par gKit permet d'écrire directement le test
 \code
