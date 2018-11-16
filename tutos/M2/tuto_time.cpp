@@ -19,7 +19,11 @@
 class TP : public App
 {
 public:
-    TP( ) : App(1024, 640) {}
+    TP( ) : App(1024, 640) 
+    {
+        // desactive vsync pour les mesures de temps
+        SDL_GL_SetSwapInterval(0);
+    }
     
     int init( )
     {
@@ -160,7 +164,7 @@ public:
     
         std::chrono::high_resolution_clock::time_point cpu_stop= std::chrono::high_resolution_clock::now();
         // conversion des mesures en duree...
-        long long int cpu_time= std::chrono::duration_cast<std::chrono::nanoseconds>(cpu_stop - cpu_start).count();
+        int cpu_time= std::chrono::duration_cast<std::chrono::microseconds>(cpu_stop - cpu_start).count();
         
         glEndQuery(GL_TIME_ELAPSED);
 
@@ -174,23 +178,23 @@ public:
         glGetQueryObjecti64v(m_time_query, GL_QUERY_RESULT, &gpu_time);
 
         std::chrono::high_resolution_clock::time_point wait_stop= std::chrono::high_resolution_clock::now();
-        long long int wait_time= std::chrono::duration_cast<std::chrono::nanoseconds>(wait_stop - wait_start).count();
+        int wait_time= std::chrono::duration_cast<std::chrono::microseconds>(wait_stop - wait_start).count();
 
         // affiche le temps mesure, et formate les valeurs... c'est un peu plus lisible.
         clear(m_console);
         if(mode == 0) printf(m_console, 0, 0, "mode 0 : 1 draw");
         if(mode == 1) printf(m_console, 0, 0, "mode 1 : 25 draws");
         if(mode == 2) printf(m_console, 0, 0, "mode 2 : 1 draw / 25 instances");
-        printf(m_console, 0, 1, "cpu  %02dms %03dus", (int) (cpu_time / 1000000), (int) ((cpu_time / 1000) % 1000));
-        printf(m_console, 0, 2, "gpu  %02dms %03dus", (int) (gpu_time / 1000000), (int) ((gpu_time / 1000) % 1000));
-        printf(m_console, 0, 3, "wait %02dms %03dus", (int) (wait_time / 1000000), (int) ((wait_time / 1000) % 1000));
+        printf(m_console, 0, 1, "cpu  %02dms %03dus", int(cpu_time / 1000), int(cpu_time % 1000));
+        printf(m_console, 0, 2, "gpu  %02dms %03dus", int(gpu_time / 1000000), int((gpu_time / 1000) % 1000));
+        printf(m_console, 0, 3, "wait %02dms %03dus", int(wait_time / 1000), int(wait_time % 1000));
         
         // affiche le texte dans la fenetre de l'application, utilise console.h
         draw(m_console, window_width(), window_height());
 
         // affiche le temps dans le terminal 
-        printf("cpu  %02dms %03dus    ", (int) (cpu_time / 1000000), (int) ((cpu_time / 1000) % 1000));
-        printf("gpu  %02dms %03dus\n", (int) (gpu_time / 1000000), (int) ((gpu_time / 1000) % 1000));
+        printf("cpu  %02dms %03dus  ", int(cpu_time / 1000), int(cpu_time % 1000));
+        printf("gpu  %02dms %03dus\n", int(gpu_time / 1000000), int((gpu_time / 1000) % 1000));
         
         return 1;
     }
