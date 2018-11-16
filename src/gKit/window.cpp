@@ -338,7 +338,6 @@ Context create_context( Window window, const int major, const int minor )
     else
         printf("adaptive vsync ON\n");
     
-    
 #ifndef NO_GLEW
     // initialise les extensions opengl
     glewExperimental= 1;
@@ -358,7 +357,11 @@ Context create_context( Window window, const int major, const int minor )
     if(GLEW_ARB_debug_output)
     {
         printf("debug output enabled...\n");
+        // selectionne tous les messages
         glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+        // desactive les messages du compilateur de shaders
+        glDebugMessageControlARB(GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
+        
         glDebugMessageCallbackARB(debug, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
