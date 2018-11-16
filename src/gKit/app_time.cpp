@@ -5,7 +5,14 @@
 #include "texture.h"
 
 
-AppTime::AppTime( const int width, const int height, const int major, const int minor ) : App(width, height, major, minor) {}
+AppTime::AppTime( const int width, const int height, const int major, const int minor ) 
+    : App(width, height, major, minor)
+{
+    // desactive vsync pour les mesures de temps
+    SDL_GL_SetSwapInterval(0);
+    printf("[Apptime] vsync OFF...\n");
+}
+
 AppTime::~AppTime( ) {}
 
 
@@ -40,12 +47,9 @@ int AppTime::run( )
        
         std::chrono::high_resolution_clock::time_point cpu_stop= std::chrono::high_resolution_clock::now();
         // conversion des mesures en duree...
-        int cpu_time= std::chrono::duration_cast<std::chrono::nanoseconds>(cpu_stop - cpu_start).count();
-        
+        int cpu_time= std::chrono::duration_cast<std::chrono::microseconds>(cpu_stop - cpu_start).count(); 
+
         glEndQuery(GL_TIME_ELAPSED);
-        
-        // force openGL a finir d'executer toutes les commandes, cf App::run()
-        glFinish();
         
         if(code< 1)
             break;
@@ -56,11 +60,15 @@ int AppTime::run( )
         
         // afficher le texte
         clear(m_console);        
-        printf(m_console, 0, 1, "cpu  %02dms %03dus", (int) (cpu_time / 1000000), (int) ((cpu_time / 1000) % 1000));
-        printf(m_console, 0, 2, "gpu  %02dms %03dus", (int) (gpu_time / 1000000), (int) ((gpu_time / 1000) % 1000));        
+        printf(m_console, 0, 1, "cpu  %02dms %03dus", cpu_time / 1000, cpu_time % 1000);
+        printf(m_console, 0, 2, "gpu  %02dms %03dus", int(gpu_time / 1000000), int((gpu_time / 1000) % 1000));
+        
+        // affiche le temps dans le terminal 
+        //~ printf("cpu  %02dms %03dus    ", cpu_time / 1000, cpu_time % 1000);
+        //~ printf("gpu  %02dms %03dus\n", int(gpu_time / 1000000), int((gpu_time / 1000) % 1000));
         
         draw(m_console, window_width(), window_height());
-        
+
         if(key_state('s'))
         {
             clear_key_state('s');
@@ -70,12 +78,6 @@ int AppTime::run( )
         }
         
         // presenter le resultat
-#if 0
-        // force openGL a finir d'executer toutes les commandes, 
-        // cf https://www.khronos.org/opengl/wiki/Swap_Interval#GPU_vs_CPU_synchronization
-        // devrait limiter la consommation sur portable
-        glFinish();
-#endif
         SDL_GL_SwapWindow(m_window);
     }
     

@@ -336,7 +336,8 @@ Context create_context( Window window, const int major, const int minor )
         SDL_GL_SetSwapInterval(1);
     }
     else
-        printf("vsync-late ON\n");
+        printf("adaptive vsync ON\n");
+    
     
 #ifndef NO_GLEW
     // initialise les extensions opengl
