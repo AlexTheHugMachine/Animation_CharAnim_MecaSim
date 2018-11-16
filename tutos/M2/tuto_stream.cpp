@@ -217,7 +217,7 @@ public:
             
             std::chrono::high_resolution_clock::time_point copy_stop= std::chrono::high_resolution_clock::now();
             auto copy_time= std::chrono::duration_cast<std::chrono::microseconds>(copy_stop - copy_start).count();
-            printf("copy  %02dus\n", int(copy_time));
+            //~ printf("copy  %02dus\n", int(copy_time));
             
             glBindBuffer(GL_ARRAY_BUFFER, m_instance_storage);            
             glFlushMappedBufferRange(GL_ARRAY_BUFFER, 0,  sizeof(vec3) * m_positions.size());
