@@ -188,6 +188,8 @@ tutosM2 = {
 	"tuto_time",
 	"tuto_mdi",
 	"tuto_mdi_count",
+	"tuto_stream",
+
 	"tuto_is",
 	"tuto_raytrace_fragment"
 }
