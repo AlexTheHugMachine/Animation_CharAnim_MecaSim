@@ -50,7 +50,7 @@ layout(local_size_x= 256) in;
 void main( )
 {
     uint id= gl_GlobalInvocationID.x;
-    if(id > objects.length())
+    if(id >= objects.length())
         return;
     
     // recupere la bbox du ieme objet...
