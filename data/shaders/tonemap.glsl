@@ -20,6 +20,7 @@ uniform float compression= 1;
 uniform float saturation= 1;
 uniform vec4 channels= vec4(1, 1, 1, 1);
 uniform float gray= 0;
+uniform float difference= 0;
 
 uniform int split;
 uniform sampler2D image;
@@ -49,7 +50,12 @@ void main(void)
     vec4 color_next= texture(image_next, zoom_texcoord);
     
     if(gl_FragCoord.x >= split)
-        color= color_next;
+    {
+        if(difference == 0)
+            color= color_next;
+        else
+            color= abs(color_next - color);
+    }
 
     // nan
     if(any(isnan(color)) || any(isinf(color)))
@@ -64,8 +70,16 @@ void main(void)
     
     if(gl_FragCoord.x >= split)
     {
-        gcolor= texture(image_next, vec2(zoom_texcoord.x, line.x));
-        gcolor_next= texture(image_next, vec2(zoom_texcoord.x + dFdx(zoom_texcoord.x), line.x));
+        if(difference == 0)
+        {
+            gcolor= texture(image_next, vec2(zoom_texcoord.x, line.x));
+            gcolor_next= texture(image_next, vec2(zoom_texcoord.x + dFdx(zoom_texcoord.x), line.x));
+        }
+        else
+        {
+            gcolor= abs(texture(image_next, vec2(zoom_texcoord.x, line.x)) - gcolor);
+            gcolor_next= abs(texture(image_next, vec2(zoom_texcoord.x + dFdx(zoom_texcoord.x), line.x)) - gcolor_next);
+        }
     }
     
     // channels
@@ -99,11 +113,11 @@ void main(void)
         
         // intersection intervalle
         vec4 gline= vec4(0, 0, 0, 0);
-        if((vertex_texcoord.y >= ymin.r) && (vertex_texcoord.y <= ymax.r))
+        if((channels.r > 0) && (vertex_texcoord.y >= ymin.r) && (vertex_texcoord.y <= ymax.r))
             gline.r= 1.0;
-        if((vertex_texcoord.y >= ymin.g) && (vertex_texcoord.y <= ymax.g))
+        if((channels.g > 0) && (vertex_texcoord.y >= ymin.g) && (vertex_texcoord.y <= ymax.g))
             gline.g= 1.0;
-        if((vertex_texcoord.y >= ymin.b) && (vertex_texcoord.y <= ymax.b))
+        if((channels.b > 0) && (vertex_texcoord.y >= ymin.b) && (vertex_texcoord.y <= ymax.b))
             gline.b= 1.0;
 
         if(gline.r > 0 || gline.g > 0 || gline.b > 0)
