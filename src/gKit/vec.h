@@ -25,6 +25,7 @@ struct Point
 
     //! cree un point a partir des coordonnees du vecteur generique (v.x, v.y, v.z).
     Point( const vec3& v );   // l'implementation se trouve en fin de fichier, la structure vec3 n'est pas encore connue.
+    Point( const vec4& v );   // l'implementation se trouve en fin de fichier, la structure vec3 n'est pas encore connue.
     //! cree un point a partir des coordonnes du vecteur (v.x, v.y, v.z).
     explicit Point( const Vector& v );   // l'implementation se trouve en fin de fichier, la structure vector n'est pas encore connue.
     
@@ -59,6 +60,7 @@ struct Vector
 
     //! cree un vecteur a partir des coordonnees du vecteur generique (v.x, v.y, v.z).
     Vector( const vec3& v );   // l'implementation se trouve en fin de fichier, la structure vec3 n'est pas encore connue.
+    Vector( const vec4& v );   // l'implementation se trouve en fin de fichier, la structure vec3 n'est pas encore connue.
     //! cree un vecteur a partir des coordonnes du vecteur (v.x, v.y, v.z).
     explicit Vector( const Point& a );   // l'implementation se trouve en fin de fichier.
     
@@ -140,12 +142,12 @@ struct vec3
     vec3( ) : x(0), y(0), z(0) {}
     explicit vec3( const float _x, const float _y, const float _z ) : x(_x), y(_y), z(_z) {}
     //! constructeur par defaut.
-    explicit vec3( const vec2& a, const float _z ) : x(a.x), y(a.y), z(_z) {}
+    vec3( const vec2& a, const float _z ) : x(a.x), y(a.y), z(_z) {}
 
     //! cree un vecteur generique a partir des coordonnees du point a.
-    explicit vec3( const Point& a );    // l'implementation se trouve en fin de fichier.
+    vec3( const Point& a );    // l'implementation se trouve en fin de fichier.
     //! cree un vecteur generique a partir des coordonnees du vecteur v.
-    explicit vec3( const Vector& v );    // l'implementation se trouve en fin de fichier.
+    vec3( const Vector& v );    // l'implementation se trouve en fin de fichier.
 
     //! renvoie la ieme composante du vecteur.
     float operator() ( const unsigned int i ) const { return (&x)[i]; }
@@ -162,14 +164,14 @@ struct vec4
     vec4( ) : x(0), y(0), z(0), w(0) {}
     explicit vec4( const float _x, const float _y, const float _z, const float _w ) : x(_x), y(_y), z(_z), w(_w) {}
     //! constructeur par defaut.
-    explicit vec4( const vec2& v, const float _z= 0, const float _w= 0 ) : x(v.x), y(v.y), z(_z), w(_w) {}
+    vec4( const vec2& v, const float _z= 0, const float _w= 0 ) : x(v.x), y(v.y), z(_z), w(_w) {}
     //! constructeur par defaut.
-    explicit vec4( const vec3& v, const float _w= 0 ) : x(v.x), y(v.y), z(v.z), w(_w) {}
+    vec4( const vec3& v, const float _w= 0 ) : x(v.x), y(v.y), z(v.z), w(_w) {}
 
     //! cree un vecteur generique a partir des coordonnees du point a, (a.x, a.y, a.z, 1).
-    explicit vec4( const Point& a );    // l'implementation se trouve en fin de fichier.
+    vec4( const Point& a );    // l'implementation se trouve en fin de fichier.
     //! cree un vecteur generique a partir des coordonnees du vecteur v, (v.x, v.y, v.z, 0).
-    explicit vec4( const Vector& v );    // l'implementation se trouve en fin de fichier.
+    vec4( const Vector& v );    // l'implementation se trouve en fin de fichier.
     
     //! renvoie la ieme composante du vecteur.
     float operator() ( const unsigned int i ) const { return (&x)[i]; }
@@ -181,9 +183,11 @@ struct vec4
 
 // implementation des constructeurs explicites.
 inline Point::Point( const vec3& v ) : x(v.x), y(v.y), z(v.z) {}
+inline Point::Point( const vec4& v ) : x(v.x), y(v.y), z(v.z) {}
 inline Point::Point( const Vector& v ) : x(v.x), y(v.y), z(v.z) {}
 
 inline Vector::Vector( const vec3& v ) : x(v.x), y(v.y), z(v.z) {}
+inline Vector::Vector( const vec4& v ) : x(v.x), y(v.y), z(v.z) {}
 inline Vector::Vector( const Point& a ) : x(a.x), y(a.y), z(a.z) {}
 
 inline vec3::vec3( const Point& a ) : x(a.x), y(a.y), z(a.z) {}
