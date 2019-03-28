@@ -361,7 +361,7 @@ void normals( MeshData& data )
 }
 
 
-MeshData vertices( const MeshData& data )
+MeshData vertices( MeshData& data )
 {
     MeshData mesh;
     mesh.materials= data.materials;
@@ -374,11 +374,15 @@ MeshData vertices( const MeshData& data )
     for(int i= 0; i < (int) data.position_indices.size(); i++)
     {
         mesh.positions.push_back( data.positions[data.position_indices[i]] );
-        if(data.texcoord_indices[i]>= 0)
+        if(data.texcoord_indices[i] >= 0)
             mesh.texcoords.push_back( data.texcoords[data.texcoord_indices[i]] );
         if(data.normal_indices[i] >= 0)
             mesh.normals.push_back( data.normals[data.normal_indices[i]] );
     }
+    
+    data.position_indices.clear();
+    data.texcoord_indices.clear();
+    data.normal_indices.clear();
     
     return mesh;
 }
