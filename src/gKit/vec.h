@@ -47,6 +47,11 @@ float distance2( const Point& a, const Point& b );
 //! renvoie le milieu du segment ab.
 Point center( const Point& a, const Point& b );
 
+//! renvoie la plus petite composante de chaque point. x, y, z= min(a.x, b.x), min(a.y, b.y), min(a.z, b.z).
+Point min( const Point& a, const Point& b );
+//! renvoie la plus grande composante de chaque point. x, y, z= max(a.x, b.x), max(a.y, b.y), max(a.z, b.z).
+Point max( const Point& a, const Point& b );
+
 
 //! representation d'un vecteur 3d.
 struct Vector
