@@ -1,4 +1,3 @@
-
 #ifndef VIEWER_H
 #define VIEWER_H
 
@@ -18,9 +17,12 @@
 #include "AnimationCurve.h"
 #include "pacman_core/Jeu.h"
 
+
+
 class Viewer : public App
 {
 public:
+    
     Viewer();
 
     //! Initialise tout : compile les shaders et construit le programme + les buffers + le vertex array.
@@ -33,56 +35,64 @@ public:
     //! Libere tout
     int quit();
 
+    //! Menu d aide
     void help();
 
+    //! Mise a jour (par exemple des Mesh)
     int update( const float time, const float delta );
 
+    
 protected:
 
+    /// Camera et contexte OpenGL
     Orbiter m_camera;
     DrawParam gl;
+    
+    /// Trajectoire pour l animation
     AnimationCurve m_anim;
+    
+    /// Pacman
+    Jeu m_pacman;
+    
+    /// Booleens pour choix du type d affichage
     bool mb_cullface;
     bool mb_wireframe;
-
-    Mesh m_axe;
-    Mesh m_grid;
-    Mesh m_cube;
-    GLuint m_cube_texture;
-
     bool b_draw_grid;
     bool b_draw_axe;
     bool b_draw_animation;
-    void init_axe();
-    void init_grid();
-    void init_cube();
-
-
-    /* Pour creer un nouvel objet vous devez :
-       1. declarer ici
-                le Mesh,
-                la texture si besoin,
-                une fonction 'init_votreObjet'
-        2. Appeller la fonction 'init_votreObjet' dans la fonction 'init' du .cpp
-        3. Pour l'affichage, ajouter un appel  gl.draw(votreMesh); dans la fonction 'render' du .cpp
-    */
+    
+    /// Declaration des Mesh
+    Mesh m_axe;
+    Mesh m_grid;
+    Mesh m_cube;
     Mesh m_quad;
-    GLuint m_quad_texture;
-    void init_quad();
-    Transform Tquad;
 
-    Jeu m_pacman;       // pacman
+    /// Declaration des Textures
+    GLuint m_cube_texture;
+    GLuint m_quad_texture;
     GLuint m_tex_mur;
     GLuint m_tex_pacman;
     GLuint m_tex_fantome;
     GLuint m_tex_pastille;
 
+    /// Declaration des fonction de creation de Mesh du type init_votreObjet()
+    void init_axe();
+    void init_grid();
+    void init_cube();
+    void init_quad();
+    
+    /// Transformations
+    Transform Tquad;
+
+    /// Declaration des fonctions d affichage du type
+    /// draw_votreObjet(const Transform& T)    
     void draw_axe(const Transform& T);
     void draw_cube(const Transform& T, unsigned int tex);
     void draw_pacman(const Transform& T);
+  
+    /// Gestion de la camera et des lumieres
     void manageCameraLight();
+
 };
-
-
 
 #endif
