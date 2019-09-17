@@ -142,7 +142,7 @@ int main( int argc, char **argv )
         return 1;
 
     // etape 2 : creer un contexte opengl pour pouvoir dessiner
-    Context context= create_context(window, 4,3);       // openGL version 4.3
+    Context context= create_context(window, 3,3);       // openGL version 3.3
     if(context == nullptr)
         return 1;
 
