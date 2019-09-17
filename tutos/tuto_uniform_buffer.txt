@@ -1,0 +1,53 @@
+
+/*! \addtogroup uniform_buffers openGL 3.3 : uniform buffers
+
+cf \ref tuto_uniform_buffers.cpp et \ref uniform.glsl
+
+Les uniforms déclarés dans les shaders se manipulent de manière assez directe, mais lorsque plusieurs shaders sont nécessaires pour dessiner une image, 
+re-affecter une valeur à chaque uniform de chaque shader devient plutot lent. De plus, leur taille totale est très limitée (32Ko ou 64Ko), ce qui les rend assez peu pratiques.
+
+Mais il est possible d'associer un buffer à un groupe d'uniforms et d'éliminer la limite de taille. Le même buffer peut rester sélectionné pendant l'exécution de plusieurs shaders 
+et il suffit d'affecter les valeurs une seule fois. La déclaration dans le shader ressemble à celle d'une structure :
+\code
+#version 330
+
+// commun a tous les shaders pour afficher une scene.
+uniform frameData
+{
+    mat4 view;
+    mat4 projection;
+};
+
+#ifdef VERTEX_SHADER
+in vec3 position;
+
+void main( )
+{
+    // compose les transformations
+    mat4 mvp= projection * view * model;
+    gl_Position= mvp * vec4(position, 1);
+}
+#endif
+
+#ifdef FRAGMENT_SHADER
+// affichage simple d'un objet avec une couleur diffuse par matiere.
+uniform simpleData
+{
+    mat4 model;
+    vec3 diffuse[64];
+};
+
+out vec4 fragment_color;
+
+void main( )
+{
+    // exemple, recupere une couleur de la matiere associee au triangle.
+    fragment_color= vec4(diffuse[gl_PrimitiveID % 64], 1);
+}
+
+#endif
+\endcode
+
+
+
+*/

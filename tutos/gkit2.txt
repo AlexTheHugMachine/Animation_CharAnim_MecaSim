@@ -48,6 +48,7 @@ plus ceux dédiés à openGL :
     - \ref draw,
     - \ref framebuffer,
     - \ref time,
+    - \ref uniform_buffers,
     - \ref storage,
     - \ref storage_texture,
     - \ref compute

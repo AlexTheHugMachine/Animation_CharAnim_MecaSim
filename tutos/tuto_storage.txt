@@ -1,7 +1,7 @@
 
 /*! \addtogroup storage openGL 4.3 : storage buffers
 
-cf \ref tuto_storage.cpp 
+cf \ref tuto_storage.cpp, \ref storage.glsl
 et
 \ref tuto_storage_buffer.cpp 
 

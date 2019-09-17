@@ -1,5 +1,5 @@
 
-//! \file tuto_uniform_buffer.cpp alignement des donnees / uniform buffers.
+//! \file tuto_uniform_buffers.cpp alignement des donnees / uniform buffers.
 
 #include <cstddef>
 #include <cassert>
