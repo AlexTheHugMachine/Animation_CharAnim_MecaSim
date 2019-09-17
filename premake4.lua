@@ -3,7 +3,7 @@ solution "gKit2light"
 
 	platforms { "x64", "x32" }
 
---~     location "build"
+	location "build"
 --~     if _PREMAKE_VERSION >="4.4" then
 --~         debugdir "./"
 --~     end
@@ -142,6 +142,7 @@ tutos = {
 	"tuto6GL",
 	"tuto6GL_buffer",
 	"tuto_framebuffer",
+	"tuto_uniform_buffers",
 	"tuto_storage",
 	"tuto_storage_buffer",
 	"tuto_storage_texture",
@@ -207,3 +208,7 @@ for i, name in ipairs(tutosM2) do
 		files ( gkit_files )
 		files { gkit_dir .. "/tutos/M2/" .. name..'.cpp' }
 end
+
+
+
+

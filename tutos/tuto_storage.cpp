@@ -136,7 +136,7 @@ int print_storage( const GLuint program )
             GLenum props[]= { GL_OFFSET, GL_TYPE, GL_ARRAY_SIZE, GL_ARRAY_STRIDE, GL_MATRIX_STRIDE, GL_IS_ROW_MAJOR, GL_TOP_LEVEL_ARRAY_STRIDE };
             const int size= sizeof(props) / sizeof(GLenum);
             
-            GLint params[size];
+            GLint params[size]= {};
             glGetProgramResourceiv(program, GL_BUFFER_VARIABLE, variables[k], size, props, size, NULL, params);
             
             // nom de la variable
@@ -223,12 +223,12 @@ int main( int argc, char **argv )
 {
     // etape 1 : creer la fenetre
     Window window= create_window(1024, 640);
-    if(window == NULL)
+    if(window == nullptr)
         return 1;
 
     // etape 2 : creer un contexte opengl pour pouvoir dessiner
     Context context= create_context(window, 4,3);       // openGL version 4.3
-    if(context == NULL)
+    if(context == nullptr)
         return 1;
 
     // etape 3 : creation des objets
