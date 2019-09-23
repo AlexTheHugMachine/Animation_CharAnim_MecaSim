@@ -14,10 +14,10 @@ struct Triangle
 
 layout(std140) uniform bufferData 
 {
-	vec2 b;
-	//~ float a;
-	float c[3];
-	//~ mat4 d;
+	vec2 a;
+	vec3 b;
+	vec4 c;
+	vec2 d[3];
 };
 
 layout(shared) uniform sharedData 
