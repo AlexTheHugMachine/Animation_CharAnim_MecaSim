@@ -9,7 +9,151 @@
 #include "window.h"
 
 #include "vec.h"
+#include "color.h"
 #include "program.h"
+
+
+namespace glsl 
+{
+    // type de base alignes sur 4 octets
+    template < typename T >
+    struct alignas(4) gscalar
+    { 
+        T x;
+        
+        gscalar( ) : x(T()) {}
+        gscalar( const T& v ) : x(v) {}
+        gscalar& operator= ( const T& v ) { x= v; return *this; }
+        operator T ( ) { return x; }
+    };
+
+    typedef gscalar<float> gfloat;
+    typedef gscalar<int> gint;
+    typedef gscalar<unsigned int> guint;
+    typedef gscalar<bool> gbool;
+    
+    // vec2, alignes sur 2 * alignement type de base du vecteur
+    template < typename T >
+    struct alignas(8) gvec2
+    {
+        alignas(4) T x, y;
+        
+        gvec2( ) {}
+        gvec2( const ::vec2& v ) : x(v.x), y(v.y) {}
+        gvec2& operator= ( const ::vec2& v ) { x= v.x; y= v.y; return *this; }
+    };
+    
+    typedef gvec2<float> vec2;
+    typedef gvec2<int> ivec2;
+    typedef gvec2<unsigned int> uvec2;
+    typedef gvec2<int> bvec2;
+    
+    // vec3, alignes sur 4 * alignement type de base du vecteur
+    template < typename T >
+    struct alignas(16) gvec3
+    {
+        alignas(4) T x, y, z;
+        
+        gvec3( ) {}
+        gvec3( const ::vec3& v ) : x(v.x), y(v.y), z(v.z) {}
+        gvec3( const Point& v ) : x(v.x), y(v.y), z(v.z) {}
+        gvec3( const Vector& v ) : x(v.x), y(v.y), z(v.z) {}
+        gvec3& operator= ( const ::vec3& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        gvec3& operator= ( const Point& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        gvec3& operator= ( const Vector& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+    };
+    
+    typedef gvec3<float> vec3;
+    typedef gvec3<int> ivec3;
+    typedef gvec3<unsigned int> uvec3;
+    typedef gvec3<int> bvec3;
+    
+    // vec4, alignes sur 4 * alignement type de base du vecteur
+    template < typename T >
+    struct alignas(16) gvec4
+    {
+        alignas(4) T x, y, z, w;
+        
+        gvec4( ) {}
+        gvec4( const ::vec4& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
+        gvec4& operator= ( const Color& c ) { x= c.r; y= c.g; z= c.b; w= c.a; return *this; }
+    };
+    
+    typedef gvec4<float> vec4;
+    typedef gvec4<int> ivec4;
+    typedef gvec4<unsigned int> uvec4;
+    typedef gvec4<int> bvec4;
+    
+    // alignement different pour les elements d'un tableau : 16 octets, meme pour les types plus petits comme les float, int, bool
+    namespace array
+    {
+        template < typename T >
+        struct alignas(16) gscalar
+        { 
+            T x;
+            
+            gscalar( ) : x(T()) {}
+            gscalar( const T& v ) : x(v) {}
+            gscalar& operator= ( const T& v ) { x= v; return *this; }
+            operator T ( ) { return x; }
+        };
+    
+        typedef gscalar<float> gfloat;
+        typedef gscalar<int> gint;
+        typedef gscalar<unsigned int> guint;
+        typedef gscalar<bool> gbool;
+        
+        template < typename T >
+        struct alignas(16) gvec2
+        {
+            alignas(4) T x, y;
+            
+            gvec2( ) {}
+            gvec2( const ::vec2& v ) : x(v.x), y(v.y) {}
+            gvec2& operator= ( const ::vec2& v ) { x= v.x; y= v.y; return *this; }
+        };
+        
+        typedef gvec2<float> vec2;
+        typedef gvec2<int> ivec2;
+        typedef gvec2<unsigned int> uvec2;
+        typedef gvec2<int> bvec2;
+        
+        template < typename T >
+        struct alignas(16) gvec3
+        {
+            alignas(4) T x, y, z;
+            
+            gvec3( ) {}
+            gvec3( const ::vec3& v ) : x(v.x), y(v.y), z(v.z) {}
+            gvec3( const Point& v ) : x(v.x), y(v.y), z(v.z) {}
+            gvec3( const Vector& v ) : x(v.x), y(v.y), z(v.z) {}
+            gvec3& operator= ( const ::vec3& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+            gvec3& operator= ( const Point& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+            gvec3& operator= ( const Vector& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        };
+        
+        typedef gvec3<float> vec3;
+        typedef gvec3<int> ivec3;
+        typedef gvec3<unsigned int> uvec3;
+        typedef gvec3<int> bvec3;
+        
+        template < typename T >
+        struct alignas(16) gvec4
+        {
+            alignas(4) T x, y, z, w;
+            
+            gvec4( ) {}
+            gvec4( const ::vec4& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
+            gvec4& operator= ( const Color& c ) { x= c.r; y= c.g; z= c.b; w= c.a; return *this; }
+        };
+        
+        typedef gvec4<float> vec4;
+        typedef gvec4<int> ivec4;
+        typedef gvec4<unsigned int> uvec4;
+        typedef gvec4<int> bvec4;
+    }
+}
+
 
 
 // utilitaire : renvoie la chaine de caracteres pour un type glsl.
@@ -123,6 +267,47 @@ int init( )
     
     // affiche l'organisation memoire des uniforms
     print_uniform(program);
+    
+    struct buffer
+    {
+        glsl::vec2 a;
+        glsl::vec3 b;
+        glsl::vec4 c;
+        glsl::array::vec2 d[3];
+
+        //~ vec3 a;
+        //~ float pad0;
+        //~ vec3 b;
+        //~ float pad1;
+        //~ vec3 c;
+        //~ float pad2;
+        //~ struct { float v; float pad0; float pad1; float pad2; } d[3];
+        
+        //~ vec3 a;
+        //~ vec3 b;
+        //~ vec3 c;
+        //~ float d[3];
+    };
+    
+    printf("a %ld\n",   offsetof(buffer, a));
+    printf("a.x %ld\n", offsetof(buffer, a.x));
+    printf("a.y %ld\n", offsetof(buffer, a.y));
+    
+    printf("b %ld\n",   offsetof(buffer, b));
+    printf("b.x %ld\n", offsetof(buffer, b.x));
+    printf("b.y %ld\n", offsetof(buffer, b.y));
+    printf("b.z %ld\n", offsetof(buffer, b.z));
+    
+    printf("c %ld\n",   offsetof(buffer, c));
+    printf("c.x %ld\n", offsetof(buffer, c.x));
+    printf("c.y %ld\n", offsetof(buffer, c.y));
+    printf("c.z %ld\n", offsetof(buffer, c.z));
+    printf("c.w %ld\n", offsetof(buffer, c.w));
+    
+    printf("d %ld\n",    offsetof(buffer, d));
+    printf("d[0] %ld\n", offsetof(buffer, d[0]));
+    printf("d[1] %ld\n", offsetof(buffer, d[1]));
+    printf("d[2] %ld\n", offsetof(buffer, d[2]));
     
     return 0;
 }
