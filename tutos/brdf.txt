@@ -12,10 +12,11 @@ utilisation dans la communauté image :
 - modèle diffus de Lambert ??
 - Phong 1975 : reflet symétrique, 
 - Blinn - Phong 1976 : reflet "réaliste", inspiré des microfacettes de Torrance - Sparrow 1967,
-- Cook - Torrance 1981 : modèle à microfacettes dérivé de Torrance - Sparrow 1967, surface rugueuse opaque,
-- Walter 2007 : reformulation du modèle de Cook - Torrance, utilisation de la distribution GGX et de sa normalisation exacte, surface rugueuse opaque ou transparente,
-- Burley 2012 : comparaison mesures / modèles, reparamétrisation "intuitive" des paramètres, séparation des métaux des autres matières, modèle Disney,
-- Heitz 2014 : normalisation, conservation de l'énergie et validation des modèles à microfacettes.
+- [Cook - Torrance 1981](https://graphics.pixar.com/library/ReflectanceModel/index.html) : modèle à microfacettes dérivé de Torrance - Sparrow 1967, surface rugueuse opaque,
+- [Walter 2007](https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf) : reformulation du modèle de Cook - Torrance, utilisation de la distribution GGX et de sa normalisation exacte, surface rugueuse opaque ou transparente,
+- [Burley 2012](https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf) : comparaison mesures / modèles, reparamétrisation "intuitive" des paramètres, séparation des métaux des autres matières, modèle Disney,
+- [Heitz 2014](http://jcgt.org/published/0003/02/03/) : normalisation, conservation de l'énergie et validation des modèles à microfacettes, [slides](http://jcgt.org/published/0003/02/03/presentation.pdf)
+- [Burley 2015](https://blog.selfshadow.com/publications/s2015-shading-course/burley/s2015_pbs_disney_bsdf_notes.pdf) : simplification, intégration des validations de Heitz 2014, 
 
 Le terme PBR vient des travaux de Walter et Burley, l'industrie a enfin compris les avantages de faire les choses correctement...
 

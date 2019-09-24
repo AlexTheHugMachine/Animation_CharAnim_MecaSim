@@ -34,6 +34,7 @@ mais il y a aussi pas mal de tutos :
     - \ref tuto_mesh_shader, dessine un objet Mesh avec un shader 'utilisateur', sans utiliser le shader par défaut, montre aussi comment utiliser simplement une, ou plusieurs, textures,
     - \ref tuto_mesh_buffer, complète le tuto9 avec la création des buffers et du vertex array object, pour dessiner un objet Mesh, directement avec openGL... 
     
+    - \ref brdf écrire un shader, modèle de matières, brdf, pbr, etc.
     - \ref shader_kit.cpp est un utilitaire pour prototyper rapidement des shaders.
     
 plus ceux dédiés à openGL :
