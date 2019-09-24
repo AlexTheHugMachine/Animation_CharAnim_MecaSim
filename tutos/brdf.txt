@@ -172,19 +172,20 @@ important. L'idée est relativement simple : quelle devrait être la direction d
 et \f$ \vec{l} \f$ ? 
 
 réponse : \f$ \vec{h}= \frac{\vec{o} + \vec{l}}{|| \vec{o} + \vec{l} ||}\f$ puisque la direction \f$ \vec{o} \f$ devient symétrique de \f$ \vec{l} \f$ par rapport à \f$ \vec{h} \f$.
-Et plus \f$ \vec{h} \f$ est loin de la normale en p, plus l'observateur est loin du reflet miroir de  \f$ \vec{l} \f$. Ne reste plus qu'une question, comment controler la taille, la concentration du reflet ?
+Et plus \f$ \vec{h} \f$ est loin de la normale en p, plus l'observateur est loin du reflet miroir de  \f$ \vec{l} \f$. Ne reste plus qu'une question, comment controler la taille, 
+la concentration du reflet ?
 Il fallait une fonction rapide à calculer (en 1976 les machines n'etaient pas tout à fait les mêmes...) et qui décroit plus ou moins vite vers 0 en fonction d'un paramètre... 
 
 et c'est \f$ \cos^\alpha \theta_h \f$ qui à gagné. mais pas tout à fait :
 <IMG SRC="cosn.png" width="30%">
 
 l'exposant permet bien de controler la taille du reflet, la fonction décroit vers 0 plus ou moins vite, mais plus le reflet est petit, moins il est intense, ce qui est plutot génant...
-la fonction doit vérifier une autre propriété : elle doit etre normalisée, son intégrale, pour \f$ \theta_h \in [0 \, \pi/2] \f$ doit être égale à 1, quelque soit la taille du reflet, la même quantité 
-de lumière est réfléchie sur l'ensemble des directions : \f$ \frac{\alpha +1}{2\pi} \int \cos^\alpha \theta_h \, d\omega = 1\f$
+la fonction doit vérifier une autre propriété : elle doit etre normalisée, son intégrale, pour \f$ \theta_h \in [0 \, \pi/2] \f$ doit être égale à 1, quelque soit la taille du reflet, l
+a même quantité de lumière est réfléchie sur l'ensemble des directions : \f$ \frac{\alpha +1}{2\pi} \int \cos^\alpha \theta_h \, d\omega = 1\f$
 <IMG SRC="cosnorm.png" width="30%">
 
-Mais si on utilise cette fonction comme _brdf_, il se passe autre chose : la matière réfléchit plus de lumière qu'elle n'en reçoit... c'est encore un problème de normalisation. Il faut s'assurer que 
-pour une direction \f$ \vec{l} \f$ la somme de la lumière réfléchie \f$  f_r(\vec{l}, \vec{o}) \cos \theta_i \f$ est inférieure ou égale à 1 : 
+Mais si on utilise cette fonction comme _brdf_, il se passe autre chose : la matière réfléchit plus de lumière qu'elle n'en reçoit... c'est encore un problème de normalisation. Il 
+faut s'assurer que pour une direction \f$ \vec{l} \f$ la somme de la lumière réfléchie \f$  f_r(\vec{l}, \vec{o}) \cos \theta_i \f$ est inférieure ou égale à 1 : 
 \f[ \int f_r(\vec{l}, \vec{o}) \cos \theta_i d\omega_i = 1 \f]
 _remarque :_ lorsqu'un modèle de matière vérifie cette condition de normalisation, on dit qu'il _conserve_ l'énergie.
 
@@ -192,11 +193,12 @@ Pour le modèle Blinn - Phong, il n'existe pas de solution parfaite, c'est un co
 fournissent un résultat simple :
 \f[ f_r(\vec{o}, \vec{l})= \frac{\alpha+8}{8\pi} \cos^\alpha \theta_h\f]
 
-et voila la quantité de lumière réfléchie en fonction de \f$ \theta_l \f$, pour les 3 versions : modèle diffus (courbe bleue), modèle normalisé (courbe rouge) et modèle conservatif (courbe verte) :
+et voila la quantité de lumière réfléchie en fonction de \f$ \theta_l \f$, pour les 3 versions : modèle diffus (courbe bleue), modèle normalisé (courbe rouge) et modèle 
+conservatif (courbe verte) :
 <IMG SRC="conservation.png" width="30%">
 
-Ce modèle, Blinn - Phong conservatif et normalisé, est très simple à calculer, se comporte correctement, mais l'intensité de ses reflets diminue lorsque l'incidence de la lumière augmente, 
-ce qui ne correspond pas vraiment à ce que l'on peut observer dans la nature...
+Ce modèle, Blinn - Phong conservatif et normalisé, est très simple à calculer, se comporte correctement, mais l'intensité de ses reflets diminue lorsque l'incidence de la 
+lumière augmente, ce qui ne correspond pas vraiment à ce que l'on peut observer dans la nature...
 
 ### et avec un shader ? comment on fait ?
 
@@ -223,18 +225,92 @@ le fragment shader doit calculer les directions  \f$ \vec{o} \f$,\f$ \vec{l} \f$
     float cos_theta= max(0, dot(normalize(n), l));
     // brdf
     float fr= (alpha+8) / (8*PI) * pow(cos_theta_h, alpha);
+    vec3 color= emission * fr * cos_theta;    
 \endcode
 
+
 ## et alors ? quel modèle pour du verre, du metal, du plastique, de l'eau ?
+
+Comment utiliser ces 2 modèles pour reproduire des matières existantes ? autre manière de formuler les choses : sont-ils capables de reproduire des matières naturelles ?
+
+Première chose à vérifier : existe-t-il des matières purement diffuses ? ou purement réfléchissantes ? la réponse courte est : __non__...
+quelques exemples réels : [filmic games 1](http://filmicworlds.com/blog/everything-is-shiny/) [filmic games 2](http://filmicworlds.com/blog/everything-has-fresnel/).
+
+Mais il est quand même possible de fabriquer un modèle un peu plus souple en moyennant les 2 :
+\f[ f_r(\vec{o}, \vec{l})= \frac{k}{\pi} + (1 - k) \frac{\alpha+8}{8\pi} \cos^\alpha \theta_h \f]
+
+avec k compris entre 0 et 1. Les 2 modèles sont correctement normalisés, donc leur moyenne vérifie les mêmes propriétés.
+
+D'après l'analyse de [B. Burley en 2012](https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf), les matières sont classées 
+en 2 groupes : les métaux et le reste... Les métaux sont des conducteurs qui interagissent avec la lumière différement des autres matières : la couleur du reflet d'un métal permet 
+d'identifier le métal, alors que pour les plastiques, par exemple, la couleur du reflet est neutre, c'est la couleur de la source.
+
+La manière classique de reproduire cette différence utilise 2 couleurs : une pour le terme diffus et une autre pour le terme réfléchissant. 
+Le terme réfléchissant est une couleur neutre pour un plastique, mais pour un métal, ce sera plutôt :
+ - Silver :    {0.971519, 0.959915, 0.915324}
+ - Aluminium : {0.913183, 0.921494, 0.924524}
+ - Gold :      {1       , 0.765557, 0.336057}
+ - Copper :    {0.955008, 0.637427, 0.538163}
+ - Chromium :  {0.549585, 0.556114, 0.554256}
+ - Nickel :    {0.659777, 0.608679, 0.525649}
+ - Titanium :  {0.541931, 0.496791, 0.449419}
+ - Cobalt :    {0.662124, 0.654864, 0.633732}
+ - Platinum :  {0.672411, 0.637331, 0.585456}
+
+Pour d'autres matières, une "couleur monochrome" :
+ - Quartz :   0.045593921
+ - Ice :      0.017908907
+ - Water :    0.020373188
+ - Alcohol :  0.01995505
+ - Glass :    0.04
+ - Milk :     0.022181983
+ - Ruby :     0.077271957
+ - Crystal :  0.111111111
+ - Diamond :  0.171968833
+ - Skin :     0.028
+
+De manière symétrique, un métal n'a pas de terme diffus.
+Ces valeurs ont été compilées et calculées par [S. Lagarde 2011](https://seblagarde.wordpress.com/2011/08/17/feeding-a-physical-based-lighting-mode/).
+Elles sont obtenues par mesure des coefficients de Fresnel puis converties en couleurs. 
+
+Et oui : la plupart des matières ne réfléchissent au total qu'une fraction de la lumière incidente, et ce sont les métaux qui réfléchissent le plus.
+
+Le dernière paramètre du modèle règle la taille du reflet et ne dépend pas vraiment de la matière elle-même, mais plutot de la surface de l'objet : soit lisse (grand exposant), 
+soit rugueux (petit exposant).
 
 
 ## et à part du plastique ? on peut faire autre chose ?
 
+Pour faire mieux, il faut intégrer les coefficients de réflexion et/ou réfraction de Fresnel dans le modèle et aussi mieux choisir la fonction qui reproduit la forme du reflet. 
+
+cf Figure 9 de [Burley 2012](https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf) :
+
+<IMG SRC="figure9_burley2012.png" width="80%">
+
+Les métaux, notamment, ont une forme de reflet que les fonctions classiques reproduisent assez mal. 
+
 
 ## reflets réalistes : modèle à microfacettes
 
-Les modèles à microfacettes sont basés sur la physique des années 60. Leur première utilisation en image date de 1984 par Cook et Torrance qui travaillaient alors chez Pixar. Ce modèle a ensuite 
-été utilisé pour produire les premiers court-métrages de Pixar.
+Les modèles à microfacettes sont basés sur la physique des années 60. Leur première utilisation en image date de 1984 par Cook et Torrance qui travaillaient alors chez Pixar. 
+Ce modèle a ensuite été utilisé pour produire les premiers court-métrages de Pixar, puis reformulé en 2007, comparé à des mesures en 2012, puis serieusement nettoyé en 2014. 
+Depuis, la quasi totalité des productions utilisent des variantes du même modèle, 
+cf [Burley 2015](https://blog.selfshadow.com/publications/s2015-shading-course/burley/s2015_pbs_disney_bsdf_notes.pdf).
+
+L'idée est de considérer que la surface géométrique de l'objet est en fait un ensemble de facettes miroir microscopiques. Elles ne sont pas observables à notre échelle mais sont 
+responsables de la forme et de l'intensité du reflet. Au lieu de les modéliser explicitement et de déterminer combien sont orientées exactement dans la direction \f$ \vec{h} \f$ 
+pour produire un reflet, elles sont représentées par quelques statistiques : distribution d'altitude et d'orientation. 
+
+Un modèle à microfacettes se présente sous la forme :
+\f[  f_r(\vec{o}, \vec{l})= \frac{F(\vec{o}, \vec{h}) \, G_2(\vec{o}, \vec{l}, \vec{h}) \, D(\vec{h})}{4 |\vec{n} \cdot \vec{o}| |\vec{n} \cdot \vec{l}|} \f]
+
+Le terme \f$ F \f$ représente le reflet crée par une facette (cf coefficients de Fresnel), \f$ D \f$ correspond au nombre de facettes orientées dans la direction \f$ \vec{h} \f$ et qui contribuent
+à créer le reflet, \f$ G_2 \f$ est la normalisation de \f$ D \f$ pour garantir la conservation d'énergie. Les cosinus \f$ |\vec{n} \cdot \vec{o}| \f$ et \f$ |\vec{n} \cdot \vec{l}| \f$ évaluent  l'aire 
+visible et éclairée de la surface.
+
+
+
+## bon alors, c'est quoi le modèle ??
 
 
 */
