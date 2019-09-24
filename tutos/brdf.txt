@@ -16,7 +16,7 @@ utilisation dans la communauté image :
 - [Walter 2007](https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf) : reformulation du modèle de Cook - Torrance, utilisation de la distribution GGX et de sa normalisation exacte, surface rugueuse opaque ou transparente,
 - [Burley 2012](https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf) : comparaison mesures / modèles, reparamétrisation "intuitive" des paramètres, séparation des métaux des autres matières, modèle Disney,
 - [Heitz 2014](http://jcgt.org/published/0003/02/03/) : normalisation, conservation de l'énergie et validation des modèles à microfacettes, [slides](http://jcgt.org/published/0003/02/03/presentation.pdf)
-- [Burley 2015](https://blog.selfshadow.com/publications/s2015-shading-course/burley/s2015_pbs_disney_bsdf_notes.pdf) : simplification, intégration des validations de Heitz 2014, 
+- [Burley 2015](https://blog.selfshadow.com/publications/s2015-shading-course/burley/s2015_pbs_disney_bsdf_notes.pdf) : simplification, intégration des validations de Heitz 2014, diffusion 
 
 Le terme PBR vient des travaux de Walter et Burley, l'industrie a enfin compris les avantages de faire les choses correctement...
 
@@ -157,11 +157,11 @@ vous pouvez tester avec shader_kit, cf \ref shader_kit :\n
 ## premier reflets : modèle de Blinn Phong
 
 Comment reproduire le type de reflet que l'on peut observer dans cette [expérience](http://resources.mpi-inf.mpg.de/lighttransport/) ?
-<table>
+<table style="width:100%">
 <tr> 
-    <td> <IMG SRC="white-inset.png"> 
-    <td> <IMG SRC="silver-inset.png"> 
-    <td> <IMG SRC="mirror-inset.png"> 
+    <td> <IMG SRC="white-inset.png" width="100%"> 
+    <td> <IMG SRC="silver-inset.png" width="100%"> 
+    <td> <IMG SRC="mirror-inset.png" width="100%"> 
 </table>
 
 Le modèle de Lambert, permet de reproduire le comportement de gauche, le modèle de Fresnel reproduit un miroir, le comportement de droite. Comment 
@@ -184,20 +184,52 @@ de lumière est réfléchie sur l'ensemble des directions : \f$ \frac{\alpha +1}
 <IMG SRC="cosnorm.png" width="30%">
 
 Mais si on utilise cette fonction comme _brdf_, il se passe autre chose : la matière réfléchit plus de lumière qu'elle n'en reçoit... c'est encore un problème de normalisation. Il faut s'assurer que 
-pour une direction \f$ \vec{l} \f$ la somme de la lumière réflechie \f$  f_r(\vec{l}, \vec{o}) \cos \theta_o \f$ est inférieure ou égale à 1 : 
-\f[ \int f_r(\vec{l}, \vec{o}) \cos \theta_o d\omega_o = 1 \f]
+pour une direction \f$ \vec{l} \f$ la somme de la lumière réfléchie \f$  f_r(\vec{l}, \vec{o}) \cos \theta_i \f$ est inférieure ou égale à 1 : 
+\f[ \int f_r(\vec{l}, \vec{o}) \cos \theta_i d\omega_i = 1 \f]
 _remarque :_ lorsqu'un modèle de matière vérifie cette condition de normalisation, on dit qu'il _conserve_ l'énergie.
 
-Pour ce cas, il n'existe pas de solution parfaite, c'est un compromis, les calculs sont rapidement décrits par [F. Giesen](http://www.farbrausch.de/%7Efg/stuff/phong.pdf) et
+Pour le modèle Blinn - Phong, il n'existe pas de solution parfaite, c'est un compromis, les calculs sont rapidement décrits par [F. Giesen](http://www.farbrausch.de/%7Efg/stuff/phong.pdf) et
 fournissent un résultat simple :
 \f[ f_r(\vec{o}, \vec{l})= \frac{\alpha+8}{8\pi} \cos^\alpha \theta_h\f]
-
 
 et voila la quantité de lumière réfléchie en fonction de \f$ \theta_l \f$, pour les 3 versions : modèle diffus (courbe bleue), modèle normalisé (courbe rouge) et modèle conservatif (courbe verte) :
 <IMG SRC="conservation.png" width="30%">
 
-Ce modèle, Blinn - Phong normalisé, est très simple à calculer, se comporte correctement, mais l'intensité de ses reflets diminue lorsque l'incidence de la lumière augmente, ce qui ne correspond 
-pas vraiment à ce que l'on peut observer dans la nature...
+Ce modèle, Blinn - Phong conservatif et normalisé, est très simple à calculer, se comporte correctement, mais l'intensité de ses reflets diminue lorsque l'incidence de la lumière augmente, 
+ce qui ne correspond pas vraiment à ce que l'on peut observer dans la nature...
+
+### et avec un shader ? comment on fait ?
+
+La démarche est identique, on doit calculer :
+\f[L_r(p, \vec{o})= L_i(p, \vec{l}) \frac{\alpha+8}{8\pi} \cos^\alpha \theta_h \cos \theta_l \f]
+
+il faut connaitre, dans le même repère : 
+- p, la position du point éclairé,
+- \f$ \vec{n} \f$, la normale de la surface au point p,
+- \f$ \vec{o} \f$, la direction du point p vers l'observateur, la camera,
+- \f$ \vec{l} \f$, la direction du point p vers la source de lumière,
+- \f$ \vec{h} \f$, la direction bisectrice de \f$ \vec{o} \f$ et \f$ \vec{l} \f$,
+- \f$ \alpha \f$, le paramètre de concentration du reflet, dit l'_exposant_...
+
+le fragment shader doit calculer les directions  \f$ \vec{o} \f$,\f$ \vec{l} \f$, et \f$ \vec{h} \f$, puis \f$ \cos \theta_l \f$ et \f$ \cos \theta_h \f$ :
+\code
+    // directions
+    vec3 o= normalize(camera - p);
+    vec3 l= normalize(source - p);
+    vec3 h= normalize(o + l);
+    float cos_theta_h= dot(normalize(n), h);
+    
+    // cos
+    float cos_theta= max(0, dot(normalize(n), l));
+    // brdf
+    float fr= (alpha+8) / (8*PI) * pow(cos_theta_h, alpha);
+\endcode
+
+## et alors ? quel modèle pour du verre, du metal, du plastique, de l'eau ?
+
+
+## et à part du plastique ? on peut faire autre chose ?
+
 
 ## reflets réalistes : modèle à microfacettes
 
