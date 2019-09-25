@@ -34,9 +34,15 @@ int App::run( )
     // gestion des evenements
     while(events(m_window))
     {
-        if(update(global_time(), delta_time()) < 0)
+        
+        //~ if(update(global_time(), delta_time()) < 0)
+        if(prerender() < 0)
             break;
+        
         if(render() < 1)
+            break;
+
+        if(postrender() < 0)
             break;
 
         // presenter le resultat

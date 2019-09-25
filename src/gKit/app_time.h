@@ -2,6 +2,8 @@
 #ifndef _APP_TIME_H
 #define _APP_TIME_H
 
+#include <chrono>
+
 #include "glcore.h"
 #include "app.h"
 #include "text.h"
@@ -24,15 +26,17 @@ public:
     virtual int quit( ) = 0;
 
     //! a deriver et redefinir pour animer les objets en fonction du temps.
-    using App::update;
+    virtual int update( const float time, const float delta ) { return 0; }
 
     //! a deriver pour afficher les objets.
     virtual int render( ) = 0;
 
-    //! execution de l'application.
-    int run( );
-
 protected:
+    virtual int prerender( );
+    virtual int postrender( );
+
+    std::chrono::high_resolution_clock::time_point m_cpu_start;
+    std::chrono::high_resolution_clock::time_point m_cpu_stop;
     Text m_console;
     GLuint m_time_query;
 };

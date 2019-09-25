@@ -5,7 +5,7 @@ AppCamera::AppCamera( const int width, const int height, const int major, const 
 
 AppCamera::~AppCamera( ) {}
 
-int AppCamera::update( const float time, const float delta )
+int AppCamera::prerender( )
 {
     // recupere les mouvements de la souris
     int mx, my;
@@ -28,5 +28,6 @@ int AppCamera::update( const float time, const float delta )
         m_camera.move(8.f * wheel.y);  // approche / eloigne l'objet
     }
     
-    return 0;
+    // appelle la fonction update() de la classe derivee
+    return update(global_time(), delta_time());
 }

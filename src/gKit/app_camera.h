@@ -30,7 +30,8 @@ public:
     virtual int quit( ) = 0;
 
     //! a deriver et redefinir pour animer les objets en fonction du temps. 
-    virtual int update_camera( const float time, const float delta ) { return 0; };
+    virtual int update( const float time, const float delta ) { return 0; }
+    
     //! a deriver pour afficher les objets. renvoie 1 pour continuer, 0 pour fermer l'application.
     virtual int render( ) = 0;
     
@@ -38,7 +39,7 @@ public:
     Orbiter& camera( ) { return m_camera; }
 
 protected:
-    virtual int update( const float time, const float delta );
+    int prerender( );
 
     Orbiter m_camera;
 };
