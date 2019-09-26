@@ -308,6 +308,40 @@ Le terme \f$ F \f$ représente le reflet crée par une facette (cf coefficients 
 à créer le reflet, \f$ G_2 \f$ est la normalisation de \f$ D \f$ pour garantir la conservation d'énergie. Les cosinus \f$ |\vec{n} \cdot \vec{o}| \f$ et \f$ |\vec{n} \cdot \vec{l}| \f$ évaluent  l'aire 
 visible et éclairée de la surface.
 
+### Coefficients de Fresnel
+
+Le terme de Fresnel permet d'évaluer la lumière réfléchie en fonction de la direction d'incidence. Le comportement d'une matière est décrit par un coefficient : l'indice
+de réfraction, \f$ \eta \f$. 
+
+\f{eqnarray*}{ 
+    F(\vec{o}, \vec{h}) & = & \frac{1}{2}  \left( \frac{g - c}{g + c} \right)^2 \left( 1 + \left( \frac{c(g + c) -1}{c(g - c) -1} \right)^2 \right)\\
+                    c   & = & \cos \angle(\vec{o}, \vec{h})\\
+                    g^2 & = & \eta^2 + c^2 -1
+\f} 
+
+Une approximation est couramment utilisée, cf [Schlick 94](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.50.2297&rep=rep1&type=pdf), même si elle peut 
+introduire une erreur non négligeable dans certaines conditions, cf Burley 2012 :
+
+\f{eqnarray*}{ 
+    F(\vec{o}, \vec{h}) & = & F_0 + (1 - F_0) (1 - c)^5\\
+    c                   & = & \cos \angle(\vec{o}, \vec{h})\\
+    F_0                 & = & \left( \frac{\eta - 1}{\eta +1} \right)^2
+\f} 
+
+Cette approximation exploite une propriété des équations de Fresnel, l'indice de réfraction \f$ \eta \f$ permet de déduire le coefficient à indicence normale \f$ F_0 \f$ (la lumière arrive dans la 
+direction de la normale et \f$ \theta = 0° \f$ ) et, par construction, toutes les matières ont une réflexion de 1 à incidence rasante (la lumière arrive dans le plan tangent et \f$ \theta = 90° \f$).
+
+### D et G_2
+
+\f{eqnarray*}{ 
+    D( \vec{h} )                       & = & \frac{\chi^+(\vec{h} \cdot \vec{n})}{\pi \alpha^2 \cos^4 \theta_m \left( 1 + \frac{\tan^2 \theta_m}{\alpha^2} \right)^2 }, \mbox{ cf Heitz 2014, eq 71}\\
+    G_2( \vec{o}, \vec{l}, \vec{h} )    & = & \frac{\chi^+(\vec{o} \cdot \vec{h}) \chi^+(\vec{l} \cdot \vec{h})} {1 + \Lambda(\vec{o}) + \Lambda(\vec{l})}, \mbox{ cf Heitz 2014, eq 99}\\
+    \Lambda(\vec{\omega})               & = & - \frac{1}{2} + \frac{1}{2} \sqrt{1 + \frac{1}{a^2}}, \mbox{ cf Heitz 2014, eq 72}\\
+    a                                   & = & \frac{1}{\alpha \tan \theta_\omega}\\
+    \chi^+(x)                           & = & 0 \mbox{ si } x < 0\\
+                                        & = & 1 \mbox{ sinon }
+    
+\f}
 
 
 ## bon alors, c'est quoi le modèle ??
