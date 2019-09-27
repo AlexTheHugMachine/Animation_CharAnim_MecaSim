@@ -334,14 +334,72 @@ direction de la normale et \f$ \theta = 0° \f$ ) et, par construction, toutes l
 ### D et G_2
 
 \f{eqnarray*}{ 
-    D( \vec{h} )                       & = & \frac{\chi^+(\vec{h} \cdot \vec{n})}{\pi \alpha^2 \cos^4 \theta_m \left( 1 + \frac{\tan^2 \theta_m}{\alpha^2} \right)^2 }, \mbox{ cf Heitz 2014, eq 71}\\
+    D( \vec{h} )                        & = & \frac{\chi^+(\vec{h} \cdot \vec{n})}{\pi \alpha^2 \cos^4 \theta_m \left( 1 + \frac{\tan^2 \theta_h}{\alpha^2} \right)^2 }, \mbox{ cf Heitz 2014, eq 71}\\
     G_2( \vec{o}, \vec{l}, \vec{h} )    & = & \frac{\chi^+(\vec{o} \cdot \vec{h}) \chi^+(\vec{l} \cdot \vec{h})} {1 + \Lambda(\vec{o}) + \Lambda(\vec{l})}, \mbox{ cf Heitz 2014, eq 99}\\
-    \Lambda(\vec{\omega})               & = & - \frac{1}{2} + \frac{1}{2} \sqrt{1 + \frac{1}{a^2}}, \mbox{ cf Heitz 2014, eq 72}\\
-    a                                   & = & \frac{1}{\alpha \tan \theta_\omega}\\
+    \Lambda(\vec{\omega})               & = & - \frac{1}{2} + \frac{1}{2} \sqrt{1 + \frac{1}{a_\omega^2}}, \mbox{ cf Heitz 2014, eq 72}\\
+    a_\omega                            & = & \frac{1}{\alpha \tan \theta_\omega}\\
     \chi^+(x)                           & = & 0 \mbox{ si } x < 0\\
                                         & = & 1 \mbox{ sinon }
-    
 \f}
+
+quelques relations utiles pour simplifier les expressions à calculer (rappel, on sait calculer facilement \f$ cos \angle(\vec{u}, \vec{v}) \f$ :
+ - \f$ \sin^2 \theta + \cos^2 \theta = 1 \mbox{ donc } \sin^2 \theta = 1 - \cos^2 \theta \mbox{ et } \sin \theta = \sqrt{1 - \cos^2 \theta} \f$
+ - \f$ \tan^2 \theta = \frac{\sin^2 \theta}{\cos^2 \theta} \mbox{ donc } \tan^2 \theta = \frac{1 - \cos^2 \theta}{\cos^2 \theta} \f$
+
+après quelques manipulations on arrive à :
+\f[
+    D( \vec{h} )        = \chi^+(\vec{h} \cdot \vec{n}) \frac{\alpha^2}{\pi \left( 1 + \cos^2 \theta_h (\alpha^2 -1) \right)^2} 
+                        = \chi^+(\vec{h} \cdot \vec{n}) \frac{1}{\pi} \left( \frac{\alpha}{1 + \cos^2 \theta_h (\alpha^2 -1)} \right)^2
+\f]
+
+ensuite on peut re-écrire \f$ \Lambda(\vec{\omega}) = - \frac{1}{2} + \frac{1}{2} \sqrt{1 + \alpha^2 \tan^2 \theta_\omega} \f$ et :
+\f[
+    G_2( \vec{o}, \vec{l}, \vec{h} ) = \chi^+(\vec{o} \cdot \vec{h}) \chi^+(\vec{l} \cdot \vec{h}) \frac{2}{\sqrt{1 + \alpha^2 \tan^2 \theta_o} \sqrt{1 + \alpha^2 \tan^2 \theta_l}}
+\f]
+
+Le seul paramètre du modèle est la rugosité de la surface des microfacettes \f$ \alpha \f$ : 0 pour une surface parfaitement lisse, et 1 pour une surface parfaitement rugueuse,
+et la forme du reflet est controlée par la fonction D. Cette version utilise la fonction GGX, dérivée des travaux de Trowbridge - Reitz 1975. Cook - Torrance 1984 utilisait une autre 
+fonction, une gaussienne projettée sur l'hemisphère. GGX est actuellement la fonction la plus utilisée, elle permet de mieux reproduire le profil des reflets qu'une gaussienne, 
+voir un peu plus haut, la figure 9 de Burley 2012.
+
+#### et avec un shader ?
+
+La démarche est toujours la même, on doit calculer :
+\f[L_r(p, \vec{o})= L_i(p, \vec{l}) \frac{F(\vec{o}, \vec{h}) \, G_2(\vec{o}, \vec{l}, \vec{h}) \, D(\vec{h})}{4 |\vec{n} \cdot \vec{o}| |\vec{n} \cdot \vec{l}|} \cos \theta_l \f]
+
+Les paramètres du modèle sont la rugosité \f$ \alpha \f$ ainsi que l'indice de réfraction \f$ \eta \f$, ou \f$ F_0 \f$ (on peut calculer l'un en fonction de l'autre), il ne reste plus qu'à évaluer 
+les termes :
+\code
+    // directions
+    vec3 o= normalize(camera - p);
+    vec3 l= normalize(source - p);
+    vec3 h= normalize(o + l);
+    
+    // cos
+    vec3 nn= normalize(n);
+    float cos_theta= max(0, dot(nn, l));
+    float cos_theta_h= max(0, dot(nn, h));
+    float cos_theta_o= max(0, dot(nn, o));
+    
+    // D
+    float D= alpha / (1 + cos_theta_h*cos_theta_h * (alpha*alpha -1));
+    D= D*D / PI;
+    
+    // G2
+    float tan2_theta_o= (1 - cos_theta_o*cos_theta_o) / (cos_theta_o*cos_theta_o);
+    float lambda_o= 1 + alpha*alpha * tan2_theta_o;
+    float tan2_theta= (1 - cos_theta*cos_theta) / (cos_theta*cos_theta);
+    float lambda= 1 + alpha*alpha * tan2_theta;
+    float G2= 2 / (sqrt(lambda_o) + sqrt(lambda));
+    
+    // F
+    float F= F0 + (1 - F0) * pow(1 - dot(o, h), 5);
+    
+    // brdf
+    float fr= (F * D * G2) / (4 * cos_theta_o * cos_theta_l);
+    vec3 color= emission * fr * cos_theta;    
+
+\endcode
 
 
 ## bon alors, c'est quoi le modèle ??
