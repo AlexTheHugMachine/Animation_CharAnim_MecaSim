@@ -305,8 +305,8 @@ Un modèle à microfacettes se présente sous la forme :
 \f[  f_r(\vec{o}, \vec{l})= \frac{F(\vec{o}, \vec{h}) \, G_2(\vec{o}, \vec{l}, \vec{h}) \, D(\vec{h})}{4 |\vec{n} \cdot \vec{o}| |\vec{n} \cdot \vec{l}|} \f]
 
 Le terme \f$ F \f$ représente le reflet crée par une facette (cf coefficients de Fresnel), \f$ D \f$ correspond au nombre de facettes orientées dans la direction \f$ \vec{h} \f$ et qui contribuent
-à créer le reflet, \f$ G_2 \f$ est la normalisation de \f$ D \f$ pour garantir la conservation d'énergie. Les cosinus \f$ |\vec{n} \cdot \vec{o}| \f$ et \f$ |\vec{n} \cdot \vec{l}| \f$ évaluent  l'aire 
-visible et éclairée de la surface.
+à créer le reflet, \f$ G_2 \f$ et les cosinus \f$ |\vec{n} \cdot \vec{o}| \f$ et \f$ |\vec{n} \cdot \vec{l}| \f$ permettent de normaliser \f$ D \f$ pour garantir la conservation d'énergie. 
+
 
 ### Coefficients de Fresnel
 
@@ -360,7 +360,11 @@ ensuite on peut re-écrire \f$ \Lambda(\vec{\omega}) = - \frac{1}{2} + \frac{1}{
 Le seul paramètre du modèle est la rugosité de la surface des microfacettes \f$ \alpha \f$ : 0 pour une surface parfaitement lisse, et 1 pour une surface parfaitement rugueuse,
 et la forme du reflet est controlée par la fonction D. Cette version utilise la fonction GGX, dérivée des travaux de Trowbridge - Reitz 1975. Cook - Torrance 1984 utilisait une autre 
 fonction, une gaussienne projettée sur l'hemisphère. GGX est actuellement la fonction la plus utilisée, elle permet de mieux reproduire le profil des reflets qu'une gaussienne, 
-voir un peu plus haut, la figure 9 de Burley 2012.
+voir un peu plus haut, la figure 9 de Burley 2012. \f$ G_2 \f$ n'est pas la forme la plus courante, mais elle permet de mieux reproduire certains comportement, pour les détails cf Heitz 2014.
+
+_pour les curieux :_ si vous vous demandez comment on est passé d'une information spatiale utilisant des distributions d'altitude et d'orientation des microfacettes à une fonction \f$ D(\vec{h}) \f$, la 
+réponse se trouve dans la section 2 (section 2.2 _Microfacet Statistics_) de Heitz 2014.
+
 
 #### et avec un shader ?
 
@@ -406,6 +410,13 @@ les termes :
     float fr= (F * D * G2) / (4 * cos_theta_o * cos_theta);
     vec3 color= emission * fr * cos_theta;    
 \endcode
+
+<table style="width:100%">
+<tr> 
+    <td> <IMG SRC="shaderkit_ggx04.png" width="100%"> 
+    <td> <IMG SRC="shaderkit_ggx01.png" width="100%"> 
+    <td> <IMG SRC="shaderkit_lambert.png" width="100%"> 
+</table>
 
 
 ## bon alors, c'est quoi le modèle ??
