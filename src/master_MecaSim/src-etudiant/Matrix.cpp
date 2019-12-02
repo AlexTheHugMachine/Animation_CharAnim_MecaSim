@@ -245,8 +245,12 @@ Vector Matrix::GetAxis(unsigned int row) const
  */
 float Matrix::Determinant() const
 {
-    return m_Values[0] * m_Values[4] * m_Values[8] + m_Values[1] * m_Values[5] * m_Values[6] + m_Values[2] * m_Values[3] * m_Values[7]
-    -  m_Values[2] * m_Values[4] * m_Values[6] - m_Values[0] * m_Values[5] * m_Values[7] - m_Values[1] * m_Values[3] * m_Values[8];
+    return m_Values[0] * m_Values[4] * m_Values[8]
+    + m_Values[1] * m_Values[5] * m_Values[6]
+    + m_Values[2] * m_Values[3] * m_Values[7]
+    -  m_Values[2] * m_Values[4] * m_Values[6]
+    - m_Values[0] * m_Values[5] * m_Values[7]
+    - m_Values[1] * m_Values[3] * m_Values[8];
 }
 
 
@@ -420,7 +424,7 @@ Matrix operator- (const Matrix & matrixA, const Matrix & matrixB)
 
 
 /*
- * Retourne le matrice (vecteur *).
+ * Retourne le matrice (vecteur * equivalent a : -w cross).
  */
 Matrix StarMatrix(const Vector & vector)
 {
@@ -429,14 +433,14 @@ Matrix StarMatrix(const Vector & vector)
     Matrix matrix;
     matrix(0) = 0;
     matrix(1) = -direction.z;
-    matrix(2) = +direction.y;
+    matrix(2) = -direction.y;
     
-    matrix(3) = +direction.z;
+    matrix(3) = -direction.z;
     matrix(4) = 0;
     matrix(5) = -direction.x;
     
     matrix(6) = -direction.y;
-    matrix(7) = +direction.x;
+    matrix(7) = -direction.x;
     matrix(8) = 0;
     
     return (matrix);
