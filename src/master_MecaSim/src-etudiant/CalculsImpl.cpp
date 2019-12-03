@@ -70,20 +70,20 @@ void SolveurImpl::Solve(float visco,
                         std::vector<Vector> &P,
                         std::vector<float> &M,
                         Vector gravite,
-                        MSS * _SytemeMasseRessort)
+                        MSS * _SystemeMasseRessort)
 {
     
     /* Initialisation des structures X, Y, PP, W, W1, W2, Df_Dx, Df_Dx_diag, Df_Dv, Df_Dv_diag */
-    Init(nb_som, _SytemeMasseRessort);
+    Init(nb_som, _SystemeMasseRessort);
     
     /* Remplissage matrices df/dx et df/dv */
-    Remplissage_df_dx_dv(nb_som, _SytemeMasseRessort, P);
+    Remplissage_df_dx_dv(nb_som, _SystemeMasseRessort, P);
     
     /* Remplissage du vecteur Y */
-    Remplissage_Y(nb_som, V, Force, M, gravite, _SytemeMasseRessort);
+    Remplissage_Y(nb_som, V, Force, M, gravite, _SystemeMasseRessort);
     
     /* Resolution de HX = Y */
-    Resolution(nb_som, M, _SytemeMasseRessort);
+    Resolution(nb_som, M, _SystemeMasseRessort);
     
     /* Calcul des vitesses */
     CalculVitesse(visco, nb_som, Tps, V, X);
@@ -107,7 +107,7 @@ void SolveurImpl::Remplissage_Y(int nb_som,
                                 std::vector<Vector> &Force,
                                 std::vector<float> &M,
                                 Vector g,
-                                MSS * _SytemeMasseRessort)
+                                MSS * _SystemeMasseRessort)
 {
     /// Matrice des contributions des forces df/dx
     // chaque element de la matrice de taille 3x3
@@ -146,7 +146,7 @@ void SolveurImpl::Remplissage_Y(int nb_som,
  */
 void SolveurImpl::CalculProdMatVect(int nb_som,
                                     std::vector<float> &M,
-                                    MSS *_SytemeMasseRessort)
+                                    MSS *_SystemeMasseRessort)
 {    
     ////////
     // Calcul des elements diagonaux
@@ -211,7 +211,7 @@ void SolveurImpl::CalculNorme(int nb_som)
  */
 void SolveurImpl::Resolution(int nb_som,
                              std::vector<float> &M,
-                             MSS * _SytemeMasseRessort)
+                             MSS * _SystemeMasseRessort)
 {
     // Rq : Le vecteur Y sera utilise comme vecteur de residu
     
@@ -232,7 +232,7 @@ void SolveurImpl::Resolution(int nb_som,
         CalculDirection(nb_som);
         
         // W = H PP = (M - dt df/dv - dt^2 df/dx) * PP
-        CalculProdMatVect(nb_som, M, _SytemeMasseRessort);
+        CalculProdMatVect(nb_som, M, _SystemeMasseRessort);
         
         // Calcul de _beta = PP^T W
         CalculBeta(nb_som);
