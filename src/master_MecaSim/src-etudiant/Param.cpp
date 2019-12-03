@@ -203,10 +203,10 @@ void ObjetSimuleMSS::Param_mss(std::string Fichier_Param)
     GET_PARAM("usetexture", _use_texture);
     
     /* Raideur */
-    GET_PARAM("k", _SytemeMasseRessort->_RessOS._Raideur);
+    GET_PARAM("k", _SystemeMasseRessort->_RessOS._Raideur);
     
     /* Amortissement */
-    GET_PARAM("nu", _SytemeMasseRessort->_RessOS._Nu);
+    GET_PARAM("nu", _SystemeMasseRessort->_RessOS._Nu);
     
     // Type d integration
     GET_PARAM("integration", _Integration);
