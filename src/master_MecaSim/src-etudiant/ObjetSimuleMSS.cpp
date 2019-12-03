@@ -441,7 +441,7 @@ void ObjetSimuleMSS::Simulation(Vector gravite, float viscosite, int Tps)
     /* ! Gestion des collisions  */
     // Reponse : reste a la position du sol - arret des vitesses
     // Penser au Translate de l objet dans la scene pour trouver plan coherent
-    //CollisionPlan();
+    //Collision();
     
     // Affichage des positions
    //  AffichagePos(Tps);
