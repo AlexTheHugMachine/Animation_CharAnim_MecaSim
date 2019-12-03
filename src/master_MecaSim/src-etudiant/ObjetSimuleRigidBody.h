@@ -63,7 +63,7 @@ public:
     void Simulation(Vector gravite, float viscosite, int Tps);
     
     /*! Gestion des collisions. Rajoutez parametre si besoin. */
-    void CollisionPlan();
+    void Collision();
     
     /*! Creation du maillage (pour l affichage) de l objet simule de type RigidBody */
     void initMeshObjet();
