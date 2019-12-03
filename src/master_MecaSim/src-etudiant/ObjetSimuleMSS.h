@@ -93,7 +93,7 @@ public:
     unsigned int _NFacets;
     
     /// Declaration du systeme masse-ressort (maillage point de vue de la simulation)
-    MSS * _SytemeMasseRessort;
+    MSS * _SystemeMasseRessort;
     
     /// Choix du schema d integration
     std::string _Integration;
