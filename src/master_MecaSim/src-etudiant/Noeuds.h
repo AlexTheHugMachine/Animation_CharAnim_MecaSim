@@ -69,7 +69,7 @@ public:
 	virtual void Simulation(Vector gravite, float viscosite, int Tps) = 0;
     
     /*! Gestion des collisions */
-    virtual void CollisionPlan() = 0;
+    virtual void Collision() = 0;
     
 	/*! Operation d'interaction */
 	virtual void Interaction(Vector MousePos) = 0;
