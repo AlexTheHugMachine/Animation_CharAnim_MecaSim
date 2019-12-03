@@ -55,7 +55,7 @@ public:
                std::vector<Vector> &P,
                std::vector<float> &M,
                Vector gravite,
-               MSS * _SytemeMasseRessort);
+               MSS * _SystemeMasseRessort);
     
     
     /*! Calcul des vitesses et reinitialisation des vecteurs forces, contribX, contribV, Y*/
@@ -78,12 +78,12 @@ public:
     
     /*! Initialisation des structures -
      X, Y, PP, W, W1, W2, Df_Dx, Df_Dx_diag, Df_Dv, Df_Dv_diag */
-    void Init(int nb_som, MSS * _SytemeMasseRessort);
+    void Init(int nb_som, MSS * _SystemeMasseRessort);
     
     /*! Remplissage matrices df/dx et df/dv -
      Utilisation formulation Volino ou Baraff */
     void Remplissage_df_dx_dv(int nb_som,
-                              MSS * _SytemeMasseRessort,
+                              MSS * _SystemeMasseRessort,
                               std::vector<Vector> &P);
     
     /* Re-initialisation : Df_Dx_diag, Df_Dv_diag, Y */
@@ -96,18 +96,18 @@ public:
                        std::vector<Vector> &Force,
                        std::vector<float> &M,
                        Vector gravite,
-                       MSS * _SytemeMasseRessort);
+                       MSS * _SystemeMasseRessort);
     
     /*! Fonction resolvant HX = Y par la methode du gradient conjugue */
     void Resolution(int nb_som,
                     std::vector<float> &M,
-                    MSS * _SytemeMasseRessort);
+                    MSS * _SystemeMasseRessort);
     
     /*! Calcul du produit matrice * vecteur :
      W = H * PP = (M - dt df/dv - dt^2 df/dx) * PP */
     void CalculProdMatVect(int nb_som,
                            std::vector<float> &M,
-                           MSS *_SytemeMasseRessort);
+                           MSS *_SystemeMasseRessort);
     
     /*! Calcul de la direction PP = Y + (_alpha / _beta) * PP  */
     void CalculDirection(int nb_som);
