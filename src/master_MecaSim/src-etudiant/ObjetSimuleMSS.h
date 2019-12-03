@@ -53,7 +53,7 @@ public:
     void Simulation(Vector gravite, float viscosite, int Tps);
     
     /*! Gestion des collisions */
-    void CollisionPlan();
+    void Collision();
     
     /*! Mise a jour du Mesh (pour affichage) de l objet en fonction des nouvelles positions calculees */
     void updateVertex();
