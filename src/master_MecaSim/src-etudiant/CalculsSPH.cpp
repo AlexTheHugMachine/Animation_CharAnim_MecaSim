@@ -90,7 +90,7 @@ void ObjetSimuleSPH::damp_reflect(int frontiere, float barrier, int indice_part)
  * Pour chacune des particules nous verifions la reflection
  * avec chacun des 4 murs du domaine.
  */
-void ObjetSimuleSPH::CollisionPlan()
+void ObjetSimuleSPH::Collision()
 {
    
     
