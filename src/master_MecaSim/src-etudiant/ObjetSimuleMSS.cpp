@@ -50,16 +50,16 @@
 ObjetSimuleMSS::ObjetSimuleMSS(std::string fich_param)
 : ObjetSimule(fich_param),
 _Size(),
-_SytemeMasseRessort(0)
+_SystemeMasseRessort(0)
 {
     /* Allocation du systeme masse-ressort */
-    _SytemeMasseRessort = new MSS();
+    _SystemeMasseRessort = new MSS();
     
     /** Recuperation des parametres du systeme masse-ressort mis dans le fichier **/
     Param_mss(fich_param);
     
     /* Calcul du facteur d amortissement des ressorts */
-    _SytemeMasseRessort->_RessOS.SetFactAmorti();
+    _SystemeMasseRessort->_RessOS.SetFactAmorti();
     
 }
 
@@ -229,7 +229,7 @@ void ObjetSimuleMSS::initObjetSimule()
         Part->SetMass(M[i]);
                 
         /* Ajout effectif de la particule dans le systeme masses-ressorts */
-        _SytemeMasseRessort->AddParticule(Part);
+        _SystemeMasseRessort->AddParticule(Part);
         
     }//for
     
@@ -266,10 +266,10 @@ void ObjetSimuleMSS::initObjetSimule()
         /* Construction de la facette fi, fj, fk */
         // Creation de la facet en mettant les sommets
         // dans l ordre inverse des aiguilles d une montre
-        _SytemeMasseRessort->MakeFace(_SytemeMasseRessort->GetParticule(facet.fk),
-                                      _SytemeMasseRessort->GetParticule(facet.fj),
-                                      _SytemeMasseRessort->GetParticule(facet.fi),
-                                      &_SytemeMasseRessort->_RessOS);
+        _SystemeMasseRessort->MakeFace(_SystemeMasseRessort->GetParticule(facet.fk),
+                                      _SystemeMasseRessort->GetParticule(facet.fj),
+                                      _SystemeMasseRessort->GetParticule(facet.fi),
+                                      &_SystemeMasseRessort->_RessOS);
         
         
         // Recopie dans le tableau des indices des sommets
@@ -436,7 +436,7 @@ void ObjetSimuleMSS::Simulation(Vector gravite, float viscosite, int Tps)
     if (_Integration == "explicite")
         _SolveurExpl->Solve(viscosite, _Nb_Sommets, Tps, A, V, P);
     else if (_Integration == "implicite")
-        _SolveurImpl->Solve(viscosite, _Nb_Sommets, Tps, Force, A, V, P, M, gravite, _SytemeMasseRessort);
+        _SolveurImpl->Solve(viscosite, _Nb_Sommets, Tps, Force, A, V, P, M, gravite, _SystemeMasseRessort);
     
     /* ! Gestion des collisions  */
     // Reponse : reste a la position du sol - arret des vitesses
