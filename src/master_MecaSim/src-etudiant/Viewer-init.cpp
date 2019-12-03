@@ -235,7 +235,7 @@ int Viewer::init()
     init_cube();
     init_sphere();
     
-    // Creation du plan (x, y, z) - plan utilise pour les ObjetSimule::CollisionPlan(x, y, z);
+    // Creation du plan (x, y, z) - plan utilise pour les ObjetSimule::Collision(x, y, z);
     // Rq : pas vraiment le plan, mais < x, < y, < z
     //init_plan(0, 0, 0);
     
