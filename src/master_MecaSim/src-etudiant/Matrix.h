@@ -73,7 +73,11 @@ public:
     float operator() (unsigned index) const;
     float operator() (unsigned row, unsigned column) const;
     
-    Vector GetAxis (unsigned int index) const;
+    /// Renvoie le vecteur ligne de la matrice selon l indice de ligne donne
+    Vector GetLine (unsigned int index) const;
+    
+    /// Renvoie le vecteur colonne de la matrice selon l indice de colonne donne
+    Vector GetColumn (unsigned int index) const;
     
     /// Renvoie le determinant de la matrice
     float Determinant() const;
@@ -93,10 +97,11 @@ public:
 };
 
 Matrix operator* (const Matrix & matrix, float factor);
+Matrix operator* (float factor, const Matrix & matrix);
 Matrix operator* (const Matrix & matrixA, const Matrix & matrixB);
 Vector operator* (const Matrix & matrix, const Vector & coord);
 Matrix operator+ (const Matrix & matrixA, const Matrix & matrixB);
-Matrix operator* (const Vector & coord , const Matrix & matrix);
+Vector operator* (const Vector & coord, const Matrix & matrix);
 Matrix operator- (const Matrix & matrixA, const Matrix & matrixB);
 std::ostream& operator<<(std::ostream &flux, Matrix const &m);
 
