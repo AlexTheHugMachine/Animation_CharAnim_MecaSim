@@ -57,7 +57,7 @@ ObjetSimuleRigidBody::ObjetSimuleRigidBody(std::string fich_param)
     Param_rigid(fich_param);
     
     /// Pour l etat X(t) - specification de :
-    // - position : x(t) - position du baycentre : _Position
+    // - position : x(t) - position du barycentre : _Position
     // - rotation : R(t) : _Rotation
     // - quantite de mouvement : P(t) : _QuantiteMouvement
     // - moment cinetique : L(t) : _MomentCinetique
