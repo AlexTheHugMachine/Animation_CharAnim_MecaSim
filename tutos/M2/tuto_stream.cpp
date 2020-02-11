@@ -22,7 +22,7 @@ class DrawInstanceBuffer : public AppTime
 {
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    DrawInstanceBuffer( ) : AppTime(1024, 640) {}
+    DrawInstanceBuffer( ) : AppTime(1024, 640,  4,4) {}
     
     int init( )
     {
@@ -92,7 +92,7 @@ public:
         glVertexAttribDivisor(1, 1);    // !! c'est la seule difference entre un attribut de sommet et un attribut d'instance !!
         glEnableVertexAttribArray(1);
         
-        // openGL 4.3
+        // openGL 4.4
         glGenBuffers(1, &m_instance_storage);
         glBindBuffer(GL_ARRAY_BUFFER, m_instance_storage);
         //~ glBufferStorage(GL_ARRAY_BUFFER,  sizeof(vec3) * m_positions.size(), m_positions.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);

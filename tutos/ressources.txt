@@ -1,0 +1,39 @@
+
+/*! \addtogroup ressources openGL 4.4 : ressources cpu / gpu et transfert de données
+
+Les shaders ont besoin de données pour fonctionner et de stockage pour écrire leurs résultats. Pour une application très simple, toutes les données sont statiques et 
+l'application ne fait pas de mise à jour. Pour les applications un peu plus évoluées, il est souvent nécessaire de modifier certaines données utilisées par les shaders : 
+des buffers ou des textures.
+
+Lorsque l'application alloue un buffer, il faut indiquer l'utilisation du buffer : cf paramètre `usage` et le flag `GL_STATIC_DRAW` dans `glBufferData()`, par exemple. 
+Ce flag indique, en théorie, que le buffer est alloué dans la mémoire du gpu et qu'il n'est pas accessible par l'application / le cpu. Pour modifier son contenu, il faut 
+créer un autre buffer, l'initialiser avec les nouvelles données, puis copier son contenu dans le premier buffer... 
+
+Que se passe-t-il si :
+- on modifie quand même le contenu du buffer avec `glBufferSubData( )` : en théorie, ça ne fonctionne pas sur un buffer `GL_STATIC_DRAW`. 
+En pratique, tous les drivers font _quelquechose_ et modifient quand même le contenu du buffer. Il y a au moins 2 techniques :
+	- le driver alloue un buffer temporaire, l'initialise et copie son contenu dans le premier buffer, et c'est très lent, mais pas trop grave, si l'application fait peu de modifications,
+	- ou, le driver décide de déplacer le buffer dans une autre zone mémoire, qui elle est accessible en écriture par le cpu et en lecture par le gpu, puis copie les données, et les 
+	performances de l'application s'écroulent complètement... 
+
+- on déclare explicitement que l'on va faire les choses proprement et que le driver ne doit pas intervenir et doit générer une erreur en cas de problème.
+
+Dans la mesure ou la première solution fonctionne, pourquoi s'embêter à faire quelquechose de plus compliqué ? Tout simplement parce que le résultat dépend de la 
+version du driver et de l'architecture de la carte graphique... Une solution qui fonctionne correctement sur une machine peut avoir des performances catastrophiques sur 
+une machine différente, alors qu'il est possible d'obtenir un résultat correct et _plus efficace_ quelque soit la configuration.
+
+_pourquoi ?_
+une carte graphique est réellement un deuxième _ordinateur_ complet connecté à l'unité centrale par un réseau spécial (bus PCI-Express). Elle est composée de plusieurs 
+processeurs parallèles pour exécuter les shaders et de mémoire dédiée très rapide. Mais pour communiquer avec l'application et l'unité centrale, elle doit utiliser la connexion 
+réseau qui est très lente par rapport à sa mémoire :
+- de son coté, l'unité centrale utilise le même réseau pour échanger des données avec la carte graphique. Mais, avant de pouvoir transférer des données vers la carte graphique, 
+l'unité centrale doit les copier dans une zone mémoire accessible par le réseau. 
+- la carte graphique reçoit aussi les données dans une zone dédiée de sa mémoire, mais selon son architecture, cette zone est utilisable par les shaders (à pleine vitesse), 
+ou pas du tout...
+
+OpenGL 4.4 a introduit de nouvelles fonctionnalités qui permettent d'obtenir des performances stables quelquesoit l'architecture des machines :
+- `glBufferStorage()` pour allouer des buffers et déclarer explicitement leur utilisation,
+- `glTexStorageXXX()` idem, pour allouer des textures (et leurs mipmaps).
+
+
+*/
