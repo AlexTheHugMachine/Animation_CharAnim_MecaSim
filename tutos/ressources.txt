@@ -31,9 +31,85 @@ l'unité centrale doit les copier dans une zone mémoire accessible par le rése
 - la carte graphique reçoit aussi les données dans une zone dédiée de sa mémoire, mais selon son architecture, cette zone est utilisable par les shaders (à pleine vitesse), 
 ou pas du tout...
 
-OpenGL 4.4 a introduit de nouvelles fonctionnalités qui permettent d'obtenir des performances stables quelquesoit l'architecture des machines :
+OpenGL 4.4 a introduit de nouvelles fonctionnalités qui permettent d'obtenir des performances stables quelque soit l'architecture des cartes graphiques :
 - `glBufferStorage()` pour allouer des buffers et déclarer explicitement leur utilisation,
-- `glTexStorageXXX()` idem, pour allouer des textures (et leurs mipmaps).
+- `glMapBuffer()` pour écrire les données directement dans la zone de transfert vers la carte graphique, en évitant les copies réalisées par le driver,
+- `glTexStorageXXX()` idem, pour allouer des textures (et leurs mipmaps),
+- `glTexSubImageXXX()` idem, pour transferer des données / pixels vers les textures.
 
+__remarque :__ chaque zone mémoire offre des performances différentes, et toutes les architectures de carte graphique ont une zone privée plus rapide qu'une zone 
+de transfert. Il est tout à fait possible de ne créer que des textures et buffers dynamiques (allouées dans les zones de transfert), mais ce ne sera pas nécessairement la 
+solution la plus efficace, même si c'est la plus simple à écrire.
+
+Les textures sont traitées différemment des buffers, l'organisation mémoire des pixels dans l'image est _opaque_, du coup, il n'est pas prévu de créer une texture dynamique ou 
+une texture privée. Il y a une seule api pour modifier les pixels d'une texture, qui fonctionne dans tous les cas.
+
+Pour les buffers, par contre, il est possible de créer un buffer privé, non accessible par l'application :
+\code
+	size_t length= { ... };
+	GLint gpu_buffer= 0;
+	glGenBuffers(1, &gpu_buffer);
+	glBindBuffer(GL_VERTEX_ARRAY, gpu_buffer);
+	glBufferStorage(/* target */ GL_VERTEX_ARRAY, /* length */ length, /* data */ nullptr , /* flags */ 0);
+\endcode
+
+c'est malin, comment on remplit le buffer maintenant ? Soit l'application a déjà préparé les données exactes et il suffit de passer le pointeur dans le paramètre `data`, soit :
+- il faut créer un buffer _dynamique_, 
+- transférer les données,
+- copier les données dans le buffer _privé_...
+
+\code
+	// creer un buffer dynamique, accessible par l'application
+	GLint cpu_buffer= 0;
+	glGenBuffers(1, &cpu_buffer);
+	glBindBuffer(GL_COPY_READ_BUFFER, cpu_buffer);
+	glBufferStorage(GL_COPY_READ_BUFFER, /* length */ ... , /* data */ ... , /* flags */ GL_DYNAMIC_STORAGE_BIT);
+	
+	// copier du buffer sélectionné sur GL_READ_BUFFER (read / source) vers le buffer sélectionné sur GL_VERTEX_ARRAY (write / destination)
+	glCopyBufferSubData(/* source */GL_READ_BUFFER, /* destination */ GL_VERTEX_ARRAY, /* source offset */ 0, /* destination offset */ 0, /* length */ length);
+	
+	// plus besoin du buffer
+	glDeleteBuffers(1, &cpu_buffer);
+\endcode
+
+Les paramètres `source offset` et `destination offset` indiquent quelle région du buffer copier, et `length` définit sa taille en octets.
+
+Créer un buffer dynamique à chaque fois que l'application veut modifier un buffer privé, n'est pas très pratique. Une bonne idée consiste à créer un buffer dédié qui ne servira qu'à 
+faire ce type de transferts. Par contre, comment modifier efficacement son contenu ? openGL 4.4 ajoute la possibilité d'obtenir un pointeur sur la zone de transfert allouée au buffer, 
+et d'écrire directement dedans, sans passer par d'autre appels openGL. Mais il faut créer le buffer avec les bons 
+flags : `GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT` pour obtenir le pointeur avec `glMapBufferRange()`.
+
+\code
+GLint gpu_buffer;
+GLint cpu_buffer;
+size_t length;
+void *write;
+
+init( ):
+	glGenBuffers(1, &cpu_buffer);
+	glBindBuffer(GL_COPY_READ_BUFFER, cpu_buffer);
+	glBufferStorage(/* target */ GL_COPY_READ_BUFFER, /* length */ length, /* data */ nullptr, /* flags */ GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
+
+	// demande l'acces a tout le buffer (length octets)
+	write= glMapBufferRange(/* target */ GL_COPY_READ_BUFFER, /* offset */ 0, /* length */ length, /* flags */ GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+	if(write == nullptr)
+		// return erreur !!
+	
+render( ):
+	// modifier le contenu du buffer
+	// par exemple :
+	memcpy(write, /* data */... , length);
+	
+	// indique la fin des modifications du contenu buffer
+	glFlushMappedBufferRange( /* target */ GL_COPY_READ_BUFFER, /* offset */ 0, /* length */ length);
+	// attendre que les données soient disponibles pour le gpu
+	glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+	
+quit( ):
+	glUnmapBuffer(/* target */ GL_COPY_READ_BUFFER);
+	glDeleteBuffers(1, &cpu_buffer);
+\endcode
+
+exemple complet dans tuto_stream.cpp
 
 */

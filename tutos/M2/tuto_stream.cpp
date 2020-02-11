@@ -1,5 +1,5 @@
 
-//! \file tuto6GL_buffer.cpp utilisation de glDrawArraysInstanced() et attributs d'instance sotckes dans un buffer
+//! \file tuto_stream.cpp utilisation de glBufferStorage() / glMapBufferRange()
 
 #include <cstdlib>
 #include <ctime>
@@ -62,8 +62,9 @@ public:
         // configure l'attribut 2, vec3 normal
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, /* stride */ 0, (const GLvoid *) offset_normals);
         glEnableVertexAttribArray(2);
-
-
+        
+    // remarque : oui, c'est mal et la suite montre comment le faire correctement !!
+        
         // instance buffer, position aleatoire des cubes...
         srand(time(nullptr));
         
@@ -81,7 +82,7 @@ public:
         printf("buffer %dKB\n", int(sizeof(vec3) * m_positions.size() / 1024));
         
         // cree et initialise le buffer d'instance
-        // openGL 3
+        // version openGL 3, buffer dynamique + glBufferSubData()
         glGenBuffers(1, &m_instance_buffer);
         glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * m_positions.size(), m_positions.data(), GL_DYNAMIC_DRAW);
@@ -92,14 +93,14 @@ public:
         glVertexAttribDivisor(1, 1);    // !! c'est la seule difference entre un attribut de sommet et un attribut d'instance !!
         glEnableVertexAttribArray(1);
         
-        // openGL 4.4
+        // openGL 4.4, buffer dynamique explicite + map persistant
         glGenBuffers(1, &m_instance_storage);
         glBindBuffer(GL_ARRAY_BUFFER, m_instance_storage);
         //~ glBufferStorage(GL_ARRAY_BUFFER,  sizeof(vec3) * m_positions.size(), m_positions.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
         glBufferStorage(GL_ARRAY_BUFFER,  sizeof(vec3) * m_positions.size(), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
         
         m_storage= glMapBufferRange(GL_ARRAY_BUFFER, 0, sizeof(vec3) * m_positions.size(), 
-            GL_MAP_INVALIDATE_BUFFER_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT);
+            GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT);
         if(m_storage == nullptr) 
             return -1;
         
@@ -176,6 +177,8 @@ public:
             clear_key_state(SDLK_SPACE);
             mode= (mode + 1) % 5;
             printf("mode %d\n", mode);
+            
+            // alterne entre les 4 solutions de transfert...
         }
         
         // modifie le contenu du buffer d'instances
@@ -210,17 +213,19 @@ public:
         else if(mode == 3)
         {
             // strategie 4 :
-            // persistant map + flush
+            // persistant map + flush + barrier
             
             std::chrono::high_resolution_clock::time_point copy_start= std::chrono::high_resolution_clock::now();
             memcpy(m_storage, m_positions.data(), sizeof(vec3) * m_positions.size());
             
             std::chrono::high_resolution_clock::time_point copy_stop= std::chrono::high_resolution_clock::now();
             auto copy_time= std::chrono::duration_cast<std::chrono::microseconds>(copy_stop - copy_start).count();
-            //~ printf("copy  %02dus\n", int(copy_time));
+            printf("memcopy  %02dus\n", int(copy_time));
             
             glBindBuffer(GL_ARRAY_BUFFER, m_instance_storage);            
             glFlushMappedBufferRange(GL_ARRAY_BUFFER, 0,  sizeof(vec3) * m_positions.size());
+            
+            glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
             
             glBindVertexArray(m_vao_storage);
         }
