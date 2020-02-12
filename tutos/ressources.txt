@@ -31,15 +31,35 @@ l'unité centrale doit les copier dans une zone mémoire accessible par le rése
 - la carte graphique reçoit aussi les données dans une zone dédiée de sa mémoire, mais selon son architecture, cette zone est utilisable par les shaders (à pleine vitesse), 
 ou pas du tout...
 
+Dans openGL 3.3, ce sont les flags de création de buffers qui indiquent l'utilisation prévue :
+- `GL_STATIC_DRAW` : pas de modification du contenu du buffer par l'application, utilisation par le gpu pour dessiner,
+- `GL_DYNAMIC_DRAW` : modifications du contenu du buffer par l'application, utilisation par le gpu pour dessiner.
+
+\code
+	GLint buffer;
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_VERTEX_ARRAY, buffer);
+	glBufferData(GL_VERTEX_ARRAY, /* length */ ..., /* data */ ... , /* flags */ GL_STATIC_DRAW);
+\endcode
+
+Mais ces flags ne sont que _informatifs_, modifier un buffer statique ne provoque pas d'erreur dans openGL 3.3, par contre les performances peuvent être variables, selon ce 
+que fait le driver pour modifier le contenu du buffer.
+
+Pour modifier le contenu d'un buffer dynamique, on dispose de plusieurs solutions :
+- reallouer le buffer avec un contenu différent, avec `glBufferData()`,
+- modifier son contenu avec `glBufferSubData()`.
+
+__remarque :__ chaque zone mémoire offre des performances différentes, et toutes les architectures de carte graphique ont une zone privée plus rapide qu'une zone 
+de transfert. Il est tout à fait possible de ne créer que des textures et buffers dynamiques (allouées dans les zones de transfert), mais ce ne sera pas nécessairement la 
+solution la plus efficace, même si c'est la plus simple à écrire.
+
+Mais les performances ne sont pas très stables d'un driver à l'autre : une solution efficace pour une carte Nvidia, ne sera peut etre pas la meilleure solution pour une carte AMD.
+
 OpenGL 4.4 a introduit de nouvelles fonctionnalités qui permettent d'obtenir des performances stables quelque soit l'architecture des cartes graphiques :
 - `glBufferStorage()` pour allouer des buffers et déclarer explicitement leur utilisation,
 - `glMapBuffer()` pour écrire les données directement dans la zone de transfert vers la carte graphique, en évitant les copies réalisées par le driver,
 - `glTexStorageXXX()` idem, pour allouer des textures (et leurs mipmaps),
 - `glTexSubImageXXX()` idem, pour transferer des données / pixels vers les textures.
-
-__remarque :__ chaque zone mémoire offre des performances différentes, et toutes les architectures de carte graphique ont une zone privée plus rapide qu'une zone 
-de transfert. Il est tout à fait possible de ne créer que des textures et buffers dynamiques (allouées dans les zones de transfert), mais ce ne sera pas nécessairement la 
-solution la plus efficace, même si c'est la plus simple à écrire.
 
 Les textures sont traitées différemment des buffers, l'organisation mémoire des pixels dans l'image est _opaque_, du coup, il n'est pas prévu de créer une texture dynamique ou 
 une texture privée. Il y a une seule api pour modifier les pixels d'une texture, qui fonctionne dans tous les cas.

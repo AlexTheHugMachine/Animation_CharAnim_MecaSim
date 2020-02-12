@@ -220,7 +220,7 @@ public:
             
             std::chrono::high_resolution_clock::time_point copy_stop= std::chrono::high_resolution_clock::now();
             auto copy_time= std::chrono::duration_cast<std::chrono::microseconds>(copy_stop - copy_start).count();
-            printf("memcopy  %02dus\n", int(copy_time));
+            printf("memcpy  %dK %02dus = %.2fK/s\n", int(sizeof(vec3) * m_positions.size()) / 1024, int(copy_time), float(sizeof(vec3) * m_positions.size() / 1024) / (float(copy_time) / 1000000));
             
             glBindBuffer(GL_ARRAY_BUFFER, m_instance_storage);            
             glFlushMappedBufferRange(GL_ARRAY_BUFFER, 0,  sizeof(vec3) * m_positions.size());
@@ -254,6 +254,7 @@ public:
 
 protected:
     std::vector<vec3> m_positions;
+    void* m_positions64;
     
     // solution openGL3
     GLuint m_vao;
