@@ -21,6 +21,7 @@ gKit2light est composé de plusieurs utilitaires :
     - widgets.h permet de controler l'application avec une interface graphique minimaliste.
 
 mais il y a aussi pas mal de tutos / exemple de code :
+    - \ref intro3d,
     - \ref tuto_application,
     - tuto2.cpp utilisation de mesh pour décrire les sommets d'un ou plusieurs triangles et les dessiner,
     - tuto3.cpp transformations, rotation d'un triangle dans l'image,
@@ -38,7 +39,6 @@ mais il y a aussi pas mal de tutos / exemple de code :
     - \ref shader_kit.cpp est un utilitaire pour prototyper rapidement des shaders.
     
 plus ceux dédiés à openGL :
-    - \ref intro3d,
     - \ref glsl,
     - \ref interfaceC,
     - \ref tuto2GL,

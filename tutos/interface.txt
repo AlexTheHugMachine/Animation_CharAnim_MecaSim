@@ -3,7 +3,19 @@
 
 ## une api3d est...
 
-un ensemble de fonctions. openGL est utilisable à travers un ensemble de fonctions C, ce qui signifie, pas de surchage, 
+un ensemble de fonctions... pour utiliser un pipeline 3D. 
+
+Dans un monde idéal, il y aurait un seul source, décrivant l'application et les shaders, des tableaux de triangles pour décrire les objets, et il n'y aurait pas de
+différence entre affecter une valeur à une variable / paramètre d'un shader et affecter une valeur à une variable de l'application...
+
+La réalité est _très légèrement_ différente. L'application s'exécute sur le processeur de l'ordinateur et les shaders s'exécutent sur les processeurs de la carte graphique, et 
+les deux disposent de leur propre mémoire, qui ne partagent pas d'espace d'adressage... autrement dit, une variable de shader n'existe pas dans l'application, et 
+réciproquement, une variable de l'application n'existe pas dans un shader. Le cpu et le gpu sont _physiquement_ des _machines_ différentes connectées 
+par un réseau... et c'est au programmeur de compiler un programme pour le cpu, de compiler les shaders pour le gpu et de les faire communiquer / s'exécuter ensemble.
+Dernier point important, le pipeline propose pas mal d'options différentes, et il n'est pas envisageable d'affecter explicitement une valeur à l'ensemble des paramètres 
+à chaque fois que l'on veut dessiner un objet. Ces 2 problèmes font qu'une api 3d est un très gros ensemble de fonctions / librairie.
+
+openGL est utilisable à travers un ensemble de fonctions C, ce qui signifie, pas de surchage, 
 mais une famille de fonctions, des types opaques, pas d'objet, mais des identifiants.
 
 une interface C++ pourrait ressembler à ça :
@@ -19,7 +31,7 @@ tout est explicite, on connait le contexte, le buffer, etc.
 
 la version C pur pourrait ressembler à ça :
 \code
-struct Context *context= context_create();
+struct Context *context= create_context();
 
 Point positions[]= { ... };
 struct Buffer *buffer= context_createBuffer(context);
@@ -29,24 +41,22 @@ buffer_data(buffer, sizeof(positions), positions);
 tout est explicite, mais un peu plus long à écrire.
 
 l'interface d'openGL utilise une _convention_ différente : au lieu de rendre explicite l'objet / la structure manipulée, elle est 
-d'abord "sélectionnée" pour une opération particulière, puis manipulée implicitement :
+d'abord "sélectionnée", puis manipulée implicitement :
 \code
-createContext();                                // crée un contexte, et le sélectionne, 
+createContext();                            // crée un contexte, et le sélectionne, devient le paramètre implicite de toutes les autres fonctions
 
-uint buffer= createBuffer();                    // crée un buffer, représenté par un identifiant numérique, parametre implicite, context
-bindBuffer(0, buffer);                          // sélectionne le buffer, pour une utilisation particulière, parametre implicite, buffer
+uint buffer= createBuffer();                // crée un buffer, représenté par un identifiant numérique, parametre implicite, context
+bindBuffer(buffer);                         // sélectionne le buffer, parametre implicite, context
 
 Point positions[]= { ... };
-bufferData(0, sizeof(positions), positions);    // alloue le buffer et l'initialise avec le contenu de positions, parametre implicite, buffer.
-// le buffer manipulé est celui sélectionné sur l'attribut 0...
+bufferData(sizeof(positions), positions);   // alloue le buffer et l'initialise avec le contenu de positions, parametre implicite, buffer, context.
 \endcode
 
-ce qui permet d'obtenir une syntaxe compacte, mais peut être source de nombreuses erreurs, si l'on n'y prête pas attention.
+ce qui permet d'obtenir une syntaxe _assez_ compacte, mais peut être source de nombreuses erreurs, si l'on n'y prête pas attention.
 
 ## pas de surcharge 
 
-autre détail important, il n'y a pas de surchage en C, on ne peut écrire ça pour modifier la valeur d'un paramètre de shader :
-
+autre détail important, il n'y a pas de surchage en C, on ne peut pas écrire ça pour modifier la valeur d'un paramètre de shader :
 \code
 Program *program= context->createProgram( ... );
 program->uniform("color", Color(1, 1, 0));      // affecter une couleur
@@ -65,11 +75,11 @@ mais plutot ça :
 // creer le shader program
 uint program= createProgram( ... );
 // selectionner le shader program
-use_program(program);
+useProgram(program);
 
 // modifier les uniforms
-uniform3f("color", 1.0f, 1.0f, 0.0f);   // parametre implicite, program, surcharge 3 float
-uniform1f("time", 12.0f);               // parametre implicite, program, surcharge 1 float
+uniform3f("color", 1, 1, 0);         // parametre implicite, program, surcharge 3 float
+uniform1f("time", 12);               // parametre implicite, program, surcharge 1 float
 \endcode
 
 chaque surcharge est nommée explicitement, puisque seul le nom de la fonction est utilisé. selon le type de valeur à manipuler,
@@ -132,5 +142,50 @@ le program sera sélectionné avec `glUseProgram( )`. cf \ref tuto2GL pour les d
 
 # documentation complète 
 
-l'api complète et sa documentation est consultable sur [opengl.org](https://www.opengl.org/sdk/docs/man/)
- */
+l'api complète et sa documentation est consultable sur [opengl.org](https://www.opengl.org/sdk/docs/man/), le 
+[wiki](https://www.khronos.org/opengl/wiki/) propose un résumé des fonctionnalités et ainsi que les détails d'utilisation.
+
+# pour les curieux
+
+Oui, il est très tentant d'écrire une abstraction c++ pour manipuler tout ça... malheureusement, les paramètres implicites empechent de faire une conception propre.
+
+Autre point pénible, openGL est une api historique, conçue par SGI (IrisGL) et rendu publique en 1992, d'ou le nom openGL. Les conventions de programmation, ainsi
+que les cartes graphiques étaient très différentes à l'époque. Les shaders n'existaient pas, par exemple, la première version ne permettait pas de manipuler de textures, etc.
+Un premier gros travail de nettoyage est arrivé avec la version 3.3 core profile. Cette version est la base d'openGL ES utilisé sur tablette et téléphone, ainsi que de WebGL.
+Chaque version d'openGL correspond à l'ajout de nouvelles fonctionnalités pour profiter de chaque génération de carte graphique. Certaines fonctions sont ajoutées pour raison 
+de performances, mais les anciennes sont toujours présentes dans l'api... De même, plusieurs ajouts permettent de simplifier le portage des applications écrites avec Direct3d.
+Et l'api est très chargée, par exemple : pour modifier le contenu d'un buffer, il y a au moins 4 solutions différentes, il y a aussi 2 manières de décrire les attributs de sommets, 
+la "nouvelle" a été introduite en partie pour raison de performance et en partie parce que la notion de vertex array n'existe pas en Direct3d...
+
+Par contre, openGL 4.5 inclus l'extension [`direct_state_access`](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_direct_state_access.txt) qui permet 
+de se rapprocher d'un modèle objet, mais comme cette api co-existe avec la version historique, le nommage des fonctions est pénible. Cette dernière version de l'api 
+élimine la sélection d'un objet pour modifier ses propriétés. par exemple, au lieu de :
+\code
+// openGL 3.3
+GLuint buffer;
+glGenBuffers(1, &buffer);
+glBindbuffer(GL_VERTEX_ARRAY, buffer);
+glBufferData(GL_VERTEX_ARRAY, ... );
+\endcode
+
+on peut écrire directement :
+\code
+// openGL 4.5, direct state
+GLuint buffer;
+glCreateBuffers(1, &buffer);
+glNamedBufferData(buffer, .... );
+\endcode
+
+Reste aussi un problème plus fondamental, la gestion des ressources openGL, l'application ne fait que référencer les objets openGL, le contexte reste le propriétaire, et 
+dernière subtilité, un contexte doit être initialisé pour créer et manipuler des objets openGL.
+
+Mais dans tous les cas, il faut commencer par écrire quelques applications openGL pour comprendre comment le manipuler avant de se lancer dans un exercice 
+d'abstraction / conception.
+
+__remarque :__  après quelques tps, Mesh::draw( ) devrait apparaitre clairement comme la solution simple et assez naive qu'elle est réellement.
+
+_exercice :_ pourquoi ? proposez une construction plus interressante, ou pour commencer : quelle est la principale limite, ou hypothèse de Mesh ?
+
+_exercice :_ uniformisez le nommage des fonctions de openGL 4.5 direct state en éliminant toutes les fonctions historiques et groupez les dans un namespace c++
+
+*/

@@ -591,14 +591,11 @@ void main( )
 }
 \endcode
 
-\image html mesh_uvgrid.png
-
 
 # résumé
 
 pour résumer, voila à quoi ressemble le pipeline openGL :
-
-\image html opengl_pipeline.png
+<IMG SRC="pipeline.png" width="33%"> 
 
 certaines étapes sont programmables, ce sont les shaders, et les autres sont paramétrables :
     - assemblage des attributs / informations des sommets de chaque triangle,
@@ -611,9 +608,17 @@ certaines étapes sont programmables, ce sont les shaders, et les autres sont pa
     - test de profondeur de chaque fragment,
     - écriture dans l'image résultat et mise à jour du zbuffer par le pipeline, pour chaque fragment, de chaque triangle,
 
-\image html shader2_pipeline.png
+Et voici le même schéma du pipeline, mais annoté avec les fonctions openGL qui permettent de le paramétrer :
+<IMG SRC="shader_pipeline.png" width="33%"> 
 
-pour dessiner un triangle (ou plusieurs), il faut donc paramétrer le pipeline pour obtenir le résultat voulu... cf \ref tuto3GL et écrire les 2 shaders... cf \ref glsl
+pour dessiner un triangle (ou plusieurs), il faut donc paramétrer le pipeline, en utilisant les fonctions de l'api openGL, pour obtenir le résultat voulu... 
+cf \ref tuto3GL et écrire les 2 shaders... cf \ref glsl
+N'oubliez pas que tout ça est juste une manière très maladroite d'exécuter des shaders sur le gpu / processeurs de la carte graphique : `glDraw(GL_TRIANGLES, n)` 
+peut vraiment se comprendre comme : 
+    - exécute le vertex shader sur `n` sommets ,
+    - dessine `n/3` triangles,
+    - exécute le fragment shader sur les pixels de l'image permettant de dessiner chaque triangle.
+
 
 suite de la lecture :
     - \ref interfaceC, les fonctions d'openGL, la construction de l'interface en C pur,
@@ -621,6 +626,5 @@ suite de la lecture :
     - \ref tuto2GL compiler un shader program, avec vérification des erreurs, avec les utilitaires de gKit,
     - \ref tuto3GL passer des paramètres, des valeurs uniform, à un shader,
     - \ref tuto4GL dessiner des triangles avec la solution classique, description des attributs des sommets, buffers, vertex arrays et shaders.
-
 
  */
