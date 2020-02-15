@@ -13,7 +13,8 @@ les deux disposent de leur propre mémoire, qui ne partagent pas d'espace d'adre
 réciproquement, une variable de l'application n'existe pas dans un shader. Le cpu et le gpu sont _physiquement_ des _machines_ différentes connectées 
 par un réseau... et c'est au programmeur de compiler un programme pour le cpu, de compiler les shaders pour le gpu et de les faire communiquer / s'exécuter ensemble.
 Dernier point important, le pipeline propose pas mal d'options différentes, et il n'est pas envisageable d'affecter explicitement une valeur à l'ensemble des paramètres 
-à chaque fois que l'on veut dessiner un objet. Ces 2 problèmes font qu'une api 3d est un très gros ensemble de fonctions / librairie.
+à chaque fois que l'on veut dessiner un objet. Ces 2 problèmes font qu'une api 3d est un très gros ensemble de fonctions / librairie, et que la totalité des paramètres sont 
+implicites.
 
 openGL est utilisable à travers un ensemble de fonctions C, ce qui signifie, pas de surchage, 
 mais une famille de fonctions, des types opaques, pas d'objet, mais des identifiants.
@@ -91,13 +92,17 @@ i pour int, u pour unsigned int, v pour vector, un pointeur sur une ou plusieurs
 
 pour dessiner, il faut en général créer plusieurs types d'objets openGL, la démarche est toujours la même :
     - créer un ou plusieurs identifiants, type `GLuint`, cf la famille de fonctions glGenXXX( ),
-    - sélectionner l'objet pour le configurer.
+    - sélectionner l'objet pour le créer et / ou le modifier.
 
 exemple, pour créer plusieurs buffers openGL, cf `glGenBuffers( )` :
 \code
 GLuint buffers[4];
 glGenBuffers(4, buffers);
 \endcode
+
+__pourquoi ?__ tous ces objets / ressources openGL permettent de manipuler des données qui sont en fait stockées dans la mémoire de la carte graphique. Il n'y a 
+pas d'espace d'adressage commun entre le cpu et le gpu : l'application ne peut pas obtenir un pointeur sur une structure allouée sur le gpu. Par contre, toutes les api 3d 
+proposent la même abstraction. Par exemple, allouer de la mémoire gpu pour stocker les coordonnées des sommets des triangles à dessiner est caché derrière les buffers.
 
 ### créer un buffer 
 
@@ -109,6 +114,8 @@ glGenBuffers(1, &buffer);
 
 le buffer sera ensuite sélectionné avec `glBindBuffer( )`. cf \ref tuto4GL pour plus de détails sur l'utilisation des buffers.
 
+c'est l'équivalent d'une allocation dynamique, cf `new[]` ou `malloc()`, mais au lieu de récupérer un pointeur, on obtient un _identifiant_ de la zone mémoire 
+allouée sur le gpu.
 
 ### créer un vertex array object
 
@@ -117,7 +124,19 @@ GLuint vao;
 glGenVertexArrays(1, &vao);
 \endcode
 
-le vao sera ensuite sélectionné avec `glBindVertexArray( )`. cf \ref tuto4GL pour plus de détails.
+le vao sera ensuite sélectionné avec `glBindVertexArray( )`. cf \ref tuto4GL pour plus de détails 
+
+cet objet permet de décrire la structure d'un sommet, c'est l'équivalent openGL d'une déclaration :
+\code
+struct vertex
+{
+        vec3 position;
+        vec3 normale;
+        vec3 couleur;
+};
+\endcode
+
+pour chaque membre, il y aura un attribut de sommet openGL déclaré en utilisant `glVertexAttribPointer()`. cf \ref tuto4GL
 
 
 ### créer une texture
@@ -129,6 +148,8 @@ glGenTextures(1, &texture);
 
 la texture sera ensuite sélectionnée avec `glBindTexture( )`, cf \ref tuto5GL.
 
+c'est la même idée que pour les buffers, une texture est un tableau de couleurs, les fonctions `glTexImageXXX()` permettent de déclarer les dimensions de l'image
+et de décrire la structure qui représente une couleur.
 
 ### créer un shader, un shader program
 
@@ -138,7 +159,74 @@ GLuint vertex_shader= glCreateShader(GL_VERTEX_SHADER);
 GLuint shader_program= glCreateProgram();
 \endcode
 
-le program sera sélectionné avec `glUseProgram( )`. cf \ref tuto2GL pour les détails.
+le shader program sera sélectionné avec `glUseProgram( )`. cf \ref tuto2GL pour les détails.
+
+openGL inclut un compilateur et un linker de shaders, ainsi qu'un ensemble de fonctions permettant de récupérer les symboles / l'interface des shaders. Ce sont ces informations qui
+permettent d'affecter une valeur à chaque paramètre avant de dessiner des objets. c'est équivalent à :
+
+\code
+// en c++ on pourrait écrire un vertex shader simple :
+std::vector<vec4> vertex_shader( const std::vector<vec3>& positions, const Transform matrix )
+{
+        std::vector<vec4> t;
+        for(auto const& p : positions)
+                t.push_back( matrix * vec4(p, 1) );
+                
+        return t;
+}
+\endcode
+
+mais le pipeline parallèlise l'execution de la boucle, et le vertex shader ne transforme qu'un seul sommet, il est exécuté par N threads :
+\code
+// en c++ on pourrait écrire un vertex shader simple :
+vec4 vertex_shader( const std::vector<vec3>& positions, const Transform matrix, const thread_id )
+{
+        return matrix * vec4(positions[thread_id], 1);
+}
+\endcode
+
+et les api 3d décrivent cette fonction différement :
+\code
+uniform mat4 matrix;
+in vec3 position;
+out vec4 gl_Position;
+
+void main( void )
+{
+        gl_Position= matrix * vec4(position, 1);
+}
+\endcode
+
+les mot clés `uniform`, `in`, `out` indiquent si chaque paramètre est une entrée, un résultat, ou si c'est un élément d'un tableau, indexé _implicitement_ par l'identifiant du 
+thread qui exécute la fonction...
+
+résultat, pour exécuter la fonction, au lieu d'écrire :
+\code
+// c++
+std::vector<vec3> positions= { .... };
+Transform matrix= { ... };
+
+std::vector<vec4> projections= vertex_shader(positions, matrix);
+\endcode
+
+il faut indiquer, paramètre par paramètre, quel objet openGL contient sa valeur : un vertex array object, un uniform, ou un buffer. cf \ref tuto3GL
+
+\code
+// selectionne les shaders / la fonction 
+useProgram(...);
+
+programUniform("matrix", ...);  // affecte une valeur au parametre 'matrix'
+bindVertexArray(...);           // affecte un tableau au parametre 'positions'
+
+draw(GL_TRIANGLES, n);          // dessine n/3 triangles et execute les vertex shaders pour transformer n sommets.
+\endcode
+
+et c'est encore un peu petit plus décomposé : pour affecter une valeur à un paramètre `uniform`, il faut d'abord récupérer son identifiant / symbole, avec `glGetUniformLocation()`
+puis utiliser la bonne surcharge de `glProgramUniform() / glUniform()` pour affecter une valeur. cf \ref tuto3GL.
+
+Affecter les paramètres un par un n'est pas la seule solution, il est aussi possible et plus performant de les grouper dans un buffer, cf \ref uniform_buffers et \ref ressources pour 
+la mise à jour efficace des buffers.
+
 
 # documentation complète 
 
@@ -164,8 +252,8 @@ de se rapprocher d'un modèle objet, mais comme cette api co-existe avec la vers
 // openGL 3.3
 GLuint buffer;
 glGenBuffers(1, &buffer);
-glBindbuffer(GL_VERTEX_ARRAY, buffer);
-glBufferData(GL_VERTEX_ARRAY, ... );
+glBindbuffer(GL_ARRAY_BUFFER, buffer);
+glBufferData(GL_ARRAY_BUFFER, ... );
 \endcode
 
 on peut écrire directement :
