@@ -179,13 +179,39 @@ std::vector<vec4> vertex_shader( const std::vector<vec3>& positions, const Trans
 mais le pipeline parallèlise l'execution de la boucle, et le vertex shader ne transforme qu'un seul sommet, il est exécuté par N threads :
 \code
 // en c++ on pourrait écrire un vertex shader simple :
-vec4 vertex_shader( const std::vector<vec3>& positions, const Transform matrix, const thread_id )
+vec4 vertex_shader( const std::vector<vec3>& positions, const Transform matrix, const int id )
 {
-        return matrix * vec4(positions[thread_id], 1);
+        return matrix * vec4(positions[id], 1);
 }
+
+// exemple de parallelisation avec openMP en c++
+std::vector<vec3> positions= { ... };	// valeurs fournies par l'application
+std::vector<vec4> shader_output(positions.size());
+#pragma omp parallel for
+	for(int vertex_id= 0; vertex_id < positions.size(); vertex_id++)
+		shader_output[vertex_id]= vertex_shader(positions, matrix, vertex_id);
 \endcode
 
-et les api 3d décrivent cette fonction différement :
+et les api 3d décrivent les paramètres du vertex shader différemment :
+\code
+// en c++ on pourrait écrire un vertex shader simple :
+vec4 vertex_shader( const vec3 position, const Transform matrix, const int id )
+{
+        return matrix * vec4(position, 1);
+}
+
+// exemple de parallelisation avec openMP en c++
+std::vector<vec3> positions= { ... };	// valeurs fournies par l'application
+std::vector<vec4> shader_output(positions.size());
+#pragma omp parallel for
+	for(int vertex_id= 0; vertex_id < positions.size(); vertex_id++)
+	{
+		vec3 position= positions[vertex_id];
+		shader_output[vertex_id]= vertex_shader(position, matrix, vertex_id);
+	}
+\endcode
+
+le vertex shader et ses paramètres s'écrivent au final comme ça :
 \code
 uniform mat4 matrix;
 in vec3 position;
@@ -224,7 +250,7 @@ draw(GL_TRIANGLES, n);          // dessine n/3 triangles et execute les vertex s
 et c'est encore un peu petit plus décomposé : pour affecter une valeur à un paramètre `uniform`, il faut d'abord récupérer son identifiant / symbole, avec `glGetUniformLocation()`
 puis utiliser la bonne surcharge de `glProgramUniform() / glUniform()` pour affecter une valeur. cf \ref tuto3GL.
 
-Affecter les paramètres un par un n'est pas la seule solution, il est aussi possible et plus performant de les grouper dans un buffer, cf \ref uniform_buffers et \ref ressources pour 
+Affecter les paramètres `uniform` un par un n'est pas la seule solution, il est aussi possible et plus performant de les grouper dans un buffer, cf \ref uniform_buffers et \ref ressources pour 
 la mise à jour efficace des buffers.
 
 

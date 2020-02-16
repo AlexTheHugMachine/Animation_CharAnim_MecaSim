@@ -9,36 +9,36 @@ Lorsque l'application alloue un buffer, il faut indiquer l'utilisation du buffer
 Ce flag indique, en théorie, que le buffer est alloué dans la mémoire du gpu et qu'il n'est pas accessible par l'application / le cpu. 
 
 \code
-	// creer un buffer statique
-		GLint buffer;
-		glGenBuffers(1, &buffer);
-		glBindBuffer(GL_VERTEX_ARRAY, buffer);
-		glBufferData(GL_VERTEX_ARRAY, /* length */, /* data */, /* flags */ GL_STATIC_DRAW);
+        // creer un buffer statique
+                GLint buffer;
+                glGenBuffers(1, &buffer);
+                glBindBuffer(GL_ARRAY_BUFFER, buffer);
+                glBufferData(GL_ARRAY_BUFFER, /* length */, /* data */, /* flags */ GL_STATIC_DRAW);
 \endcode
 
 Pour pouvoir modifier le contenu d'un buffer, il faut le créer avec le flag `GL_DYNAMIC_DRAW`, et utiliser `glBufferSubData()` :
 
 \code
-	init( ):
-	// creer un buffer dynamique
-		GLint buffer;
-		glGenBuffers(1, &buffer);
-		glBindBuffer(GL_VERTEX_ARRAY, buffer);
-		glBufferData(GL_VERTEX_ARRAY, /* length */ , /* data */ , /* flags */ GL_DYNAMIC_DRAW);
-		
-	render( ):
-	// modifier le contenu du buffer dynamique
-		glBindBuffer(GL_VERTEX_ARRAY, buffer);
-		glBufferSubData( /* target */ GL_VERTEX_ARRAY, /* offset */ , /* length */, /* data */ ... );
+        init( ):
+        // creer un buffer dynamique
+                GLint buffer;
+                glGenBuffers(1, &buffer);
+                glBindBuffer(GL_ARRAY_BUFFER, buffer);
+                glBufferData(GL_ARRAY_BUFFER, /* length */ , /* data */ , /* flags */ GL_DYNAMIC_DRAW);
+                
+        render( ):
+        // modifier le contenu du buffer dynamique
+                glBindBuffer(GL_ARRAY_BUFFER, buffer);
+                glBufferSubData( /* target */ GL_ARRAY_BUFFER, /* offset */ , /* length */, /* data */ ... );
 \endcode
 
 Mais que se passe-t-il, lorsque l'on modifie quand même le contenu d'un buffer statique ?
 
 En pratique, rien... le contenu du buffer statique est bien modifié. Il y a _juste_ un warning dans la console... 
 Tous les drivers font _quelquechose_ et modifient quand même le contenu du buffer. Les drivers peuvent utiliser au moins une de ces 2 techniques :
-	- le driver alloue un buffer temporaire, l'initialise et copie son contenu dans le premier buffer, et c'est lent, mais pas trop grave, si l'application fait peu de modifications,
-	- ou, le driver décide de déplacer le buffer dans une autre zone mémoire, qui elle est accessible en écriture par le cpu et en lecture par le gpu, puis copie les données, et les 
-	performances de l'application s'écroulent complètement... 
+        - le driver alloue un buffer temporaire, l'initialise et copie son contenu dans le premier buffer, et c'est lent, mais pas trop grave, si l'application fait peu de modifications,
+        - ou, le driver décide de déplacer le buffer dans une autre zone mémoire, qui elle est accessible en écriture par le cpu et en lecture par le gpu, puis copie les données, et les 
+        performances de l'application s'écroulent complètement... 
 
 Les flags de `glBufferData()` ne sont que _informatifs_, modifier un buffer statique ne provoque pas d'erreur dans openGL 3.3, par contre les performances seront variables, selon ce 
 que fait le driver pour modifier le contenu du buffer, et les différences peuvent être vraiment importantes.
@@ -53,11 +53,11 @@ OpenGL 4.4 a introduit de nouvelles fonctionnalités qui permettent d'obtenir de
 
 Il est possible de créer un buffer privé, non accessible par l'application, équivalent au flag `GL_STATIC_DRAW`, par contre, essayer de modifier son contenu provoquera une erreur...
 \code
-	size_t length= { ... };
-	GLint gpu_buffer= 0;
-	glGenBuffers(1, &gpu_buffer);
-	glBindBuffer(GL_VERTEX_ARRAY, gpu_buffer);
-	glBufferStorage(/* target */ GL_VERTEX_ARRAY, /* length */ length, /* data */ nullptr , /* flags */ 0);
+        size_t length= { ... };
+        GLint gpu_buffer= 0;
+        glGenBuffers(1, &gpu_buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, gpu_buffer);
+        glBufferStorage(/* target */ GL_ARRAY_BUFFER, /* length */ length, /* data */ nullptr , /* flags */ 0);
 \endcode
 
 _remarque :_ pour créer un buffer dynamique, le flag est `GL_DYNAMIC_STORAGE_BIT` au lieu de 0.
@@ -69,17 +69,17 @@ C'est malin, comment on remplit le buffer maintenant ? Soit l'application a déj
 - détruire le buffer de transfert.
 
 \code
-	// creer un buffer dynamique, accessible par l'application
-	GLint cpu_buffer= 0;
-	glGenBuffers(1, &cpu_buffer);
-	glBindBuffer(GL_COPY_READ_BUFFER, cpu_buffer);
-	glBufferStorage(GL_COPY_READ_BUFFER, /* length */ ... , /* data */ data, /* flags */ GL_DYNAMIC_STORAGE_BIT);
-	
-	// copier du buffer sélectionné sur GL_READ_BUFFER (read / source) vers le buffer sélectionné sur GL_VERTEX_ARRAY (write / destination)
-	glCopyBufferSubData(/* source */ GL_READ_BUFFER, /* destination */ GL_VERTEX_ARRAY, /* source offset */ 0, /* destination offset */ 0, /* length */ length);
-	
-	// plus besoin du buffer
-	glDeleteBuffers(1, &cpu_buffer);
+        // creer un buffer dynamique, accessible par l'application
+        GLint cpu_buffer= 0;
+        glGenBuffers(1, &cpu_buffer);
+        glBindBuffer(GL_COPY_READ_BUFFER, cpu_buffer);
+        glBufferStorage(GL_COPY_READ_BUFFER, /* length */ ... , /* data */ data, /* flags */ GL_DYNAMIC_STORAGE_BIT);
+        
+        // copier du buffer sélectionné sur GL_READ_BUFFER (read / source) vers le buffer sélectionné sur GL_ARRAY_BUFFER (write / destination)
+        glCopyBufferSubData(/* source */ GL_READ_BUFFER, /* destination */ GL_ARRAY_BUFFER, /* source offset */ 0, /* destination offset */ 0, /* length */ length);
+        
+        // plus besoin du buffer
+        glDeleteBuffers(1, &cpu_buffer);
 \endcode
 
 Les paramètres `source offset` et `destination offset` indiquent quelle région du buffer copier, et `length` définit sa taille en octets.
@@ -90,35 +90,35 @@ et d'écrire directement dedans, sans passer par d'autre appels openGL. Mais il 
 flags : `GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT` pour obtenir ensuite le pointeur avec `glMapBufferRange()`.
 
 \code
-	GLint gpu_buffer;
-	GLint cpu_buffer;
-	size_t length;
-	void *write;
+        GLint gpu_buffer;
+        GLint cpu_buffer;
+        size_t length;
+        void *write;
 
-	init( ):
-		glGenBuffers(1, &cpu_buffer);
-		glBindBuffer(GL_COPY_READ_BUFFER, cpu_buffer);
-		glBufferStorage(/* target */ GL_COPY_READ_BUFFER, /* length */ length, /* data */ nullptr, /* flags */ GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
+        init( ):
+                glGenBuffers(1, &cpu_buffer);
+                glBindBuffer(GL_COPY_READ_BUFFER, cpu_buffer);
+                glBufferStorage(/* target */ GL_COPY_READ_BUFFER, /* length */ length, /* data */ nullptr, /* flags */ GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 
-		// demande l'acces a tout le buffer (length octets)
-		write= glMapBufferRange(/* target */ GL_COPY_READ_BUFFER, /* offset */ 0, /* length */ length, /* flags */ GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
-		if(write == nullptr)
-			// return erreur !!
-		
-	render( ):
-		// modifier le contenu du buffer
-		// par exemple :
-		memcpy(write, /* data */ , length);
-		
-		// indique la fin des modifications du contenu buffer
-		glFlushMappedBufferRange( /* target */ GL_COPY_READ_BUFFER, /* offset */ 0, /* length */ length);
-		
-		// attendre que les données soient disponibles pour le gpu
-		glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
-		
-	quit( ):
-		glUnmapBuffer(/* target */ GL_COPY_READ_BUFFER);
-		glDeleteBuffers(1, &cpu_buffer);
+                // demande l'acces a tout le buffer (length octets)
+                write= glMapBufferRange(/* target */ GL_COPY_READ_BUFFER, /* offset */ 0, /* length */ length, /* flags */ GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+                if(write == nullptr)
+                        // return erreur !!
+                
+        render( ):
+                // modifier le contenu du buffer
+                // par exemple :
+                memcpy(write, /* data */ , length);
+                
+                // indique la fin des modifications du contenu buffer
+                glFlushMappedBufferRange( /* target */ GL_COPY_READ_BUFFER, /* offset */ 0, /* length */ length);
+                
+                // attendre que les données soient disponibles pour le gpu
+                glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+                
+        quit( ):
+                glUnmapBuffer(/* target */ GL_COPY_READ_BUFFER);
+                glDeleteBuffers(1, &cpu_buffer);
 \endcode
 
 `glBufferStorage()` et `glMapBufferRange()` utilisent les mêmes flags, ce qui plutot cohérent, mais il ne faut pas oublier de préciser que l'on souhaite uniquement écrire dans le buffer, 

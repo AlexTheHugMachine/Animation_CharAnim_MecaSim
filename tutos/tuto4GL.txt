@@ -28,6 +28,9 @@ glBindVertexArray(vao);
 les informations des sommets, les attributs, sont stockées dans un ou plusieurs vertex buffers, qui ne sont que des 
 tableaux alloués dans la mémoire de la carte graphique. cf \ref buffers pour les créer et leur affecter des données.
 
+_remarque :_ relisez \ref interfaceC section shaders pour les explications sur les `uniform`, `in` `out` et leurs rapports avec les tableaux de sommets...
+
+
 Si le vertex shader etait écrit en c++, on pourrait écrire directement :
 \code
 // declarer la structure qui represente un sommet et ses attributs
@@ -71,8 +74,8 @@ sommet pour exécuter les vertex shaders. par contre, l'application ne connait p
 
 le vertex shader GLSL s'écrit :
 \code
-layout(location= 0) in vec3 position;	// attribut 0
-layout(location= 1) in vec3 color;	// attribut 1
+layout(location= 0) in vec3 position;   // attribut 0
+layout(location= 1) in vec3 color;      // attribut 1
 
 out vec4 gl_Position;	// vertex_position, mais openGL impose le nom de cette variable
 out vec3 vertex_color;
@@ -88,8 +91,6 @@ void main( )
 }
 \endcode
 
-_remarque :_ relisez \ref interfaceC pour les explications sur les uniform, in out et leurs rapports avec les tableaux de sommets...
-
 il faut donc décrire l'organisation mémoire des 2 attributs, ainsi que leur type.
 
 le vertex array object stocke, pour chaque attribut déclaré par le vertex shader :
@@ -98,7 +99,7 @@ le vertex array object stocke, pour chaque attribut déclaré par le vertex shad
         - l'identifiant du buffer dans lequel se trouve les valeurs, implicite, c'est le buffer sélectionné sur 
         GL_ARRAY_BUFFER, cf \ref buffers, 
         - la position de la première valeur dans le buffer, paramètre offset, cf `offsetof(vertex, attrib)`
-        - la distance entre chaque valeur dans le buffer, paramètre stride, ou `sizeof(attrib)`.
+        - la distance entre chaque valeur dans le buffer, paramètre stride, ou `sizeof(vertex)`.
 
 l'indexation des sommets (l'index buffer) peut aussi être associé à un vertex array objet.
 
@@ -432,4 +433,20 @@ layout(location= 2) in vec3 normal;
 \endcode
 
 et la création des buffers / configuration du vao peut etre simplifiée, puisque l'on connait les identifiants des attributs. cf l'exemple précédent \ref single_buffer.
- */
+
+\section dynamic et comment modifier le contenu du buffer ?
+
+Il suffit d'utiliser le _bon_ flag `usage` lors de la création du buffer :
+        - `GL_STATIC_DRAW` : l'application ne modifie pas le contenu du buffer
+        \code
+        glBufferData(/* target */ , /* length */ , /* data*/ , GL_STATIC_DRAW);
+        \endcode
+        
+        - `GL_DYNAMIC_DRAW` : l'application va modifier régulièrement le contenu du buffer
+        \code
+        glBufferData(/* target */ , /* length */ , /* data*/ , GL_DYNAMIC_DRAW);
+        \endcode
+
+Plus de détails dans \ref ressources.
+
+*/
