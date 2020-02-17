@@ -39,8 +39,8 @@ mais il y a aussi pas mal de tutos / exemple de code :
     - \ref shader_kit.cpp est un utilitaire pour prototyper rapidement des shaders.
     
 plus ceux dédiés à openGL :
-    - \ref glsl,
     - \ref interfaceC,
+    - \ref glsl,
     - \ref tuto2GL,
     - \ref tuto3GL,
     - \ref tuto4GL,
