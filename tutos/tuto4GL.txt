@@ -126,6 +126,11 @@ exemple complet : \ref tuto4GL_normals.cpp
 pour récupérer la liste des attributs déclarés par le vertex shader et vérifier qu'ils sont bien associés à un buffer, 
 cf \ref shader_reflect
 
+## et avec un attribut entier (int, uint) ?
+
+il faut utiliser `glVertexAttribIPointer()` au lieu de `glVertexAttribPointer()`.
+
+
 ## et si un attribut n'existe plus dans le vertex shader ?? ( glGetAttribLocation( ) < 0 )
 
 le compilateur et le linker des shaders sont capables de déterminer qu'un attribut n'est pas nécessaire pour exécuter un shader. par exemple :
@@ -368,4 +373,66 @@ layout(location= 2) in vec3 normal;
 \endcode
 
 et la création des buffers / configuration du vao peut etre simplifiée, puisque l'on connait les identifiants des attributs. cf l'exemple précédent \ref single_buffer.
+
+# version openGL 4.3
+
+openGL 4.3 a introduit une nouvelle interface pour configurer les VAO, pour simplifier le portage depuis directX, mais aussi pour séparer la déclaration du type des 
+attributs de leur stockage dans un buffer.
+
+c'est `glVertexAttribFormat()` qui décrit le type d'un attribut avec les mêmes paramètres que `glVertexAttribPointer()`
+\code
+	// selectionner le vertex array object a configurer, si necessaire
+	// glBindVertexArray(vao);
+	
+	glVertexAttribFormat(/* attribut */ 0, /* size*/ 3, /* type */ GL_FLOAT, /* normalized */ GL_FALSE, /* relative offset */ 0);
+\endcode
+
+_remarque :_ pour le attributs entiers, il faut utiliser `glVertexAttribIFormat()` au lieu de `glVertexAttribFormat()`.
+
+`glVertexAttribBinding()` et `glBindVertexBuffer()`permettent d'associer un attribut à un buffer :
+\code
+	GLuint buffer;
+	{
+		// creation et initialisation du buffer contenant les donnees.
+	}
+	
+	// selectionner le vertex array object a configurer, si necessaire
+	// glBindVertexArray(vao);
+	{
+		// configuration du type des attributs
+	}
+	
+	glVertexAttribBinding( /* attribut */ 0, /* binding */ 0);
+	glBindVertexBuffer(/* binding */ 0, /* buffer */ buffer, /* offset */ 0, /* stride */ 0);
+\endcode
+
+les paramètres de `glBindVertexBuffer()` sont les mêmes que ceux de `glVertexAttribPointer()`, ils permettent de décrire l'organisation des données dans le buffer.
+La seule différence est l'utilisation de `relative offset` par attribut en plus de `offset` par buffer. `relative offset` permet de savoir ou se trouvent les données d'un
+attribut dans la région du buffer, et `offset` indique de manière globale ou trouver les attributs du premier sommet dans le buffer.
+
+par exemple, si l'on souhaite utiliser une organisation intrelacée : `PNPNPNPNPNPNPN`, qui décrit la position et la normale de chaque sommet :
+\code
+	relative offset(P)= 0
+	relative offset(N)= sizeof(P)
+	stride(P)= sizeof(P) + sizeof(N)
+	stride(N)= sizeof(P) + sizeof(N)
+	
+	binding(P)= 0
+	binding(N)= 0
+\endcode
+
+pour l'autre organisation `PPPPPPPPNNNNNNNN` :
+\code
+	relative offset(P)= 0;
+	relative offset(N)= SIZEOF(p) * n;
+	stride(P)= 0	// sizeof(P)
+	stride(N)= 0	// sizeof(N)
+	
+	binding(P)= 0
+	binding(N)= 0
+\endcode
+
+L'intéret de cette nouvelle interface pour configurer un vao est de permettre de changer très facilement de buffer, sans avoir à décrire plusieurs fois le type des attributs, 
+et c'est probablement plus efficace pour le driver aussi : il est plus efficace de changer de buffers entre 2 objets à dessiner que de changer de vao.
+
  */
