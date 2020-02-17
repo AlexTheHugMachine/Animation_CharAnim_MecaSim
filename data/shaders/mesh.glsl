@@ -5,8 +5,6 @@
 layout(location= 0) in vec3 position;
 uniform mat4 mvpMatrix;
 
-uniform mat4 mvMatrix;
-out vec3 vertex_position;
 
 #ifdef USE_TEXCOORD
     layout(location= 1) in vec2 texcoord;
@@ -17,6 +15,9 @@ out vec3 vertex_position;
     layout(location= 2) in vec3 normal;
     uniform mat4 normalMatrix;
     out vec3 vertex_normal;
+#else
+    uniform mat4 mvMatrix;
+    out vec3 vertex_position;
 #endif
 
 #ifdef USE_COLOR
@@ -29,14 +30,14 @@ void main( )
 {
     gl_Position= mvpMatrix * vec4(position, 1);
     
-    vertex_position= vec3(mvMatrix * vec4(position, 1));
-
 #ifdef USE_TEXCOORD
     vertex_texcoord= texcoord;
 #endif
 
 #ifdef USE_NORMAL
     vertex_normal= mat3(normalMatrix) * normal;
+#else
+    vertex_position= vec3(mvMatrix * vec4(position, 1));
 #endif
 
 #ifdef USE_COLOR
@@ -57,10 +58,11 @@ void main( )
     uniform float alpha_min= 0.3;
 #endif
 
-in vec3 vertex_position;
 
 #ifdef USE_NORMAL
     in vec3 vertex_normal;
+#else
+    in vec3 vertex_position;
 #endif
 
 #ifdef USE_COLOR

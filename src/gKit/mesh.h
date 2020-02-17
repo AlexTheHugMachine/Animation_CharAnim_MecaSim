@@ -111,12 +111,12 @@ public:
     //! \name construction.
     //@{
     //! constructeur par defaut.
-    Mesh( ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), m_state_map(), m_state(0),
-        m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_buffer(0), m_index_buffer(0), m_program(0), m_update_buffers(false) {}
+    Mesh( ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
+        m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_buffer(0), m_index_buffer(0), m_update_buffers(false) {}
     
     //! constructeur.
-    Mesh( const GLenum primitives ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), m_state_map(), m_state(0),
-        m_color(White()), m_primitives(primitives), m_vao(0), m_buffer(0), m_index_buffer(0), m_program(0), m_update_buffers(false) {}
+    Mesh( const GLenum primitives ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
+        m_color(White()), m_primitives(primitives), m_vao(0), m_buffer(0), m_index_buffer(0), m_update_buffers(false) {}
     
     //! construit les objets openGL.
     int create( const GLenum primitives );
@@ -241,7 +241,7 @@ public:
     //@}
     
     //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet (boite englobante alignee sur les axes, aabb).
-    void bounds( Point& pmin, Point& pmax );
+    void bounds( Point& pmin, Point& pmax ) const;
     
     //! renvoie la couleur par defaut du mesh, utilisee si les sommets n'ont pas de couleur associee.
     Color default_color( ) const { return m_color; }
@@ -313,34 +313,12 @@ public:
     }
     //@}
     
-    /*! dessine l'objet avec les transformations model, vue et projection.\n
-        eventuellement eclaire l'objet avec une source de lumiere.\n
-        eventuellement applique une texture sur la surface de l'objet. 
-    
-        \param use_light si vrai light et light_color doivent etre definis,
-        \param use_texture si vrai texture doit est l'identifiant d'une texture openGL.
-    */
-    void draw( const Transform& model, const Transform& view, const Transform& projection, 
-        const bool use_light, const Point& light, const Color& light_color, 
-        const bool use_texture, const GLuint texture,
-        const bool use_alpha_test, const float alpha_min );
-    
-    //! dessine l'objet avec un shader fourni par l'application. les uniforms du shader doivent deja etre configure, cf transformations...
-    void draw( const GLuint program, const bool use_position= true, const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
-    
-    //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).\n
+    //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).
     GLuint create_buffers( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
+    //! dessine l'objet avec un shader program. 
+    void draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color );
     
 protected:    
-    /*! construit un shader program configure.
-    \param use_texcoord force l'utilisation des coordonnees de texture
-    \param use_normal force l'utilisation des normales
-    \param use_color force l'utilisation des couleurs 
-    \param use_light force l'utilisation d'un source de lumiere 
-    \param use_alpha_test force l'utilisation d'un test de transparence, cf utilisation d'une texture avec un canal alpha
-     */
-    GLuint create_program( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true, const bool use_light= false, const bool use_alpha_test= false );
-    
     //! modifie les buffers openGL, si necessaire.
     int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color );
     
@@ -355,19 +333,18 @@ protected:
     std::vector<Material> m_materials;
     std::vector<unsigned int> m_triangle_materials;
 
-    std::unordered_map<unsigned int, GLuint> m_state_map;
-    unsigned int m_state;
-
     Color m_color;
     
     GLenum m_primitives;
     GLuint m_vao;
     GLuint m_buffer;
     GLuint m_index_buffer;
-    GLuint m_program;
+    size_t m_vertex_buffer_size;
+    size_t m_index_buffer_size;
     
     bool m_update_buffers;
 };
+
 
 ///@}
 #endif

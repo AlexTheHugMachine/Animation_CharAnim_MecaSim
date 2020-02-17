@@ -5,6 +5,7 @@
 #include "mesh.h"
 #include "orbiter.h"
 #include "window.h"
+#include "program.h"
 
 
 //! \addtogroup objet3D
@@ -27,9 +28,6 @@ void draw( Mesh& m, const Transform& model, const Orbiter& camera );
 void draw( Mesh& m, const Orbiter& camera, const GLuint texture );
 //! dessine l'objet avec une transformation model. les transformations vue et projection sont celles de la camera. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
 void draw( Mesh& m, const Transform& model, const Orbiter& camera, const GLuint texture );
-
-//! dessine l'objet avec un shader program "specifique"
-void draw( Mesh& m, const GLuint program, const bool use_position= true, const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
 
 /*! representation des options / parametres d'un draw.
     permet de donner tous les parametres d'un draw de maniere flexible.
@@ -83,12 +81,21 @@ public:
     DrawParam& lighting(bool use_light=true) { m_use_light=use_light;  return *this; }
 
     //! dessine l'objet avec l'ensemble des parametres definis.
-    void draw( Mesh& mesh ) const;
-
+    void draw( Mesh& mesh );
+    
     //! renvoie la position de la lumière
     const Point& light() const { return m_light; }
-
+    
 protected:
+    /*! construit un shader program configure.
+    \param use_texcoord force l'utilisation des coordonnees de texture
+    \param use_normal force l'utilisation des normales
+    \param use_color force l'utilisation des couleurs 
+    \param use_light force l'utilisation d'un source de lumiere 
+    \param use_alpha_test force l'utilisation d'un test de transparence, cf utilisation d'une texture avec un canal alpha
+     */
+    GLuint create_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test );
+    
     Transform m_model;
     Transform m_view;
     Transform m_projection;
@@ -104,8 +111,56 @@ protected:
     float m_alpha_min;
 };
 
-//! dessine l'objet avec l'ensemble des parametres definis.
-void draw( Mesh& mesh, const DrawParam& param );
+
+//! description d'un shader program compile.
+struct PipelineProgram
+{
+    std::string filename;
+    std::string definitions;
+    GLuint program;
+};
+
+//! ensemble de shader programs compiles. singleton.
+class PipelineCache
+{
+public:
+    ~PipelineCache( ) 
+    {
+        printf("[pipeline cache] %d programs.\n", int(m_programs.size()));
+    }
+    
+    //! renvoie un shader program compile.
+    PipelineProgram *find( const char *filename, const char *definitions= "" )
+    {
+        for(auto program : m_programs)
+        {
+            if(program->filename == filename && program->definitions == definitions)
+                return program;
+        }
+        
+        // cree le programme s'il n'existe pas deja...
+        GLuint p= read_program(filename, definitions);
+        program_print_errors(p);
+        
+        PipelineProgram *program= new PipelineProgram {filename, definitions, p};
+        m_programs.push_back(program);
+        return program;
+    }
+    
+    //! access au singleton.
+    static PipelineCache& manager( ) 
+    {
+        static PipelineCache cache;
+        return cache;
+    }
+    
+protected:
+    //! destructeur prive. le singleton ne sera detruit qu'a la fin de l'application... fonctionne correctement avec la classe App. doit etre detruit tant que le contexte openGL existe.
+    PipelineCache( ) : m_programs() {}
+    
+    std::vector<PipelineProgram *> m_programs;
+};
+
 
 ///@}
 #endif
