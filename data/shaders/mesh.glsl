@@ -90,18 +90,8 @@ void main( )
     
     #ifdef USE_ALPHATEST
         if(color.a < alpha_min)
-        //~ if(length(color.rgb) < alpha_min)
             discard;
     #endif
-    
-    if(color.r + color.g + color.b == 0)    // noir
-    {
-        // fixer une couleur debug pour indiquer qu'il faut utiliser une texture avec cet objet
-        vec3 p= vertex_position * 8;
-	float d= length( p - (floor(p) + 0.5));
-	if(d > 1) d= 0;
-        color=  vec4(d*0.8*2, d*0.4*2, 0, 1);
-    }
 #endif
 
     vec3 normal= vec3(0, 0, 1);
