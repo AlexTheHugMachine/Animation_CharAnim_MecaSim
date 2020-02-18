@@ -174,10 +174,10 @@ ImageData read_image_data( const char *filename )
                 Uint8 a= pixel[format.Ashift / 8];
 
                 std::size_t offset= image.offset(x, y);
-                image.data[offset]= r;
-                image.data[offset +1]= g;
-                image.data[offset +2]= b;
-                image.data[offset +3]= a;
+                image.pixels[offset]= r;
+                image.pixels[offset +1]= g;
+                image.pixels[offset +2]= b;
+                image.pixels[offset +3]= a;
                 pixel= pixel + format.BytesPerPixel;
             }
         }
@@ -201,9 +201,9 @@ ImageData read_image_data( const char *filename )
                 if(format.BitsPerPixel >= 24) { b= pixel[format.Bshift / 8]; }  // rgb
 
                 std::size_t offset= image.offset(x, y);
-                image.data[offset]= r;
-                image.data[offset +1]= g;
-                image.data[offset +2]= b;
+                image.pixels[offset]= r;
+                image.pixels[offset +1]= g;
+                image.pixels[offset +2]= b;
                 pixel= pixel + format.BytesPerPixel;
             }
         }
@@ -235,12 +235,12 @@ int write_image_data( ImageData& image, const char *filename )
     for(int x= 0; x < image.width; x++)
     {
         std::size_t offset= image.offset(x, image.height - y -1);
-        Uint8 r= image.data[offset];
-        Uint8 g= image.data[offset +1];
-        Uint8 b= image.data[offset +2];
+        Uint8 r= image.pixels[offset];
+        Uint8 g= image.pixels[offset +1];
+        Uint8 b= image.pixels[offset +2];
         Uint8 a= 255;
         if(image.channels > 3)
-            a= image.data[offset +3];
+            a= image.pixels[offset +3];
 
         flip[p]= r;
         flip[p +1]= g;
@@ -276,4 +276,24 @@ int write_image_data( ImageData& image, const char *filename )
     if(code < 0)
         printf("[error] writing color image '%s'...\n%s\n", filename, SDL_GetError());
     return code;
+}
+
+
+ImageData flip( const ImageData& image )
+{
+    // flip de l'image : origine en haut a gauche
+    ImageData flip(image.width, image.height, image.channels);
+
+    for(int y= 0; y < image.height; y++)
+    for(int x= 0; x < image.width; x++)
+    {
+        size_t s= image.offset(x, y);
+        //~ size_t d= flip.offset(flip.width - x -1, flip.height - y -1);
+        size_t d= flip.offset(x, flip.height - y -1);
+        
+        for(int i= 0; i < image.channels; i++)
+            flip.pixels[d+i]= image.pixels[s+i];
+    }
+
+    return flip;
 }
