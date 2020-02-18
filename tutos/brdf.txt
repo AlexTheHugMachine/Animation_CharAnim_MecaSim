@@ -314,7 +314,7 @@ Le terme de Fresnel permet d'évaluer la lumière réfléchie en fonction de la 
 de réfraction, \f$ \eta \f$. 
 
 \f{eqnarray*}{ 
-    F(\vec{o}, \vec{h}) & = & \frac{1}{2}  \left( \frac{g - c}{g + c} \right)^2 \left( 1 + \left( \frac{c(g + c) -1}{c(g - c) -1} \right)^2 \right)\\
+    F(\vec{o}, \vec{h}) & = & \frac{1}{2}  \left( \frac{g - c}{g + c} \right)^2 \left( 1 + \left( \frac{c(g + c) -1}{c(g - c) +1} \right)^2 \right)\\
                     c   & = & \cos \angle(\vec{o}, \vec{h})\\
                     g^2 & = & \eta^2 + c^2 -1
 \f} 
@@ -365,8 +365,14 @@ voir un peu plus haut, la figure 9 de Burley 2012. \f$ G_2 \f$ n'est pas la form
 _pour les curieux :_ si vous vous demandez comment on est passé d'une information spatiale utilisant des distributions d'altitude et d'orientation des microfacettes à une fonction \f$ D(\vec{h}) \f$, la 
 réponse se trouve dans la section 2 (section 2.2 _Microfacet Statistics_) de Heitz 2014.
 
+### et ça conserve l'énergie, au moins ?
 
-#### et avec un shader ?
+pas trop mal...
+
+<IMG SRC="conservation_ggx.png" width="30%">
+
+
+### et avec un shader ?
 
 La démarche est toujours la même, on doit calculer :
 \f[L_r(p, \vec{o})= L_i(p, \vec{l}) \frac{F(\vec{o}, \vec{h}) \, G_2(\vec{o}, \vec{l}, \vec{h}) \, D(\vec{h})}{4 |\vec{n} \cdot \vec{o}| |\vec{n} \cdot \vec{l}|} \cos \theta_l \f]
@@ -387,10 +393,7 @@ les termes :
     
     // meme hemisphere
     if(cos_theta <= 0 || cos_theta_h <= 0 || cos_theta_o <= 0)
-    {
-        fragment_color= vec4(0, 0, 0, 1);
         return;
-    }
     
     // D
     float D= alpha / (1 + cos_theta_h*cos_theta_h * (alpha*alpha -1));
@@ -417,6 +420,19 @@ les termes :
     <td> <IMG SRC="shaderkit_ggx01.png" width="100%"> 
     <td> <IMG SRC="shaderkit_lambert.png" width="100%"> 
 </table>
+
+quelques exemples de reflets pour Blinn - Phong et ce modèle à microfacettes :
+<table style="width:100%">
+<tr> 
+    <td> <IMG SRC="brdfc00.png" width="60%"> 
+    <td> <IMG SRC="brdfc40.png" width="60%"> 
+    <td> <IMG SRC="brdfc60.png" width="60%"> 
+<tr> 
+    <td> <IMG SRC="brdfggx00.png" width="60%"> 
+    <td> <IMG SRC="brdfggx40.png" width="60%"> 
+    <td> <IMG SRC="brdfggx60.png" width="60%"> 
+</table>
+
 
 
 ## bon alors, c'est quoi le modèle ??
