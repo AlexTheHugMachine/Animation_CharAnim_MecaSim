@@ -298,12 +298,12 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
         return 0;
 
 #if 1
-    if(m_texcoords.size() > 0 && m_texcoords.size() != m_positions.size() && use_texcoord)
-        printf("[oops] mesh: invalid texcoords array...\n");
-    if(m_normals.size() > 0 && m_normals.size() != m_positions.size() && use_normal)
-        printf("[oops] mesh: invalid normals array...\n");
-    if(m_colors.size() > 0 && m_colors.size() != m_positions.size() && use_color)
-        printf("[oops] mesh: invalid colors array...\n");
+    if(use_texcoord && !has_texcoord())
+        printf("[oops] mesh: no texcoord array...\n");
+    if(use_normal && !has_normal())
+        printf("[oops] mesh: no normal array...\n");
+    if(use_color && !has_color())
+        printf("[oops] mesh: no color array...\n");
 #endif
     
     glGenVertexArrays(1, &m_vao);
@@ -311,11 +311,11 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
     
     // determine la taille du buffer pour stocker tous les attributs et les indices
     m_vertex_buffer_size= vertex_buffer_size();
-    if(use_texcoord && m_texcoords.size() == m_positions.size())
+    if(use_texcoord && has_texcoord())
         m_vertex_buffer_size+= texcoord_buffer_size();
-    if(use_normal && m_normals.size() == m_positions.size())
+    if(use_normal && has_normal())
         m_vertex_buffer_size+= normal_buffer_size();
-    if(use_color && m_colors.size() == m_positions.size())
+    if(use_color && has_color())
         m_vertex_buffer_size+= color_buffer_size();
     
     // allouer le buffer
@@ -332,9 +332,7 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer_size, index_buffer(), GL_STATIC_DRAW);
     }
 
-    update_buffers(use_texcoord && m_texcoords.size() == m_positions.size(), 
-        use_normal && m_normals.size() == m_positions.size(), 
-        use_color && m_colors.size() == m_positions.size());
+    update_buffers(use_texcoord,  use_normal, use_color);
     
     return m_vao;
 }
@@ -351,11 +349,11 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
     
     // determine la taille du buffer pour stocker tous les attributs et les indices
     size_t size= vertex_buffer_size();
-    if(use_texcoord && m_texcoords.size() == m_positions.size())
+    if(use_texcoord && has_texcoord())
         size+= texcoord_buffer_size();
-    if(use_normal && m_normals.size() == m_positions.size())
+    if(use_normal && has_normal())
         size+= normal_buffer_size();
-    if(use_color && m_colors.size() == m_positions.size())
+    if(use_color && has_color())
         size+= color_buffer_size();
     
     if(size != m_vertex_buffer_size)
@@ -372,7 +370,7 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const void *) offset);
     glEnableVertexAttribArray(0);
     
-    if(use_texcoord && m_texcoords.size() == m_positions.size())
+    if(use_texcoord && has_texcoord())
     {
         offset= offset + size;
         size= texcoord_buffer_size();
@@ -381,7 +379,7 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
         glEnableVertexAttribArray(1);
     }
     
-    if(use_normal && m_normals.size() == m_positions.size())
+    if(use_normal && has_normal())
     {
         offset= offset + size;
         size= normal_buffer_size();
@@ -390,7 +388,7 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
         glEnableVertexAttribArray(2);
     }
     
-    if(use_color && m_colors.size() == m_positions.size())
+    if(use_color && has_color())
     {
         offset= offset + size;
         size= color_buffer_size();
@@ -423,35 +421,36 @@ void Mesh::draw( const GLuint program, const bool use_position, const bool use_t
     }
     
     if(m_vao == 0)
-        // cree les buffers demandes, inclus toujours position
-        create_buffers(use_texcoord, use_normal, use_color);
+        create_buffers(has_texcoord(), has_normal(), has_color());
     assert(m_vao != 0);
     
     if(m_update_buffers)
-        update_buffers(use_texcoord, use_normal, use_color);
+        update_buffers(has_texcoord(), has_normal(), has_color());
+
+    // transfere toutes les donnees disponibles (et correctement definies)
+    // le meme mesh peut etre dessine avec plusieurs shaders utilisant des attributs differents... 
     
     glBindVertexArray(m_vao);
     
 #ifndef GK_RELEASE
+    char label[1024]= { 0 };
+    #ifdef GL_VERSION_4_3
+    {
+        char tmp[1024];
+        glGetObjectLabel(GL_PROGRAM, program, sizeof(tmp), nullptr, tmp);
+        sprintf(label, "program( %u '%s' )", program, tmp);
+    }
+    #else
+        sprintf(label, "program( %u )", program); 
+    #endif
+    
     // verifie que le program est selectionne
     GLuint current;
     glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *) &current);
     if(current != program)
-    {
-    #ifdef GL_VERSION_4_3
-        {
-            char label[1024];
-            glGetObjectLabel(GL_PROGRAM, program, sizeof(label), nullptr, label);
-            
-            printf("[oops] program( %u '%s' ): not active... can't draw !!\n", program, label); 
-        }
-    #else
-        printf("[oops] program( %u ): not active... can't draw !!", program); 
-    #endif
-    }
+        printf("[oops] %s: not active... undefined draw !!\n", label); 
     
     // verifie que les attributs necessaires a l'execution du shader sont presents dans le mesh...
-
     // etape 1 : recuperer le nombre d'attributs
     GLint n= 0;
     glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &n);
@@ -467,31 +466,31 @@ void Mesh::draw( const GLuint program, const bool use_position, const bool use_t
         GLint location= glGetAttribLocation(program, name);
         if(location == 0)       // attribut position necessaire a l'execution du shader
         {
-            if(!use_position || !vertex_buffer_size())
-                printf("[oops]  no position data... can't draw !!\n");
+            if(!use_position || !has_position())
+                printf("[oops] position attribute '%s' in %s: no data... undefined draw !!\n", name, label);
             if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC3)
-                printf("[oops]  position attribute '%s' is not declared as a vec3... can't draw !!\n", name);
+                printf("[oops] position attribute '%s' is not declared as a vec3 in %s... undefined draw !!\n", name, label);
         }
         else if(location == 1)  // attribut texcoord necessaire 
         {
-            if(!use_texcoord || !texcoord_buffer_size())
-                printf("[oops]  no texcoord data... can't draw !!\n");
+            if(!use_texcoord || !has_texcoord())
+                printf("[oops] texcoord attribute '%s' in %s: no data... undefined draw !!\n", name, label);
             if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC2)
-                printf("[oops]  texcoord attribute '%s' is not declared as a vec2... can't draw !!\n", name);
+                printf("[oops] texcoord attribute '%s' is not declared as a vec2 in %s... undefined draw !!\n", name, label);
         }
         else if(location == 2)  // attribut normal necessaire
         {
-            if(!use_normal || !normal_buffer_size())
-                printf("[oops]  no normal data... can't draw !!\n");
+            if(!use_normal || !has_normal())
+                printf("[oops] normal attribute '%s' in %s: no data... undefined draw !!\n", name, label);
             if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC3)
-                printf("[oops]  attribute '%s' is not declared as a vec3... can't draw !!\n", name);
+                printf("[oops] attribute '%s' is not declared as a vec3 in %s... undefined draw !!\n", name, label);
         }
         else if(location == 3)  // attribut color necessaire
         {
-            if(!use_color || !color_buffer_size())
-                printf("[oops]  no color data... can't draw !!\n");
+            if(!use_color || !has_color())
+                printf("[oops] color attribute '%s' in %s: no data... undefined draw !!\n", name, label);
             if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC4)
-                printf("[oops]  attribute '%s' is not declared as a vec4... can't draw !!\n", name);
+                printf("[oops] attribute '%s' is not declared as a vec4 in %s... undefined draw !!\n", name, label);
         }
     }
 #endif

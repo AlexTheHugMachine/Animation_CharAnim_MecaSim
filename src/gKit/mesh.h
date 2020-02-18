@@ -286,6 +286,12 @@ public:
     const std::vector<vec3>& normals( ) const { return m_normals; }
     const std::vector<vec4>& colors( ) const { return m_colors; }
     const std::vector<unsigned int>& indices( ) const { return m_indices; }
+    
+    //! verifie que les attributs sont decrits de maniere coherente.
+    bool has_position( ) const { return !m_positions.empty(); }
+    bool has_texcoord( ) const { return m_texcoords.size() == m_positions.size(); }
+    bool has_normal( ) const { return m_normals.size() == m_positions.size(); }
+    bool has_color( ) const { return m_colors.size() == m_positions.size(); }
     //@}
     
     //! renvoie le type de primitives.
@@ -313,12 +319,13 @@ public:
     }
     //@}
     
-    //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).
-    GLuint create_buffers( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
-    //! dessine l'objet avec un shader program. 
-    void draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color );
     
-protected:    
+    //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).
+    GLuint create_buffers( const bool use_texcoord, const bool use_normal, const bool use_color );
+    //! dessine l'objet avec un shader program. 
+    void draw( const GLuint program, const bool use_position= true, const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
+    
+private:    
     //! modifie les buffers openGL, si necessaire.
     int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color );
     

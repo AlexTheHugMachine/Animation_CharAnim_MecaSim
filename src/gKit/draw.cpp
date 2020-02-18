@@ -49,6 +49,11 @@ void draw( Mesh& m, DrawParam& param )
     param.draw(m);
 }
 
+void draw( Mesh& m, GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color  )
+{
+    //~ m.draw(program, m.has_position(), m.has_texcoord(), m.has_normal(), m.has_color());
+    m.draw(program, use_position, use_texcoord, use_normal, use_color);
+}
 
 GLuint DrawParam::create_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test )
 {
@@ -78,12 +83,11 @@ GLuint DrawParam::create_program( const GLenum primitives, const bool use_texcoo
 
 void DrawParam::draw( Mesh& mesh )
 {
-    bool use_texcoord= (m_use_texture && m_texture > 0) && (mesh.texcoords().size() == mesh.positions().size());
-    bool use_normal= (mesh.normals().size() == mesh.positions().size());
-    bool use_color= (mesh.colors().size() == mesh.positions().size());
+    bool use_texcoord= m_use_texture && m_texture > 0 && mesh.has_texcoord();
+    bool use_normal= mesh.has_normal();
+    bool use_color= mesh.has_color();
     
     // etape 1 : construit le program en fonction des attributs du mesh et des options choisies
-    // pas de shader pour ce type de draw
     GLuint program= create_program(mesh.primitives(), use_texcoord, use_normal, use_color, m_use_light, m_use_alpha_test);
     
     glUseProgram(program);
