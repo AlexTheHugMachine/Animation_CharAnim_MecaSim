@@ -29,13 +29,12 @@ par exemple, un vertex shader déclare, en général, 2 types de paramètres : l
 
 _pourquoi ?_
 
-
 \code
 #ifdef VERTEX_SHADER
 
 uniform mat4 mvpMatrix;	// la transformation à appliquer aux sommets, mot-clé : uniform
 
-in vec3 position;	    // la position d'un sommet, mot-clé : in
+in vec3 position;	    // la position du ieme sommet, mot-clé : in
 
 void main( )
 {
@@ -47,16 +46,12 @@ void main( )
 Les shaders (et le reste du pipeline graphique) sont exécutés par les processeurs de la carte graphique au moment ou l'application utilise 
 `glDrawArrays(GL_TRIANGLES, 0, n);` ce qui signifie "dessine des triangles avec les sommets d'indice 0 à n-1", soit n/3 triangles.
 
-Les processeurs de la carte graphique transforment tous les sommets en parallèle : un vertex shader (la fonction ci-dessus) est exécutée pour transformer un seul 
-sommet. il faut donc affecter une valeur aux paramètres `mvpMatrix` et `position` pour chaque appel de la fonction afin de transformer tous les sommets. La matrice 
-de transformation est la même pour tous les sommets, par contre, la position du sommet change chaque fois que la fonction est appellée... et comme tous les appels 
-sont fait en même temps, toutes les valeurs de `position` doivent être accessibles, quelquepart dans la mémoire de la carte graphique (ce sont les buffers d'openGL 
-qui permettent de stocker ces valeurs).
+La carte graphique transforme tous les sommets en parallèle : un vertex shader (la fonction ci-dessus) est exécutée par n threads. La matrice 
+de transformation est la même pour tous les sommets, mais bien sur ce n'est pas le cas pour les attributs des sommets. repassez dans \ref interfaceC, section shaders.
 
 C'est pour cette raison que les paramètres `mvpMatrix` et `position` sont déclarés avec des mots-clés différents, `uniform` pour indiquer que tous les vertex shaders 
-utilisent la même transformation (la même matrice) et le mot-clé `in` pour indiquer que la valeur de la position change à chaque appel, pour chaque sommet. Et 
-bien sur, affecter une (seule) valeur à un uniform est différent d'affecter un ensemble de valeurs à un attribut. Mesh s'occuppe des attributs, le plus "complique", 
-mais il reste les uniforms... 
+utilisent la même transformation (la même matrice) et le mot-clé `in` pour indiquer que position est différent pour chaque sommet. Et bien sur, affecter une (seule) 
+valeur à un uniform est différent d'affecter un ensemble de valeurs à un attribut. Mesh s'occuppe des attributs, le plus "complique", mais il reste les uniforms... 
 
 Par contre, il faut respecter la convention utilisée par Mesh, qui numérote les attributs des sommets et impose un type qu'il faut respecter :
     - attribut 0, `vec3 position`,
