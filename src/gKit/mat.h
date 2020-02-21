@@ -68,6 +68,8 @@ Transform Normal( const Transform& m );
 //! renvoie la matrice representant une mise a l'echelle / etirement.
 Transform Scale( const float x, const float y, const float z );
 
+Transform Scale( const float s );
+
 //! renvoie la matrice representant une translation par un vecteur.
 Transform Translation( const Vector& v );
 //! renvoie la matrice representant une translation par un vecteur x y z.

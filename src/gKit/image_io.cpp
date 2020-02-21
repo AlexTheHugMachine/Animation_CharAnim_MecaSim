@@ -279,7 +279,7 @@ int write_image_data( ImageData& image, const char *filename )
 }
 
 
-ImageData flip( const ImageData& image )
+ImageData flipY( const ImageData& image )
 {
     // flip de l'image : origine en haut a gauche
     ImageData flip(image.width, image.height, image.channels);
@@ -288,7 +288,6 @@ ImageData flip( const ImageData& image )
     for(int x= 0; x < image.width; x++)
     {
         size_t s= image.offset(x, y);
-        //~ size_t d= flip.offset(flip.width - x -1, flip.height - y -1);
         size_t d= flip.offset(x, flip.height - y -1);
         
         for(int i= 0; i < image.channels; i++)
@@ -297,3 +296,38 @@ ImageData flip( const ImageData& image )
 
     return flip;
 }
+
+ImageData flipX( const ImageData& image )
+{
+    ImageData flip(image.width, image.height, image.channels);
+
+    for(int y= 0; y < image.height; y++)
+    for(int x= 0; x < image.width; x++)
+    {
+        size_t s= image.offset(x, y);
+        size_t d= flip.offset(flip.width -x -1, y);
+        
+        for(int i= 0; i < image.channels; i++)
+            flip.pixels[d+i]= image.pixels[s+i];
+    }
+
+    return flip;
+}
+
+ImageData copy( const ImageData& image, const int xmin, const int ymin, const int width, const int height )
+{
+    ImageData copy(width, height, image.channels);
+    
+    for(int y= 0; y < height; y++)
+    for(int x= 0; x < width; x++)
+    {
+        size_t s= image.offset(xmin+x, ymin+y);
+        size_t d= copy.offset(x, y);
+        
+        for(int i= 0; i < image.channels; i++)
+            copy.pixels[d+i]= image.pixels[s+i];
+    }
+    
+    return copy;
+}
+

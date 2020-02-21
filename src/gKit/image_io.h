@@ -43,8 +43,13 @@ ImageData read_image_data( const char *filename );
 //! enregistre des donnees dans un fichier png.
 int write_image_data( ImageData& image, const char *filename );
 
-//! retourne l'image, origine en haut a gauche
-ImageData flip( const ImageData& data );
+//! retourne l'image
+ImageData flipY( const ImageData& image );
+//! retourne l'image
+ImageData flipX( const ImageData& image );
+
+//! renvoie un bloc de l'image
+ImageData copy( const ImageData& image, const int xmin, const int ymin, const int width, const int height );
 
 ///@}
 
