@@ -31,7 +31,6 @@ out vec4 fragment_color;
 
 void main( )
 {
-    //~ vec3 m= reflect(normalize(vertex_position), normalize(vertex_normal));
     //~ vec3 m= reflect(normalize(vertex_position - camera_position), normalize(vertex_normal));
     vec3 m= normalize(vertex_position);
     vec4 color= texture(texture0, m) / 2;

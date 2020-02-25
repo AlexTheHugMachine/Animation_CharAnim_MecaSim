@@ -35,6 +35,7 @@ void main( )
 {
     // calculer la direction du rayon pour le pixel dans le repere du monde
     vec3 d= normalize(vertex_position - camera_position);
+    //~ vec3 d= normalize(vertex_position);
     vec4 color= texture(texture0, d);
     
     fragment_color= color;
