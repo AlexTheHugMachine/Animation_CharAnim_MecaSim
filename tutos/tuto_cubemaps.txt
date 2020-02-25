@@ -1,0 +1,66 @@
+
+/*! \addtogroup cubemap utilisation, chargement et création de cubemap
+
+	Les cubemaps openGL sont des textures à 6 faces permettant d'afficher un environnement complet, pre-calculé, ou pas...
+
+# affichage d'un environnement 
+
+cf \ref tuto5GL_cubemap.cpp + tuto5GL_cubemap.glsl + cubemap.glsl
+
+## cubemap ?
+
+Les cubemaps sont des textures un peu à part dans openGL, elles ne suivent pas les conventions habituelles mais celles de... [Renderman](https://renderman.pixar.com/), 
+les différences sont décrites dans la doc openGL, mais... d'une manière un peu compacte : une cubemap est _une_ texture composée de 6 faces, et les coordonnées utilisées 
+pour lire une couleur dans une des 6 faces sont décrites [ici](https://www.khronos.org/registry/OpenGL/specs/gl/glspec46.core.pdf#section.8.13) page 253.
+	- les coordonnées sont en 3d, elles représentent une direction sur une sphère, elles sont comprises entre -1 et +1,
+	- l'origine de l'image de chaque face de la cubemap n'est pas en bas à gauche comme pour les autres textures, mais en _haut_ et à _droite_ !!
+	- la face "avant" de la cubemap n'est pas dans la direction -Z, mais +Z...
+	
+résultat, selon les tutos, les explications sont soit inexistantes, soit contradictoires... soit il faudra modifier les images à la main pour obtenir un début de résultat...
+
+### comment ça marche ?
+
+L'idée de la cubemap est de représenter un décor placé autour de la scène, sous forme de texture. Pour observer le décor dans toutes les directions, il faut bien donner une direction, puis 
+utiliser cette direction (ses coordonnées) pour choisir une face de la cubemap et enfin choisir un pixel sur cette face. Cette projection de la direction \f$(r_x, r_y, r_z)\f$ pour obtenir la 
+face et le pixel se fait en  2 temps :
+	- déterminer l'axe dominant de la direction -x, +x, -y, +y, etc, projection sur les faces de la cubemap,
+	- calculer les coordonnées du pixel en fonction de l'axe dominant / face de la cubemap, cf tableau 8.19 dans la doc openGL
+	
+axe  | face                        | sm  | tm  | m
+:---:|:----------------------------|----:|----:|--:
++rx  | TEXTURE_CUBE_MAP_POSITIVE_X | −rz | −ry | rx
+−rx  | TEXTURE_CUBE_MAP_NEGATIVE_X |  rz | −ry | rx
++ry  | TEXTURE_CUBE_MAP_POSITIVE_Y |  rx |  rz | ry
+−ry  | TEXTURE_CUBE_MAP_NEGATIVE_Y |  rx | −rz | ry
++rz  | TEXTURE_CUBE_MAP_POSITIVE_Z |  rx | −ry | rz
+−rz  | TEXTURE_CUBE_MAP_NEGATIVE_Z | −rx | −ry | rz
+
+et dans tous les cas les coordonnées du pixel de la face sont \f$ s= \frac{1}{2} \left( \frac{sm}{|m|} +1 \right) \f$ et \f$ t= \frac{1}{2} \left( \frac{tm}{|m|} +1 \right) \f$
+
+Par exemple, pour une direction \f$(1, 0, 0)\f$, l'axe dominant est +x, m= +1 (x), sm= -0 (-z), tm= -0 (-y) et \f$ s= \frac{1}{2} \left( \frac{-0}{|1|} +1 \right) = 0.5 \f$ et \f$ t= \frac{1}{2} \left( \frac{-0}{|1|} +1 \right) = 0.5 \f$,
+ce qui correspond bien au milieu de la face. on peut recommencer pour les 4 coins de la texture, pour se rendre compte de son orientation : 
+	- \f$(1, -1, -1)\f$ et \f$ s= \frac{1}{2} \left( \frac{ 1}{|1|} +1 \right) = 1 \f$ et \f$ t= \frac{1}{2} \left( \frac{ 1}{|1|} +1 \right) = 1 \f$
+	- \f$(1, -1,  1)\f$ et \f$ s= \frac{1}{2} \left( \frac{-1}{|1|} +1 \right) = 0 \f$ et \f$ t= \frac{1}{2} \left( \frac{ 1}{|1|} +1 \right) = 1 \f$
+	- \f$(1,  1, -1)\f$ et \f$ s= \frac{1}{2} \left( \frac{ 1}{|1|} +1 \right) = 1 \f$ et \f$ t= \frac{1}{2} \left( \frac{-1}{|1|} +1 \right) = 0 \f$
+	- \f$(1,  1,  1)\f$ et \f$ s= \frac{1}{2} \left( \frac{-1}{|1|} +1 \right) = 0 \f$ et \f$ t= \frac{1}{2} \left( \frac{-1}{|1|} +1 \right) = 0 \f$
+	
+dans ce cas, la direction (1, -1, -1) correspond au pixel (1, 1) et la direction (1, 1, 1) correspond au pixel (0, 0).
+
+## chargement d'une cubemap
+
+Première étape, supposons que les faces de la cubemap se trouvent dans une image : 
+
+
+
+## affichage
+
+
+# cubemap dynamique
+
+cf \ref tuto5GL_dynamic_cubemap.cpp + render_cubemap.glsl
+
+# éclairage par une envmap
+
+
+
+*/
