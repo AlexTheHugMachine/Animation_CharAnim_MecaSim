@@ -208,17 +208,45 @@ Transform Rotation( const Vector& axis, const float angle )
         a.x * a.y * (1 - c ) - a.z * s,
         a.x * a.z * (1 - c ) + a.y * s,
         0,
-
+        
         a.x * a.y * (1 - c ) + a.z * s,
         a.y * a.y + (1 - a.y * a.y ) * c,
         a.y * a.z * (1 - c ) - a.x * s,
         0,
-
+        
         a.x * a.z * (1 - c ) - a.y * s,
         a.y * a.z * (1 - c ) + a.x * s,
         a.z * a.z + (1 - a.z * a.z ) * c,
         0,
+        
+        0, 0, 0, 1);
+}
 
+
+Transform Rotation( const Vector& u, const Vector& v )
+{
+    Vector a= normalize(u);
+    Vector b= normalize(v);
+    Vector w= cross(a, b);      // rotation autour de w, un vecteur perpendiculaire a u et v
+    float s= length(w); // sin theta
+    float c= dot(a, b); // cos theta
+    
+    return Transform(
+        w.x * w.x + (1 - w.x * w.x ) * c,
+        w.x * w.y * (1 - c ) - w.z * s,
+        w.x * w.z * (1 - c ) + w.y * s,
+        0,
+        
+        w.x * w.y * (1 - c ) + w.z * s,
+        w.y * w.y + (1 - w.y * w.y ) * c,
+        w.y * w.z * (1 - c ) - w.x * s,
+        0,
+        
+        w.x * w.z * (1 - c ) - w.y * s,
+        w.y * w.z * (1 - c ) + w.x * s,
+        w.z * w.z + (1 - w.z * w.z ) * c,
+        0,
+        
         0, 0, 0, 1);
 }
 
@@ -235,6 +263,21 @@ Transform Perspective( const float fov, const float aspect, const float znear, c
                   0,    0, (zfar+znear)*id, 2.f*zfar*znear*id,
                   0,    0,              -1,                 0);
 }
+
+
+Transform Ortho( const float left, const float right, const float bottom, const float top, const float znear, const float zfar )
+{
+    float tx= - (right + left) / (right - left);
+    float ty= - (top + bottom) / (top - bottom);
+    float tz= - (zfar + znear) / (zfar - znear);
+   
+    return Transform(
+        2.f / (right - left),                    0,                     0, tx,
+                           0, 2.f / (top - bottom),                     0, ty,
+        0,                                       0, -2.f / (zfar - znear), tz,
+        0,                                       0,                     0, 1);
+}
+
 
 Transform Viewport( const float width, const float height )
 {
@@ -301,7 +344,7 @@ Transform Transform::inverse( ) const
                         }
                     }
                     else if (ipiv[k] > 1)
-                        printf("singular matrix in make_inverse()\n");
+                        printf("singular matrix in Transform::inverse()\n");
                 }
             }
         }
@@ -319,7 +362,7 @@ Transform Transform::inverse( ) const
         indxr[i] = irow;
         indxc[i] = icol;
         if (minv.m[icol][icol] == 0.)
-            printf("singular matrix in make_inverse()\n");
+            printf("singular matrix in Transform::inverse()\n");
 
         // Set $m[icol][icol]$ to one by scaling row _icol_ appropriately
         float pivinv = 1.f / minv.m[icol][icol];
