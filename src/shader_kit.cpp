@@ -117,7 +117,7 @@ int init( std::vector<const char *>& options )
         {
             mesh_filename= Filename(option);
             
-            vao= mesh.create_buffers();
+            vao= mesh.create_buffers(mesh.has_texcoord(), mesh.has_normal(), mesh.has_color());
             vertex_count= mesh.vertex_count();
             
             mesh.bounds(mesh_pmin, mesh_pmax);
@@ -343,12 +343,16 @@ int draw( void )
     {
         clear_key_state('v');
         if(camera.read_orbiter("orbiter.txt") < 0)
-            camera= Orbiter(mesh_pmin, mesh_pmax);
+        {
+            camera= Orbiter();
+            camera.lookat(mesh_pmin, mesh_pmax);
+        }
     }
     if(key_state('f'))
     {
         clear_key_state('f');
-        camera= Orbiter(mesh_pmin, mesh_pmax);        
+        camera= Orbiter();
+        camera.lookat(mesh_pmin, mesh_pmax);
     }
     
     return 1;

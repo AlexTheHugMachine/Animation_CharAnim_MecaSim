@@ -1,5 +1,5 @@
 
-//! \file tuto5GL_cubemap.cpp dessiner une cubemap a l'infini.
+//! \file tuto5GL_dynamic_cubemap.cpp rendu dans une cubemap en 1 passe : draw instancie + vertex gl_Layer 
 
 #include <stdio.h>
 
@@ -19,8 +19,11 @@
 
 GLuint program;
 GLuint program_cubemap;
+GLuint program_render_cubemap;
 
-GLuint texture;
+GLuint texture_cubemap;
+GLuint depth_cubemap;
+GLuint fbo_cubemap;
 
 GLuint vao;
 GLuint vao_null;
@@ -29,7 +32,6 @@ GLuint normal_buffer;
 int vertex_count;
 
 Orbiter camera;
-
 
 int init( )
 {
@@ -42,6 +44,10 @@ int init( )
     program_cubemap= read_program("tutos/cubemap.glsl");
     program_print_errors(program_cubemap);
     
+    // . dessiner dans une cube map
+    program_render_cubemap= read_program("tutos/render_cubemap.glsl");
+    program_print_errors(program_render_cubemap);
+    
     // etape 2 : charger un mesh, (avec des normales), vao + vertex buffer
     //~ Mesh mesh= read_mesh("data/bigguy.obj");
     Mesh mesh= read_mesh("data/cube.obj");
@@ -49,27 +55,23 @@ int init( )
         return -1;      // gros probleme, pas de sommets...
 
     vertex_count= mesh.vertex_count();
-
+    
     Point pmin, pmax;
     mesh.bounds(pmin, pmax);
     camera.lookat(pmin, pmax);
-
+    
     // vertex format : position + normal,
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
-
+    
     // vertex buffer
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, mesh.vertex_buffer_size(), mesh.vertex_buffer(), GL_STATIC_DRAW);
-
+    
     // configurer l'attribut position, cf declaration dans le vertex shader : in vec3 position;
-    GLint position= glGetAttribLocation(program, "position");
-    if(position >= 0)
-    {
-        glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 0, 0);
-        glEnableVertexAttribArray(position);
-    }
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
     
     // normal buffer
     if(!mesh.normal_buffer_size())
@@ -81,186 +83,55 @@ int init( )
     glGenBuffers(1, &normal_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, normal_buffer);
     glBufferData(GL_ARRAY_BUFFER, mesh.normal_buffer_size(), mesh.normal_buffer(), GL_STATIC_DRAW);
-
-    GLint normal= glGetAttribLocation(program, "normal");
-    if(normal >= 0)
-    {
-        glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
-        glEnableVertexAttribArray(normal);
-    }
+    
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(1);
     
     // nettoyage
     mesh.release();
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // etape 3 : texture
-#if 0
-    ImageData tmp= read_image_data("data/debug2x2red.png");
-    //~ ImageData image= flipX(flipY(tmp));
-    ImageData image= flipY(tmp);
-    
-    // solution 1, utiliser une seule texture *carree* et la copier sur les 6 faces de la cubemap
-    int size= image.width;
-    
-    GLenum data_format;
-    GLenum data_type= GL_UNSIGNED_BYTE;
-    if(image.channels == 3)
-        data_format= GL_RGB;
-    else // par defaut
-        data_format= GL_RGBA;
-
-    // creer la texture
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
-    
-    // creer les 6 faces 
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.data());
-    
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.data());
-    
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.data());
-        
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.data());
-        
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.data());
-        
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.data());
-#endif
-
-#if 0
-    // les 6 faces sur une bande
-    ImageData image= read_image_data("tutos/cubemap_debug.png");
-    
-    // les 6 images sont regroupees sur une bande horizontale.
-    int size= image.width / 6;
-    
-    GLenum data_format;
-    GLenum data_type= GL_UNSIGNED_BYTE;
-    if(image.channels == 3)
-        data_format= GL_RGB;
-    else // par defaut
-        data_format= GL_RGBA;
-    
-    // creer la texture
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
-
-    // creer les 6 faces
-    // chaque face de la cubemap est un bloc [image.width/6 x image.height] dans l'image originale 
-    int faces[]= { 0, 1, 2, 3, 4, 5 };
-    
-    // largeur totale de l'image
-    for(int i= 0; i < 6; i++)
+    // etape 3 : textures + framebuffer
     {
-        // extrait la face 
-        ImageData face= flipX(flipY(copy(image, faces[i]*size, 0, size, size)));
+        int w= 1024;
+        int h= 1024;
         
-        // transferer les pixels
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
-            GL_RGBA, size, size, 0,
-            data_format, data_type, face.data());
+        // 6 faces couleur
+        glGenTextures(1, &texture_cubemap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, texture_cubemap);
+        for(int i= 0; i < 6; i++)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
+                GL_RGBA, w, h, 0,
+                GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        }
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);    
+        
+        // 6 faces profondeur
+        glGenTextures(1, &depth_cubemap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, depth_cubemap);
+        for(int i= 0; i < 6; i++)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
+                GL_DEPTH_COMPONENT, w, h, 0,
+                GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
+        }
+        
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);        
     }
-#endif
-    
-#if 1
-// http://paulbourke.net/miscellaneous/cubemaps/
 
-    // les 6 faces sur une croix
-    ImageData image= read_image_data("canyon2.jpg");
+    // framebuffer, attache les 6 faces couleur + profondeur
+    glGenFramebuffers(1, &fbo_cubemap);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_cubemap);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texture_cubemap, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_cubemap, 0);
     
-    int w= image.width / 4;
-    int h= image.height / 3;
-    assert(w == h);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
-    GLenum data_format;
-    GLenum data_type= GL_UNSIGNED_BYTE;
-    if(image.channels == 3)
-        data_format= GL_RGB;
-    else // par defaut
-        data_format= GL_RGBA;
-    
-    // creer la texture
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
 
-    // creer les 6 faces
-    // chaque face de la cubemap est un rectangle [image.width/4 x image.height/3] dans l'image originale 
-    struct { int x, y; } faces[]= {
-        {0, 1}, // X+
-        {2, 1}, // X-
-        {1, 2}, // Y+
-        {1, 0}, // Y- 
-        {1, 1}, // Z+
-        {3, 1}, // Z-
-    };
-    
-    for(int i= 0; i < 6; i++)
-    {
-        ImageData face= flipX(flipY(copy(image, faces[i].x*w, faces[i].y*h, w, h)));
-        
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
-            GL_RGBA, w, h, 0,
-            data_format, data_type, face.data());
-    }
-#endif
-
-#if 0
-    // 6 images
-    const char *filenames[]= {
-        "data/cubemap/cubemap_opensea/opensea_posx.png",
-        "data/cubemap/cubemap_opensea/opensea_negx.png",
-        "data/cubemap/cubemap_opensea/opensea_posy.png",
-        "data/cubemap/cubemap_opensea/opensea_negy.png",
-        "data/cubemap/cubemap_opensea/opensea_posz.png",
-        "data/cubemap/cubemap_opensea/opensea_negz.png"
-        //~ "data/cubemap/skybox/left.jpg",
-        //~ "data/cubemap/skybox/right.jpg",
-        //~ "data/cubemap/skybox/top.jpg",
-        //~ "data/cubemap/skybox/bottom.jpg",
-        //~ "data/cubemap/skybox/back.jpg",
-        //~ "data/cubemap/skybox/front.jpg"
-    };
-    
-    // creer la texture
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
-    
-    for(int i= 0; i < 6; i++)
-    {
-        ImageData tmp= read_image_data(filenames[i]);
-        ImageData image= flipX(flipY(tmp));
-        
-        GLenum data_format;
-        GLenum data_type= GL_UNSIGNED_BYTE;
-        if(image.channels == 3)
-            data_format= GL_RGB;
-        else // par defaut
-            data_format= GL_RGBA;
-        
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
-            GL_RGBA, image.width, image.height, 0,
-            data_format, data_type, image.data());
-    }
-#endif
-    
-    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-    
     // filtrage "correct" sur les bords du cube...
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    //~ glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     
     // etape 4 : vao pour dessiner la cubemap a l'infini
@@ -291,19 +162,69 @@ int quit( )
 {
     release_program(program);
     release_program(program_cubemap);
+    release_program(program_render_cubemap);
     glDeleteVertexArrays(1, &vao);
     glDeleteVertexArrays(1, &vao_null);
     glDeleteBuffers(1, &vertex_buffer);
     glDeleteBuffers(1, &normal_buffer);
-    glDeleteTextures(1, &texture);
+    glDeleteTextures(1, &texture_cubemap);
+    glDeleteTextures(1, &depth_cubemap);
+    glDeleteFramebuffers(1, &fbo_cubemap);
     return 0;
 }
 
 int draw( )
 {
+    // partie 1 : dessiner dans la cubemap dynamique
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_cubemap);
+    glViewport(0, 0, 1024, 1024);
+    
+    // efface les 6 faces couleur + profondeur attachees au framebuffer
+    //~ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    float black[4]= { 0, 0, 0, 0 };
+    glClearBufferfv(GL_COLOR, 0, black);
+    
+    float one= 1;
+    glClearBufferfv(GL_DEPTH, 0, &one);
+    
+    {
+        // prepare les 6 matrices view, une par face de la cubemap
+        // !! attention a la direction 'up' de lookat... rappel : orientation des textures des cubemaps...
+        Transform faces[6];
+        faces[0]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(1, 0, 0),  /* up */ Vector(0, -1, 0));   // +X
+        faces[1]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(-1, 0, 0), /* up */ Vector(0, -1, 0));   // -X
+        
+        faces[2]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(0, 1, 0),  /* up */ Vector(0, 0, 1));    // +Y
+        faces[3]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(0, -1, 0), /* up */ Vector(0, 0, -1));   // -Y
+        
+        faces[4]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(0, 0, 1),  /* up */ Vector(0, -1, 0));   // +Z
+        faces[5]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(0, 0, -1), /* up */ Vector(0, -1, 0));   // -Z
+        
+        Transform model= Identity();
+        Transform projection= Perspective(45, 1, 0.01, 100);
+        
+        // dessine 6 fois la scene
+        glBindVertexArray(vao);
+        glUseProgram(program_render_cubemap);
+        glUniformMatrix4fv(glGetUniformLocation(program_render_cubemap, "projectionMatrix"), 1, GL_TRUE, projection.buffer());
+        glUniformMatrix4fv(glGetUniformLocation(program_render_cubemap, "modelMatrix"), 1, GL_TRUE, model.buffer());
+        glUniformMatrix4fv(glGetUniformLocation(program_render_cubemap, "viewMatrix"), 6, GL_TRUE, faces[0].buffer());
+        
+        // mais avec un seul draw... qui dessine chaque triangle 6 fois, une fois par face de la cubemap, avec les 6 transformations correspondantes
+        glDrawArraysInstanced(GL_TRIANGLES, 0, vertex_count, 6);
+    }
+    
+    // mise a jour des mipmaps des faces de la cubemap
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture_cubemap);
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    
+    // partie 2 : dessiner avec la cubemap dynamique
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, window_width(), window_height());
+    
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-#if 1
+    
     // recupere les mouvements de la souris, utilise directement SDL2
     int mx, my;
     unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
@@ -320,7 +241,6 @@ int draw( )
     else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
         // deplace le point de rotation
         camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
-#endif
 
     /*  config pipeline :
         vertex array object
@@ -346,7 +266,7 @@ int draw( )
         program_uniform(program, "camera_position", Inverse(view)(Point(0, 0, 0)));
 
         // texture
-        glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, texture_cubemap);
 
         // sampler2D declare par le fragment shader
         GLint location= glGetUniformLocation(program, "texture0");
@@ -362,7 +282,7 @@ int draw( )
         glUseProgram(program_cubemap);
         
         // texture
-        glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, texture_cubemap);
         
         // sampler2D declare par le fragment shader
         GLint location= glGetUniformLocation(program_cubemap, "texture0");
@@ -397,6 +317,16 @@ int main( int argc, char **argv )
     if(context == NULL)
         return 1;       // erreur lors de la creation du contexte opengl
 
+    // verifier que l'extension est disponible
+    if(GLEW_ARB_shader_viewport_layer_array)
+        printf("ARB_shader_viewport_layer_array supported\n");
+    
+    else
+    {
+        printf("[error] ARB_shader_viewport_layer_array not supported...\n");
+        return 1;
+    }
+    
     // etape 3 : creation des objets
     if(init() < 0)
     {

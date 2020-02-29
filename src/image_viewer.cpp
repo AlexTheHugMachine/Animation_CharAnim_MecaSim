@@ -63,6 +63,7 @@ struct ImageViewer : public App
             
             qbins= qbins + (float) bins[i] / (m_width * m_height);
         }
+        m_compression= 2.2f;        
     }
     
     void title( const int index )
@@ -238,7 +239,7 @@ struct ImageViewer : public App
             }
         }
     
-        program_uniform(m_program, "center", vec2( float(xmouse) / float(window_width()), float(window_height() - ymouse +1) / float(window_height())));
+        program_uniform(m_program, "center", vec2( float(xmouse) / float(window_width()), float(window_height() - ymouse -1) / float(window_height())));
         if(bmouse & SDL_BUTTON(3))
             program_uniform(m_program, "zoom", m_zoom);
         else
@@ -252,7 +253,7 @@ struct ImageViewer : public App
         }
 
         program_uniform(m_program, "graph", int(m_graph));
-        program_uniform(m_program, "line", vec2(float(window_height() - ymouse +1) / float(window_height()), float(window_height() - ymouse +1)));
+        program_uniform(m_program, "line", vec2(float(window_height() - ymouse -1) / float(window_height()), float(window_height() - ymouse -1)));
         
         // dessine 1 triangle plein ecran
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -297,7 +298,7 @@ struct ImageViewer : public App
                     glBindTexture(GL_TEXTURE_2D, m_textures[m_index]);
                     glTexImage2D(GL_TEXTURE_2D, 0,
                         GL_RGBA32F, image.width(), image.height(), 0,
-                        GL_RGBA, GL_FLOAT, image.buffer());
+                        GL_RGBA, GL_FLOAT, image.data());
                     
                     glGenerateMipmap(GL_TEXTURE_2D);                    
                 }
@@ -321,9 +322,47 @@ struct ImageViewer : public App
             if(m_reference_index != -1)
                 button(m_widgets, "diff to reference", m_difference);
             
+        begin_line(m_widgets);
+        {
+            int x= xmouse;
+            int y= window_height() - ymouse -1;
+            if(x >= 0 && x < m_images[m_index].width()
+            && y >= 0 && y < m_images[m_index].height())
+            {
+                Color pixel= m_images[m_index](x, y);
+                label(m_widgets, "pixel %d %d: %f %f %f", x, y, pixel.r, pixel.g, pixel.b);
+            }
+        }
         end(m_widgets);
         
         draw(m_widgets, window_width(), window_height());
+        
+        if(key_state('s'))
+        {
+            clear_key_state('s');
+            
+            static int calls= 0;
+            screenshot("screenshot", ++calls);
+            printf("screenshot %d...\n", calls);
+        }
+        
+        if(key_state(SDLK_LCTRL) && key_state('w'))
+        {
+            clear_key_state('w');
+            
+            m_filenames.erase(m_filenames.begin() + m_index);
+            m_images.erase(m_images.begin() + m_index);
+            m_textures.erase(m_textures.begin() + m_index);
+            if(m_reference_index == m_index)
+                m_reference_index= -1;
+            
+            if(m_textures.empty())
+                return 0;
+            
+            m_index= m_index % int(m_textures.size());
+            // change aussi le titre de la fenetre
+            title(m_index);
+        }
         return 1;
     }
     

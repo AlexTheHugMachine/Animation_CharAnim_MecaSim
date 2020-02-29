@@ -42,7 +42,7 @@ GLuint make_texture( const int unit, const Image& im, const GLenum texel_type )
     // transfere les donnees dans la texture, 4 float par texel
     glTexImage2D(GL_TEXTURE_2D, 0,
         texel_type, im.width(), im.height(), 0,
-        GL_RGBA, GL_FLOAT, im.buffer());
+        GL_RGBA, GL_FLOAT, im.data());
     
     // prefiltre la texture
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -51,7 +51,7 @@ GLuint make_texture( const int unit, const Image& im, const GLenum texel_type )
 
 GLuint make_texture( const int unit, const ImageData& im, const GLenum texel_type )
 {
-    if(im.data.empty())
+    if(im.pixels.empty())
         return 0;
     
     // cree la texture openGL
@@ -87,7 +87,7 @@ GLuint make_texture( const int unit, const ImageData& im, const GLenum texel_typ
     // transfere les donnees dans la texture
     glTexImage2D(GL_TEXTURE_2D, 0,
         texel_type, im.width, im.height, 0,
-        format, type, im.buffer());
+        format, type, im.data());
     
     // prefiltre la texture
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -117,7 +117,7 @@ int screenshot( const char *filename )
     // transfere les pixels
     ImageData image(viewport[2], viewport[3], 4);
     glReadPixels(0, 0, image.width, image.height,
-        GL_RGBA, GL_UNSIGNED_BYTE, image.buffer());
+        GL_RGBA, GL_UNSIGNED_BYTE, image.data());
     // ecrit l'image
     return write_image_data(image, filename);
 }

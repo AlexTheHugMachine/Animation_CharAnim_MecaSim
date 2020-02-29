@@ -251,15 +251,22 @@ struct Tglsl
 };
 \endcode
 
-\ref tuto_uniform_buffers.cpp propose les différents types, avec des types différents pour les tableaux :
+\ref tuto_uniform_buffers.cpp propose les différents types dans le namespace `glsl` :
 \code
 namespace glsl {
     // type de base alignes sur 4 octets
     template < typename T >
     struct alignas(4) gscalar
-    {};
+    {
+        T x;
+        
+        gscalar( ) : x(T()) {}
+        gscalar( const T& v ) : x(v) {}
+        gscalar& operator= ( const T& v ) { x= v; return *this; }
+        operator T ( ) { return x; }
+    };
     
-    typedef gscalar<float> gfloat;
+    typedef gscalar<float> gfloat;      // pas possible d'utiliser les memes noms que les types de base du c++
     typedef gscalar<int> gint;
     typedef gscalar<unsigned int> guint;
     typedef gscalar<bool> gbool;
@@ -271,9 +278,15 @@ namespace glsl {
         alignas(4) T x, y, z;
         
         gvec3( ) {}
+        gvec3( const gvec3<T>& v ) : x(v.x), y(v.y), z(v.z) {}
         gvec3( const ::vec3& v ) : x(v.x), y(v.y), z(v.z) {}
         gvec3( const Point& v ) : x(v.x), y(v.y), z(v.z) {}
         gvec3( const Vector& v ) : x(v.x), y(v.y), z(v.z) {}
+        gvec3& operator= ( const gvec3<T>& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        gvec3& operator= ( const ::vec3& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        gvec3& operator= ( const Point& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        gvec3& operator= ( const Vector& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        operator ::vec3 ( ) { return ::vec3(float(x), float(y), float(y)); }
     };
 
     typedef gvec3<float> vec3;
@@ -283,13 +296,13 @@ namespace glsl {
 }
 \endcode
 
-et les tableaux ont une déclaration séparée :
+et dans le namespace `glsl::array` pour les tableaux :
 \code
 namespace glsl {
     namespace array {
         template < typename T >
         struct alignas(16) gscalar
-        {};
+        { ... };
         
         typedef gscalar<float> gfloat;
         typedef gscalar<int> gint;
@@ -315,9 +328,9 @@ Le code complet est également dans \ref tuto_uniform_buffers.cpp, voici ce qu'i
 \code
 loading program 'tutos/uniform.glsl'...
   uniform 'bufferData' binding 0
-    'vec3 a': offset 0, stride 0
-    'vec3 b': offset 16, stride 0
-    'vec3 c': offset 32, stride 0
+    'vec3 a': offset 0
+    'vec3 b': offset 16
+    'vec3 c': offset 32
     'vec3 d[0]': offset 48, array size 3, stride 16
   buffer size 96
 \endcode

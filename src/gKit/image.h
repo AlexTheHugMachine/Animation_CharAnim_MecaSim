@@ -20,7 +20,7 @@
 class Image
 {
 protected:
-    std::vector<Color> m_data;
+    std::vector<Color> m_pixels;
     int m_width;
     int m_height;
 
@@ -33,15 +33,13 @@ protected:
         if(py < 0) py= 0;
         if(py > m_height-1) py= m_height-1;
         
-        assert(py * m_width + px < int(m_data.size()));
-        assert(py * m_width + px >= 0);
-        
+        assert(py * m_width + px < int(m_pixels.size()));
         return py * m_width + px;
     }
     
 public:
-    Image( ) : m_data(), m_width(0), m_height(0) {}
-    Image( const int w, const int h, const Color& color= Black() ) : m_data(w*h, color), m_width(w), m_height(h) {}
+    Image( ) : m_pixels(), m_width(0), m_height(0) {}
+    Image( const int w, const int h, const Color& color= Black() ) : m_pixels(w*h, color), m_width(w), m_height(h) {}
     
     /*! renvoie une reference sur la couleur d'un pixel de l'image.
     permet de modifier et/ou de connaitre la couleur d'un pixel :
@@ -54,13 +52,13 @@ public:
     */
     Color& operator() ( const int x, const int y )
     {
-        return m_data[offset(x, y)];
+        return m_pixels[offset(x, y)];
     }
     
     //! renvoie la couleur d'un pixel de l'image (image non modifiable).
     Color operator() ( const int x, const int y ) const
     {
-        return m_data[offset(x, y)];
+        return m_pixels[offset(x, y)];
     }
     
     //! renvoie la couleur interpolee a la position (x, y).
@@ -78,10 +76,10 @@ public:
     }
     
     //! renvoie un pointeur sur le stockage des couleurs des pixels.
-    const void * buffer( ) const
+    const void *data( ) const
     {
-        assert(!m_data.empty());
-        return &m_data.front();
+        assert(!m_pixels.empty());
+        return &m_pixels.front();
     }
     
     //! renvoie la largeur de l'image.

@@ -102,7 +102,7 @@ int init( )
 
     glTexImage2D(GL_TEXTURE_2D, 0,
         GL_RGBA, image.width, image.height, 0,
-        data_format, data_type, image.buffer() );
+        data_format, data_type, image.data() );
 
     glGenerateMipmap(GL_TEXTURE_2D);
 

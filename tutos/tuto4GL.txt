@@ -30,7 +30,6 @@ tableaux alloués dans la mémoire de la carte graphique. cf \ref buffers pour l
 
 _remarque :_ relisez \ref interfaceC section shaders pour les explications sur les `uniform`, `in` `out` et leurs rapports avec les tableaux de sommets...
 
-
 Si le vertex shader etait écrit en c++, on pourrait écrire directement :
 \code
 // declarer la structure qui represente un sommet et ses attributs
@@ -62,25 +61,38 @@ du tableau et de la structure :
         vec3 *p= &tab[id].position;
 \endcode
 
-par contre, si le pointeur n'est pas type, il faut connaitre le nombre d'octets occuppes par la structure vertex et la place du membre position dans la structure :
+par contre, si on ne connait qu'un pointeur non typé `void *t`, au lieu de `vertex *tab`, il faut connaitre le nombre d'octets occuppes par la structure vertex, 
+`sizeof(vertex)` et la place du membre position dans la structure `offsetof(vertex, position)` pour calculer l'adresse d'un attribut du ieme sommet :
 \code
-        vertex *tab= { ... };
+        void *tab= { ... };
         char *t= (char *) tab;
         void *p= t + id * sizeof(vertex) + offsetof(vertex, position);
 \endcode
 
-ce sont exactement les informations : `t`, le buffer, `sizeof()` et `offsetof()` qu'il faut décrire à openGL pour que le gpu calcule l'adresse de chaque attribut de chaque 
-sommet pour exécuter les vertex shaders. par contre, l'application ne connait pas l'adresse gpu du tableau, mais un identifiant de buffer... 
+ce sont exactement ces informations : `t`, `sizeof()` et `offsetof()` qu'il faut décrire à openGL pour que le gpu calcule l'adresse de chaque attribut de chaque 
+sommet pour exécuter les vertex shaders. par contre, l'application ne connait pas l'adresse gpu du tableau, `t`, mais un identifiant de buffer... 
 
-le vertex shader GLSL s'écrit :
+openGL manipule le shader avec une interface différente : le shader n'a pas directement acces aux tableaux de sommets, uniquement au ieme sommet :
 \code
-layout(location= 0) in vec3 position;   // attribut 0
-layout(location= 1) in vec3 color;      // attribut 1
+vertex_shader_ouput vertex_shader( const vertex& vertex, const Transform& matrix, const unsigned int id )
+{
+        return { matrix * vec4(vertex.position, 1), vertex.color };
+}
+\endcode
 
+et le vertex shader GLSL s'écrit :
+\code
+// entrees
+in vec3 position;       // implicitement un element d'un tableau
+in vec3 color;          // implicitement un element d'un tableau
+
+// sorties
 out vec4 gl_Position;	// vertex_position, mais openGL impose le nom de cette variable
 out vec3 vertex_color;
 
+// parametre classique, une seule valeur 
 uniform mat4 matrix;
+
 void main( )
 {
         // position contient la valeur de tab[gl_VertexID].position
@@ -91,26 +103,30 @@ void main( )
 }
 \endcode
 
-il faut donc décrire l'organisation mémoire des 2 attributs, ainsi que leur type.
+il faut donc décrire l'organisation mémoire des 2 attributs, ainsi que leur type. 
+
+_remarque :_ pour affecter une valeur aux paramètres _classiques_, déclaré avec le mot-clé `uniform`, cf \ref tuto3GL
 
 le vertex array object stocke, pour chaque attribut déclaré par le vertex shader :
-        - le type de l'attribut, float, int, etc, paramètre type, GL_FLOAT, GL_INTEGER, etc.
-        - le nombre de composants de l'attribut, 1 pour une valeur scalaire, ou 2, 3, 4 pour un vecteur, paramètre size,
+        - le type de l'attribut, float, int, etc, paramètre `type`, GL_FLOAT, GL_INTEGER, etc.
+        - le nombre de composants de l'attribut, 1 pour une valeur scalaire, ou 2, 3, 4 pour un vecteur, paramètre `size`,
         - l'identifiant du buffer dans lequel se trouve les valeurs, implicite, c'est le buffer sélectionné sur 
         GL_ARRAY_BUFFER, cf \ref buffers, 
-        - la position de la première valeur dans le buffer, paramètre offset, cf `offsetof(vertex, attrib)`
-        - la distance entre chaque valeur dans le buffer, paramètre stride, ou `sizeof(vertex)`.
+        - la position de la première valeur dans le buffer, paramètre `offset`, cf `offsetof(vertex, attrib)`
+        - la distance entre chaque valeur dans le buffer, paramètre `stride`, ou `sizeof(vertex)`.
 
 l'indexation des sommets (l'index buffer) peut aussi être associé à un vertex array objet.
 
 la configuration se fait en plusieurs étapes :
         - récupérer l'identifiant de l'attribut dans le vertex shader, cf glGetAttribLocation( ),
         - sélectionner le vertex buffer sur GL_ARRAY_BUFFER,
-        - apeller glVertexAttribPointer( ),
-        - utiliser l'attribut, cf glEnableVertexAttribArray( )
-        
-exemple : le cas classique, le vertex buffer, identifiant buffer, contient les positions des sommets. 
-le vertex shader déclare : `in vec3 position;`
+        - déclarer le type et l'organisation mémoire de l'attribut avec `glVertexAttribPointer( identifiant, size, type, ... )`, 
+        - utiliser l'attribut, cf `glEnableVertexAttribArray( identifiant )`
+
+_remarque :_ les attributs sont numérotés automatiquement par le compilateur / linker, et il faut utiliser `glGetAttribLocation()` pour connaître leur identifiant. Il
+est aussi possible d'imposer l'identifiant d'un attribut directement dans le source du shader cf \ref location.
+
+_exemple :_ le cas classique, le vertex buffer, identifiant buffer, contient les positions des sommets. et le vertex shader déclare : `in vec3 position;`
 \code
         // selectionner le vertex array object a configurer, si necessaire
         // glBindVertexArray(vao);
@@ -133,13 +149,44 @@ le vertex shader déclare : `in vec3 position;`
         glEnableVertexAttribArray(attribute);
 \endcode
 
-exemple : si le maillage est décrit par des sommets partagés, l'index buffer stocke des triplets d'indices pour décrire chaque triangle. 
-Les opérations sont les mêmes que pour un vertex buffer, par contre, il faut sélectionner le buffer sur GL_ELEMENT_ARRAY_BUFFER :
+Selon le type des attributs il faut utiliser la bonne _déclaration_ :
+        - `in float attr0` : l'attribut est un `float`, utiliser `glVertexAttribPointer(location, 1, GL_FLOAT, ... )`,
+        - `in vec2 attr1` : l'attribut est un vecteur à 2 composantes `float`, utiliser `glVertexAttribPointer(location, 2, GL_FLOAT, ... )`,
+        - `in vec3 attr2` : l'attribut est un vecteur à 3 composantes `float`, utiliser `glVertexAttribPointer(location, 3, GL_FLOAT, ... )`,
+        - `in uint attr3` : l'attribut est un `unsigned int`, utiliser `glVertexAttribIPointer(location, 1, GL_UNSIGNED_INT, ... )`,
+        - `in int attr3` : l'attribut est un `int`, utiliser `glVertexAttribIPointer(location, 1, GL_INT, ... )`,
 
+
+Lorsque l'objet est décrit par des sommets indexés, en plus de décrire l'organisation mémoire des attributs de sommets, il faut également décrire leur indexation. 
+en c++, on pourrait écrire le vertex shader sous cette forme :
+\code
+// declarer la structure qui represente un sommet et ses attributs
+struct vertex
+{
+        vec3 position;
+        vec3 color;
+};
+
+// idem, pour un sommet transforme dans le repere projectif, cf exemple précédent
+struct vertex_shader_output { ... };
+
+// transformer un sommet indexé
+vertex_shader_ouput vertex_shader( const std::vector<vertex>& vertex, const std::vector<int>& index, const Transform& matrix, const unsigned int id )
+{
+        const int vertex_id= index[id];
+        return { matrix * vec4(vertex[vertex_id].position, 1), vertex[vertex_id].color };
+}
+\endcode
+
+L'index buffer stocke des triplets d'indices pour décrire chaque triangle. La description du vertex buffer et des sommets se fait toujours de la même manière, 
+par contre, il faut sélectionner le buffer contenant les indices de sommets sur GL_ELEMENT_ARRAY_BUFFER :
 \code
         // selectionner le vertex array object a configurer, si necessaire
         // glBindVertexArray(vao);
-
+        
+        // décrire les attributs de sommets 
+        { ... }
+        
         // selectionner l'index buffer et configurer le vao
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
 \endcode
@@ -190,6 +237,11 @@ exemple complet : \ref tuto4GL_normals.cpp
 
 pour récupérer la liste des attributs déclarés par le vertex shader et vérifier qu'ils sont bien associés à un buffer, 
 cf \ref shader_reflect
+
+## et avec un attribut entier (int, uint) ?
+
+il faut utiliser `glVertexAttribIPointer()` au lieu de `glVertexAttribPointer()`.
+
 
 ## et si un attribut n'existe plus dans le vertex shader ?? ( glGetAttribLocation( ) < 0 )
 
@@ -434,6 +486,7 @@ layout(location= 2) in vec3 normal;
 
 et la création des buffers / configuration du vao peut etre simplifiée, puisque l'on connait les identifiants des attributs. cf l'exemple précédent \ref single_buffer.
 
+
 \section dynamic et comment modifier le contenu du buffer ?
 
 Il suffit d'utiliser le _bon_ flag `usage` lors de la création du buffer :
@@ -449,4 +502,66 @@ Il suffit d'utiliser le _bon_ flag `usage` lors de la création du buffer :
 
 Plus de détails dans \ref ressources.
 
-*/
+
+# version openGL 4.3
+
+openGL 4.3 a introduit une nouvelle interface pour configurer les VAO, pour simplifier le portage depuis Direct3d, mais aussi pour séparer la déclaration du type des 
+attributs de leur stockage dans un buffer.
+
+c'est `glVertexAttribFormat()` qui décrit le type d'un attribut avec les mêmes paramètres que `glVertexAttribPointer()`
+\code
+	// selectionner le vertex array object a configurer, si necessaire
+	// glBindVertexArray(vao);
+	
+	glVertexAttribFormat(/* attribut */ 0, /* size*/ 3, /* type */ GL_FLOAT, /* normalized */ GL_FALSE, /* relative offset */ 0);
+\endcode
+
+_remarque :_ pour le attributs entiers, il faut utiliser `glVertexAttribIFormat()` au lieu de `glVertexAttribFormat()`.
+
+`glVertexAttribBinding()` et `glBindVertexBuffer()`permettent d'associer un attribut à un buffer :
+\code
+	GLuint buffer;
+	{
+		// creation et initialisation du buffer contenant les donnees.
+	}
+	
+	// selectionner le vertex array object a configurer, si necessaire
+	// glBindVertexArray(vao);
+	{
+		// configuration du type des attributs
+	}
+	
+	glVertexAttribBinding( /* attribut */ 0, /* binding */ 0);
+	glBindVertexBuffer(/* binding */ 0, /* buffer */ buffer, /* offset */ 0, /* stride */ 0);
+\endcode
+
+les paramètres de `glBindVertexBuffer()` sont les mêmes que ceux de `glVertexAttribPointer()`, ils permettent de décrire l'organisation des données dans le buffer.
+La seule différence est l'utilisation de `relative offset` par attribut en plus de `offset` par buffer. `relative offset` permet de savoir ou se trouvent les données d'un
+attribut dans la région du buffer, et `offset` indique de manière globale ou trouver les attributs du premier sommet dans le buffer.
+
+par exemple, si l'on souhaite utiliser une organisation intrelacée : `PNPNPNPNPNPNPN`, qui décrit la position et la normale de chaque sommet :
+\code
+	relative offset(P)= 0
+	relative offset(N)= sizeof(P)
+	stride(P)= sizeof(P) + sizeof(N)
+	stride(N)= sizeof(P) + sizeof(N)
+	
+	binding(P)= 0
+	binding(N)= 0
+\endcode
+
+pour l'autre organisation `PPPPPPPPNNNNNNNN` :
+\code
+	relative offset(P)= 0;
+	relative offset(N)= SIZEOF(P) * n;
+	stride(P)= 0	// sizeof(P)
+	stride(N)= 0	// sizeof(N)
+	
+	binding(P)= 0
+	binding(N)= 0
+\endcode
+
+L'intéret de cette nouvelle interface pour configurer un vao est de permettre de changer très facilement de buffer, sans avoir à décrire plusieurs fois le type des attributs, 
+et c'est probablement plus efficace pour le driver aussi : il est plus efficace de changer de buffers entre 2 objets à dessiner que de changer de vao.
+
+ */
