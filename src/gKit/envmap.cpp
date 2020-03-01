@@ -77,7 +77,6 @@ int write_cubemap( const Envmap& envmap, const char *filename )
 
 int write_cubemap_faces( const Envmap& envmap, const char *prefix )
 {
-    
     std::array<const char *, 6> suffixes= {
         "posx",
         "negx",

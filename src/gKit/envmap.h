@@ -13,7 +13,7 @@ struct Envmap
 {
     Envmap( ) : m_faces(), m_width(0) {}
     
-    //! extrait les 6 faces d'une image
+    //! extrait les 6 faces d'une image.
     Envmap( const Image& image ) : m_faces(), m_width(0)
     {
         int w= image.width() / 4;
@@ -191,14 +191,14 @@ protected:
 
 //! charge une cubemap. les 6 faces sont dans une seule image.
 Envmap read_cubemap( const char *filename );
-//! charge une cubemap. les 6 faces sont dans 6 images.
+//! charge une cubemap. les 6 faces sont dans 6 images, dans l'ordre openGL +x -x, +y -y, +z -z.
 Envmap read_cubemap_faces( const std::array<const char *, 6>& filenames );
-//! charge une cubemap. les 6 faces sont dans 6 images, prefix = "sky%s.png", les suffixes sont : "posx", "negx", "posy", "negy", "posz", "negz".
+//! charge une cubemap. les 6 faces sont dans 6 images, prefix = "sky%s.[png|jpg|bmp|tga|hdr]", les suffixes sont : "posx", "negx", "posy", "negy", "posz", "negz".
 Envmap read_cubemap_faces( const char *prefix );
 
 //! enregistre une cubemap dans une image.
 int write_cubemap( const Envmap& envmap, const char *filename );
-//! enregistre une cubemap dans 6 images. prefix = "sky%s.png", les suffixes sont : "posx", "negx", "posy", "negy", "posz", "negz".
+//! enregistre une cubemap dans 6 images. prefix = "sky%s.[png|hdr]", les suffixes sont : "posx", "negx", "posy", "negy", "posz", "negz".
 int write_cubemap_faces( const Envmap& envmap, const char *prefix );
 
 #endif
