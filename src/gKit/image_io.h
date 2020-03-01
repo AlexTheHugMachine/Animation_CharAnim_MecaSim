@@ -18,6 +18,14 @@ Image read_image( const char *filename );
 //! enregistre une image dans un fichier png.
 int write_image( const Image& image, const char *filename );
 
+//! retourne l'image
+Image flipY( const Image& image );
+//! retourne l'image
+Image flipX( const Image& image );
+
+//! renvoie un bloc de l'image
+Image copy( const Image& image, const int xmin, const int ymin, const int width, const int height );
+
 
 //! stockage temporaire des donnees d'une image.
 struct ImageData
