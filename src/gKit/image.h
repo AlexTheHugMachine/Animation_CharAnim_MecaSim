@@ -24,19 +24,6 @@ protected:
     int m_width;
     int m_height;
 
-    unsigned int offset (const int x, const int y ) const
-    {
-        int px= x;
-        if(px < 0) px= 0;
-        if(px > m_width-1) px= m_width-1;
-        int py= y;
-        if(py < 0) py= 0;
-        if(py > m_height-1) py= m_height-1;
-        
-        assert(py * m_width + px < int(m_pixels.size()));
-        return py * m_width + px;
-    }
-    
 public:
     Image( ) : m_pixels(), m_width(0), m_height(0) {}
     Image( const int w, const int h, const Color& color= Black() ) : m_pixels(w*h, color), m_width(w), m_height(h) {}
@@ -61,7 +48,19 @@ public:
         return m_pixels[offset(x, y)];
     }
     
-    //! renvoie la couleur interpolee a la position (x, y).
+    Color& operator() ( const size_t offset )
+    {
+        assert(offset < m_pixels.size());
+        return m_pixels[offset];
+    }
+    
+    Color operator() ( const size_t offset ) const
+    {
+        assert(offset < m_pixels.size());
+        return m_pixels[offset];
+    }
+    
+    //! renvoie la couleur interpolee a la position (x, y) [0 .. width]x[0 .. height].
     Color sample( const float x, const float y ) const
     {
         // interpolation bilineaire 
@@ -73,6 +72,12 @@ public:
             + (*this)(ix+1, iy)   * (u       * (1 - v))
             + (*this)(ix, iy+1)   * ((1 - u) * v)
             + (*this)(ix+1, iy+1) * (u       * v);
+    }
+    
+    //! renvoie la couleur interpolee aux coordonnees normalisees (x, y) [0 .. 1]x[0 .. 1].
+    Color texture( const float x, const float y ) const
+    {
+        return sample(x * m_width, y * m_height);
     }
     
     //! renvoie un pointeur sur le stockage des couleurs des pixels.
@@ -88,6 +93,20 @@ public:
     int height( ) const { return m_height; }
     //! renvoie le nombre de pixels de l'image.
     std::size_t size( ) const { return m_width * m_height; }
+    
+    //! renvoie l'indice du pixel.
+    unsigned int offset (const int x, const int y ) const
+    {
+        int px= x;
+        if(px < 0) px= 0;
+        if(px > m_width-1) px= m_width-1;
+        int py= y;
+        if(py < 0) py= 0;
+        if(py > m_height-1) py= m_height-1;
+        
+        assert(py * m_width + px < int(m_pixels.size()));
+        return py * m_width + px;
+    }
     
     /*! sentinelle pour la gestion d'erreur lors du chargement d'un fichier.
     exemple :

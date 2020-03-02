@@ -67,6 +67,7 @@ Transform Normal( const Transform& m );
 
 //! renvoie la matrice representant une mise a l'echelle / etirement.
 Transform Scale( const float x, const float y, const float z );
+inline Transform Scale( const float s ) { return Scale(s, s, s); }
 
 Transform Scale( const float s );
 
@@ -84,10 +85,15 @@ Transform RotationZ( const float angle );
 //! renvoie la matrice representation une rotation de angle degree autour de l'axe axis.
 Transform Rotation( const Vector& axis, const float angle );
 
+//! renvoie la matrice de rotation entre u et v.
+Transform Rotation( const Vector&u, const Vector& v );
+
 //! renvoie la matrice representant une transformation viewport.
 Transform Viewport( const float width, const float height );
 //! renvoie la matrice representant une transformation projection perspective.
 Transform Perspective( const float fov, const float aspect, const float znear, const float zfar );
+//! renvoie la matrice representant une transformation orthographique, passage d'un cube []x[]x[] vers [-1 1]x[-1 1]x[-1 1].
+Transform Ortho( const float left, const float right, const float bottom, const float top, const float znear, const float zfar );
 //! renvoie la matrice representant le placement et l'orientation d'une camera pour observer le point to.
 Transform Lookat( const Point& from, const Point& to, const Vector& up );
 

@@ -279,6 +279,56 @@ int write_image_data( ImageData& image, const char *filename )
 }
 
 
+Image flipY( const Image& image )
+{
+    // flip de l'image : origine en haut a gauche
+    Image flip(image.width(), image.height());
+
+    for(int y= 0; y < image.height(); y++)
+    for(int x= 0; x < image.width(); x++)
+    {
+        size_t s= image.offset(x, y);
+        size_t d= flip.offset(x, flip.height() - y -1);
+        
+        flip(d)= image(s);
+    }
+
+    return flip;
+}
+
+Image flipX( const Image& image )
+{
+    Image flip(image.width(), image.height());
+
+    for(int y= 0; y < image.height(); y++)
+    for(int x= 0; x < image.width(); x++)
+    {
+        size_t s= image.offset(x, y);
+        size_t d= flip.offset(flip.width() -x -1, y);
+        
+        flip(d)= image(s);
+    }
+
+    return flip;
+}
+
+Image copy( const Image& image, const int xmin, const int ymin, const int width, const int height )
+{
+    Image copy(width, height);
+    
+    for(int y= 0; y < height; y++)
+    for(int x= 0; x < width; x++)
+    {
+        size_t s= image.offset(xmin+x, ymin+y);
+        size_t d= copy.offset(x, y);
+        
+        copy(d)= image(s);
+    }
+    
+    return copy;
+}
+
+
 ImageData flipY( const ImageData& image )
 {
     // flip de l'image : origine en haut a gauche
