@@ -13,6 +13,12 @@ struct Envmap
 {
     Envmap( ) : m_faces(), m_width(0) {}
     
+    Envmap( const int size ) : m_faces(), m_width(size) 
+    {
+        for(int i= 0; i < 6; i++)
+            m_faces[i]= Image(size, size);
+    }
+    
     //! extrait les 6 faces d'une image.
     Envmap( const Image& image ) : m_faces(), m_width(0)
     {
@@ -120,6 +126,16 @@ struct Envmap
         return faces;
     }
     
+    Color& operator() ( const int face, const int x, const int y )
+    {
+        return m_faces[face](x, y);
+    }
+    
+    Color operator() ( const int face, const int x, const int y ) const
+    {
+        return m_faces[face](x, y);
+    }
+    
     //! renvoie la couleur de la cubemap dans la direction d, utilise les memes conventions qu'openGL / Renderman.
     Color texture( const Vector& d ) const
     {
@@ -184,6 +200,124 @@ struct Envmap
         return m_faces[face].texture(s, t);
     }
     
+    // mapping direction vers pixel [0 .. w]x[0 .. h]
+    Vector envmap_pixel( const Vector& d ) { Vector texel= envmap_texel(d); return Vector(texel.x, texel.y * m_width, texel.z * m_width); }
+    
+    // mapping direction vers texel [0 .. 1]x[0 .. 1]
+    Vector envmap_texel( const Vector& d )
+    {
+        float sm, tm;
+        int face= -1;
+        Vector m= Vector(std::abs(d.x), std::abs(d.y), std::abs(d.z));
+        if(m.x > m.y && m.x > m.z)
+        {
+            // X
+            if(d.x > 0)
+            {
+                face= 0;
+                sm= -d.z / m.x;
+                tm= -d.y / m.x;
+            }
+            else
+            {
+                face= 1;
+                sm= d.z / m.x;
+                tm= -d.y / m.x;
+            }
+        }
+        else if(m.y > m.z)
+        {
+            // Y
+            if(d.y > 0)
+            {
+                face= 2;
+                sm= d.x / m.y;
+                tm= d.z / m.y;
+            }
+            else
+            {
+                face= 3;
+                sm= d.x / m.y;
+                tm= -d.z / m.y;
+            }
+        }
+        else
+        {
+            // Z
+            if(d.z > 0)
+            {
+                face= 4;
+                sm= d.x / m.z;
+                tm= -d.y / m.z;
+            }
+            else
+            {
+                face= 5;
+                sm= -d.x / m.z;
+                tm= -d.y / m.z;
+            }
+        }
+        
+        assert(face != -1);
+        float s= (sm +1) / 2;
+        float t= (tm +1) / 2;
+        return Vector(face, s, t);
+    }
+
+    // mapping texel vers direction
+    Vector envmap_pixel_direction( const Vector& d ) { return envmap_texel_direction(int(d.x), d.y / m_width, d.z / m_width); }
+    
+    Vector envmap_texel_direction( const Vector& d ) { return envmap_texel_direction(int(d.x), d.y, d.z); }
+    
+    Vector envmap_texel_direction( const int face, const float s, const float t )
+    {
+        // retrouve le point sur le cube [-1 .. 1]
+        float sm= 2 * s -1;
+        float tm= 2 * t -1;
+        if(face == 0)
+        {
+            // X+
+            // sm= -d.z / m.x;
+            // tm= -d.y / m.x;
+            return Vector(1, -tm, -sm);
+        }
+        else if(face == 1)
+        {
+            // X-
+            // sm= d.z / m.x;
+            // tm= -d.y / m.x;
+            return Vector(-1, -tm, sm);
+        }
+        else if(face == 2)
+        {
+            // Y+
+            // sm= d.x / m.y;
+            // tm= d.z / m.y;
+            return Vector(sm, 1, tm);
+        }
+        else if(face == 3)
+        {
+            // Y-
+            // sm= d.x / m.y;
+            // tm= -d.z / m.y;
+            return Vector(sm, -1, -tm);
+        }
+        else if(face == 4)
+        {
+            // Z+
+            // sm= d.x / m.z;
+            // tm= -d.y / m.z;
+            return Vector(sm, -tm, 1);
+        }
+        else // if(face == 5)
+        {
+            // Z-
+            // sm= -d.x / m.z;
+            // tm= -d.y / m.z;
+            return Vector(-sm, -tm, -1);
+        }
+    }
+    
 protected:
     std::array<Image, 6> m_faces;
     int m_width;
@@ -200,6 +334,7 @@ Envmap read_cubemap_faces( const char *prefix );
 int write_cubemap( const Envmap& envmap, const char *filename );
 //! enregistre une cubemap dans 6 images. prefix = "sky%s.[png|hdr]", les suffixes sont : "posx", "negx", "posy", "negy", "posz", "negz".
 int write_cubemap_faces( const Envmap& envmap, const char *prefix );
+
 
 #endif
 
