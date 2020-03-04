@@ -139,6 +139,10 @@ tutos = {
 	"tuto5GL_sampler",
 	"tuto5GL_samplers",
 	"tuto5GL_multi",
+	"tuto_draw_cubemap",
+	"tuto_cubemap",
+	"tuto_dynamic_cubemap",
+	
 	"tuto6GL",
 	"tuto6GL_buffer",
 	"tuto_framebuffer",
