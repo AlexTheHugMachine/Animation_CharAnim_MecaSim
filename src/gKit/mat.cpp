@@ -147,11 +147,6 @@ Transform Scale( const float x, const float y, const float z )
         0, 0, 0, 1);
 }
 
-Transform Scale( const float s )
-{
-    return Scale(s, s, s);
-}
-
 Transform Translation( const Vector& v )
 {
     return Transform(
