@@ -47,6 +47,7 @@ plus ceux dédiés à openGL :
     - \ref shader_reflect,
     - \ref tuto5GL,
     - \ref draw,
+    - \ref wavefront,
     - \ref framebuffer,
     - \ref cubemap,
     - \ref time,
