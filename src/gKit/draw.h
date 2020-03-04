@@ -128,6 +128,8 @@ public:
     ~PipelineCache( ) 
     {
         printf("[pipeline cache] %d programs.\n", int(m_programs.size()));
+        // le contexte est deja detruit lorsque ce destructeur est appelle... 
+        // trop tard pour detruire les programs et les shaders...
     }
     
     //! renvoie un shader program compile.

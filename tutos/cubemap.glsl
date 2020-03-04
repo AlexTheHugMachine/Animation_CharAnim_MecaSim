@@ -36,12 +36,12 @@ void main( )
 {
     vec3 v= vertex_position - camera_position;
     vec3 n= normalize(vertex_normal);
-    vec3 color= texture(texture0, n).rgb;
+    //~ vec3 color= texture(texture0, n).rgb;   // couleur dans la direction de la normale
     
     vec3 m= reflect(v, n);
-    //~ vec3 color= texture(texture0, m).rgb;
+    vec3 color= texture(texture0, m).rgb;       // couleur dans la direction du reflet miroir
     
-    //~ // approximation 
+    //~ // ou approximation pour un modele blinn - phong, cf shaders et brdfs...
     //~ float size= textureSize(texture0, 0).x;
     //~ float dlevel= floor(log2(size)) +1;
     //~ vec3 diffuse= textureLod(texture0, n, dlevel).rgb;

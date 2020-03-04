@@ -21,7 +21,7 @@ public:
     {
         m_objet= read_mesh("data/cube.obj");
         
-        /* si l'objet est gros, il faut regler la camera pour l'observer entierement :
+        // si l'objet est gros, il faut regler la camera pour l'observer entierement :
         // recuperer les points extremes de l'objet (son englobant)
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);

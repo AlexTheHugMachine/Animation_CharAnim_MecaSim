@@ -11,7 +11,7 @@
 #include "uniforms.h"
 #include "draw.h"
 
-#include "app_camera.h"        // classe Application a deriver
+#include "app_camera.h"
 
 //! charge une image, decoupe les 6 faces et renvoie une texture cubemap.
 GLuint read_cubemap( const int unit, const char *filename,  const GLenum texel_type = GL_RGBA )
@@ -84,14 +84,11 @@ public:
     int init( )
     {
         m_objet= read_mesh("data/cube.obj");
-        m_texture= read_cubemap(0, "canyon2.jpg");
-        //~ m_texture= read_cubemap("tutos/cubemap_debug_cross.png");
+        m_texture= read_cubemap(0, "tutos/cubemap_debug_cross.png");
         m_program= read_program("tutos/draw_cubemap.glsl");
         program_print_errors(m_program);
         
         // init camera
-        camera().projection(window_width(), window_height(), 45);
-        
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
         camera().lookat(pmin, pmax);
@@ -102,7 +99,7 @@ public:
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
         
         glClearDepth(1.f);                          // profondeur par defaut
-        glDepthFunc(GL_LEQUAL);                       // ztest, conserver l'intersection la plus proche de la camera
+        glDepthFunc(GL_LEQUAL);                     // ztest, conserver l'intersection la plus proche de la camera
         glEnable(GL_DEPTH_TEST);                    // activer le ztest
         
         return 0;   // ras, pas d'erreur

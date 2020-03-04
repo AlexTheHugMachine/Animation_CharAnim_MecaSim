@@ -85,11 +85,10 @@ public:
     // creation des objets de l'application
     int init( )
     {
-        //~ m_objet= read_mesh("data/cube.obj");
-        m_objet= read_mesh("/home/jciehl/scenes/ccbigguy.obj");
+        m_objet= read_mesh("data/cube.obj");
+        m_objet= read_mesh("data/bigguy.obj");
         
-        m_texture= read_cubemap(0, "canyon2.jpg");
-        //~ m_texture= read_cubemap(0, "tutos/cubemap_debug_cross.png");
+        m_texture= read_cubemap(0, "tutos/cubemap_debug_cross.png");
         
         m_program_draw= read_program("tutos/draw_cubemap.glsl");
         program_print_errors(m_program_draw);
@@ -97,8 +96,6 @@ public:
         program_print_errors(m_program);
         
         // init camera
-        camera().projection(window_width(), window_height(), 45);
-        
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
         camera().lookat(pmin, pmax);

@@ -5,8 +5,6 @@
 
 # affichage d'un environnement 
 
-cf \ref tuto5GL_cubemap.cpp + tuto5GL_cubemap.glsl + cubemap.glsl
-
 cf \ref tuto_draw_cubemap.cpp + draw_cubemap.glsl
 
 ## cubemap ?
@@ -51,9 +49,9 @@ dans ce cas, la direction (1, -1, -1) correspond au pixel (1, 1) et la direction
 
 <table style="width:100%">
 <tr> 
-<td> <IMG SRC="cubemapx.png" width="100%"> face +x, chargée directement... (à l'envers) </td>
-<td> <IMG SRC="cubemapxflip.png" width="100%"> face +x, chargée correctement, vue de l'extérieur du cube </td>
-<td> <IMG SRC="cubemapxflip_inside.png" width="100%"> face +x, chargée correctement, vue de l'intérieur du cube...
+<td> <IMG SRC="cubemapx.png" width="100%"> face +x, chargée directement... (à l'envers) origine classique, en bas à gauche</td>
+<td> <IMG SRC="cubemapxflip.png" width="100%"> face +x, chargée correctement, vue de l'extérieur du cube, origine en haut à gauche...</td>
+<td> <IMG SRC="cubemapxflip_inside.png" width="100%"> face +x, chargée correctement, vue de l'intérieur du cube... origne en haut à droite...
 </table>
 
 ## chargement d'une cubemap
@@ -398,12 +396,60 @@ Charger une image est pratique pour initialiser une cubemap, mais dans certains 
 l'éclairer. Une solution directe consiste à préparer 6 framebuffers, un par face de la cubemap et à dessiner 6 fois la scène. cf \ref framebuffer. mais c'est assez pénible à écrire 
 et plutot lent.
 
-Une solution plus efficace existe : une cubemap est un tableau de 6 textures, et il est possible d'associer le tableau complet à un framebuffer. Par contre, il faudra indiquer dans 
-quel élement du tableau / face de cubemap dessiner les triangles. Il faudra toujours dessiner 6 fois chaque triangle, une fois par face de la cubemap et c'est la variable `gl_Layer` 
-qui indique quelle texture du tableau / framebuffer / cubemap remplir. Cette fonctionnalité, le _layered rendering_, utilise normalement un _geometry shader_ pour dessiner 6 fois 
-chaque triangle. Les différents tutos sur le sujet ne mentionnent que cette solution, mais il est plus simple et plus efficace de ne _pas_ utiliser de geometry shader et d'utiliser à la 
-place `glDrawInstanced()` pour dessiner 6 fois les triangles. Le vertex shader affectera une valeur à `gl_Layer` en fonction de l'instance. Cette fonctionnalité est disponible sur tous 
-les gpu actuels, cf l'extension [GL_ARB_shader_viewport_layer_array](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_shader_viewport_layer_array.txt).
+Une solution plus efficace existe : une cubemap est un tableau de 6 textures, et il est possible d'associer le tableau complet à un framebuffer avec `glFramebufferTexture()` :
+\code
+    GLuint color_cubemap= 0;
+    GLuint depth_cubemap= 0;
+    GLuint framebuffer= 0;
+    
+    // 6 faces couleur
+    glGenTextures(1, &color_cubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, color_cubemap);
+    for(int i= 0; i < 6; i++)
+    {
+        // creer chaque face
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
+            GL_RGBA, w, h, 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    }
+    
+    // parametres de filtrage
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);    
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);    
+    //+ mipmaps
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);    
+    
+    // 6 faces profondeur
+    glGenTextures(1, &depth_cubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, depth_cubemap);
+    for(int i= 0; i < 6; i++)
+    {
+        // creer chaque face
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
+            GL_DEPTH_COMPONENT, w, h, 0,
+            GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
+    }
+    
+    // framebuffer 
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    // attache les 6 faces couleur + profondeur
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, color_cubemap, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_cubemap, 0);
+    
+    // nettoyage
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+\endcode
+
+Par contre, il faudra indiquer dans quel élement du tableau / face de cubemap dessiner les triangles. Il faudra toujours dessiner 6 fois chaque triangle, une fois par face de la cubemap et 
+c'est la variable `gl_Layer` qui indique quelle texture du tableau / framebuffer / cubemap remplir. Cette fonctionnalité, le _layered rendering_, utilise normalement un _geometry shader_ 
+pour dessiner 6 fois chaque triangle. Les différents tutos sur le sujet ne mentionnent que cette solution, mais il est plus simple et plus efficace de ne _pas_ utiliser de geometry shader et 
+d'utiliser à la place `glDrawInstanced()` pour dessiner 6 fois les triangles. Le vertex shader affectera une valeur à `gl_Layer` en fonction de l'instance. Cette fonctionnalité est disponible 
+sur tous les gpu actuels, cf l'extension [GL_ARB_shader_viewport_layer_array](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_shader_viewport_layer_array.txt).
 
 La seule difficulté est de construire les matrices _view_ qui permettent d'orienter la camera dans le bon sens pour produire images / face de la cubemap en respectant leur 
 convention... Lookat() de mat.h permet de le faire assez facilement :
@@ -447,9 +493,6 @@ void main( )
 
 `gl_InstanceID` permet de retrouver la transformation à utiliser pour la Ieme face et `gl_Layer` permet de dessiner le triangle dans la face de la cubemap attachée au framebuffer.
 
-
-
-cf \ref tuto5GL_dynamic_cubemap.cpp + render_cubemap.glsl
-
+code complet dans \ref tuto_dynamic_cubemap.cpp + render_cubemap.glsl
 
 */

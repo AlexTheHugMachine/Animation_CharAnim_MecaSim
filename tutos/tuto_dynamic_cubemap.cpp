@@ -167,9 +167,6 @@ public:
     // creation des objets de l'application
     int init( )
     {
-        //~ m_object= read_mesh("/home/jciehl/scenes/ccbigguy.obj");
-        //~ m_object= read_mesh("sphere.obj");
-        //~ m_object= read_mesh("data/cube.obj");
         m_object= read_mesh("data/bigguy.obj");
         m_cube= read_mesh("data/cube.obj");
         m_ground= make_grid(20);
