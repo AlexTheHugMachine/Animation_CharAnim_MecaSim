@@ -93,7 +93,7 @@ public:
         
         m_program_draw= read_program("tutos/draw_cubemap.glsl");
         program_print_errors(m_program_draw);
-        m_program= read_program("tutos/tuto5GL_cubemap.glsl");
+        m_program= read_program("tutos/cubemap.glsl");
         program_print_errors(m_program);
         
         // init camera
@@ -137,9 +137,6 @@ public:
         Transform viewport= camera().viewport();
         Transform mvp= projection * view * model;
         
-        // inverse de la composition des transformations repere monde vers repere image
-        Transform inv= Inverse(viewport * projection * view);
-        
         Transform viewInv= Inverse(view);
         Point camera_position= viewInv(Point(0, 0, 0));  // coordonnees de la camera, dans le repere camera... c'est l'origine
         
@@ -152,9 +149,13 @@ public:
         glBindTexture(GL_TEXTURE_CUBE_MAP, m_texture);
         program_uniform(m_program, "texture0", int(0));
         
+        // dessine l'objet, les attributs position et normale sont necessaires a l'execution du shader.
         draw(m_objet, m_program, /* position */ true, /* texcoord */ false, /* normal */ true, /* color */ false);
         
         // etape 2 : affiche la cube map
+        // inverse de la composition des transformations repere monde vers repere image
+        Transform inv= Inverse(viewport * projection * view);
+        
         glUseProgram(m_program_draw);
         glBindVertexArray(m_vao);
         program_uniform(m_program_draw, "invMatrix", inv);
@@ -176,7 +177,7 @@ public:
             
             m_program_draw= read_program("tutos/draw_cubemap.glsl");
             program_print_errors(m_program_draw);
-            m_program= read_program("tutos/tuto5GL_cubemap.glsl");
+            m_program= read_program("tutos/cubemap.glsl");
             program_print_errors(m_program);
         }
         

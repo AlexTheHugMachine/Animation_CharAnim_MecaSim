@@ -1,43 +1,56 @@
 
-//! \file cubemap.glsl dessiner la cubemap a l'infini.
+//! \file cubemap.glsl reflechir une cubemap sur un objet
 
-#version 330
+#version 430
 
 #ifdef VERTEX_SHADER
-uniform mat4 vpInvMatrix;
+uniform mat4 mvpMatrix;
+uniform mat4 modelMatrix;
 
+layout(location= 0) in vec3 position;
+layout(location= 2) in vec3 normal;
 out vec3 vertex_position;
+out vec3 vertex_normal;
 
 void main( )
 {
-    // repere projectif
-    vec2 positions[3]= vec2[3]( vec2(-1,-1), vec2(3, -1), vec2(-1, 3) );
-    
-    // place le point sur le plan far... a l'infini
-    vec4 p= vec4(positions[gl_VertexID], 1, 1);
-
-    // repere monde
-    vec4 ph= vpInvMatrix * p;
-    vertex_position= ph.xyz / ph.w;
-    
-    gl_Position= p;
+    gl_Position= mvpMatrix * vec4(position, 1);
+    vertex_position= vec3(modelMatrix * vec4(position, 1));
+    vertex_normal= mat3(modelMatrix) * normal;
 }
 #endif
+
 
 #ifdef FRAGMENT_SHADER
 uniform vec3 camera_position;
 uniform samplerCube texture0;
 
+const float alpha= 400;
+const float k= 0.8;
+
 in vec3 vertex_position;
+in vec3 vertex_normal;
 out vec4 fragment_color;
 
 void main( )
 {
-    // calculer la direction du rayon pour le pixel dans le repere du monde
-    vec3 d= normalize(vertex_position - camera_position);
-    //~ vec3 d= normalize(vertex_position);
-    vec4 color= texture(texture0, d);
+    vec3 v= vertex_position - camera_position;
+    vec3 n= normalize(vertex_normal);
+    vec3 color= texture(texture0, n).rgb;
     
-    fragment_color= color;
+    vec3 m= reflect(v, n);
+    //~ vec3 color= texture(texture0, m).rgb;
+    
+    //~ // approximation 
+    //~ float size= textureSize(texture0, 0).x;
+    //~ float dlevel= floor(log2(size)) +1;
+    //~ vec3 diffuse= textureLod(texture0, n, dlevel).rgb;
+
+    //~ float glevel= max(0, log2(size * sqrt(3)) - 0.5 * log2(alpha+1));
+    //~ vec3 glossy= textureLod(texture0, m, glevel).rgb;
+
+    //~ vec3 color= k * diffuse + (1 - k) * glossy;
+    
+    fragment_color= vec4(color, 1);
 }
 #endif

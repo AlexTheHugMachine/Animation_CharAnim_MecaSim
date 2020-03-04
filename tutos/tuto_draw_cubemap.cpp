@@ -133,10 +133,10 @@ public:
         Transform inv= Inverse(viewport * projection * view);
         
         Transform viewInv= Inverse(view);
-        Point camera= viewInv(Point(0, 0, 0));  // coordonnees de la camera, dans le repere camera... c'est l'origine
+        Point camera_position= viewInv(Point(0, 0, 0));  // coordonnees de la camera, dans le repere camera... c'est l'origine
         
         program_uniform(m_program, "invMatrix", inv);
-        program_uniform(m_program, "camera", camera);
+        program_uniform(m_program, "camera_position", camera_position);
         
         glBindTexture(GL_TEXTURE_CUBE_MAP, m_texture);
         program_uniform(m_program, "texture0", int(0));
