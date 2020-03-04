@@ -99,7 +99,7 @@ public:
         program_use_texture(m_program, "texture1", 1, m_texture1);
         
         // go !
-        draw(m_objet, m_program);
+        draw(m_objet, m_program, /* use position */ true, /* use texcoord */ true, /* use normal */ false, /* use color */ false);
         return 1;
     }
     

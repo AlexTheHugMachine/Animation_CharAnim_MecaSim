@@ -1,6 +1,7 @@
 
 //! \file tuto7_camera.cpp reprise de tuto7.cpp mais en derivant AppCamera, avec gestion automatique d'une camera.
 
+
 #include "wavefront.h"
 #include "texture.h"
 
@@ -19,17 +20,13 @@ public:
     int init( )
     {
         m_objet= read_mesh("data/cube.obj");
-
-        /* si l'objet est gros, il faut regler la camera pour l'observer entierement :
-            // recuperer les points extremes de l'objet (son englobant)
-            Point pmin, pmax;
-            m_objet.bounds(pmin, pmax);
-            
-            // parametrer la camera
-            camera().lookat(pmin, pmax);
-        */
         
-        m_texture= read_texture(0, "data/debug2x2red.png");
+        /* si l'objet est gros, il faut regler la camera pour l'observer entierement :
+        // recuperer les points extremes de l'objet (son englobant)
+        Point pmin, pmax;
+        m_objet.bounds(pmin, pmax);
+        // parametrer la camera
+        camera().lookat(pmin, pmax);
 
         // etat openGL par defaut
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
@@ -45,8 +42,6 @@ public:
     int quit( )
     {
         m_objet.release();
-        glDeleteTextures(1, &m_texture);
-        
         return 0;
     }
     
@@ -55,14 +50,13 @@ public:
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        draw(m_objet, Identity(), camera(), m_texture);
-        
+        draw(m_objet, Identity(), camera());
+
         return 1;
     }
 
 protected:
     Mesh m_objet;
-    GLuint m_texture;
 };
 
 
