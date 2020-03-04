@@ -1,7 +1,11 @@
 
 #include "app_camera.h"
 
-AppCamera::AppCamera( const int width, const int height, const int major, const int minor ) : App(width, height, major, minor), m_camera() {}
+AppCamera::AppCamera( const int width, const int height, const int major, const int minor ) : App(width, height, major, minor), m_camera() 
+{
+    // projection par defaut, adaptee a la fenetre
+    m_camera.projection(window_width(), window_height(), 45);
+}
 
 AppCamera::~AppCamera( ) {}
 
@@ -27,7 +31,7 @@ int AppCamera::prerender( )
         clear_wheel_event();
         m_camera.move(8.f * wheel.y);  // approche / eloigne l'objet
     }
-    
+
     // appelle la fonction update() de la classe derivee
     return update(global_time(), delta_time());
 }

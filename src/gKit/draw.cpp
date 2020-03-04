@@ -19,27 +19,27 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
     param.draw(m);
 }
 
-void draw( Mesh& m, const Transform& model, const Orbiter& camera, const GLuint texture )
+void draw( Mesh& m, const Transform& model, Orbiter& camera, const GLuint texture )
 {
     // recupere les transformations
     Transform view= camera.view();
-    Transform projection= camera.projection((float) window_width(), (float) window_height(), 45);
+    Transform projection= camera.projection(window_width(), window_height(), 45);
     
     // affiche l'objet
     draw(m, model, view, projection, texture);
 }
 
-void draw( Mesh& m, const Orbiter& camera, const GLuint texture )
+void draw( Mesh& m, Orbiter& camera, const GLuint texture )
 {
     draw(m, Identity(), camera, texture);
 }
 
-void draw( Mesh& m, const Orbiter& camera )
+void draw( Mesh& m, Orbiter& camera )
 {
     draw(m, Identity(), camera, 0);
 }
 
-void draw( Mesh& m, const Transform& model, const Orbiter& camera )
+void draw( Mesh& m, const Transform& model, Orbiter& camera )
 {
     draw(m, model, camera, 0);
 }

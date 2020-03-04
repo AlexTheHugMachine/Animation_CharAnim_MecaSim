@@ -21,14 +21,14 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, const GLuint texture );
 
 //! dessine l'objet avec les transformations vue et projection, definies par la camera. model est la transformation identite.
-void draw( Mesh& m, const Orbiter& camera );
+void draw( Mesh& m, Orbiter& camera );
 //! dessine l'objet avec une transformation model. les transformations vue et projection sont celles de la camera
-void draw( Mesh& m, const Transform& model, const Orbiter& camera );
+void draw( Mesh& m, const Transform& model, Orbiter& camera );
 
 //! dessine l'objet avec les transformations vue et projection. model est l'identite. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
-void draw( Mesh& m, const Orbiter& camera, const GLuint texture );
+void draw( Mesh& m, Orbiter& camera, const GLuint texture );
 //! dessine l'objet avec une transformation model. les transformations vue et projection sont celles de la camera. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
-void draw( Mesh& m, const Transform& model, const Orbiter& camera, const GLuint texture );
+void draw( Mesh& m, const Transform& model, Orbiter& camera, const GLuint texture );
 
 /*! representation des options / parametres d'un draw.
     permet de donner tous les parametres d'un draw de maniere flexible.
@@ -67,9 +67,9 @@ public:
     DrawParam& projection( const Transform& m ) { m_projection= m; return *this; }
 
     //! utilise les transformations view et projection definies par une camera.
-    DrawParam& camera( const Orbiter& o ) { m_view= o.view(); m_projection= o.projection((float) window_width(), (float) window_height(), 45); return *this; }
+    DrawParam& camera( const Orbiter& o ) { m_view= o.view(); m_projection= o.projection(); return *this; }
     //! utilise les transformations view et projection definies par une camera. parametres explicites de la projection.
-    DrawParam& camera( const Orbiter& o, const float width, const float height, const float fov ) { m_view= o.view(); m_projection= o.projection(width, height, fov); return *this; }
+    DrawParam& camera( Orbiter& o, const int width, const int height, const float fov ) { m_view= o.view(); m_projection= o.projection(width, height, fov); return *this; }
     //! eclaire l'objet avec une source ponctuelle, de position p et de couleur c.
     DrawParam& light( const Point& p, const Color& c= White() ) { m_use_light= true; m_light= p; m_light_color=c; return *this; }
     //! plaque une texture a la surface de l'objet.

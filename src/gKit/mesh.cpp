@@ -306,6 +306,10 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
         printf("[oops] mesh: no color array...\n");
 #endif
     
+    if(m_vao)
+        // c'est deja fait...
+        return m_vao;
+    
     glGenVertexArrays(1, &m_vao);
     glBindVertexArray(m_vao);
     
