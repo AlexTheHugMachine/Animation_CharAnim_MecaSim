@@ -328,19 +328,19 @@ struct IS : public App
                     glBindTexture(GL_TEXTURE_2D, m_ptexture);
                     glTexSubImage2D(GL_TEXTURE_2D, 0, 
                         0, 0, m_hitp.width(), m_hitp.height(),
-                        GL_RGBA, GL_FLOAT, m_hitp.buffer());
+                        GL_RGBA, GL_FLOAT, m_hitp.data());
                     
                     glActiveTexture(GL_TEXTURE0 +1);
                     glBindTexture(GL_TEXTURE_2D, m_ntexture);
                     glTexSubImage2D(GL_TEXTURE_2D, 0, 
                         0, 0, m_hitn.width(), m_hitn.height(),
-                        GL_RGBA, GL_FLOAT, m_hitn.buffer());
+                        GL_RGBA, GL_FLOAT, m_hitn.data());
                     
                     glActiveTexture(GL_TEXTURE0 +2);
                     glBindTexture(GL_TEXTURE_2D, m_vtexture);
                     glTexSubImage2D(GL_TEXTURE_2D, 0, 
                         0, 0, m_hitv.width(), m_hitv.height(),
-                        GL_RGBA, GL_FLOAT, m_hitv.buffer());
+                        GL_RGBA, GL_FLOAT, m_hitv.data());
                 }
             }
         }

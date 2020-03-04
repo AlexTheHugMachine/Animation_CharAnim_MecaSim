@@ -77,6 +77,7 @@ public:
             m_positions.push_back(vec3(x *4, y *4, z *4));
         }
         
+        
         m_instance_count= int(m_positions.size());
         
         printf("buffer %dKB\n", int(sizeof(vec3) * m_positions.size() / 1024));
@@ -96,7 +97,6 @@ public:
         // openGL 4.4, buffer dynamique explicite + map persistant
         glGenBuffers(1, &m_instance_storage);
         glBindBuffer(GL_ARRAY_BUFFER, m_instance_storage);
-        //~ glBufferStorage(GL_ARRAY_BUFFER,  sizeof(vec3) * m_positions.size(), m_positions.data(), GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
         glBufferStorage(GL_ARRAY_BUFFER,  sizeof(vec3) * m_positions.size(), nullptr, GL_DYNAMIC_STORAGE_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
         
         m_storage= glMapBufferRange(GL_ARRAY_BUFFER, 0, sizeof(vec3) * m_positions.size(), 
@@ -254,7 +254,6 @@ public:
 
 protected:
     std::vector<vec3> m_positions;
-    void* m_positions64;
     
     // solution openGL3
     GLuint m_vao;

@@ -43,6 +43,7 @@ public:
         m_objet= read_mesh("data/bigguy.obj");
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
+        
         m_camera.lookat(pmin - Vector(200, 200,  0), pmax + Vector(200, 200, 0));
         
         // genere les parametres des draws et les transformations
