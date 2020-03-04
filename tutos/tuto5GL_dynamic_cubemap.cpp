@@ -23,7 +23,7 @@ GLuint program_render_cubemap;
 
 GLuint texture_cubemap;
 GLuint depth_cubemap;
-GLuint fbo_cubemap;
+GLuint framebuffer;
 
 GLuint vao;
 GLuint vao_null;
@@ -37,7 +37,7 @@ int init( )
 {
     // etape 1 : shaders
     // . dessiner le reflet de la cubemap sur un objet
-    program= read_program("tutos/tuto5GL_cubemap.glsl");
+    program= read_program("tutos/cubemap.glsl");
     program_print_errors(program);
     
     // . dessiner la cubemap a l'infini
@@ -49,8 +49,8 @@ int init( )
     program_print_errors(program_render_cubemap);
     
     // etape 2 : charger un mesh, (avec des normales), vao + vertex buffer
-    //~ Mesh mesh= read_mesh("data/bigguy.obj");
-    Mesh mesh= read_mesh("data/cube.obj");
+    Mesh mesh= read_mesh("data/bigguy.obj");
+    //~ Mesh mesh= read_mesh("data/cube.obj");
     if(mesh.vertex_count() == 0)
         return -1;      // gros probleme, pas de sommets...
 
@@ -74,7 +74,7 @@ int init( )
     glEnableVertexAttribArray(0);
     
     // normal buffer
-    if(!mesh.normal_buffer_size())
+    if(!mesh.has_normal())
     {
         printf("[oops]  pas de normales...\n");
         return -1;
@@ -122,8 +122,8 @@ int init( )
     }
 
     // framebuffer, attache les 6 faces couleur + profondeur
-    glGenFramebuffers(1, &fbo_cubemap);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_cubemap);
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texture_cubemap, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_cubemap, 0);
     
@@ -169,14 +169,14 @@ int quit( )
     glDeleteBuffers(1, &normal_buffer);
     glDeleteTextures(1, &texture_cubemap);
     glDeleteTextures(1, &depth_cubemap);
-    glDeleteFramebuffers(1, &fbo_cubemap);
+    glDeleteFramebuffers(1, &framebuffer);
     return 0;
 }
 
 int draw( )
 {
     // partie 1 : dessiner dans la cubemap dynamique
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_cubemap);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glViewport(0, 0, 1024, 1024);
     
     // efface les 6 faces couleur + profondeur attachees au framebuffer
@@ -262,7 +262,7 @@ int draw( )
         glUseProgram(program);
 
         program_uniform(program, "mvpMatrix", mvp);
-        program_uniform(program, "mMatrix", model);
+        program_uniform(program, "modelMatrix", model);
         program_uniform(program, "camera_position", Inverse(view)(Point(0, 0, 0)));
 
         // texture
@@ -323,7 +323,7 @@ int main( int argc, char **argv )
     
     else
     {
-        printf("[error] ARB_shader_viewport_layer_array not supported...\n");
+        printf("[error] ARB_shader_viewport_layer_array NOT supported...\n");
         return 1;
     }
     

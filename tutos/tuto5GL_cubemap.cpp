@@ -9,6 +9,7 @@
 
 #include "program.h"
 #include "uniforms.h"
+#include "texture.h"
 
 #include "mesh.h"
 #include "wavefront.h"
@@ -167,6 +168,7 @@ int init( )
     {
         // extrait la face 
         ImageData face= flipX(flipY(copy(image, faces[i]*size, 0, size, size)));
+        //~ ImageData face= copy(image, faces[i]*size, 0, size, size);
         
         // transferer les pixels
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
@@ -180,6 +182,7 @@ int init( )
 
     // les 6 faces sur une croix
     ImageData image= read_image_data("canyon2.jpg");
+    //~ ImageData image= read_image_data("html/cubemap_debug_cross.png");
     
     int w= image.width / 4;
     int h= image.height / 3;
@@ -210,6 +213,7 @@ int init( )
     for(int i= 0; i < 6; i++)
     {
         ImageData face= flipX(flipY(copy(image, faces[i].x*w, faces[i].y*h, w, h)));
+        //~ ImageData face= copy(image, faces[i].x*w, faces[i].y*h, w, h);
         
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
             GL_RGBA, w, h, 0,
@@ -231,7 +235,7 @@ int init( )
         //~ "data/cubemap/skybox/top.jpg",
         //~ "data/cubemap/skybox/bottom.jpg",
         //~ "data/cubemap/skybox/back.jpg",
-        //~ "data/cubemap/skybox/front.jpg"
+        //~ "data/cubemap/skybox/front.jpg",
     };
     
     // creer la texture
@@ -241,7 +245,8 @@ int init( )
     for(int i= 0; i < 6; i++)
     {
         ImageData tmp= read_image_data(filenames[i]);
-        ImageData image= flipX(flipY(tmp));
+        //~ ImageData image= flipX(flipY(tmp));
+        ImageData image= flipY(tmp);    // les faces haut/bas sont retouchees a la main...
         
         GLenum data_format;
         GLenum data_type= GL_UNSIGNED_BYTE;
@@ -374,6 +379,13 @@ int draw( )
         
         // dessine un triangle qui couvre tous les pixels de l'image
         glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+    
+    if(key_state('s'))
+    {
+        clear_key_state('s');
+        static int calls= 0;
+        screenshot("cubemaps", ++calls);
     }
     
     // nettoyage
