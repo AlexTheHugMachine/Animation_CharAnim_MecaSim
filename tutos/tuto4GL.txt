@@ -42,8 +42,8 @@ struct vertex
 // idem, pour un sommet transforme dans le repere projectif
 struct vertex_shader_output
 {
-        vec4 proj;
-        vec3 color;
+        vec4 vertex_position;
+        vec3 vertex_color;
 };
 
 // transformer un sommet
