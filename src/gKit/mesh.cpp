@@ -124,6 +124,19 @@ void Mesh::vertex( const unsigned int id, const vec3& p )
     m_positions[id]= p;
 }
 
+void Mesh::clear( )
+{
+    m_update_buffers= true;
+    
+    m_positions.clear();
+    m_texcoords.clear();
+    m_normals.clear();
+    m_colors.clear();
+    m_indices.clear();
+    m_materials.clear();
+    m_triangle_materials.clear();
+}
+
 //
 Mesh& Mesh::triangle( const unsigned int a, const unsigned int b, const unsigned int c )
 {
@@ -365,6 +378,8 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
         m_vertex_buffer_size= size;
         glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
         // utilise un buffer dynamique, si le mesh a change
+        
+        printf("[warning] resize buffer %d: %dK\n", m_buffer, size/1024);
     }
     
     // transferer les attributs et configurer le format de sommet (vao)

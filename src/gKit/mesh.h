@@ -151,6 +151,9 @@ public:
     unsigned int vertex( const Point& p ) { return vertex(vec3(p)); }
     //! insere un sommet de position p, et ses attributs (s'ils sont definis par color(), texcoord(), normal()), dans l'objet. renvoie l'indice du sommet.
     unsigned int vertex( const float x, const float y, const float z ) { return vertex(vec3(x, y, z)); }
+    
+    //! vide la description.
+    void clear( );
     //@}
 
     //! \name description de triangles indexes.
