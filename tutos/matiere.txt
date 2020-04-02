@@ -70,7 +70,7 @@ mesure que \f$ \cos \theta \f$ du flux reçu.
 
 <IMG SRC="cos.png" width="25%"> 
 
-Pour résumé, le flux reçu par une surface est exprimé par unité d'aire de cette surface. Il dépend de la distance à la source (de son _carré_) et de l'orientation de la 
+Pour résumer, le flux reçu par une surface est exprimé par unité d'aire de cette surface. Il dépend de la distance à la source (de son _carré_) et de l'orientation de la 
 surface (du cosinus entre la _normale_ et la direction vers la source).
 
 L'apparence d'un objet parfaitement diffus est identique quelque soit la direction d'observation \f$ \vec{o} \f$, la matière réflechit la même quantité de lumière. On peut 
@@ -182,6 +182,8 @@ du domaine visible) et cette valeur est multipliée par la "couleur de base" la 
 si on souhaite utiliser une source de "couleur", il est aussi possible d'utiliser \f$ L_{e_{RGB}} \f$. Mais __attention__ il est frequent d'obtenir du noir, par exemple : une source 
 rouge qui éclaire un objet bleu. Alors que si l'on avait fait les calculs pour chaque longueur d'onde, on aurait bien trouvé une "couleur" réfléchie...
 
-Les détails sur l'écriture des shaders dans \ref brdf.
+La suite, comment écrire des shaders pour faire ces calculs : \ref brdf.
+
+Résumé du fonctionnement des shaders : \ref glsl.
 
 */

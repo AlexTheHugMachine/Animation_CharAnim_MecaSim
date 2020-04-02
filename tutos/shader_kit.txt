@@ -1,9 +1,8 @@
 
 /*! \addtogroup shader_kit prototyper un shader program
 
-autre solution, \ref shader_kit.cpp peut être utilisé comme compilateur de shader, il affiche les erreurs sous cette forme un peu 
-plus lisible, et permet de recharger et de recompiler le shader en appuyant sur la touche R. ça permet de corriger
-interactivement le source du shader en le modifiant dans un éditeur.
+autre solution, \ref shader_kit.cpp peut être utilisé comme compilateur de shader, il affiche les erreurs de manière lisible, et permet de recharger et de recompiler le shader 
+en appuyant sur la touche R. ça permet de corriger interactivement le source du shader en le modifiant dans un éditeur.
 
 shader_kit est un 'bac à sable' permettant d'écrire et de tester des shaders assez facilement. il permet aussi de charger 
 un objet .obj, des textures et permet de déplacer la camera à la souris. 
@@ -11,7 +10,13 @@ un objet .obj, des textures et permet de déplacer la camera à la souris.
 comme il n'est pas possible d'écrire une solution totalement générique, shader_kit à des limites :
 	- 1 seul shader program, écrit dans un seul fichier .glsl, avec les \#ifdef VERTEX_SHADER, etc, voir plus haut,
 	- il n'est pas obligatoire de charger un objet, dans ce cas, il fonctionne comme [shadertoy.com](https://www.shadertoy.com/),
-	- charge 1 seul objet,
+	- charge 1 seul objet, les attributs position, normal, etc, doivent etre numérotés dans le vertex shader :
+		\code
+			layout(location= 0) in vec3 position;
+			layout(location= 1) in vec2 texcoord;
+			layout(location= 2) in vec3 normal;
+			layout(location= 3) in vec4 color;		
+		\endcode
 	- plusieurs textures 2d rgba8, jusqu'à la limite d'openGL, 16 ou 32 selon les machines :
 		- uniform sampler2D texture0;
 		- uniform sampler2D texture1; etc, en fonction du nombre d'images chargées,
