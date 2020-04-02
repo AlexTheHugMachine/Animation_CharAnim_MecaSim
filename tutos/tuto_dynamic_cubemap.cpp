@@ -311,7 +311,7 @@ public:
             program_uniform(m_program, "texture0", int(0));
             
             // dessine l'objet, les attributs position et normale sont necessaires a l'execution du shader.
-            draw(m_object, m_program, /* position */ true, /* texcoord */ false, /* normal */ true, /* color */ false);
+            m_object.draw(m_program, /* position */ true, /* texcoord */ false, /* normal */ true, /* color */ false);
             
             // et le reste
             draw(m_ground, Identity(), view, projection);

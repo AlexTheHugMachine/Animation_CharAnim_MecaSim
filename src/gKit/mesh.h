@@ -326,7 +326,7 @@ public:
     //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).
     GLuint create_buffers( const bool use_texcoord, const bool use_normal, const bool use_color );
     //! dessine l'objet avec un shader program. 
-    void draw( const GLuint program, const bool use_position= true, const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
+    void draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color );
     
 private:    
     //! modifie les buffers openGL, si necessaire.

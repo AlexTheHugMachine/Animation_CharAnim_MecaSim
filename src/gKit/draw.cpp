@@ -49,12 +49,6 @@ void draw( Mesh& m, DrawParam& param )
     param.draw(m);
 }
 
-void draw( Mesh& m, GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color  )
-{
-    //~ m.draw(program, m.has_position(), m.has_texcoord(), m.has_normal(), m.has_color());
-    m.draw(program, use_position, use_texcoord, use_normal, use_color);
-}
-
 GLuint DrawParam::create_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test )
 {
     std::string definitions;

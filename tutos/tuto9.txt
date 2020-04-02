@@ -123,6 +123,7 @@ Une fois le shader program complètement paramétré, il ne reste plus qu'à des
 
 Mesh mesh= { ... };
 GLuint program= { ... };
+Transfrom mvp= { ... };
 // selectionner le program, si necessaire
 // glUseProgram(program);
 program_uniform(program, "mvpMatrix", mvp);
@@ -133,18 +134,20 @@ program_uniform(program, "color", Red());
 //   glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
 //   int location= glGetUniformLocation(program, "color");
 //   glUniform4f(location, 1, 1, 0, 1);
-	
-draw(mesh, program);
+    
+// indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
+// le shader de test n'utilise que position.
+mesh.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false);
 \endcode
 
 cf \ref tuto9.cpp pour un exemple complet qui utilise un uniform supplémentaire, qui permet de donner la même couleur aux pixels de l'objet.
 
-par défaut, Mesh transfère tous les attributs, il est possible d'indiquer à draw( ) de n'utiliser que les attributs déclarés que le vertex shader :
+Mesh transfère les attributs nécessaire à l'exécution du shader / déclarés par le vertex shader :
 \code
-draw(mesh, program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false);
+mesh.draw(mesh, program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false);
 \endcode
 
-draw( ) vérifie (en mode debug, en tout cas) que les attributs déclarés dans le vertex shader sont disponibles dans le Mesh. par exemple, si le vertex 
+Mesh::draw( ) vérifie (en mode debug, en tout cas) que les attributs déclarés dans le vertex shader sont disponibles dans le Mesh. par exemple, si le vertex 
 shader déclare un attribut normale par sommet mais que ces valeurs ne sont pas dans le Mesh, le shader ne peut pas fonctionner...
 
 
@@ -209,7 +212,9 @@ Dernière étape, configurer le pipeline pour utiliser la texture, vous pouvez l
     program_use_texture(program, "texture0", 0, m_texture);
 
     // go !
-    m_objet.draw(m_program);
+    // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
+    // le shader utilise position et texcoord.
+    m_objet.draw(m_program, /* use position */ true, /* use texcoord */ true, /* use normal */ false, /* use color */ false);
 \endcode
 cf \ref tuto9_texture1.cpp pour un exemple complet qui charge une texture.
 
@@ -240,7 +245,9 @@ C'est la même chose, par contre, il faut charger et configurer une unité de te
     program_use_texture(program, "texture1", 1, m_texture1);    // le shader déclare: uniform sampler2D texture1;
 
     // go !
-    m_objet.draw(m_program);
+    // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
+    // le shader utilise position et texcoord.
+    m_objet.draw(m_program, /* use position */ true, /* use texcoord */ true, /* use normal */ false, /* use color */ false);
 \endcode
 
 cf \ref tuto9_textures.cpp pour un exemple complet qui charge et utilise 2 textures.

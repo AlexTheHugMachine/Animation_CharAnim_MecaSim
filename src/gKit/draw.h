@@ -12,8 +12,6 @@
 ///@{
 
 //! \file
-//! dessine un objet avec un shader deja parametre.
-void draw( Mesh& m, GLuint program, const bool use_position= true, const bool use_texcoord= true, const bool use_normal= true, const bool use_color=true );
 
 //! dessine l'objet avec les transformations model, vue et projection.
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection );
