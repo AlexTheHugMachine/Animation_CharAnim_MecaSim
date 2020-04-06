@@ -195,8 +195,16 @@ J. Blinn en 1976, reformule le modèle de B. Phong 1975 pour mieux reproduire l'
 important. L'idée est relativement simple : quelle devrait être la direction de la normale pour produire un reflet "miroir" entre les directions \f$ \vec{o} \f$ 
 et \f$ \vec{l} \f$ ? 
 
-réponse : \f$ \vec{h}= \frac{\vec{o} + \vec{l}}{|| \vec{o} + \vec{l} ||}\f$, le bissecteur des 2 vecteurs. du coup la direction \f$ \vec{o} \f$ devient symétrique 
-de \f$ \vec{l} \f$ par rapport à \f$ \vec{h} \f$. Et plus \f$ \vec{h} \f$ est loin de la normale en p, plus l'observateur est loin du reflet miroir de  \f$ \vec{l} \f$. 
+_indications :_ on peut calculer la direction miroir de \f$ \vec{l} \f$ par rapport à la normale. \f$ \vec{l} \f$ et \f$ \vec{m} \f$ deviennent symétriques par rappport à la normale :
+le même angle les séparent de la normale. la normale est le bisecteur de \f$ \vec{l} \f$ et \f$ \vec{m} \f$.
+\f[
+	\vec{m} = 2 (\vec{n} \cdot \vec{l}) \vec{n} - \vec{l}
+\f]
+<IMG SRC="fresnel.png" width="20%"> 
+
+_réponse :_ \f$ \vec{h}= \frac{\vec{o} + \vec{l}}{|| \vec{o} + \vec{l} ||}\f$, le bisecteur des 2 vecteurs. du coup la direction \f$ \vec{o} \f$ devient symétrique 
+de \f$ \vec{l} \f$ par rapport à \f$ \vec{h} \f$. Si la normale de la surface est orientée comme \f$ \vec{h} \f$, \f$ \vec{l} \f$ est la direction miroir de \f$ \vec{o} \f$.
+Et plus \f$ \vec{h} \f$ est loin de la normale en p, plus l'observateur est loin du reflet miroir de  \f$ \vec{l} \f$. 
 
 <IMG SRC="testh.png" width="40%"> 
 
