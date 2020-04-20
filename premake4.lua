@@ -151,7 +151,9 @@ tutos = {
 	"tuto_storage_buffer",
 	"tuto_storage_texture",
 	"min_data",
-	"tuto_vertex_compute"
+	"tuto_vertex_compute",
+	
+	"tuto_rayons"
 }
 
 for i, name in ipairs(tutos) do
@@ -162,22 +164,6 @@ for i, name in ipairs(tutos) do
 		files ( gkit_files )
 		files { gkit_dir .. "/tutos/" .. name..'.cpp' }
 end
-
---~  -- description des tutos serie 2
---~  tutos2 = {
---~ 	"tuto1",
---~ 	"tuto2"
---~ }
-
---~ for i, name in ipairs(tutos2) do
---~ 	project(name .. "_serie2")
---~ 		language "C++"
---~ 		kind "ConsoleApp"
---~ 		targetdir "bin"
---~ 		files ( gkit_files )
---~ 		files { gkit_dir .. "/tutos/serie2/" .. name..'.cpp' }
---~ end
-
 
 project("mesh_viewer")
 	language "C++"

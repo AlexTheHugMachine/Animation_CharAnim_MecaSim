@@ -27,9 +27,9 @@ ou en gros
 zbuffer[]= max;
 
 pour chaque triangle
-	pour chaque pixel
-		si profondeur < zbuffer[pixel]
-		zbuffer[pixel]= profondeur
+    pour chaque pixel
+        si profondeur < zbuffer[pixel]
+        zbuffer[pixel]= profondeur
 \endcode
 
 à la fin du parcours, tous les pixels contiennent la profondeur du triangle le plus proche de la camera ainsi que sa couleur.
@@ -39,18 +39,18 @@ le lancer de rayon fonctionne dans l'autre sens :
 rayons[]
 image[]
 pour chaque pixel
-	rayons[pixel]= coordonnées du rayon pour le centre du pixel
-	image[pixel]= noir
+    rayons[pixel]= coordonnées du rayon pour le centre du pixel
+    image[pixel]= noir
 
 zbuffer[]= max
 pour chaque rayon
-	pour chaque triangle
-		si le rayon touche le triangle
-			si profondeur < zbuffer[rayon]
-				interpoler les attributs des sommets
-				calculer la couleur
-				image[rayon]= couleur
-				zbuffer[rayon]= profondeur
+    pour chaque triangle
+        si le rayon touche le triangle
+            si profondeur < zbuffer[rayon]
+                interpoler les attributs des sommets
+                calculer la couleur
+                image[rayon]= couleur
+                zbuffer[rayon]= profondeur
 \endcode
 
 à première vue, les 2 solutions ne sont pas très différentes. Pourtant, il y a une différence fondamentale, le lancer de rayons fonctionne pour un ensemble 
@@ -132,9 +132,9 @@ il ne reste plus qu'à trouver quelle valeur de t vérifie ces conditions :
 \vec{n} \cdot ((o - a) + (t \vec{d})) 			& = & 0\\
 \vec{n} \cdot (o - a) + \vec{n} \cdot (t \vec{d})	& = & 0\\
 \vec{n} \cdot (o - a) + t (\vec{n} \cdot \vec{d}) 	& = & 0\\
-		        t (\vec{n} \cdot \vec{d}) 	& = & - \vec{n} \cdot (o - a)\\
-						      t & = & \frac{- \vec{n} \cdot (o - a)}{\vec{n} \cdot \vec{d}}\\
-						      t & = & \frac{\vec{n} \cdot (a - o)}{\vec{n} \cdot \vec{d}}\\
+                t (\vec{n} \cdot \vec{d}) 	& = & - \vec{n} \cdot (o - a)\\
+                              t & = & \frac{- \vec{n} \cdot (o - a)}{\vec{n} \cdot \vec{d}}\\
+                              t & = & \frac{\vec{n} \cdot (a - o)}{\vec{n} \cdot \vec{d}}\\
 \end{eqnarray*}
 \f]
 
@@ -172,7 +172,7 @@ il ne reste plus qu'à trouver la valeur de \f$ t \f$ pour que \f$ p(t) \f$, le 
 \end{eqnarray*}
 \f]
 
-il faut relire précisement ce résultat, mais il est sous une forme assez simple au final :
+il faut relire attentivement ce résultat, mais il est sous une forme assez simple au final :
 \f[
 \begin{eqnarray*}
 a t^2 + b t + k & = & 0\\
@@ -202,9 +202,296 @@ sait à l'avance que l'origine du rayon se trouve à l'exterieur de la sphère, 
 
 ## triangle
 
+Il y a plusieurs manières de faire ce calcul. par exemple, calculer l'intersection du rayon et du plan qui porte le triangle 
+(représenté par un sommet du triangle et sa normale géométrique, \f$ a \f$ et \f$ \vec{n}= \vec{ab} \times \vec{ac} \f$, puis vérifier que le point du 
+plan est aussi à l'intérieur du triangle. 
+
+Il faut aussi se rappler que l'on veut les coordonnées barycentriques du point d'intersection pour obtenir les memes informations que la 
+rasterization / fragmentation, mais surtout pour pouvoir interpoler les attibuts des sommets du triangle.
+
+du coup, on peut représenter un point dans le plan du triangle \f$ abc \f$ à l'aide des coordonnées barycentriques : 
+\f[
+p(\alpha, \beta, \gamma) = \alpha a + \beta b + \gamma c
+\f]
+mais les points à l'intérieur du triangle vérifient quelques propriétés supplémentaires :
+\f[
+\begin{eqnarray*}
+\alpha & >= & 0\\
+\beta & >= & 0\\
+\gamma & >= & 0\\
+\alpha + \beta + \gamma & =& 1
+\end{eqnarray*}
+\f]
+
+\f$ \alpha \f$ peut être recalculée en fonction des 2 autres : \f$ \alpha= 1 - \beta - \gamma \f$ et on utilise la forme simplifiée :
+\f[ 
+p(\beta, \gamma) = (1 - \beta - \gamma) a + \beta b + \gamma c
+\f]
+
+__remarque :__ il existe plusieurs conventions pour cette simplification, n'importe laquelle des 3 peut etre calculée implicitement.
+
+il ne reste plus qu'à écrire qu'un point doit être en même temps sur le rayon et dans le triangle :
+\f[
+\begin{eqnarray*}
+    p(t) & = & p(\beta, \gamma)\\
+    o + t\vec{d} & = & (1 - \beta - \gamma) a + \beta b + \gamma c\\
+    o + t\vec{d} & = & a + \beta (b - a) + \gamma (c - a)\\
+    t\vec{d} & = & (a - o) + \beta (b - a) + \gamma (c - a)\\
+\end{eqnarray*}
+\f]
+
+on obtient un système linéaire, 3 équations et 3 inconnues, une solution élégante n'utilisant que des produits scalaires et vectoriels est proposée dans cet 
+article : ["Fast, Minimum Storage Ray Triangle Intersection", T. Moller, B. Trumbore, 1997](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.124.8459&rep=rep1&type=pdf)
+
 ## cube 
 
+\todo
 
+# en pratique
+
+Comment calculer une image avec du lancer de rayons et les triangles d'un Mesh ?
+
+
+\code
+int main( )
+{
+    const char *orbiter_filename= "cornell_orbiter.txt";
+    const char *mesh_filename= "cornell.obj";
+    
+    // cree l'image resultat
+    Image image(1024, 768);
+    
+    // charge une camera
+    Orbiter camera;
+    if(camera.read_orbiter(orbiter_filename) < 0)
+        return 1;
+
+    // charge des triangles
+    Mesh mesh= read_mesh(mesh_filename);
+    
+    // recupere les triangles du mesh
+    std::vector<Triangle> triangles;
+    {
+        int n= mesh.triangle_count();
+        for(int i= 0; i < n; i++)
+            triangles.emplace_back(mesh.triangle(i), i);
+    }
+    
+    // recupere les transformations standards
+    camera.projection(image.width(), image.height(), 45);
+    Transform model= Identity();
+    Transform view= camera.view();
+    Transform projection= camera.projection();
+    Transform viewport= camera.viewport();
+    Transform inv= Inverse(viewport * projection * view * model);
+    
+    // c'est parti, parcours tous les pixels de l'image
+    for(int y= 0; y < image.height(); y++)
+    for(int x= 0; x < image.width(); x++)
+    {
+        // generer le rayon sur le centre du pixel (x, y)
+        Point origine= inv(Point(x + .5f, y + .5f, 0));
+        Point extremite= inv(Point(x + .5f, y + .5f, 1));
+        Ray ray(origine, extremite);
+        
+        // calculer les intersections avec tous les triangles
+        Hit hit;
+        for(int i= 0; i < int(triangles.size()); i++)
+        {
+            if(Hit h= triangles[i].intersect(ray, hit.t))
+                // ne conserve que l'intersection la plus proche de l'origine du rayon
+                hit= h;
+        }
+        
+        if(hit)
+            // pixel rouge en cas d'intersection
+            image(x, y)= Red();
+    }
+    
+    // enregistre l'image
+    write_image(image, "render.png");
+    return 0;
+}
+\endcode
+
+et voila, pas bien compliqué !! malgrè des explications un peu longues...
+
+bon, afficher des pixels rouges, ne permet pas vraiment de vérifier que les intersections fonctionnent, il suffit de construire une couleur avec le résultat de 
+l'intersection :
+\code
+if(hit)
+    // coordonnees barycentriques de l'intersection
+    image(x, y)= Color(1 - hit.u - hit.v, hit.u, hit.v);
+\endcode
+
+le sommet a des triangles apparait en rouge, le sommet b en vert et le sommet c en bleu...
+
+<IMG SRC="rt_uvw.png" width="50%"> 
+
+## matière diffuse, source de lumière, et lumière réfléchie...
+
+pour calculer la couleur des pixels en fonction de la matière du triangle et de sa normale interpolée, il faut ajouter quelques éléments :
+    - interpoler les normales des sommets du triangle en fonction des coordonnées de l'intersection,
+    - recuperer la couleur diffuse de la matiere du triangle,
+    - recuperer la position de la source de lumière,
+    - calculer la lumière réfléchie vers la camera / l'origine du rayon.
+
+pour interpoler la normale au point d'intersection en fonction des normales des sommets du triangle, il suffit de ré-utiliser les coordonnées barycentriques 
+du point d'intersection avec le triangle, exactement comme le pipeline openGL :
+\f[
+\vec{n}(\beta, \gamma) = (1 - \beta - \gamma) \vec{n_a} + \beta \vec{n_b} + \gamma \vec{n_c}
+\f]
+
+\code
+Vector normal( const Mesh& mesh, const Hit& hit )
+{
+    // recuperer le triangle complet dans le mesh
+    const TriangleData& data= mesh.triangle(hit.triangle_id);
+    // interpoler la normale avec les coordonnées barycentriques du point d'intersection
+    float w= 1 - hit.u - hit.v;
+    Vector n= w * data.na + hit.u * data.nb + hit.v * data.nc;
+    return normalize(n);
+}
+\endcode
+
+pour la récupérer la couleur de la matière :
+\code
+Color diffuse_color( const Mesh& mesh, const Hit& hit )
+{
+    const Material& matieral= mesh.triangle_material(hit.triangle_id);
+    return material.diffuse_color;
+}
+\endcode
+
+pour trouver les sources de lumière, il faut parcourir les triangles du Mesh et vérifier si leur matière émet de la lumière. comme c'est un peu long, ce sera fait
+une seule fois au début du programme :
+\code
+struct Source
+{
+    Point s;
+    Color emission;
+};
+
+// recuperer les sources de lumière dans le mesh
+std::vector<Source> sources;
+int n= mesh.triangle_count();
+for(int i= 0; i < n; i++)
+{
+    const Material& material= mesh.triangle_material(i);
+    if(material.emission.r + material.emission.g + material.emission.b > 0)
+    {
+        // utiliser le centre du triangle comme source de lumière
+        const TriangleData& data= mesh.triangle(i);
+        Point p= (data.a + data.b + data.c) / 3;
+        
+        sources.push_back( { p, material.emission } );
+    }
+}
+printf("%d sources\n", int(sources.size()));
+assert(sources.size() > 0);
+\endcode
+
+il ne reste plus qu'à calculer la lumière réfléchie par une matière diffuse, comme dans le tp précédent (cf `lumière et matière`)
+\code
+if(hit)
+{
+    // position et emission de la source de lumiere
+    Point s= sources[0].s;
+    Color emission= sources[0].emission;
+
+    // position du point d'intersection
+    Point p= ray.o + hit.t * ray.d;
+    // direction de p vers la source s
+    Vector l= normalize(Vector(p, s));
+
+    // interpoler la normale au point d'intersection
+    Vector pn= normal(mesh, hit);
+    // calculer la lumiere reflechie vers la camera / l'origine du rayon
+    float cos_theta= std::max(float(0), dot(pn, l));
+    Color fr= diffuse_color(mesh, hit) / M_PI;
+    
+    Color color= emission * fr * cos_theta
+    image(x, y)= color;
+}
+\endcode
+
+et voila :
+<IMG SRC="rt_diffuse.png" width="50%"> 
+
+il ne reste plus qu'à ajouter les ombres...
+
+_indication :_ il suffit de construire un rayon entre p et s, le point sur la source, et de vérifier qu'il n'y a __pas__ d'intersection entre eux, pour que la 
+lumière arrive au point p, sinon p est à l'ombre...
+
+<IMG SRC="rt_shadow.png" width="50%"> 
+
+## et alors ?
+
+et avec d'autres objets, qu'est ce qui change ? il faut écrire les fonctions d'intersection rayon / objet pour chaque cas.
+
+
+## annexe 
+il manque les définitions des structures Ray, Hit et Triangle :
+\code
+
+struct Ray
+{
+    Point o;            // origine
+    Vector d;           // direction
+    
+    Ray( const Point& _o, const Point& _e ) :  o(_o), d(Vector(_o, _e)) {}
+};
+
+struct Hit
+{
+    float t;            // p(t)= o + td, position du point d'intersection sur le rayon
+    float u, v;         // p(u, v), position du point d'intersection sur le triangle
+    int triangle_id;    // indice du triangle dans le mesh
+    
+    Hit( ) : t(FLT_MAX), u(), v(), triangle_id(-1) {}
+    Hit( const float _t, const float _u, const float _v, const int _id ) : t(_t), u(_u), v(_v), triangle_id(_id) {}
+    operator bool ( ) { return (triangle_id != -1); }
+};
+
+struct Triangle
+{
+    Point p;            // sommet a du triangle
+    Vector e1, e2;      // aretes ab, ac du triangle
+    int id;
+    
+    Triangle( const TriangleData& data, const int _id ) : p(data.a), e1(Vector(data.a, data.b)), e2(Vector(data.a, data.c)), id(_id) {}
+    
+    /* calcule l'intersection ray/triangle
+        cf "fast, minimum storage ray-triangle intersection" 
+        
+        renvoie faux s'il n'y a pas d'intersection valide (une intersection peut exister mais peut ne pas se trouver dans l'intervalle [0 tmax] du rayon.)
+        renvoie vrai + les coordonnees barycentriques (u, v) du point d'intersection + sa position le long du rayon (t).
+        convention barycentrique : p(u, v)= (1 - u - v) * a + u * b + v * c
+    */
+    Hit intersect( const Ray &ray, const float tmax ) const
+    {
+        Vector pvec= cross(ray.d, e2);
+        float det= dot(e1, pvec);
+        
+        float inv_det= 1 / det;
+        Vector tvec(p, ray.o);
+        
+        float u= dot(tvec, pvec) * inv_det;
+        if(u < 0 || u > 1) return Hit();
+        
+        Vector qvec= cross(tvec, e1);
+        float v= dot(ray.d, qvec) * inv_det;
+        if(v < 0 || u + v > 1) return Hit();
+        
+        float t= dot(e2, qvec) * inv_det;
+        if(t > tmax || t < 0) return Hit();
+        
+        return Hit(t, u, v, id);           // p(u, v)= (1 - u - v) * a + u * b + v * c
+    }
+};
+\endcode
+
+le code complet est dans tuto_rayons.cpp
 
 # c'est trop lent !!
 
