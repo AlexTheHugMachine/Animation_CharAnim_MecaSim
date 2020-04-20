@@ -83,8 +83,8 @@ clair.
 
 Résultat, on peut calculer les coordonnées de 2 points sur le rayon : x, y sur le plan near (z = 0), et x, y sur le plan far (z = 1) :
 \f[
-origine_{scene} = ( Image \times Projection \times View )^{-1} \times \begin{bmatrix} x \\ y \\ z \equiv 0 \end{bmatrix}\\
-extremité_{scene} = ( Image \times Projection \times View )^{-1} \times \begin{bmatrix} x \\ y \\ z \equiv 1 \end{bmatrix}\\
+origine_{scene} = ( Image \times Projection \times View )^{-1} \times \begin{bmatrix} x \\ y \\ 0 \end{bmatrix}\\
+extremité_{scene} = ( Image \times Projection \times View )^{-1} \times \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}\\
 \f]
 
 On peut donc représenter le rayon par les 2 points : origine et extremité. Mais en général, pour calculer les intersections avec les objets, on utilise plutot une 
@@ -354,12 +354,12 @@ Vector normal( const Mesh& mesh, const Hit& hit )
 }
 \endcode
 
-pour la récupérer la couleur de la matière :
+pour récupérer la couleur de la matière :
 \code
 Color diffuse_color( const Mesh& mesh, const Hit& hit )
 {
-    const Material& matieral= mesh.triangle_material(hit.triangle_id);
-    return material.diffuse_color;
+    const Material& material= mesh.triangle_material(hit.triangle_id);
+    return material.diffuse;
 }
 \endcode
 
@@ -407,7 +407,7 @@ if(hit)
     // interpoler la normale au point d'intersection
     Vector pn= normal(mesh, hit);
     // calculer la lumiere reflechie vers la camera / l'origine du rayon
-    float cos_theta= std::max(float(0), dot(pn, l));
+    float cos_theta= std::abs(dot(pn, l));
     Color fr= diffuse_color(mesh, hit) / M_PI;
     
     Color color= emission * fr * cos_theta

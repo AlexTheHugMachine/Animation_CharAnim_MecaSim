@@ -195,7 +195,7 @@ int main( )
             Ray shadow_ray(p + 0.001f * pn, s);
             for(int i= 0; i < int(triangles.size()); i++)
             {
-                if(triangles[i].intersect(shadow_ray, hit.t))
+                if(triangles[i].intersect(shadow_ray, 1 - .001f))
                 {
                     // on vient de trouver un triangle entre p et s. p est donc a l'ombre
                     v= 0;
