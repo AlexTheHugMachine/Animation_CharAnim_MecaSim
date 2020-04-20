@@ -127,7 +127,6 @@ _rappel :_ \f$ p(t) = o + t\vec{d} \f$ désigne un point du rayon.
 il ne reste plus qu'à trouver quelle valeur de t vérifie ces conditions :
 \f[
 \begin{eqnarray*}
-\vec{n} \cdot \vec{ap} 					& = & 0\\
 \vec{n} \cdot \vec{ap(t)} 				& = & 0\\
 \vec{n} \cdot ((o + t \vec{d}) - a) 			& = & 0\\
 \vec{n} \cdot ((o - a) + (t \vec{d})) 			& = & 0\\
@@ -149,6 +148,57 @@ Par contre, il ne faut pas oublier que l'on ne s'interresse qu'aux intersections
 différence entre les intersections de la droite et des objets testés et les intersections du rayon (la demi droite positive) avec les objets... 
 
 ## sphere
+
+Pour une sphère de centre \f$ c \f$, et de rayon \f$ r \f$, même stratégie : les points de l'espace sont sur la sphère s'ils se trouvent à la bonne distance du 
+centre :
+\f[
+\begin{eqnarray*}
+| p - c | & = & r \\
+| p - c | - r  & = & 0 \\
+| p - c |^2 - r^2 & = & 0\\
+(p - c) \cdot (p -  c) - r^2 & = & 0
+\end{eqnarray*}
+\f]
+
+_rappel :_ on a utilisé une relation entre le produit scalaire et (le carré de) la longueur du vecteur : \f$ \vec{u} \cdot \vec{u} = |u|^2 \f$
+
+il ne reste plus qu'à trouver la valeur de \f$ t \f$ pour que \f$ p(t) \f$, le point sur le rayon soit aussi sur la sphère :
+\f[
+\begin{eqnarray*}
+(p(t) - c) \cdot (p(t) -  c) - r^2 & = & 0\\
+(o + t\vec{d} - c) \cdot (o + t\vec{d} -  c) - r^2 & = & 0\\
+((o - c) + t\vec{d}) \cdot ((o - c) + t\vec{d}) - r^2 & = & 0\\
+(\vec{d} \cdot \vec{d}) t^2 + 2\vec{d} \cdot (o - c) t + (o - c) \cdot (o - c) - r^2 & = & 0\\
+\end{eqnarray*}
+\f]
+
+il faut relire précisement ce résultat, mais il est sous une forme assez simple au final :
+\f[
+\begin{eqnarray*}
+a t^2 + b t + k & = & 0\\
+a & = & \vec{d} \cdot \vec{d}\\
+b & = & 2\vec{d} \cdot (o - c)\\
+k & = & (o - c) \cdot (o - c) - r^2 
+\end{eqnarray*}
+\f]
+
+il ne reste plus qu'à calculer les zeros du polynome : les détails sont sur [wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) et [ici](https://en.wikipedia.org/wiki/Quadratic_equation)
+et ce résultat est assez intuitif : une droite peut passer à coté de la sphère, la toucher en un seul point, ou la traverser en 2 points.
+
+si \f$ b^2 - 4ak > 0 \f$, les solutions s'écrivent :
+\f[
+\begin{eqnarray*}
+t_1 & = & \frac{-b + \sqrt{b^2 - 4ak}}{2a}\\
+t_2 & = & \frac{-b - \sqrt{b^2 - 4ak}}{2a}\\
+\end{eqnarray*}
+\f]
+
+Par contre, il ne faut pas oublier que l'on ne veut que les intersections avec le rayon, pas les intersections avec la droite. il faut donc aussi vérifier le signe 
+des solutions \f$ t_1 > 0 \f$ et \f$ t_2 > 0 \f$
+
+__pour les curieux :__ on peut gagner pas mal de temps en ne calculant qu'une seule solution, et en normalisant \f$ \vec{d} \f$ à l'avance, 
+\f$ | \vec{d} |= 1 \f$ et aussi \f$| \vec{d} |^2 =  \vec{d} \cdot \vec{d} = a = 1\f$. Selon le cas, on 
+sait à l'avance que l'origine du rayon se trouve à l'exterieur de la sphère, et il suffit de calculer la plus petite racine \f$ > 0 \f$.
 
 ## triangle
 
