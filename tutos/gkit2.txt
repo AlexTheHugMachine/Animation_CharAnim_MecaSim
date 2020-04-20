@@ -38,7 +38,7 @@ mais il y a aussi pas mal de tutos / exemple de code :
     - \ref matiere, lumière, matière et brdf,
     - \ref brdf, écrire un shader, matière, brdf, pbr, etc.
     
-    - \ref shader_kit.cpp est un utilitaire pour prototyper rapidement des shaders.
+    - \ref shader_kit est un utilitaire pour prototyper rapidement des shaders.
     
 plus ceux dédiés à openGL :
     - \ref interfaceC,
@@ -59,6 +59,10 @@ plus ceux dédiés à openGL :
     - \ref compute,
     - \ref mdi,
     - \ref ressources.
+    
+et ceux dédiés au lancer de rayons :
+    - \ref intrort,
+    
     
 et un utilitaire pour jouer avec les shaders, \ref shader_kit.cpp \ref shader_kit.
 

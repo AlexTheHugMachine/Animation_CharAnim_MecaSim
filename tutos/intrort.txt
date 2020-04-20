@@ -1,0 +1,163 @@
+
+/*! \addtogroup intrort principes du lancer de rayons
+
+Un pipeline graphique permet de calculer la couleur des pixels d'une image représentant une scène 3d éclairée par une ou plusieurs sources de lumières.
+Le pipeline openGL basé sur la rasterization / fragmentation est _une_ solution particulière. On peut résumer son fonctionnement :
+
+\code
+zbuffer[]= max
+image[]= noir
+
+pour chaque triangle
+        transformer les sommets du triangle dans le repère projectif de la camera
+        si une partie du triangle est visible dans l''image (ou dans le frustum de la camera)
+            transformer les sommets dans le repere de l''image
+            pour chaque pixel de l''image
+                si le centre du pixel est inclus dans le triangle
+                    interpoler les attributs des sommets
+                    interpoler la profondeur
+                    calculer la couleur
+                    si profondeur < zbuffer[pixel]
+                        image[pixel]= couleur
+                        zbuffer[pixel]= profondeur
+\endcode
+
+ou en gros 
+\code
+zbuffer[]= max;
+
+pour chaque triangle
+	pour chaque pixel
+		si profondeur < zbuffer[pixel]
+		zbuffer[pixel]= profondeur
+\endcode
+
+à la fin du parcours, tous les pixels contiennent la profondeur du triangle le plus proche de la camera ainsi que sa couleur.
+
+le lancer de rayon fonctionne dans l'autre sens :
+\code
+rayons[]
+image[]
+pour chaque pixel
+	rayons[pixel]= coordonnées du rayon pour le centre du pixel
+	image[pixel]= noir
+
+zbuffer[]= max
+pour chaque rayon
+	pour chaque triangle
+		si le rayon touche le triangle
+			si profondeur < zbuffer[rayon]
+				interpoler les attributs des sommets
+				calculer la couleur
+				image[rayon]= couleur
+				zbuffer[rayon]= profondeur
+\endcode
+
+à première vue, les 2 solutions ne sont pas très différentes. Pourtant, il y a une différence fondamentale, le lancer de rayons fonctionne pour un ensemble 
+de rayons quelconque. Dans l'exemple ci-dessus, les 2 images seront identiques. Mais on peut facilement créer de nouveaux rayons pour tester la visibilité des
+sources de lumière et ajouter très simplement les ombres dans l'image, ce qui est plus difficile à faire avec openGL, par exemple. 
+
+Une autre différence importante est ce que l'on peut calculer l'intersection d'un rayon avec d'autres objets que des triangles : des spheres, des cubes, 
+des plans, des cylindres, des cones, des tores, des fractales, des champs de distances, des fonctions implicites, etc. sans avoir à trianguler la surface de ces 
+objets. Par contre, il faudra écrire les différentes fonctions d'intersections.
+
+# rayon ?
+
+Un rayon est une droite dans l'espace (de la scène, par exemple) qui passe par le centre d'un pixel dans l'image. Mais il faut connaitre au moins 2 points pour 
+représenter une droite. lesquels ? L'idée est que le rayon est l'ensemble des points de la scène qui se projettent sur le centre du pixel. 
+
+Quelles sont les coordonnées du centre d'un pixel dans le repère de la scène ? Il suffit de se rappeller que l'on peut transformer des coordonnées du repère 
+image vers le repère de la scène en utilisant les transformations inverses des transformations standards. 
+si on connait des coordonnées \f$ p_{scene} \f$ dans le repère de la scène, on peut écrire :
+\f[
+q_{image} = Image \times Projection \times View \times p_{scene}
+\f]
+et
+\f[
+p_{scene} = ( Image \times Projection \times View )^{-1} \times q_{image}
+\f]
+
+Quelles sont les coordonnées d'un pixel dans le repère \f$ Image \f$ ? On connait directement x et y, il ne reste plus que z ? Par définition, z = 0 
+sur le plan proche du frustum de la camera et z = 1 sur le plan far du frustum. repassez dans le cours d'intro sur les transformations si ce n'est pas 
+clair.
+
+Résultat, on peut calculer les coordonnées de 2 points sur le rayon : x, y sur le plan near (z = 0), et x, y sur le plan far (z = 1) :
+\f[
+origine_{scene} = ( Image \times Projection \times View )^{-1} \times \begin{bmatrix} x \\ y \\ z \equiv 0 \end{bmatrix}\\
+extremité_{scene} = ( Image \times Projection \times View )^{-1} \times \begin{bmatrix} x \\ y \\ z \equiv 1 \end{bmatrix}\\
+\f]
+
+On peut donc représenter le rayon par les 2 points : origine et extremité. Mais en général, pour calculer les intersections avec les objets, on utilise plutot une 
+autre convention : origine et direction. direction est le vecteur entre l'origine et l'extremité \f$ direction = extremité - origine \f$.
+
+_remarque :_ on connait un autre point sur le rayon, c'est le centre de projection de la camera, ou la position de la camera. Les coordonnées sont (0, 0, 0) 
+dans le repère camera :
+\f[
+origine_{scene} = ( Image \times Projection )^{-1} \times \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}\\
+\f]
+
+# intersection ?
+
+Il ne reste plus qu'à trouver comment calculer l'intersection d'un rayon / d'une droite avec les objets qui composent la scène.
+
+Il faut exprimer le fait qu'une intersection représente un point du rayon et un point de l'objet. permière question, comment représenter un point sur le rayon ?
+la solution classique utilise la forme paramétrique des droites : \f$ p(t) = origine + t \cdot direction \f$, \f$ t \f$ identifie un point sur la droite / le rayon, la 
+position du point sur la droite.
+
+## plan
+comment décrire l'ensemble de points sur un plan ? il existe de nombreuses manières, mais l'idée est de choisir une représentation qui permet d'écrire le calcul 
+de l'intersection comme la recherche du zero d'une fonction.
+
+On peut représenter un plan par un point \f$ a \f$ et une normale \f$ \vec{n} \f$, et déterminer l'ensemble des points \f$ p \f$ appartenant au plan comme les 
+zeros de la forme implicite : 
+\f[
+\vec{n} \cdot \vec{ap} = 0
+\f]
+
+_remarque :_ les points \f$ p \f$ sont sur le plan si les vecteurs \f$ \vec{ap} \f$ et \f$ \vec{n} \f$ sont perpendiculaires, leur produit scalaire est nul dans ce cas.
+
+calculer l'intersection du rayon et du plan se resume à trouver le point du rayon \f$ p(t) \f$ qui se trouve aussi sur le plan. le point d'intersection vérifie 
+les 2 propriétés en même temps :
+\f[
+\vec{n} \cdot \vec{a p(t)} = 0
+\f]
+
+_rappel :_ \f$ p(t) = o + t\vec{d} \f$ désigne un point du rayon.
+
+il ne reste plus qu'à trouver quelle valeur de t vérifie ces conditions :
+\f[
+\begin{eqnarray*}
+\vec{n} \cdot \vec{ap} 					& = & 0\\
+\vec{n} \cdot \vec{ap(t)} 				& = & 0\\
+\vec{n} \cdot ((o + t \vec{d}) - a) 			& = & 0\\
+\vec{n} \cdot ((o - a) + (t \vec{d})) 			& = & 0\\
+\vec{n} \cdot (o - a) + \vec{n} \cdot (t \vec{d})	& = & 0\\
+\vec{n} \cdot (o - a) + t (\vec{n} \cdot \vec{d}) 	& = & 0\\
+		        t (\vec{n} \cdot \vec{d}) 	& = & - \vec{n} \cdot (o - a)\\
+						      t & = & \frac{- \vec{n} \cdot (o - a)}{\vec{n} \cdot \vec{d}}\\
+						      t & = & \frac{\vec{n} \cdot (a - o)}{\vec{n} \cdot \vec{d}}\\
+\end{eqnarray*}
+\f]
+
+
+_rappel :_ calcul avec des points, des vecteurs et des produits scalaires, cf [wikipedia](https://en.wikipedia.org/wiki/Dot_product#Properties)
+
+on peut remarquer que, sans trop de surprise, un rayon intersecte toujours un plan, sauf lorsque le rayon est parallele au plan et que la direction du rayon 
+et la normale du plan sont perpendiculaires.
+
+Par contre, il ne faut pas oublier que l'on ne s'interresse qu'aux intersections se trouvant devant la camera, c'est à dire \f$ t > 0 \f$, il faut bien faire la 
+différence entre les intersections de la droite et des objets testés et les intersections du rayon (la demi droite positive) avec les objets... 
+
+## sphere
+
+## triangle
+
+## cube 
+
+
+
+# c'est trop lent !!
+
+
+
+*/
