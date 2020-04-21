@@ -1,0 +1,30 @@
+
+
+/*! \addtogroup acceleration le lancer de rayons, ça rame ? ou pas ?
+
+Pour l'instant le lancer de rayon se résume en une double boucle pas très efficace lorsqu'il y a beaucoup de rayons et beaucoup d'objets :
+\code
+objets[]
+rayons[]
+hit[]
+
+pour chaque rayon
+    hit[rayon].t= max
+    pour chaque objet
+        (t, uv) = intersection rayon / objet
+        si t < hit[rayon].t
+            hit[rayon]= (t, uv)
+\endcode
+
+que peut-on faire pour éviter de calculer la totalité des intersections et réduire la complexité de cette fonction ?
+
+L'idée est assez simple : si un rayon passe _loin_ d'un objet ou d'un groupe d'objets, ce n'est pas la peine de calculer toutes ces intersections...
+Comment réaliser ce test rapide sur tout le groupe d'objet ? il suffit de choisir une forme simple avec une fonction d'intersection rapide et de l'utiliser pour 
+représenter la région de l'espace occuppée par le groupe d'objet :
+
+on dit que cette forme simple et rapide à tester est l'_englobant_ du groupe d'objet. Si un rayon ne touche pas l'englobant du groupe, il n'est pas nécessaire
+de calculer les intersections du rayon avec tous les objets du groupe.
+
+
+
+*/
