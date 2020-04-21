@@ -248,7 +248,7 @@ article : ["Fast, Minimum Storage Ray Triangle Intersection", T. Moller, B. Trum
 
 # en pratique
 
-Comment calculer une image avec du lancer de rayons et les triangles d'un Mesh ?
+Comment calculer une image avec du lancer de rayons et les triangles d'un Mesh ? (et une camera)
 
 
 \code
@@ -263,6 +263,7 @@ int main( )
     // charge une camera
     Orbiter camera;
     if(camera.read_orbiter(orbiter_filename) < 0)
+        // erreur
         return 1;
 
     // charge des triangles
@@ -274,6 +275,8 @@ int main( )
         int n= mesh.triangle_count();
         for(int i= 0; i < n; i++)
             triangles.emplace_back(mesh.triangle(i), i);
+        
+        assert(int(triangles.size() > 0);
     }
     
     // recupere les transformations standards
@@ -313,17 +316,17 @@ int main( )
 }
 \endcode
 
-et voila, pas bien compliqué !! malgrè des explications un peu longues...
+et voila, pas bien compliqué !! malgré des explications un peu longues...
 
-bon, afficher des pixels rouges, ne permet pas vraiment de vérifier que les intersections fonctionnent, il suffit de construire une couleur avec le résultat de 
-l'intersection :
+bon, afficher des pixels rouges, ne permet pas vraiment de vérifier que les intersections fonctionnent correctement. on peut construire une couleur avec 
+le résultat de l'intersection :
 \code
 if(hit)
     // coordonnees barycentriques de l'intersection
     image(x, y)= Color(1 - hit.u - hit.v, hit.u, hit.v);
 \endcode
 
-le sommet a des triangles apparait en rouge, le sommet b en vert et le sommet c en bleu...
+le sommet \f$ a \f$ des triangles apparait en rouge, le sommet \f$ b \f$ en vert et le sommet \f$ c \f$ en bleu...
 
 <IMG SRC="rt_uvw.png" width="50%"> 
 
@@ -331,8 +334,8 @@ le sommet a des triangles apparait en rouge, le sommet b en vert et le sommet c 
 
 pour calculer la couleur des pixels en fonction de la matière du triangle et de sa normale interpolée, il faut ajouter quelques éléments :
     - interpoler les normales des sommets du triangle en fonction des coordonnées de l'intersection,
-    - recuperer la couleur diffuse de la matiere du triangle,
-    - recuperer la position de la source de lumière,
+    - récupérer la couleur diffuse de la matiere du triangle,
+    - récupérer la position de la source de lumière,
     - calculer la lumière réfléchie vers la camera / l'origine du rayon.
 
 pour interpoler la normale au point d'intersection en fonction des normales des sommets du triangle, il suffit de ré-utiliser les coordonnées barycentriques 
@@ -362,7 +365,7 @@ Color diffuse_color( const Mesh& mesh, const Hit& hit )
 }
 \endcode
 
-pour trouver les sources de lumière, il faut parcourir les triangles du Mesh et vérifier si leur matière émet de la lumière. comme c'est un peu long, ce sera fait
+pour trouver les sources de lumière, il faut parcourir les triangles du Mesh et vérifier que leur matière émet de la lumière. Comme c'est un peu long, ce sera fait
 une seule fois au début du programme :
 \code
 struct Source
@@ -386,15 +389,16 @@ for(int i= 0; i < n; i++)
         sources.push_back( { p, material.emission } );
     }
 }
+
 printf("%d sources\n", int(sources.size()));
 assert(sources.size() > 0);
 \endcode
 
-il ne reste plus qu'à calculer la lumière réfléchie par une matière diffuse, comme dans le tp précédent (cf `lumière et matière`)
+Il ne reste plus qu'à calculer la lumière réfléchie par une matière diffuse, comme dans le tp précédent (cf `lumière et matière` et `shader et brdf`)
 \code
 if(hit)
 {
-    // position et emission de la source de lumiere
+    // position et emission de la (premiere) source de lumiere
     Point s= sources[0].s;
     Color emission= sources[0].emission;
 
@@ -426,8 +430,31 @@ lumière arrive au point p, sinon p est à l'ombre...
 
 ## et alors ?
 
-et avec d'autres objets, qu'est ce qui change ? il faut écrire les fonctions d'intersection rayon / objet pour chaque cas.
+Et avec d'autres objets, qu'est ce qui change ? Il faut écrire les fonctions d'intersection rayon / objet pour chaque cas.
 
+openGL dessine les triangles "tout seul", par contre manipuler l'api d'openGL est probablement plus compliqué. mais on profite des processeurs parallèles de 
+la carte graphique qui sont particulièrement rapides.
+
+_pour les curieux :_ 
+oui, bien sur, on peut écrire un shader openGL qui calcule les intersections rayons / triangles de la même manière,
+cf tuto_raytrace_fragment.cpp et raytrace.glsl
+
+la version en ligne de [PBRT](http://pbr-book.org) (un livre de référence sur le lancer rayons et les calculs réalistes) propose également les tests d'intersections 
+pour plusieurs objets :
+    - [sphère](http://www.pbr-book.org/3ed-2018/Shapes/Spheres.html),
+    - [cylindres](http://www.pbr-book.org/3ed-2018/Shapes/Cylinders.html),
+    - [disques](http://www.pbr-book.org/3ed-2018/Shapes/Disks.html),
+    - [cones et paraboloides](http://www.pbr-book.org/3ed-2018/Shapes/Other_Quadrics.html),
+    - [triangles](http://www.pbr-book.org/3ed-2018/Shapes/Triangle_Meshes.html#TriangleIntersection),
+    - [courbes épaisses](www.pbr-book.org/3ed-2018/Shapes/Curves.html), courbes de Bézier extrudées pour décrire des cheveux, de la fourrure, de l'herbe...
+
+Les fonctions implicites permettent aussi de faire énormement de choses, regardez quelque exemples sur [shadertoy.com](http://shadertoy.com), presque tous
+les shaders utilisent une variante du lancer de rayon, le _lancer de sphère_ / _sphere tracing_. 
+En attendant le cours de M2 d'Eric Galin sur le sujet, vous pouvez jeter un ou plusieurs yeux sur le [blog d'Inigo Quilez](https://www.iquilezles.org/www/articles/raymarchingdf/raymarchingdf.htm), 
+le créateur de shadertoy.
+
+Mais le principal problème du lancer de rayon est sa lenteur, du coup il est nécessaire de réfléchir un peu pour calculer des intersections sur plus de 100 objets. 
+cf \ref acceleration.
 
 ## annexe 
 il manque les définitions des structures Ray, Hit et Triangle :
@@ -495,9 +522,6 @@ struct Triangle
 \endcode
 
 le code complet est dans tuto_rayons.cpp
-
-# c'est trop lent !!
-
 
 
 */
