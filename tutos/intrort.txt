@@ -37,12 +37,11 @@ pour chaque triangle
 le lancer de rayon fonctionne dans l'autre sens :
 \code
 rayons[]
-image[]
 pour chaque pixel
-    rayons[pixel]= coordonnées du rayon pour le centre du pixel
-    image[pixel]= noir
+    rayons[pixel]= rayon passant par le centre du pixel
 
 zbuffer[]= max
+image[]= noir
 pour chaque rayon
     pour chaque triangle
         si le rayon touche le triangle
@@ -236,11 +235,11 @@ il ne reste plus qu'à écrire qu'un point doit être en même temps sur le rayo
     p(t) & = & p(\beta, \gamma)\\
     o + t\vec{d} & = & (1 - \beta - \gamma) a + \beta b + \gamma c\\
     o + t\vec{d} & = & a + \beta (b - a) + \gamma (c - a)\\
-    t\vec{d} & = & (a - o) + \beta (b - a) + \gamma (c - a)\\
+    - t\vec{d} + \beta (b - a) + \gamma (c - a) & = & (o - a) \\
 \end{eqnarray*}
 \f]
 
-on obtient un système linéaire, 3 équations et 3 inconnues, une solution élégante n'utilisant que des produits scalaires et vectoriels est proposée dans cet 
+on obtient un système linéaire, 3 équations et 3 inconnues (\f$ t, \beta, \gamma \f$), une solution élégante n'utilisant que des produits scalaires et vectoriels est proposée dans cet 
 article : ["Fast, Minimum Storage Ray Triangle Intersection", T. Moller, B. Trumbore, 1997](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.124.8459&rep=rep1&type=pdf)
 
 ## cube 
@@ -448,8 +447,12 @@ struct Hit
     float u, v;         // p(u, v), position du point d'intersection sur le triangle
     int triangle_id;    // indice du triangle dans le mesh
     
-    Hit( ) : t(FLT_MAX), u(), v(), triangle_id(-1) {}
+    // pas d'intersection
+    Hit( ) : t(FLT_MAX), u(), v(), triangle_id(-1) {}   
+    // intersection 
     Hit( const float _t, const float _u, const float _v, const int _id ) : t(_t), u(_u), v(_v), triangle_id(_id) {}
+    
+    // renvoie vrai si l'intersection est valide
     operator bool ( ) { return (triangle_id != -1); }
 };
 
@@ -477,16 +480,16 @@ struct Triangle
         Vector tvec(p, ray.o);
         
         float u= dot(tvec, pvec) * inv_det;
-        if(u < 0 || u > 1) return Hit();
+        if(u < 0 || u > 1) return Hit();        // pas d'intersection, u doit etre entre 0 et 1
         
         Vector qvec= cross(tvec, e1);
         float v= dot(ray.d, qvec) * inv_det;
-        if(v < 0 || u + v > 1) return Hit();
+        if(v < 0 || u + v > 1) return Hit();    // pas d'intersection, v doit etre entre 0 et 1-u pour que w= 1-u-v soit aussi entre 0 et 1
         
         float t= dot(e2, qvec) * inv_det;
-        if(t > tmax || t < 0) return Hit();
+        if(t < 0 || t > tmax) return Hit();     // pas d'intersection, t doit etre entre 0 et tmax
         
-        return Hit(t, u, v, id);           // p(u, v)= (1 - u - v) * a + u * b + v * c
+        return Hit(t, u, v, id);                // intersection valide p(u, v)= (1-u-v)*a + u*b + v*c
     }
 };
 \endcode
