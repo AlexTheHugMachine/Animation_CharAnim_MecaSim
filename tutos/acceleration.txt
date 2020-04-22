@@ -22,8 +22,305 @@ L'idée est assez simple : si un rayon passe _loin_ d'un objet ou d'un groupe d'
 Comment réaliser ce test rapide sur tout le groupe d'objet ? il suffit de choisir une forme simple avec une fonction d'intersection rapide et de l'utiliser pour 
 représenter la région de l'espace occuppée par le groupe d'objet :
 
-on dit que cette forme simple et rapide à tester est l'_englobant_ du groupe d'objet. Si un rayon ne touche pas l'englobant du groupe, il n'est pas nécessaire
+<IMG SRC="englobant.png" width="30%"> 
+
+On dit que cette forme simple et rapide à tester est l'_englobant_ du groupe d'objet. Si un rayon ne touche pas l'englobant du groupe, il n'est pas nécessaire
 de calculer les intersections du rayon avec tous les objets du groupe.
+Dans cet exemple, on a testé 2 boites et 3 triangles, au lieu de 6 triangles. ce ne sera plus rapide que si tester 2 boites est plus rapide que tester 3 triangles...
+
+Mais bien sur, il faut maintenant construire cet englobant à partir des objets, ou d'une partie des objets. et selon la complexité de chaque étape, l'algorithme 
+complet pourra être plus interressant que la double boucle, ou pas...
+
+Voila l'idée générale, qui repartit les triangles en 2 groupes / englobants si c'est interressant, ou qui utilise la double boucle directe.
+\code
+// version directe
+direct( rayons, objets ) :
+    pour chaque rayon
+        pour chaque objet
+            intersection, etc.
+
+// version "efficace"
+repartition( englobant, rayons, objets ) :
+    si pas de rayons ou pas d''objets
+        arreter
+    si rayons < limite ou objets < limite
+        direct(rayons, objets)
+    sinon
+        // decouper le probleme
+        découper l''englobant en 2 regions ("petits" englobants)
+        pour chaque region
+            { r } = rayons qui touchent la region
+            { t } = objets à l''interieur de la region
+            repartition(region, { r }, { t })
+\endcode
+
+le paramètre _limite_ aura une grosse influence sur l'algorithme, en fonction du temps necessaire pour couper un englobant en 2, repartir les objets dans 
+les 2 englobants et tester quels rayons touchent chaque englobant.
+
+on peut illustrer les différentes étapes de l'algorithme, en utilisant un cube aligné sur les axes comme englobant :
+
+<IMG SRC="englobant_repartition.png" width="30%"> 
+
+Il y a encore quelques détails à régler avant d'écrire la solution complète : si on découpe un englobant en 2 parties, il peut très bien arriver qu'un triangle 
+touche les 2 parties, il faudra donc inclure le triangle dans les 2 ensembles de triangles testés par la suite de l'algorithme. ce qui veut dire allouer de la 
+mémoire à chaque appel récursif pour représenter l'ensemble `{ t }`... et ça va être très long. 
+
+On peut faire le contraire : choisir pour chaque triangle dans quel englobant le mettre et calculer ensuite la taille des englobants (en fonction des triangles qui 
+leur sont associés). De cette manière chaque triangle n'apparait que dans un seul ensemble `{ t }` et il n'est plus nécessaire de réallouer de la mémoire. On
+peut même faire mieux : on peut décider que les triangles du premier ensemble seront au début du tableau de triangles et que les autres sont placés après. 
+si tous les triangles sont dans un tableau T, après la répartition, on peut repérer chaque ensemble de triangles `{ t }` par un indice de début et un indice 
+de fin.
+\code
+// au debut
+Triangle T[]= { A, B, C, D, E, F, G, H };
+
+// on decide de repartir les triangles comme ca :
+// T1= { A, C, F, G };
+// et
+// T2= { B, D, E, H };
+
+// apres la répartition, on peut ranger les triangles dans T[]
+T[]= { A, C, F, G , B, D, E, H };
+// et representer T1 avec :
+int debut1 = 0;
+int fin1= 4;
+// les 4 premiers triangles
+// et T2
+int debut2= 4;
+int fin2= 8;
+// les 4 suivants
+\endcode
+
+tout ça pour dire que le tableau de triangles va se trier au fur et à mesure des appels récursifs de `repartition( )` et qu'il suffit de passer les indices debut/fin 
+de chaque partie en paramètre.
+
+En pratique, une solution de répartition qui fonctionne bien utilise une boite alignée sur les axes comme englobant. Pour découper l'englobant en 2 régions, 
+il suffit de trouver quel axe de l'englobant est le plus long, et de le couper en 2, au milieu. Ensuite, il suffit de tester un point de chaque triangle pour décider 
+de l'associer à la region 1 ou 2, selon sa position par rapport au plan qui coupe l'englobant par le milieu.
+
+Quel point choisir pour répartir un triangle dans l'ensemble `T1` ou `T2` ? Si l'on regarde le fonctionnement de l'algorithme, les objets sont répartis en 
+utilisant leur boite englobante. Et le centre de la boite englobante est probablement la meilleure solution.
+
+Dernier détail pratique, comment écrire la répartition des triangles ? 
+\code
+// au debut :
+// Triangle T[]= { A, B, C, D, E, F, G, H };
+
+        découper l''englobant en 2 regions ("petits" englobants)
+        pour chaque region
+            { t } = objets à l''interieur de la region
+
+// apres la repartition :
+// T[]= { A, C, F, G , B, D, E, H };
+// T1_debut= 0; T1_fin= 4;
+// T2_debut= 4; T2_fin= 8;
+\endcode
+
+en fait, c'est un algorithme classique disponible dans la librairie standard c++ : [std::partition()](https://en.cppreference.com/w/cpp/algorithm/partition)
+l'idée est de tester chaque élément d'un tableau et de décider s'il doit etre placé au début ou à la fin du tableau, en fonction du résultat du test. 
+Tous les éléments pour lesquels le test est `vrai` sont placés au début du tableau, et ceux pour lesquels le test est `faux` sont placés à la suite, à la fin du tableau.
+Et la fonction `std::partition()` renvoie l'indice du premier élément de la 2ieme partie du tableau. Il ne reste plus qu'à écrire le test. On utilise une structure
+qui définit `operator() ( ... ) const`, qui renvoie un `bool`. cette fonction de test des éléments s'appelle un prédicat :
+
+\code
+// exemple: partitionner les elements de T, les valeurs multiple de m seront au debut du tableau, les autres à la fin du tableau
+
+#include <algorithm>
+
+// predicat 
+struct test
+{
+    int m;
+    test( const int _m ) : m(_m) {}
+    
+    bool operator() ( const int &x ) const { return (x%m) == 0; }       // renvoie vrai si x est multiple de m
+};
+
+
+std::vector<int> tab= { 1, 2, 3, 4, 6, 8, 9, 11, 13, 14, 15, 16 };
+
+// partitionne les elements du tableau, multiples de 3 au debut, les autres à la suite
+int *p= std::partition(tab.data(), tab.data() + tab.size(), test(3));
+// partition renvoie un pointeur sur l'élément, retrouver son indice...
+int pivot= std::distance(tab.data(), p);
+
+// partie 1 au debut du tableau : de l'indice 0 à pivot
+for(int i= 0; i < pivot; i++)
+    printf("%d ", tab[i]);
+// 15 9 3 6 
+
+// partie 2 à la fin du tableau : de pivot à la fin
+for(int i= pivot; i < int(tab.size()); i++)
+    printf("%d ", tab[i]);
+// 4 8 2 11 13 14 1 16
+\endcode
+
+Les ensembles de triangles et des rayons sont répresentés par des tableaux et les indices de début et fin. L'intersection directe
+de tous les rayons avec tous les triangles peut s'ecrire facilement :
+\code
+void direct( 
+    const std::vector<Triangle>& triangles, const int tbegin, const int tend,
+    std::vector<RayHit>& rays, const int rbegin, const int rend )
+{
+    for(int i= rbegin; i < rend; i++)
+    for(int k= tbegin; k < tend; k++)
+        triangles[k].intersect(rays[i]);
+}
+\endcode
+
+On a maintenant tous les éléments pour écrire l'algorithme de répartition. Pour manipuler facilement les englobants, on peut utiliser :
+\code
+struct BBox
+{
+    Point pmin, pmax;	// points extremes de l'englobant
+    
+    BBox( const Point& p ) : pmin(p), pmax(p) {}
+    
+    // ajouter un point dans l'englobant
+    BBox& insert( const Point& p ) { pmin= min(pmin, p); pmax= max(pmax, p); return *this; }
+    
+    // position du centre de l'englobant sur un axe
+    float centroid( const int axis ) const { return (pmin(axis) + pmax(axis)) / 2; }
+    
+    // intersection avec un rayon
+    bool intersect( const RayHit& ray ) const;
+};
+\endcode
+
+Et voila l'algo principal :
+\code
+void divide( const BBox& bounds, 
+    std::vector<Triangle>& triangles, const int tbegin, const int tend,
+    std::vector<RayHit>& rays, const int rbegin, const int rend )
+{
+    if(tbegin == tend || rbegin == rend)
+        // plus de triangles ou de rayons, rien a faire...
+        return;
+        
+    if(tend - tbegin <= 4)
+    {
+        // il ne reste plus que quelques triangles, finir les calculs d'intersection...
+        direct(triangles, tbegin, tend, rays, rbegin, rend);
+        return;
+    }
+    
+    // axe le plus etire de l'englobant
+    Vector d= Vector(bounds.pmin, bounds.pmax);
+    int axis;
+    if(d.x > d.y && d.x > d.z)  // x plus grand que y et z ?
+        axis= 0;
+    else if(d.y > d.z)          // y plus grand que z ? (et que x implicitement)
+        axis= 1;
+    else                        // x et y ne sont pas les plus grands...
+        axis= 2;
+
+    // coupe l'englobant au milieu
+    float cut= bounds.centroid(axis);
+    
+    // repartit les triangles 
+    Triangle *pm= std::partition(triangles.data() + tbegin, triangles.data() + tend, triangle_less1(axis, cut));
+    int m= std::distance(triangles.data(), pm);
+    
+    // la repartition des triangles peut echouer, et tous les triangles sont dans la meme partie...
+    if(m == tbegin || m == tend)
+    {
+        // finir les calculs d'intersection
+        direct(triangles, tbegin, tend, rays, rbegin, rend);
+        return;
+    }
+    
+    // construit les englobants des triangles de la partie 1 / a gauche
+    // les triangles se trouvent dans [tbegin .. m)
+    BBox left(triangles[tbegin].p);                                         // englobant du premier triangle
+    left.insert(triangles[tbegin].p + triangles[tbegin].e1);                // on insere les 3 sommets...
+    left.insert(triangles[tbegin].p + triangles[tbegin].e2);
+    for(int i= tbegin+1; i < m; i++)                                        // insere les sommets des autres triangles
+    {
+        left.insert(triangles[i].p);
+        left.insert(triangles[i].p + triangles[i].e1);
+        left.insert(triangles[i].p + triangles[i].e2);
+    }
+    
+    // place les rayons qui touchent l'englobant au debut du tableau
+    RayHit *prleft= std::partition(rays.data() + rbegin, rays.data() + rend, ray_less1(left));
+    int rleft= std::distance(rays.data(), prleft);
+    // les rayons qui touchent l'englobant se trouvent dans [rbegin .. rleft)
+    
+    // recursion sur T1 et les rayons qui touchent l'englobant de T1
+    divide(left, triangles, tbegin, m, rays, rbegin, rleft);
+    
+    // on recommence pour la partie 2 / a droite
+    // les triangles se trouvent dans [m .. tend)
+    BBox right(triangles[m].p);
+    right.insert(triangles[m].p + triangles[m].e1);
+    right.insert(triangles[m].p + triangles[m].e2);
+    for(int i= m+1; i < tend; i++)
+    {
+        right.insert(triangles[i].p);
+        right.insert(triangles[i].p + triangles[i].e1);
+        right.insert(triangles[i].p + triangles[i].e2);
+    }
+    
+    // place les rayons qui touchent l'englobant au debut du tableau
+    RayHit *prright= std::partition(rays.data() + rbegin, rays.data() + rend, ray_less1(right));
+    int rright= std::distance(rays.data(), prright);
+    // les rayons qui touchent l'englobant se trouvent dans [rbegin .. rright)
+    
+    // recursion sur T2 et les rayons qui touchent l'englobant de T2
+    divide(right, triangles, m, tend, rays, rbegin, rright);
+}
+\endcode
+
+il manque les prédicats qui testent les rayons et les triangles :
+\code
+struct ray_less1
+{
+    BBox bounds;
+    
+    ray_less1( const BBox& _bounds ) : bounds(_bounds) {}
+    
+    bool operator() ( const RayHit& ray ) const
+    {   // renvoie vrai le rayon touche l'englobant
+        return bounds.intersect(ray);
+    }
+};
+\endcode
+
+et 
+\code
+struct triangle_less1
+{
+    int axis;
+    float cut;
+    
+    triangle_less1( const int _axis, const float _cut ) : axis(_axis), cut(_cut) {}
+    
+    bool operator() ( const Triangle& triangle ) const
+    {
+        // re-construit l'englobant du triangle
+        BBox bounds(triangle.p);
+        bounds.insert(triangle.p + triangle.e1);
+        bounds.insert(triangle.p + triangle.e2);
+        // renvoie vrai si le triangle est dans la partie gauche / avant le plan qui coupe l'englobant au milieu
+        return bounds.centroid(axis) < cut;
+    }
+};
+\endcode
+
+## et alors ?
+
+est-ce que tout ca est interressant ?? pour la cornell box, qui ne comporte que 32 triangles, c'est un peu mieux :
+    - direct 92ms
+    - divide 69ms
+
+et pour un objet plus gros, par exemple `data/bigguy.obj`, 3000 triangles :
+    - direct 13897ms
+    - divide 163ms
+    
+ca commence à etre mieux... petite remarque sur la complexite de l'algorithme de répartition, il y a à peu près 10 fois plus de triangles
+dans bigguy, mais le temps d'intersection n'est que ~2 fois plus important... pas mal.
+
+code complet dans tuto_englobant.cpp
 
 
 

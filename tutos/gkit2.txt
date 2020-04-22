@@ -62,6 +62,7 @@ plus ceux dédiés à openGL :
     
 et ceux dédiés au lancer de rayons :
     - \ref intrort,
+    - \ref acceleration
     
     
 et un utilitaire pour jouer avec les shaders, \ref shader_kit.cpp \ref shader_kit.
