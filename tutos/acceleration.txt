@@ -584,4 +584,57 @@ protected:
 };
 \endcode
 
+### et alors ca marche ??
+
+rappel, voici les temps d'intersection pour `direct()`, `divide()` et le bvh :
+
+pour la cornell box, qui ne comporte que 32 triangles, c'est un peu mieux :
+    - direct 92ms
+    - divide 69ms
+    - bvh construction < 1ms, construction + intersection 85ms
+<IMG SRC="cornell_bvh.png" width="25%"> 
+
+et pour un objet plus gros, par exemple `data/bigguy.obj`, 3000 triangles :
+    - direct 13897ms
+    - divide 163ms
+    - bvh construction < 1ms, construction + intersection 155ms
+<IMG SRC="bigguy_bvh.png" width="25%"> 
+
+pour plus gros : sibenik, 75000 triangles
+    - direct abandon...
+    - divide 5634ms
+    - bvh construction 19ms, construction + intersection 965ms
+<IMG SRC="sibenik_bvh.png" width="25%"> 
+    
+encore plus gros : sponza version crytek, >25000 triangles
+    - direct pas la peine...
+    - divide abandon...
+    - bvh construction 80ms, construction + intersection 4164ms
+<IMG SRC="sponza_bvh.png" width="25%"> 
+
+et bien sur, on peut maintenant paralleliser l'intersection des rayons (avec openMP, par exemple) :
+\code
+        const int n= int(rays.size());
+        #pragma omp parallel for schedule(dynamic, 1024)
+        for(int i= 0; i < n; i++)
+            bvh.intersect(rays[i]);
+\endcode
+
+sur 6 coeurs / 12 threads : le temps de construction du bvh ne change pas, par contre voici les temps d'intersection :
+    - sibenik : intersection 122ms (au lieu de 900ms)
+    - sponza version crytek : intersection 460ms (au lieu de 4000ms )
+
+c'est mieux, la construction du bvh et son parcours / intersection sont toujours plus rapides que `divide()` et le bvh sera plus simple à utiliser pour calculer 
+une image. Mais les résultats sont quand meme assez bizarres, les 2 algorithmes sont sensés faire la même chose...
+
+En regardant de plus près, les 2 méthodes ne calculent pas le meme nombre d'intersections rayons / triangles. Par exemple, sur sibenik :
+    - `divide()` 1036443892 tests !!, soit > 1000 tests par rayon,
+    - `bvh::intersect()` 6283869 tests,  soit 8 tests par rayon...
+    
+ce qui explique la différence de temps. mais la vraie question est : _pourquoi ?_
+
+
+### peut mieux faire...
+
+
 */
