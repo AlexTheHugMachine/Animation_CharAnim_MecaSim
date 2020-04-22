@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cfloat>
+#include <chrono>
 
 #include "vec.h"
 #include "mat.h"
@@ -93,10 +94,15 @@ struct Source
     Color emission;
 };
 
-int main( )
+int main( const int argc, const char **argv )
 {
-    const char *orbiter_filename= "cornell_orbiter.txt";
     const char *mesh_filename= "cornell.obj";
+    if(argc > 1)
+        mesh_filename= argv[1];
+        
+    const char *orbiter_filename= "cornell_orbiter.txt";
+    if(argc > 2)
+        orbiter_filename= argv[2];
     
     Orbiter camera;
     if(camera.read_orbiter(orbiter_filename) < 0)
@@ -143,6 +149,8 @@ int main( )
     Transform viewport= camera.viewport();
     Transform inv= Inverse(viewport * projection * view * model);
     
+auto start= std::chrono::high_resolution_clock::now();
+    
     // c'est parti, parcours tous les pixels de l'image
     for(int y= 0; y < image.height(); y++)
     for(int x= 0; x < image.width(); x++)
@@ -176,6 +184,7 @@ int main( )
         }
     #endif
     
+    #if 0
         if(hit)
         {
             // position et emission de la source de lumiere
@@ -187,7 +196,7 @@ int main( )
             // interpoler la normale au point d'intersection
             Vector pn= normal(mesh, hit);
             // direction de p vers la source s
-            Vector l= normalize(Vector(p, s));
+            Vector l= Vector(p, s);
             
             // visibilite entre p et s
             float v= 1;
@@ -205,13 +214,17 @@ int main( )
         #endif
             
             // calculer la lumiere reflechie vers la camera / l'origine du rayon
-            float cos_theta= std::abs(dot(pn, l));
+            float cos_theta= std::abs(dot(pn, normalize(l)));
             Color fr= diffuse_color(mesh, hit) / M_PI;
             
-            Color color= v * emission * fr * cos_theta;
+            Color color= v * emission * fr * cos_theta / length2(l);
             image(x, y)= Color(color, 1);
         }
+    #endif
     }
+auto stop= std::chrono::high_resolution_clock::now();
+int cpu= std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+printf("%dms\n", cpu);
     
     write_image(image, "render.png");
     write_image_hdr(image, "shadow.hdr");

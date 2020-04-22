@@ -153,7 +153,9 @@ tutos = {
 	"min_data",
 	"tuto_vertex_compute",
 	
-	"tuto_rayons"
+	"tuto_rayons",
+	"tuto_englobant",
+	"tuto_bvh"
 }
 
 for i, name in ipairs(tutos) do

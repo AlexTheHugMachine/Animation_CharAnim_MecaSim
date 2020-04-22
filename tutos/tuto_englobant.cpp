@@ -23,10 +23,14 @@ struct RayHit
     float t;            // p(t)= o + td, position du point d'intersection sur le rayon
     Vector d;           // direction
     int triangle_id;    // indice du triangle dans le mesh
+    float u, v;
+    int x, y;
     
-    RayHit( const Point& _o, const Point& _e ) :  o(_o), t(1), d(Vector(_o, _e)), triangle_id(-1) {}
+    RayHit( const Point& _o, const Point& _e ) :  o(_o), t(1), d(Vector(_o, _e)), triangle_id(-1), u(), v(), x(), y() {}
+    RayHit( const Point& _o, const Point& _e, const int _x, const int _y ) :  o(_o), t(1), d(Vector(_o, _e)), triangle_id(-1), u(), v(), x(_x), y(_y) {}
     operator bool ( ) { return (triangle_id != -1); }
 };
+
 
 struct Triangle
 {
@@ -64,6 +68,8 @@ struct Triangle
         // touche !!
         ray.t= t;
         ray.triangle_id= id;
+        ray.u= u;
+        ray.v= v;
     }
 };
 
@@ -173,11 +179,13 @@ void divide( const BBox& bounds,
     // repartit les triangles 
     Triangle *pm= std::partition(triangles.data() + tbegin, triangles.data() + tend, triangle_less1(axis, cut));
     int m= std::distance(triangles.data(), pm);
+    
+    // la repartition des triangles peut echouer, et tous les triangles sont dans la meme partie... 
+    // forcer quand meme un decoupage en 2 ensembles 
     if(m == tbegin || m == tend)
-    {
-        direct(triangles, tbegin, tend, rays, rbegin, rend);
-        return;
-    }
+        m= (tbegin + tend) / 2;
+    assert(m != tbegin);
+    assert(m != tend);
     
     // construit les englobants
     BBox left(triangles[tbegin].p);
@@ -259,10 +267,11 @@ int main( const int argc, const char **argv )
         Point origine= inv(Point(x + .5f, y + .5f, 0));
         Point extremite= inv(Point(x + .5f, y + .5f, 1));
         
-        rays.emplace_back(origine, extremite);
+        rays.emplace_back(origine, extremite, x, y);
     }
     
 // mesure les temps d'execution 
+#if 0
     {
         auto start= std::chrono::high_resolution_clock::now();
         direct(triangles, 0, int(triangles.size()), rays, 0, int(rays.size()));
@@ -271,6 +280,7 @@ int main( const int argc, const char **argv )
         int cpu= std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
         printf("direct %dms\n", cpu);
     }
+#endif
 
     {
         auto start= std::chrono::high_resolution_clock::now();
@@ -280,6 +290,22 @@ int main( const int argc, const char **argv )
         int cpu= std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
         printf("divide %dms\n", cpu);
     }
+    
+    // reconstruit l'image
+    for(int i= 0; i < rays.size(); i++)
+    {
+        if(rays[i])
+        {
+            int x= rays[i].x;
+            int y= rays[i].y;
+            float u= rays[i].u;
+            float v= rays[i].v;
+            float w= 1 - u - v;
+            image(x, y)= Color(w, u, v);
+        }
+    }
+    write_image(image, "divide.png");
+    
     
     return 0;
 }
