@@ -482,7 +482,7 @@ protected:
             axis= 1;
         else                        // x et y ne sont pas les plus grands...
             axis= 2;
-
+        
         // coupe l'englobant au milieu
         float cut= bounds.centroid(axis);
         
@@ -499,8 +499,8 @@ protected:
         
         // construire le fils gauche
         // les triangles se trouvent dans [begin .. m)
-        BBox bounds_left(triangles[begin].p);                                         // englobant du premier triangle
-        bounds_left.insert(triangles[begin].p + triangles[begin].e1);                // on insere les 3 sommets...
+        BBox bounds_left(triangles[begin].p);                                  // englobant du premier triangle
+        bounds_left.insert(triangles[begin].p + triangles[begin].e1);          // on insere les 3 sommets...
         bounds_left.insert(triangles[begin].p + triangles[begin].e2);
         for(int i= begin+1; i < m; i++)                                        // insere les sommets des autres triangles
         {
@@ -523,6 +523,7 @@ protected:
         }
         int right= build(bounds_right, m, end);
         
+        // inserer un noeud interne et renvoyer son indice
         int index= nodes.size();
         nodes.push_back(make_node(bounds, left, right));
         return index;
@@ -535,5 +536,52 @@ plus.
 
 ## parcours 
 
+Maintenant que l'arbre est construit, il faut l'utiliser pour calculer les intersections d'un rayon et des objets. La encore, le principe est le meme que tout à 
+l'heure, dans la fonction de répartition. Si le rayon touche un englobant, il faut vérifier s'il touche aussi les englobants des fils du noeud. L'intersection avec
+les objets ne se fait qu'au niveau des feuilles.
+
+\code
+intersection( noeud, rayon ) :
+    si le rayon ne touche pas l''englobant du noeud
+        arreter
+        
+    si le noeud est une feuille
+        pour chaque objet associé à la feuille
+            intersection(objet, rayon)
+    sinon
+        intersection(fils gauche, rayon)
+        intersection(fils droit, rayon)
+\endcode
+
+ce qui s'écrit directement :
+\code
+struct BVH
+{
+    ... 
+    void intersect( RayHit& ray ) const
+    {
+        intersect(root, ray);
+    }
+
+protected:
+    void intersect( const int index, RayHit& ray ) const
+    {
+        const Node& node= nodes[index];
+        if(node.bounds.intersect(ray))
+        {
+            if(node.leaf())
+            {
+                for(int i= node.leaf_begin(); i < node.leaf_end(); i++)
+                    triangles[i].intersect(ray);
+            }
+            else // if(node.internal())
+            {
+                intersect(node.internal_left(), ray);
+                intersect(node.internal_right(), ray);
+            }
+        }
+    }
+};
+\endcode
 
 */
