@@ -29,9 +29,9 @@ de calculer les intersections du rayon avec tous les objets du groupe.
 Dans cet exemple, on a testé 2 boites et 3 triangles, au lieu de 6 triangles. ce ne sera plus rapide que si tester 2 boites est plus rapide que tester 3 triangles...
 
 Mais bien sur, il faut maintenant construire cet englobant à partir des objets, ou d'une partie des objets. et selon la complexité de chaque étape, l'algorithme 
-complet pourra être plus interressant que la double boucle, ou pas...
+complet pourra être plus interessant que la double boucle, ou pas...
 
-Voila l'idée générale, qui repartit les triangles en 2 groupes / englobants si c'est interressant, ou qui utilise la double boucle directe.
+Voila l'idée générale, qui repartit les triangles en 2 groupes / englobants si c'est interessant, ou qui utilise la double boucle directe.
 \code
 // version directe
 direct( rayons, objets ) :
@@ -280,7 +280,8 @@ struct ray_less1
     ray_less1( const BBox& _bounds ) : bounds(_bounds) {}
     
     bool operator() ( const RayHit& ray ) const
-    {   // renvoie vrai le rayon touche l'englobant
+    {
+        // renvoie vrai si le rayon touche l'englobant
         return bounds.intersect(ray);
     }
 };
@@ -309,7 +310,7 @@ struct triangle_less1
 
 ## et alors ?
 
-est-ce que tout ca est interressant ?? pour la cornell box, qui ne comporte que 32 triangles, c'est un peu mieux :
+est-ce que tout ca est interessant ?? pour la cornell box, qui ne comporte que 32 triangles, c'est un peu mieux :
     - direct 92ms
     - divide 69ms
 
@@ -317,11 +318,222 @@ et pour un objet plus gros, par exemple `data/bigguy.obj`, 3000 triangles :
     - direct 13897ms
     - divide 163ms
     
-ca commence à etre mieux... petite remarque sur la complexite de l'algorithme de répartition, il y a à peu près 10 fois plus de triangles
-dans bigguy, mais le temps d'intersection n'est que ~2 fois plus important... pas mal.
+ca commence à etre mieux... petite remarque sur la complexite de l'algorithme de répartition, il y a presque 10 fois plus de triangles dans bigguy, mais 
+le temps d'intersection n'est que ~2 fois plus important... pas mal.
 
 code complet dans tuto_englobant.cpp
 
+Par contre, il y a un petit inconvénient pour utiliser cet algorithme pour calculer une image, il faut construire le tableau de rayons pour l'utiliser et il serait
+plus simple et plus pratique de pouvoir tester rapidement un seul rayon à la fois. Un autre problème est lié au fait que les triangles sont re-triés à chaque fois :
+pour tous les rayons partant de la camera, puis les ombres (visibilité des sources de lumières), pour les reflets, etc... Dernier point embétant, il n'est pas facile 
+de le paralléliser...
+
+_pour les curieux :_ cette méthode est décrite plus en détail :
+    - ["Naive-Ray-Tracing: A divide-and-conquer approach", B. Mora, 11](https://cs.swansea.ac.uk/visualcomputing/?p=130) 
+    - ["Efficient Divide-And-Conquer Ray Tracing using Ray Sampling", K. Nabata, K. Iwasaki, Y. Dobashi, T. Nishita, 2013](http://nishitalab.org/user/UEI/publication/Nabata_HPG2013.pdf)
+
+
+# BVH : arbre d'englobants
+
+Le principal inconvénient de la solution précedente est que l'on re-trie plusieurs fois les triangles, pour chaque ensemble de rayons nécessaire au calcul de 
+l'image et bien sur qu'il faut construire l'ensemble de rayons à tester... 
+
+## construction
+
+Mais il n'est pas très compliqué de stocker les englobants construits par l'algorithme de répartition dans un arbre. Puis de parcourir cet arbre pour chaque rayon...
+Voici les englobants construits par l'algorithme de répartition, ainsi que les noeuds et l'arbre associé :
+
+<IMG SRC="arbre_englobant.png" width="35%"> 
+
+il suffit de modifier l'algorithme :
+\code
+repartition( englobant, rayons, objets ) :
+    si rayons < limite ou objets < limite
+        direct(rayons, objets)
+    sinon
+        // decouper le probleme
+        découper l''englobant en 2 regions ("petits" englobants)
+        pour chaque region
+            { r } = rayons qui touchent la region
+            { t } = objets à l''interieur de la region
+            repartition(region, { r }, { t })
+\endcode
+
+l'appel à la fonction `direct()` correspond à la création d'une feuille, et les appels à `repartition()` correspondent à la création des fils des noeuds internes. On
+n'a plus besoin des rayons, on veut simplement construire tous les groupes d'objets et leurs englobants :
+\code
+construction( englobant, objets ) :
+    si objets < limite
+        renvoyer une feuille { englobant, objets }
+    sinon
+        // decouper le probleme
+        découper l''englobant en 2 regions ("petits" englobants)
+        { gauche, objets_gauche } = englobant et objets de la region 1
+        { droite, objets_droite } = englobant et objets de la region 2
+        fils gauche= construction(gauche, objets_gauche)
+        fils droit= construction(droite, objets_droite)
+        renvoyer un noeud interne { englobant, fils gauche, fils droit }
+\endcode
+
+et l'algorithme renvoie le noeud racine de l'arbre. Ce type d'arbre s'appelle un BVH, pour _Bounding Volume Hierarchy_. 
+
+Ces deux algorithmes suivent le meme principe et à la fin les objets sont triés dans l'ordre des feuilles qui les référencent.
+
+<IMG SRC="arbre_feuilles.png" width="35%"> 
+
+
+Bien sur, il reste quelques détails à régler : comment représenter les noeuds, les feuilles, les objets, etc. Le plus simple est d'utiliser la meme structure pour
+représenter les noeuds internes et les feuilles de l'arbre. Une autre simplification consiste à utiliser un tableau de noeuds, et à utiliser des indices pour désigner
+le fils gauche et le fils droit. Avec cette convention, on obtient cette représentation :
+    - noeud : un englobant, l'indice de son fils gauche, l'indice de son fils droit,
+    - feuille : un englobant, l'indice du premier objet dans le tableau trié des objets, et l'indice du dernier objet, ce sont les memes parametres que l'appel 
+    à `direct()` dans l'algorithme de répartition.
+
+L'arbre est représenté par un tableau de noeud / feuille et le tableau des objets triés par la construction, et l'indice de la racine :
+\code
+struct Node
+{
+    BBox bounds;
+    int left;
+    int right;
+};
+
+struct BVH
+{
+    std::vector<Node> nodes;
+    std::vector<Triangle> triangles;
+    
+    int root;
+};
+\endcode
+
+on aurait également pu utiliser des entiers supplémentaires (`premier` et `dernier` par exemple) pour stocker l'indice du premier et du dernier objet, mais 
+il suffit de pouvoir faire la différence entre un noeud et une feuille. Du coup, on peut utiliser des valeurs négatives pour stocker les indices des objets et des
+valeurs positives pour stocker les indices des fils. Pour rendre le reste du code plus lisible, il suffit de _cacher_ ces détails dans la structure `Node` :
+\code
+struct Node
+{
+    BBox bounds;
+    int left;
+    int right;
+    
+    bool internal( ) const { return right > 0; }                        // renvoie vrai si le noeud est un noeud interne
+    int internal_left( ) const { assert(internal()); return left; }     // renvoie le fils gauche du noeud interne 
+    int internal_right( ) const { assert(internal()); return right; }   // renvoie le fils droit
+    
+    bool leaf( ) const { return right < 0; }                            // renvoie vrai si le noeud est une feuille
+    int leaf_begin( ) const { assert(leaf()); return -left; }           // renvoie le premier objet de la feuille
+    int leaf_end( ) const { assert(leaf()); return -right; }            // renvoie le dernier objet
+};
+
+// creation d'un noeud interne
+Node make_node( const BBox& bounds, const int left, const int right )
+{
+    Node node { bounds, left, right };
+    assert(node.internal());    // verifie que c'est bien un noeud...
+    return node;
+}
+
+// creation d'une feuille
+Node make_leaf( const BBox& bounds, const int begin, const int end )
+{
+    Node node { bounds, -begin, -end };
+    assert(node.leaf());        // verifie que c'est bien une feuille...
+    return node;
+}
+\endcode
+
+La construction de l'arbre est sans surprise, elle utilise la meme répartition avec `std::partition()`, et renvoie l'indice du noeud ou de la feuille crée :
+\code
+struct BVH
+{
+    ...
+    
+    // construit un bvh pour l'ensemble de triangles
+    int build( const std::vector<Triangle>& _triangles, const BBox& _bounds )
+    {
+        triangles= _triangles;  // copie les triangles pour les trier
+        nodes.clear();          // efface les noeuds
+        
+        // construit l'arbre... 
+        root= build(_bounds, 0, triangles.size());
+        // et renvoie la racine
+        return root;
+    }
+    
+protected:
+    // construction d'un noeud
+    int build( const BBox& bounds, const int begin, const int end )
+    {
+        if(end - begin <= 2)
+        {
+            // inserer une feuille et renvoyer son indice
+            int index= nodes.size();
+            nodes.push_back(make_leaf(bounds, begin, end));
+            return index;
+        }
+        
+        // axe le plus etire de l'englobant
+        Vector d= Vector(bounds.pmin, bounds.pmax);
+        int axis;
+        if(d.x > d.y && d.x > d.z)  // x plus grand que y et z ?
+            axis= 0;
+        else if(d.y > d.z)          // y plus grand que z ? (et que x implicitement)
+            axis= 1;
+        else                        // x et y ne sont pas les plus grands...
+            axis= 2;
+
+        // coupe l'englobant au milieu
+        float cut= bounds.centroid(axis);
+        
+        // repartit les triangles 
+        Triangle *pm= std::partition(triangles.data() + begin, triangles.data() + end, triangle_less1(axis, cut));
+        int m= std::distance(triangles.data(), pm);
+        
+        // la repartition des triangles peut echouer, et tous les triangles sont dans la meme partie... 
+        // forcer quand meme un decoupage en 2 ensembles 
+        if(m == begin || m == end)
+            m= (begin + end) / 2;
+        assert(m != begin);
+        assert(m != end);
+        
+        // construire le fils gauche
+        // les triangles se trouvent dans [begin .. m)
+        BBox bounds_left(triangles[begin].p);                                         // englobant du premier triangle
+        bounds_left.insert(triangles[begin].p + triangles[begin].e1);                // on insere les 3 sommets...
+        bounds_left.insert(triangles[begin].p + triangles[begin].e2);
+        for(int i= begin+1; i < m; i++)                                        // insere les sommets des autres triangles
+        {
+            bounds_left.insert(triangles[i].p);
+            bounds_left.insert(triangles[i].p + triangles[i].e1);
+            bounds_left.insert(triangles[i].p + triangles[i].e2);
+        }
+        int left= build(bounds_left, begin, m);
+        
+        // on recommence pour le fils droit
+        // les triangles se trouvent dans [m .. end)
+        BBox bounds_right(triangles[m].p);
+        bounds_right.insert(triangles[m].p + triangles[m].e1);
+        bounds_right.insert(triangles[m].p + triangles[m].e2);
+        for(int i= m+1; i < end; i++)
+        {
+            bounds_right.insert(triangles[i].p);
+            bounds_right.insert(triangles[i].p + triangles[i].e1);
+            bounds_right.insert(triangles[i].p + triangles[i].e2);
+        }
+        int right= build(bounds_right, m, end);
+        
+        int index= nodes.size();
+        nodes.push_back(make_node(bounds, left, right));
+        return index;
+    }
+};
+\endcode
+
+et voila !! c'est exactement la meme stratégie que tout à l'heure, mais bien sur, il faut conserver les englobants, les groupes d'objet et construire l'arbre en 
+plus.
+
+## parcours 
 
 
 */
