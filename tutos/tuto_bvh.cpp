@@ -326,9 +326,9 @@ int main( const int argc, const char **argv )
     {
         BVH bvh;
         
-        auto start= std::chrono::high_resolution_clock::now();
+        //~ auto start= std::chrono::high_resolution_clock::now();
         {
-            //~ auto start= std::chrono::high_resolution_clock::now();
+            auto start= std::chrono::high_resolution_clock::now();
             // construction 
             bvh.build(bounds, triangles);
             
@@ -338,7 +338,7 @@ int main( const int argc, const char **argv )
         }
         
         {
-            //~ auto start= std::chrono::high_resolution_clock::now();
+            auto start= std::chrono::high_resolution_clock::now();
             
             // intersection
             const int n= int(rays.size());
@@ -350,19 +350,19 @@ int main( const int argc, const char **argv )
             printf("bvh %dms\n", cpu);
         }
         
-        //~ {
-            //~ auto start= std::chrono::high_resolution_clock::now();
+        {
+            auto start= std::chrono::high_resolution_clock::now();
             
-            //~ // intersection
-            //~ const int n= int(rays.size());
-            //~ #pragma omp parallel for schedule(dynamic, 1024)
-            //~ for(int i= 0; i < n; i++)
-                //~ bvh.intersect(rays[i]);
+            // intersection
+            const int n= int(rays.size());
+            #pragma omp parallel for schedule(dynamic, 1024)
+            for(int i= 0; i < n; i++)
+                bvh.intersect(rays[i]);
             
-            //~ auto stop= std::chrono::high_resolution_clock::now();
-            //~ int cpu= std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
-            //~ printf("bvh %dms\n", cpu);
-        //~ }
+            auto stop= std::chrono::high_resolution_clock::now();
+            int cpu= std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+            printf("bvh %dms\n", cpu);
+        }
     }
     
     // reconstruit l'image

@@ -106,11 +106,12 @@ la solution classique utilise la forme paramétrique des droites : \f$ p(t) = or
 position du point sur la droite.
 
 ## plan
+
 comment décrire l'ensemble de points sur un plan ? il existe de nombreuses manières, mais l'idée est de choisir une représentation qui permet d'écrire le calcul 
 de l'intersection comme la recherche du zero d'une fonction.
 
-On peut représenter un plan par un point \f$ a \f$ et une normale \f$ \vec{n} \f$, et déterminer l'ensemble des points \f$ p \f$ appartenant au plan comme les 
-zeros de la forme implicite : 
+On peut représenter un plan par un point \f$ a \f$ et une normale \f$ \vec{n} \f$, noté \f$ plan(a, \vec{n}) \f$ et déterminer l'ensemble des 
+points \f$ p \f$ appartenant au plan comme les zeros de la forme implicite : 
 \f[
 \vec{n} \cdot \vec{ap} = 0
 \f]
@@ -140,7 +141,6 @@ il ne reste plus qu'à trouver quelle valeur de t vérifie ces conditions :
 \end{eqnarray*}
 \f]
 
-
 _rappel :_ calcul avec des points, des vecteurs et des produits scalaires, cf [wikipedia](https://en.wikipedia.org/wiki/Dot_product#Properties)
 
 on peut remarquer que, sans trop de surprise, un rayon intersecte toujours un plan, sauf lorsque le rayon est parallele au plan et que la direction du rayon 
@@ -148,6 +148,72 @@ et la normale du plan sont perpendiculaires.
 
 Par contre, il ne faut pas oublier que l'on ne s'interresse qu'aux intersections se trouvant devant la camera, c'est à dire \f$ t > 0 \f$, il faut bien faire la 
 différence entre les intersections de la droite et des objets testés et les intersections du rayon (la demi droite positive) avec les objets... 
+
+
+## cube 
+
+On peut représenter un cube par les plans qui portent chaque face. pour chaque axe, il y a une paire de plans parallèles : le rayon entre dans le cube par un 
+plan et ressort de l'autre coté, par l'autre plan. Le rayon traverse l'espace compris entre les 2 plans pour un intervalle \f$ t \in [t_{min} .. t_{max}] \f$.
+
+__remarque :__ si le rayon est orienté dans l'autre sens, s'il traverse l'espace de la droite vers la gauche, il faut inverser les bornes de l'intervalle 
+\f$ [t_{min} .. t_{max}] \f$. Les bornes de l'intervalle _doivent_ vérifier \f$ t_{min} \leq t_{max} \f$
+
+On peut décrire un cube par un centre \f$ c \f$ , et 3 axes \f$ \vec{i}, \vec{j}, \vec{k} \f$. Les calculs d'intersections rayon / plans sont réalisés comme 
+ci-dessus :
+    - \f$ plan( c + \vec{i}, \vec{i} ) \f$, \f$ plan(c - \vec{i}, \vec{i}) \f$
+    - \f$ plan( c + \vec{j}, \vec{j} ) \f$, \f$ plan(c - \vec{j}, \vec{j}) \f$
+    - \f$ plan( c + \vec{k}, \vec{k} ) \f$, \f$ plan(c - \vec{k}, \vec{k}) \f$
+
+<IMG SRC="cube.png" width="20%"> 
+
+Pour calculer l'intersection avec le cube, il faut calculer ces 3 intervalles (un par paire de plans / par axe) et vérifier que les intervalles se chevauchent : que 
+leur intersection n'est pas vide. 
+
+<IMG SRC="ray_cube.png" width="30%"> 
+
+Il y a aura une intersection si \f$ [t_{min_i} .. t_{max_i}] \cap [t_{min_j} .. t_{max_j}] \cap [t_{min_k} .. t_{max_k}] \cap [0 .. t_{max}] \neq \phi \f$
+
+
+### cube aligné sur les axes
+
+c'est la meme chose, mais les axes sont implicitement \f$ \vec{x}, \vec{y}, \vec{z} \f$. Les produits scalaires d'un vecteur \f$ \vec{v} \f$ avec les axes 
+d'un repère se simplifient :
+\f[
+\vec{x} \cdot \vec{v} = \begin{bmatrix} 1\\ 0\\ 0 \end{bmatrix} \cdot \begin{bmatrix} v_x\\ v_y\\ v_z \end{bmatrix} = v_x, \,
+\vec{y} \cdot \vec{v} = \begin{bmatrix} 0\\ 1\\ 0 \end{bmatrix} \cdot \begin{bmatrix} v_x\\ v_y\\ v_z \end{bmatrix} = v_y, \mbox{ et }
+\vec{z} \cdot \vec{v} = \begin{bmatrix} 0\\ 0\\ 1 \end{bmatrix} \cdot \begin{bmatrix} v_x\\ v_y\\ v_z \end{bmatrix} = v_z
+\f]
+
+au final, ce n'est pas si compliqué :
+\code
+bool intersect( const Point& pmin, const Point& pmax, const Ray& ray )
+{
+    Point rmin= pmin;
+    Point rmax= pmax;
+    
+    // verifier la direction du rayon, sur chaque axe
+    // echanger tmin, tmax, si necessaire
+    if(ray.d.x < 0) std::swap(rmin.x, rmax.x);      // rmin.x <= rmax.x
+    if(ray.d.y < 0) std::swap(rmin.y, rmax.y);      // rmin.y <= rmax.y
+    if(ray.d.z < 0) std::swap(rmin.z, rmax.z);      // rmin.z <= rmax.z
+    
+    // intersection avec les 3 plans
+    Vector invd= Vector(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
+    Vector dmin= (rmin - ray.o) * invd;
+    Vector dmax= (rmax - ray.o) * invd;
+    
+    // intersection des 4 intervalles...
+    float tmin= std::max(dmin.z, std::max(dmin.y, std::max(dmin.x, float(0))));
+    float tmax= std::min(dmax.z, std::min(dmax.y, std::min(dmax.x, ray.t)));
+    
+    // si l'intervalle est valide, il y a intersection
+    return (tmin <= tmax);
+}
+\endcode
+
+il y a encore quelques astuces de calculs pour éviter les problèmes lorsque la direction du rayon est parallèle à un axe : cf
+    - ["An Efficient and Robust Ray-Box Intersection Algorithm", A. Williams, S. Barrus, R.K. Morley, P. Shirley, 2003](http://people.csail.mit.edu/amy/papers/box-jgt.pdf)
+
 
 ## sphere
 
@@ -250,12 +316,9 @@ il ne reste plus qu'à écrire qu'un point doit être en même temps sur le rayo
 <IMG SRC="ray_triangle.png" width="30%"> 
 
 
-on obtient un système linéaire, 3 équations et 3 inconnues (\f$ t, \beta, \gamma \f$), une solution élégante n'utilisant que des produits scalaires et vectoriels est proposée dans cet 
-article : ["Fast, Minimum Storage Ray Triangle Intersection", T. Moller, B. Trumbore, 1997](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.124.8459&rep=rep1&type=pdf)
+on obtient un système linéaire, 3 équations et 3 inconnues (\f$ t, \beta, \gamma \f$), une solution élégante n'utilisant que des produits scalaires 
+et vectoriels est proposée dans cet article : ["Fast, Minimum Storage Ray Triangle Intersection", T. Moller, B. Trumbore, 1997](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.124.8459&rep=rep1&type=pdf)
 
-## cube 
-
-\todo
 
 # en pratique
 
@@ -452,6 +515,7 @@ cf tuto_raytrace_fragment.cpp et raytrace.glsl
 
 la version en ligne de [PBRT](http://pbr-book.org) (un livre de référence sur le lancer rayons et les calculs réalistes) propose également les tests d'intersections 
 pour plusieurs objets :
+    - [cube aligné sur les axes](http://www.pbr-book.org/3ed-2018/Shapes/Basic_Shape_Interface.html#RayndashBoundsIntersections),
     - [sphère](http://www.pbr-book.org/3ed-2018/Shapes/Spheres.html),
     - [cylindres](http://www.pbr-book.org/3ed-2018/Shapes/Cylinders.html),
     - [disques](http://www.pbr-book.org/3ed-2018/Shapes/Disks.html),

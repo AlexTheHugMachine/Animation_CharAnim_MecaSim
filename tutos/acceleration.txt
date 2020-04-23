@@ -2,7 +2,7 @@
 
 /*! \addtogroup acceleration le lancer de rayons, ça rame ? ou pas ?
 
-Pour l'instant le lancer de rayon se résume en une double boucle pas très efficace lorsqu'il y a beaucoup de rayons et beaucoup d'objets :
+Pour l'instant le lancer de rayon se résume à une double boucle, pas très efficace lorsqu'il y a beaucoup de rayons et beaucoup d'objets :
 \code
 objets[]
 rayons[]
@@ -124,7 +124,6 @@ qui définit `operator() ( ... ) const`, qui renvoie un `bool`. cette fonction d
 
 \code
 // exemple: partitionner les elements de T, les valeurs multiple de m seront au debut du tableau, les autres à la fin du tableau
-
 #include <algorithm>
 
 // predicat 
@@ -135,7 +134,6 @@ struct test
     
     bool operator() ( const int &x ) const { return (x%m) == 0; }       // renvoie vrai si x est multiple de m
 };
-
 
 std::vector<int> tab= { 1, 2, 3, 4, 6, 8, 9, 11, 13, 14, 15, 16 };
 
@@ -221,13 +219,10 @@ void divide( const BBox& bounds,
     Triangle *pm= std::partition(triangles.data() + tbegin, triangles.data() + tend, triangle_less1(axis, cut));
     int m= std::distance(triangles.data(), pm);
     
-    // la repartition des triangles peut echouer, et tous les triangles sont dans la meme partie...
+    // la repartition des triangles peut echouer, et tous les triangles sont dans la meme partie... 
+    // forcer quand meme un decoupage en 2 ensembles de meme taille
     if(m == tbegin || m == tend)
-    {
-        // finir les calculs d'intersection
-        direct(triangles, tbegin, tend, rays, rbegin, rend);
-        return;
-    }
+        m= (tbegin + tend) / 2;
     
     // construit les englobants des triangles de la partie 1 / a gauche
     // les triangles se trouvent dans [tbegin .. m)
@@ -311,12 +306,12 @@ struct triangle_less1
 ## et alors ?
 
 est-ce que tout ca est interessant ?? pour la cornell box, qui ne comporte que 32 triangles, c'est un peu mieux :
-    - direct 92ms
-    - divide 69ms
+    - `direct()` 90ms
+    - `divide()` 80ms
 
 et pour un objet plus gros, par exemple `data/bigguy.obj`, 3000 triangles :
-    - direct 13897ms
-    - divide 163ms
+    - `direct()` 12400ms
+    - `divide()` 170ms
     
 ca commence à etre mieux... petite remarque sur la complexite de l'algorithme de répartition, il y a presque 10 fois plus de triangles dans bigguy, mais 
 le temps d'intersection n'est que ~2 fois plus important... pas mal.
@@ -336,7 +331,7 @@ _pour les curieux :_ cette méthode est décrite plus en détail :
 # BVH : arbre d'englobants
 
 Le principal inconvénient de la solution précedente est que l'on re-trie plusieurs fois les triangles, pour chaque ensemble de rayons nécessaire au calcul de 
-l'image et bien sur qu'il faut construire l'ensemble de rayons à tester... 
+l'image (et construire l'ensemble de rayons à tester n'est pas toujours simple).
 
 ## construction
 
@@ -384,12 +379,12 @@ Ces deux algorithmes suivent le meme principe et à la fin les objets sont trié
 
 Bien sur, il reste quelques détails à régler : comment représenter les noeuds, les feuilles, les objets, etc. Le plus simple est d'utiliser la meme structure pour
 représenter les noeuds internes et les feuilles de l'arbre. Une autre simplification consiste à utiliser un tableau de noeuds, et à utiliser des indices pour désigner
-le fils gauche et le fils droit. Avec cette convention, on obtient cette représentation :
+le fils gauche et le fils droit. Avec cette convention, on obtient cette représentation de noeud :
     - noeud : un englobant, l'indice de son fils gauche, l'indice de son fils droit,
     - feuille : un englobant, l'indice du premier objet dans le tableau trié des objets, et l'indice du dernier objet, ce sont les memes parametres que l'appel 
     à `direct()` dans l'algorithme de répartition.
 
-L'arbre est représenté par un tableau de noeud / feuille et le tableau des objets triés par la construction, et l'indice de la racine :
+L'arbre est représenté par un tableau de noeud / feuille et le tableau des objets triés par la construction, ainsi que l'indice de la racine :
 \code
 struct Node
 {
@@ -407,9 +402,10 @@ struct BVH
 };
 \endcode
 
-on aurait également pu utiliser des entiers supplémentaires (`premier` et `dernier` par exemple) pour stocker l'indice du premier et du dernier objet, mais 
-il suffit de pouvoir faire la différence entre un noeud et une feuille. Du coup, on peut utiliser des valeurs négatives pour stocker les indices des objets et des
-valeurs positives pour stocker les indices des fils. Pour rendre le reste du code plus lisible, il suffit de _cacher_ ces détails dans la structure `Node` :
+on aurait également pu utiliser des entiers supplémentaires dans les feuilles (`premier` et `dernier` par exemple) pour stocker l'indice du premier et du 
+dernier objet, mais il suffit de pouvoir faire la différence entre un noeud (interne) et une feuille. Du coup, on peut utiliser des valeurs négatives pour stocker 
+les indices des objets et des valeurs positives pour stocker les indices des fils. Pour rendre le reste du code plus lisible, il suffit de _cacher_ ces détails dans la 
+structure `Node` :
 \code
 struct Node
 {
@@ -443,7 +439,7 @@ Node make_leaf( const BBox& bounds, const int begin, const int end )
 }
 \endcode
 
-La construction de l'arbre est sans surprise, elle utilise la meme répartition avec `std::partition()`, et renvoie l'indice du noeud ou de la feuille crée :
+La construction de l'arbre est sans surprise, elle utilise la meme fonction de répartition `std::partition()`, et renvoie l'indice du noeud ou de la feuille crée :
 \code
 struct BVH
 {
@@ -537,8 +533,8 @@ plus.
 ## parcours 
 
 Maintenant que l'arbre est construit, il faut l'utiliser pour calculer les intersections d'un rayon et des objets. La encore, le principe est le meme que tout à 
-l'heure, dans la fonction de répartition. Si le rayon touche un englobant, il faut vérifier s'il touche aussi les englobants des fils du noeud. L'intersection avec
-les objets ne se fait qu'au niveau des feuilles.
+l'heure, dans la fonction de répartition. Si le rayon touche l'englobant d'un noeud, il faut aussi vérifier s'il touche les englobants des fils du noeud. 
+L'intersection avec les objets ne se fait qu'au niveau des feuilles.
 
 \code
 intersection( noeud, rayon ) :
@@ -586,46 +582,50 @@ protected:
 
 ### et alors ca marche ??
 
-rappel, voici les temps d'intersection pour `direct()`, `divide()` pour les comparer au bvh :
-
-pour la cornell box, qui ne comporte que 32 triangles, c'est un peu mieux :
-    - `direct()` 92ms
-    - `divide()` 69ms
+pour la cornell box, 32 triangles :
+    - `direct()` 90ms
+    - `divide()` 80ms
     - bvh construction < 1ms, construction + intersection 85ms
 <IMG SRC="cornell_bvh.png" width="25%"> 
 
-et pour un objet plus gros, par exemple `data/bigguy.obj`, 3000 triangles :
-    - `direct()` 13897ms
-    - `divide()` 163ms
-    - bvh construction < 1ms, construction + intersection 155ms
+pour un objet plus gros, par exemple `data/bigguy.obj`, 3000 triangles :
+    - `direct()` 12400ms
+    - `divide()` 170ms
+    - bvh construction < 1ms, construction + intersection 150ms
 <IMG SRC="bigguy_bvh.png" width="25%"> 
 
-pour plus gros : sibenik, 75000 triangles
+plus gros : sibenik : 75000 triangles
     - `direct()` abandon...
-    - divide 5634ms
-    - bvh construction 19ms, construction + intersection 965ms
+    - `divide()` 710ms
+    - bvh construction 19ms, construction + intersection 910ms
 <IMG SRC="sibenik_bvh.png" width="25%"> 
     
-encore plus gros : sponza version crytek, >25000 triangles
+sponza version crytek : 250000 triangles
     - `direct()` pas la peine...
-    - `divide()` abandon...
-    - bvh construction 80ms, construction + intersection 4164ms
+    - `divide()` 2470ms
+    - bvh construction 80ms, construction + intersection 4000ms
 <IMG SRC="sponza_bvh.png" width="25%"> 
 
-et bien sur, on peut maintenant paralleliser l'intersection des rayons (avec openMP, par exemple) :
+musee : 1500000 triangles
+    - `direct()` pas la peine...
+    - `divide()` 2800ms
+    - bvh construction 480ms, construction + intersection 4000ms
+<IMG SRC="history_bvh.png" width="25%"> 
+
+bien sur, on peut maintenant paralleliser l'intersection des rayons (avec openMP, par exemple) :
 \code
-        const int n= int(rays.size());
         #pragma omp parallel for schedule(dynamic, 1024)
-        for(int i= 0; i < n; i++)
+        for(int i= 0; i < int(rays.size()); i++)
             bvh.intersect(rays[i]);
 \endcode
 
 sur 6 coeurs / 12 threads : le temps de construction du bvh ne change pas, par contre voici les temps d'intersection :
-    - sibenik : intersection 122ms (au lieu de 900ms)
-    - sponza version crytek : intersection 460ms (au lieu de 4000ms )
+    - sibenik : intersection 120ms (au lieu de 900ms)
+    - sponza version crytek : intersection 450ms (au lieu de 4000ms )
+    - musée : intersection 310ms (au lieu de 3700ms )
 
-c'est mieux, la construction du bvh et son parcours / intersection sont toujours plus rapides que `divide()` et le bvh sera plus simple à utiliser pour calculer 
-une image, et les tests d'intersection sont facilement parallelisables. 
+c'est mieux, la construction du bvh et son parcours / intersection parallelisé sont toujours plus rapides que `divide()` et le bvh sera plus simple à utiliser 
+pour calculer une image. 
 
 \todo
 Mais les résultats sont quand meme assez bizarres, les 2 algorithmes sont sensés faire 
@@ -634,8 +634,34 @@ En regardant de plus près, les 2 méthodes ne calculent pas le meme nombre d'in
     - `divide()` 1036443892 tests !!, soit > 1000 tests par rayon,
     - bvh 6283869 tests, soit 8 tests par rayon...\n    
 
-ce qui explique la différence de temps. mais la vraie question est : _pourquoi ?_
+\todo c'est corrige, les temps d'intersection aussi, la repartition degeneree n'etait pas la meme, cf `if(m == begin || m ==end) `, par contre bvh plus lent que divide() ??
 
+_pour les curieux :_ la version en ligne de [PBRT](http://pbr-book.org) (un livre de référence sur le lancer rayons et les calculs réalistes) propose également 
+d'utiliser des [BVH](http://www.pbr-book.org/3ed-2018/Primitives_and_Intersection_Acceleration/Bounding_Volume_Hierarchies.html#). 
+3 méthodes de construction sont présentées, ainsi que l'optimisation de la représentation mémoire de l'arbre et un parcours ordonné plus efficace que celui présenté ici.
+
+
+## paralléliser le calcul de l'image
+
+pour paralléliser le calcul de l'image, il suffit de se rendre compte que le calcul d'un pixel est indépendant des autres pixels, et qu'il suffit de paralleliser 
+la boucle sur les lignes de l'image :
+\code
+    // parcours parallele de toutes les lignes de l'image
+    #pragma omp parallel for schedule(dynamic, 1)
+    for(int y= 0; y < image.height(); y++)
+    for(int x= 0; x < image.width(); x++)
+    {
+        // generer le rayon sur le centre du pixel (x, y)
+        Point origine= inv(Point(x + .5f, y + .5f, 0));
+        Point extremite= inv(Point(x + .5f, y + .5f, 1));
+        Ray ray(origine, extremite);
+        
+        // calculer la couleur du pixel (x, y)
+        { ... }
+        
+        image(x, y)= Color( ..., 1 );
+    }
+\endcode
 
 ### peut mieux faire...
 
