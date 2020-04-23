@@ -80,6 +80,8 @@ Quelles sont les coordonnées d'un pixel dans le repère \f$ Image \f$ ? On conn
 sur le plan proche du frustum de la camera et z = 1 sur le plan far du frustum. repassez dans le cours d'intro sur les transformations si ce n'est pas 
 clair.
 
+<IMG SRC="repere_rayon.png" width="35%"> 
+
 Résultat, on peut calculer les coordonnées de 2 points sur le rayon : x, y sur le plan near (z = 0), et x, y sur le plan far (z = 1) :
 \f[
 origine_{scene} = ( Image \times Projection \times View )^{-1} \times \begin{bmatrix} x \\ y \\ 0 \end{bmatrix}\\
@@ -121,6 +123,7 @@ les 2 propriétés en même temps :
 \vec{n} \cdot \vec{a p(t)} = 0
 \f]
 
+<IMG SRC="ray_plane.png" width="25%"> 
 _rappel :_ \f$ p(t) = o + t\vec{d} \f$ désigne un point du rayon.
 
 il ne reste plus qu'à trouver quelle valeur de t vérifie ces conditions :
@@ -160,6 +163,8 @@ centre :
 \f]
 
 _rappel :_ on a utilisé une relation entre le produit scalaire et (le carré de) la longueur du vecteur : \f$ \vec{u} \cdot \vec{u} = |u|^2 \f$
+
+<IMG SRC="ray_sphere.png" width="25%"> 
 
 il ne reste plus qu'à trouver la valeur de \f$ t \f$ pour que \f$ p(t) \f$, le point sur le rayon soit aussi sur la sphère :
 \f[
@@ -212,6 +217,9 @@ du coup, on peut représenter un point dans le plan du triangle \f$ abc \f$ à l
 \f[
 p(\alpha, \beta, \gamma) = \alpha a + \beta b + \gamma c
 \f]
+
+<IMG SRC="triangle_uvw.png" width="30%"> 
+
 mais les points à l'intérieur du triangle vérifient quelques propriétés supplémentaires :
 \f[
 \begin{eqnarray*}
@@ -238,6 +246,9 @@ il ne reste plus qu'à écrire qu'un point doit être en même temps sur le rayo
     - t\vec{d} + \beta (b - a) + \gamma (c - a) & = & (o - a) \\
 \end{eqnarray*}
 \f]
+
+<IMG SRC="ray_triangle.png" width="30%"> 
+
 
 on obtient un système linéaire, 3 équations et 3 inconnues (\f$ t, \beta, \gamma \f$), une solution élégante n'utilisant que des produits scalaires et vectoriels est proposée dans cet 
 article : ["Fast, Minimum Storage Ray Triangle Intersection", T. Moller, B. Trumbore, 1997](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.124.8459&rep=rep1&type=pdf)
