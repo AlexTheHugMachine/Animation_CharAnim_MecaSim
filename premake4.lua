@@ -3,7 +3,6 @@ solution "gKit2light"
 
 	platforms { "x64", "x32" }
 
---~ 	location "build"
 --~     if _PREMAKE_VERSION >="4.4" then
 --~         debugdir "./"
 --~     end
@@ -64,6 +63,9 @@ solution "gKit2light"
 		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
     
 	configuration { "windows", "vs2017" }
+		location "build"
+		debugdir "."
+
 		if _PREMAKE_VERSION >="5.0" then
 			system "Windows"
 			architecture "x64"
