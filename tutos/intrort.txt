@@ -371,7 +371,7 @@ int main( )
     // charge une camera
     Orbiter camera;
     if(camera.read_orbiter(orbiter_filename) < 0)
-        return 1;       // erreur
+        return 1;       // erreur, pas de camera, pas d'image
     
     // charge des triangles
     Mesh mesh= read_mesh(mesh_filename);
@@ -381,9 +381,10 @@ int main( )
     {
         int n= mesh.triangle_count();
         for(int i= 0; i < n; i++)
-            triangles.emplace_back(mesh.triangle(i), i);
+            triangles.push_back( Triangle(mesh.triangle(i), i) );
         
         assert(int(triangles.size() > 0);
+        // pas de triangles, pas d'image...
     }
     
     // recupere les transformations standards
@@ -405,12 +406,24 @@ int main( )
         
         // calculer les intersections avec tous les triangles
         Hit hit;
+        hit.t= 1;   // intersections dans l'intervalle [0 .. 1]
         for(int i= 0; i < int(triangles.size()); i++)
         {
-            if(Hit h= triangles[i].intersect(ray, hit.t))
+            Hit h= triangles[i].intersect(ray, hit.t);
+            if(h)
                 // ne conserve que l'intersection la plus proche de l'origine du rayon
-                // triangle::intersect(ray, tmax= hit.t) ne renvoie une intersection que si t < hit.t
+                // triangle::intersect(ray, tmax= hit.t) ne renvoie vrai que si t < hit.t
                 hit= h;
+                
+            /* remarque : Hit() definit un operateur de conversion vers bool qui renvoie vrai si hit.triangle_id != -1
+                if(h) { ... }
+                est equivalent a :
+                if(h.triangle_id != -1) { ... }
+                
+                et on peut ecrire tout ca de maniere encore plus compacte :
+                if(Hit h= triangles[i].intersect(ray, hit.t))
+                    hit= h;
+             */
         }
         
         if(hit)
@@ -425,6 +438,25 @@ int main( )
 \endcode
 
 et voila, pas bien compliqué !! malgré des explications un peu longues...
+
+__remarque :__ la boucle qui calcule les intersections fonctionne de la meme maniere quelque soit le type des objets :
+\code
+    hit.t= 1    // ou \inf si le rayon est une demi droite sans extremite
+    pour chaque objet
+        si la droite touche l''objet
+            trouver l''intersection la plus proche de l''origine du rayon qui appartient a l''intervalle [0 hit.t]
+            // sinon pas d''intersection avec le rayon...
+                hit.XX= informations sur l''intersection
+                hit.t= intersection la plus proche dans l''intervalle [0 hit.t]
+\endcode
+dans le code d'exemple, la fonction Triangle::intersect() ne renvoie vrai que si une intersection valide (dans l'intervalle [0 .. hit.t]) existe, ce qui simplifie 
+pas mal l'ecriture de la boucle...
+\code
+    hit.t= 1    // ou \inf si le rayon est une demi droite sans extremite
+    pour chaque objet
+        si intersection dans l''intervalle [0 hit.t]
+            hit= intersection
+\endcode
 
 bon, afficher des pixels rouges, ne permet pas vraiment de vérifier que les intersections fonctionnent correctement. on peut construire une couleur avec 
 le résultat de l'intersection :
