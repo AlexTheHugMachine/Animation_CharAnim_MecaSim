@@ -62,8 +62,8 @@ objets. Par contre, il faudra écrire les différentes fonctions d'intersections
 
 # rayon ?
 
-Un rayon est une droite dans l'espace (de la scène, par exemple) qui passe par le centre d'un pixel dans l'image. Mais il faut connaitre au moins 2 points pour 
-représenter une droite. lesquels ? L'idée est que le rayon est l'ensemble des points de la scène qui se projettent sur le centre du pixel. 
+Un rayon est une droite (ou un segment) dans l'espace (de la scène, par exemple) qui passe par le centre d'un pixel dans l'image. Mais il faut connaitre au 
+moins 2 points pour représenter une droite. lesquels ? L'idée est que le rayon est l'ensemble des points de la scène qui se projettent sur le centre du pixel. 
 
 Quelles sont les coordonnées du centre d'un pixel dans le repère de la scène ? Il suffit de se rappeller que l'on peut transformer des coordonnées du repère 
 image vers le repère de la scène en utilisant les transformations inverses des transformations standards. 
@@ -102,8 +102,40 @@ origine_{scene} = ( Image \times Projection )^{-1} \times \begin{bmatrix} 0 \\ 0
 Il ne reste plus qu'à trouver comment calculer l'intersection d'un rayon / d'une droite avec les objets qui composent la scène.
 
 Il faut exprimer le fait qu'une intersection représente un point du rayon et un point de l'objet. permière question, comment représenter un point sur le rayon ?
-la solution classique utilise la forme paramétrique des droites : \f$ p(t) = origine + t \cdot direction \f$, \f$ t \f$ identifie un point sur la droite / le rayon, la 
+la solution classique utilise la forme paramétrique des droites : \f$ p(t) = o + t \vec{d} \f$, \f$ t \f$ identifie un point sur la droite / le rayon. il represente la 
 position du point sur la droite.
+
+Lorsque le rayon est un segment, il "contient" tous les points entre son origine et son extremite : \f$ p(t)= o + t \vec{d} \f$ avec \f$ t \in [0 .. 1]\f$. on peut 
+bien sur retrouver l'origine et l'extrémité du segment : \f$ p(0)= origine \f$ et \f$ p(1) = extremite \f$.
+
+Il est également possible de représenter une demi-droite infinie au lieu d'un segment, dans ce cas \f$ t \in [0 .. \infty)\f$, et l'extremité n'existe pas, on ne 
+connait que l'origine et la direction du rayon.
+
+De manière générale pour décrire un rayon on utilise, \f$ o \f$, \f$ \vec{d} \f$ et la borne de l'intervalle \f$ t_{max} = 1 \f$ ou \f$ \infty \f$ selon le cas :
+\code
+struct Ray
+{
+    Point o;                // origine
+    Vector d;               // direction
+    float tmax;             // intervalle [0 tmax]
+    
+    // le rayon est un segment, on connait origine et extremite, et tmax= 1
+    Ray( const Point& origine, const Point& extremite ) : o(origine), d(Vector(origine, extremite)), tmax(1) {}
+    
+    // le rayon est une demi droite, on connait origine et direction, et tmax= \inf
+    Ray( const Point& origine, const Vector& direction ) : o(origine), d(direction), tmax(FLT_MAX) {}
+    
+    // renvoie le point sur le rayon pour t
+    Point point( const float t ) const { return o + t * d; }
+};
+\endcode
+
+__attention :__
+Les calculs d'intersection qui sont décrits juste après se font avec la droite infinie qui porte le rayon. Lorsque le calcul trouve une ou plusieurs intersections,
+il faut vérifier qu'elles se trouvent dans l'intervalle \f$ [0 .. t_{max}] \f$ du rayon. La droite infinie peut toucher un objet, mais pas nécessairement le rayon.
+
+<IMG SRC="intersection_rayon.png" width="35%"> 
+
 
 ## plan
 
@@ -192,26 +224,27 @@ bool intersect( const Point& pmin, const Point& pmax, const Ray& ray )
     Point rmax= pmax;
     
     // verifier la direction du rayon, sur chaque axe
-    // echanger tmin, tmax, si necessaire
+    // echanger tmin, tmax, si la direction est < 0
     if(ray.d.x < 0) std::swap(rmin.x, rmax.x);      // rmin.x <= rmax.x
     if(ray.d.y < 0) std::swap(rmin.y, rmax.y);      // rmin.y <= rmax.y
     if(ray.d.z < 0) std::swap(rmin.z, rmax.z);      // rmin.z <= rmax.z
     
-    // intersection avec les 3 plans
+    // intersection avec les plans
     Vector invd= Vector(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
     Vector dmin= (rmin - ray.o) * invd;
     Vector dmax= (rmax - ray.o) * invd;
     
-    // intersection des 4 intervalles...
+    // intersection des 4 intervalles... 3 pour les paires de plans + intervalle du rayon
     float tmin= std::max(dmin.z, std::max(dmin.y, std::max(dmin.x, float(0))));
-    float tmax= std::min(dmax.z, std::min(dmax.y, std::min(dmax.x, ray.t)));
+    float tmax= std::min(dmax.z, std::min(dmax.y, std::min(dmax.x, ray.tmax)));
     
     // si l'intervalle est valide, il y a intersection
     return (tmin <= tmax);
 }
 \endcode
 
-il y a encore quelques astuces de calculs pour éviter les problèmes lorsque la direction du rayon est parallèle à un axe : cf
+il y a encore quelques astuces de calculs pour éviter les problèmes lorsque la direction du rayon est parallèle à un axe : par exemple pourquoi le code précédent
+multiplie par l'inverse d'une valeur au lieu de calculer directement la division...
     - ["An Efficient and Robust Ray-Box Intersection Algorithm", A. Williams, S. Barrus, R.K. Morley, P. Shirley, 2003](http://people.csail.mit.edu/amy/papers/box-jgt.pdf)
 
 
@@ -252,8 +285,9 @@ k & = & (o - c) \cdot (o - c) - r^2
 \end{eqnarray*}
 \f]
 
-il ne reste plus qu'à calculer les zeros du polynome : les détails sont sur [wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) et [ici](https://en.wikipedia.org/wiki/Quadratic_equation)
-et ce résultat est assez intuitif : une droite peut passer à coté de la sphère, la toucher en un seul point, ou la traverser en 2 points.
+il ne reste plus qu'à calculer les zeros du polynome : les détails sont sur [wikipedia](https://en.wikipedia.org/wiki/Quadratic_formula) et 
+[ici](https://en.wikipedia.org/wiki/Quadratic_equation) et ce résultat est assez intuitif : une droite peut passer à coté de la sphère, la toucher en un seul point, 
+ou la traverser en 2 points.
 
 si \f$ b^2 - 4ak > 0 \f$, les solutions s'écrivent :
 \f[
@@ -317,19 +351,19 @@ il ne reste plus qu'à écrire qu'un point doit être en même temps sur le rayo
 
 
 on obtient un système linéaire, 3 équations et 3 inconnues (\f$ t, \beta, \gamma \f$), une solution élégante n'utilisant que des produits scalaires 
-et vectoriels est proposée dans cet article : ["Fast, Minimum Storage Ray Triangle Intersection", T. Moller, B. Trumbore, 1997](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.124.8459&rep=rep1&type=pdf)
+et vectoriels est proposée dans cet article : 
+    - ["Fast, Minimum Storage Ray Triangle Intersection", T. Moller, B. Trumbore, 1997](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.124.8459&rep=rep1&type=pdf)
 
 
 # en pratique
 
-Comment calculer une image avec du lancer de rayons et les triangles d'un Mesh ? (et une camera)
-
+Comment calculer une image avec du lancer de rayons et des triangles ? (et une camera) (et une source de lumiere) (et des matieres...)
 
 \code
 int main( )
 {
-    const char *orbiter_filename= "cornell_orbiter.txt";
-    const char *mesh_filename= "cornell.obj";
+    const char *orbiter_filename= "data/cornell_orbiter.txt";
+    const char *mesh_filename= "data/cornell.obj";
     
     // cree l'image resultat
     Image image(1024, 768);
@@ -337,9 +371,8 @@ int main( )
     // charge une camera
     Orbiter camera;
     if(camera.read_orbiter(orbiter_filename) < 0)
-        // erreur
-        return 1;
-
+        return 1;       // erreur
+    
     // charge des triangles
     Mesh mesh= read_mesh(mesh_filename);
     
@@ -376,6 +409,7 @@ int main( )
         {
             if(Hit h= triangles[i].intersect(ray, hit.t))
                 // ne conserve que l'intersection la plus proche de l'origine du rayon
+                // triangle::intersect(ray, tmax= hit.t) ne renvoie une intersection que si t < hit.t
                 hit= h;
         }
         
@@ -532,17 +566,10 @@ Mais le principal problème du lancer de rayon est sa lenteur, du coup il est n�
 cf \ref acceleration.
 
 ## annexe 
-il manque les définitions des structures Ray, Hit et Triangle :
+il manque les définitions des structures Hit et Triangle :
 \code
 
-struct Ray
-{
-    Point o;            // origine
-    Vector d;           // direction
-    
-    Ray( const Point& _o, const Point& _e ) :  o(_o), d(Vector(_o, _e)) {}
-};
-
+// intersection avec un triangle
 struct Hit
 {
     float t;            // p(t)= o + td, position du point d'intersection sur le rayon
@@ -562,7 +589,7 @@ struct Triangle
 {
     Point p;            // sommet a du triangle
     Vector e1, e2;      // aretes ab, ac du triangle
-    int id;
+    int id;             // indice du triangle dans le mesh, permet de recuperer sa matiere, et les attributs des sommets (normales, etc)
     
     Triangle( const TriangleData& data, const int _id ) : p(data.a), e1(Vector(data.a, data.b)), e2(Vector(data.a, data.c)), id(_id) {}
     
