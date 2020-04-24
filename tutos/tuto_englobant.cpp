@@ -224,11 +224,11 @@ void divide( const BBox& bounds,
 
 int main( const int argc, const char **argv )
 {
-    const char *mesh_filename= "cornell.obj";
+    const char *mesh_filename= "data/cornell.obj";
     if(argc > 1)
         mesh_filename= argv[1];
         
-    const char *orbiter_filename= "cornell_orbiter.txt";
+    const char *orbiter_filename= "data/cornell_orbiter.txt";
     if(argc > 2)
         orbiter_filename= argv[2];
     

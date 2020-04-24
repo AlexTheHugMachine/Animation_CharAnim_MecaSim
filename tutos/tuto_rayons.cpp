@@ -96,11 +96,11 @@ struct Source
 
 int main( const int argc, const char **argv )
 {
-    const char *mesh_filename= "cornell.obj";
+    const char *mesh_filename= "data/cornell.obj";
     if(argc > 1)
         mesh_filename= argv[1];
         
-    const char *orbiter_filename= "cornell_orbiter.txt";
+    const char *orbiter_filename= "data/cornell_orbiter.txt";
     if(argc > 2)
         orbiter_filename= argv[2];
     
@@ -175,7 +175,7 @@ auto start= std::chrono::high_resolution_clock::now();
             image(x, y)= Color(1 - hit.u - hit.v, hit.u, hit.v);
     #endif
 
-    #if 0
+    #if 1
         if(hit)
         {
             Vector n= normal(mesh, hit);
@@ -200,7 +200,7 @@ auto start= std::chrono::high_resolution_clock::now();
             
             // visibilite entre p et s
             float v= 1;
-        #if 1
+        #if 0
             Ray shadow_ray(p + 0.001f * pn, s);
             for(int i= 0; i < int(triangles.size()); i++)
             {
