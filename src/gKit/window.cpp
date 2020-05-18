@@ -113,11 +113,11 @@ static unsigned int last_delta= 1;
 float global_time( )
 {
     unsigned int now= SDL_GetTicks();
-    
+
     // ecoulement du temps strictement croissant...
     if(now <= last_time)
         now= last_time +1;
-    
+
     last_delta= now - last_time;
     last_time= now;
     return (float) last_time;
@@ -158,17 +158,17 @@ int last_event_count( ) { return event_count; }
 int events( Window window )
 {
     event_count= 0;
-    
+
     // proportions de la fenetre
     SDL_GetWindowSize(window, &width, &height);
     aspect= float(width) / float(height);
-    
+
     // gestion des evenements
     SDL_Event event;
     while(SDL_PollEvent(&event))
     {
         event_count++;
-        
+
         switch(event.type)
         {
             case SDL_WINDOWEVENT:
@@ -328,7 +328,7 @@ Context create_context( Window window, const int major, const int minor )
         return NULL;
     }
 
-    // 
+    //
     SDL_GL_SetSwapInterval(-1);
     if(SDL_GL_GetSwapInterval() != -1)
     {
@@ -337,7 +337,7 @@ Context create_context( Window window, const int major, const int minor )
     }
     else
         printf("adaptive vsync ON\n");
-    
+
 #ifndef NO_GLEW
     // initialise les extensions opengl
     glewExperimental= 1;
@@ -361,8 +361,8 @@ Context create_context( Window window, const int major, const int minor )
         glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
         // desactive les messages du compilateur de shaders
         glDebugMessageControlARB(GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
-        
-        glDebugMessageCallbackARB(debug, NULL);
+
+//        glDebugMessageCallbackARB(debug, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
 #endif
