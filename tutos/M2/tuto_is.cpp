@@ -255,6 +255,8 @@ struct IS : public App
         else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
             m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
         
+        m_camera.projection(window_width(), window_height(), 45);
+        
         static int mode= 0;
         static vec2 texcoord= vec2(0, 0);
         if(key_state(' '))
@@ -273,11 +275,11 @@ struct IS : public App
                 // go
                 Point d0;
                 Vector dx0, dy0;
-                m_camera.frame(m_hitp.width(), m_hitp.height(), 0, 45, d0, dx0, dy0);
+                m_camera.frame(0, d0, dx0, dy0);
                 
                 Point d1;
                 Vector dx1, dy1;
-                m_camera.frame(m_hitp.width(), m_hitp.height(), 1, 45, d1, dx1, dy1);
+                m_camera.frame(1, d1, dx1, dy1);
                 
                 // pixel
                 Point o= d0 + pixel.x*dx0 + pixel.y*dy0;
@@ -328,19 +330,19 @@ struct IS : public App
                     glBindTexture(GL_TEXTURE_2D, m_ptexture);
                     glTexSubImage2D(GL_TEXTURE_2D, 0, 
                         0, 0, m_hitp.width(), m_hitp.height(),
-                        GL_RGBA, GL_FLOAT, m_hitp.buffer());
+                        GL_RGBA, GL_FLOAT, m_hitp.data());
                     
                     glActiveTexture(GL_TEXTURE0 +1);
                     glBindTexture(GL_TEXTURE_2D, m_ntexture);
                     glTexSubImage2D(GL_TEXTURE_2D, 0, 
                         0, 0, m_hitn.width(), m_hitn.height(),
-                        GL_RGBA, GL_FLOAT, m_hitn.buffer());
+                        GL_RGBA, GL_FLOAT, m_hitn.data());
                     
                     glActiveTexture(GL_TEXTURE0 +2);
                     glBindTexture(GL_TEXTURE_2D, m_vtexture);
                     glTexSubImage2D(GL_TEXTURE_2D, 0, 
                         0, 0, m_hitv.width(), m_hitv.height(),
-                        GL_RGBA, GL_FLOAT, m_hitv.buffer());
+                        GL_RGBA, GL_FLOAT, m_hitv.data());
                 }
             }
         }

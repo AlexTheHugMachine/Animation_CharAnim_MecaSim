@@ -5,10 +5,7 @@
 
 créer un répertoire de travail, puis :
 
-    git clone git@forge.univ-lyon1.fr:Alexandre.Meyer/gkit2light.git
-
-
-_remarque :_ si vous avez un problème d'authentification avec la forge, consultez https://forge.univ-lyon1.fr/help/ssh/README.md et modifiez la configuration de git pour utiliser une clé `ssh`.
+    git clone https://forge.univ-lyon1.fr/Alexandre.Meyer/gkit2light.git
 
 
 ## installer les dépendances :
@@ -40,19 +37,23 @@ les librairies sont disponibles :
     - [sdl2_image](https://www.libsdl.org/projects/SDL_image/), section development libraries
 	
 plusieurs versions de premake pour visual studio sont disponibles :
-    - pour générer des projets Visual Studio 2013 :
-    [premake 4.4](http://premake.github.io/download.html), copiez le dans le répertoire des sources de gKit
-
-    - pour générer des projets Visual Studio 2015 :
+    - pour générer des projets Visual Studio 2015 et 2017 :
     [premake 5](http://premake.github.io/download.html), copiez le dans le répertoire des sources de gKit
 
 ### installation rapide
-les librairies et premake4/5 sont regroupées dans une archive [disponible ici](http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/gkit2light_extern_vs_mingw.zip).
+les librairies et premake4/5 sont regroupées dans une archive [disponible ici](http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/extern_mingw_visual.zip).
 
-il suffit de dezipper l'archive dans le répertoire de gKit, __et ensuite de copier les dll et la version de premake__ que vous allez utiliser dans le répertoire de gKit :
-    - pour utiliser codeblocks : copiez le contenu de `extern/mingw/lib` et `extern/mingw/bin/premake4.exe`
-    - pour utiliser visual studio 2013 : copiez le contenu de `extern/visual2013/lib` et `extern/visual2013/bin/premake4.exe`
-    - pour utiliser visual studio 2015 : copiez le contenu de `extern/visual2015/lib` et `extern/visual2015/bin/premake5.exe`
+il suffit de dezipper l'archive dans le répertoire de gKit, __et ensuite de copier les dll et la version de premake__ que vous allez utiliser dans le répertoire de gKit ou `./bin` :
+    - pour utiliser codeblocks : copiez `extern/mingw/bin` 
+    - pour utiliser visual studio 2015 et 2017 : copiez `extern/visual/bin`
+
+les répertoires doivent avoir la structure détaillée ci-dessous.
+
+### SDK windows
+
+premake ne connait pas la version du windows sdk actuellement installé sur votre machine, par défaut, il génère des projets pour le sdk de windows 8.1. 
+si cette version du sdk n'est pas installée, __pas de panique__ : ouvrez la solution générée, dans visual studio : ouvrez le solution explorer, click droit sur solution et choisissez `re-cibler la solution` / `retarget solution`.
+vous pouvez maintenant compiler un projet.
 
 
 ### installation manuelle
@@ -62,6 +63,7 @@ le plus simple est de créer un sous répertoire, `extern` par exemple, et d'y c
 gKit2light/
     premake4/5
     premake4.lua
+    
     data/
         shaders/
         ...
@@ -74,8 +76,14 @@ gKit2light/
         gKit/
         ...
     
+    bin/
+        glew32.dll
+        SDL2.dll
+        SDL2_image.dll
+        libjpeg.dll etc
+    
     extern/
-        mingw/ ou visual2013/ ou visual2015/
+        mingw/ ou visual/
             bin/
             
             include/
@@ -89,9 +97,9 @@ gKit2light/
                     ...
                 
             lib/
-                glew32.dll et lib
-                SDL2.dll et lib
-                SDL2_image.dll et lib
+                glew32.lib
+                SDL2.lib
+                SDL2_image.lib
                 SDL2_main.lib
                 ...
 \endcode
@@ -126,9 +134,10 @@ _rappel :_ commandes `ls` et `cd` pour naviguer.
 éxecuter premake4 --help, la suite devrait être assez évidente. 
 
 - si vous voulez générer un projet visual studio, il suffit de choisir la bonne version,
-	- `./premake4 vs2013`
 	- `./premake5 vs2015`
+	- `./premake5 vs2017`
 
+la solution visual studio ainsi que les projets sont crées dans le répertoire `build/`
 
 - pour code blocks...
 	- `./premake4 codeblocks`
@@ -143,6 +152,7 @@ _rappel :_ commandes `ls` et `cd` pour naviguer.
 	
 
 vous pouvez maintenant ouvrir la solution visual studio, le projet xcode, code blocks et compiler shader_kit ou un des tutos.
+
 
 
 ## utilisation des makefiles
@@ -196,7 +206,7 @@ ajoutez la description de votre projet :
 
 ## regénérez le projet, 
 
-cf premake4 gmake / vs2013 / xcode ...
+cf premake gmake / vs2017 / xcode ...
 
 
 # FAQ :
@@ -229,7 +239,7 @@ par défaut les projets essayent de générer la version 32bits des applications
 
 configurations générées :
     - windows codeblocks : utilisez la version 32 bits, 64 bits n'existe pas (limitation de gcc pour windows ?)
-    - windows visual studio 2013 et 2015, utilisez la version 64bits des librairies 
+    - windows visual studio 2015 et 2017, utilisez la version 64bits des librairies 
     - linux codeblocks : utilisez la même version que votre système. cf panneau de configuration / details
     - mac os : les frameworks contiennent les 2 versions.
 

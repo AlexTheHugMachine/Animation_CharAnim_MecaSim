@@ -1,5 +1,5 @@
 
-/*! \addtogroup framebuffer rendu multi-passes : shadow maps, post process
+/*! \addtogroup framebuffer rendu multi-passes : shadow maps, post process, framebuffer object
 
 cf \ref tuto_framebuffer.cpp
 

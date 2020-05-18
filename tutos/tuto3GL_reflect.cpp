@@ -1,12 +1,13 @@
 
 //! \file tuto3GL_reflect.cpp afficher les uniforms et les attributs utilises par un program.
 
+#include <cstdio>
+#include <algorithm>
+
 #include "window.h"
 #include "program.h"
 #include "mesh.h"
 #include "wavefront.h"
-
-#include <stdio.h>
 
 // identifiant du shader program
 GLuint program;

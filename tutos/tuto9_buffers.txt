@@ -1,0 +1,167 @@
+
+/*! \addtogroup tuto_mesh_buffer tuto9_buffers.cpp
+
+cf \ref tuto9_buffers.cpp
+
+le tuto précédent a montré comment manipuler un shader openGL pour dessiner un Mesh, ce tuto explique rapidement comment créer et configurer le vertex buffer et
+le vertex array qui permettent de dessiner directement un Mesh avec openGL.
+
+que font Mesh et draw(mesh, program) pour afficher un objet ? 
+comme expliqué dans le tuto précédent, les attributs de sommets doivent se trouver dans la memoire de la carte graphique pour que les vertex shader s'exécutent 
+correctement.
+
+la mémoire de la carte graphique est séparée de la mémoire de l'application : il n'est pas possible de faire un `malloc` ou un `new` directment, mais openGL propose 
+des buffers comme mécanisme d'allocation de mémoire.
+
+il faut d'abord créer un identifiant de buffer, cf glGenBuffers(), et le sélectionner pour le manipuler, cf glBindBuffer() :
+\code
+GLuint buffer;
+glGenBuffers(1, &buffer);
+
+// selectionne le buffer 
+glBindBuffer(GL_ARRAY_BUFFER, buffer);
+\endcode
+
+pour donner la taille du buffer, et son contenu, cf glBufferData() :
+\code
+// selectionner le buffer, si necessaire :
+// glBindBuffer(GL_ARRAY_BUFFER, buffer);
+glBufferData(GL_ARRAY_BUFFER, /* size */, /* data */, GL_STATIC_DRAW);
+\endcode
+
+le dernier parametre, GL_STATIC_DRAW, indique que le contenu du buffer ne sera pas modifie.
+
+il ne reste plus qu'à utiliser glBufferData() pour allouer et copier toutes les positions des sommets d'un Mesh :
+\code
+Mesh mesh= read_mesh( ... );
+
+// selectionner le buffer, si necessaire :
+// glBindBuffer(GL_ARRAY_BUFFER, buffer);
+glBufferData(GL_ARRAY_BUFFER, /* size */ mesh.vertex_buffer_size(), /* data */ mesh.vertex_buffer(), GL_STATIC_DRAW);
+\endcode
+
+_remarque :_ on peut aussi ecrire une fonction utilitaire plus proche de l'utilisation de `malloc` :
+\code
+GLuint create_buffer( const int size, const void *data )
+{
+    GLuint buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    return buffer;
+}
+
+void release_buffer( const GLuint buffer )
+{
+    glDeleteBuffers(1, &buffer);
+}
+
+GLuint buffer= create_buffer(mesh.vertex_buffer_size(), mesh.vertex_buffer());
+\endcode
+
+dernière étape, décrire le format des sommets du Mesh avec un vertex array object : même démarche, il faut créer un identifiant, cf glGenVertexArrays(), 
+le sélectionner, cf glBindVertexArray(), et le configurer, cf glVertexAttribPointer() :
+\code
+GLuint vao;
+glGenVertexArrays(1, &vao);
+glBindVertexArray(vao);
+
+// selectionner le buffer contenant les positions, si nécessaire, c'est un parametre implicite de glVertexAttribPointer !!
+// glBindBuffer(GL_ARRAY_BUFFER, buffer);
+
+// configurer l'attribut 0, position, cf convention de Mesh
+glVertexAttribPointer( /* attribute */ 0, 
+    3, GL_FLOAT,    // size et type, position est un vec3 dans le vertex shader
+    GL_FALSE,       // pas de normalisation des valeurs
+    0,              // stride 0, les valeurs sont les unes a la suite des autres
+    0               // offset 0, les valeurs sont au debut du buffer
+);
+
+// utiliser l'attribut 0
+glEnableVertexAttribArray(0);
+\endcode
+
+voila, les coordonnées des sommets du Mesh sont transférées dans un buffer, l'attribut est configuré dans un vertex array object, il suffira de le selectionner avant 
+le glDraw() pour dessiner l'objet :
+\code
+// configuration minimale du pipeline openGL
+glUseProgram( ... );
+glBindVertexArray(vao);
+glDrawArrays(GL_TRIANGLES, 0, n);
+\endcode
+
+dernier detail, il ne faut pas oublier de conserver le nombre de sommets, et il n'est plus nécessaire de conserver l'objet Mesh !
+
+cf \ref tuto4GL pour tous les détails supplémentaires, utiliser plusieurs buffers, plusieurs attributs, etc.
+
+
+\ref tuto9_buffers.cpp donne un exemple complet et stocke toutes les informations dans une structure Buffers :
+
+\code
+struct Buffers
+{
+    GLuint vao;
+    GLuint vertex_buffer;
+    int vertex_count;
+
+    Buffers( ) : vao(0), vertex_buffer(0), vertex_count(0) {}
+    
+    void create( const Mesh& mesh )
+    {
+        if(!mesh.vertex_buffer_size()) return;
+        
+        // cree et initialise le buffer stockant les positions des sommets
+        glGenBuffers(1, &vertex_buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+        glBufferData(GL_ARRAY_BUFFER, mesh.vertex_buffer_size(), mesh.vertex_buffer(), GL_STATIC_DRAW);
+        
+        // cree et configure un vertex array object: conserve la description des attributs de sommets
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+        
+        // attribut 0, position des sommets, declare dans le vertex shader : in vec3 position;
+        glVertexAttribPointer(0, 
+            3, GL_FLOAT,    // size et type, position est un vec3 dans le vertex shader
+            GL_FALSE,       // pas de normalisation des valeurs
+            0,              // stride 0, les valeurs sont les unes a la suite des autres
+            0               // offset 0, les valeurs sont au debut du buffer
+        );
+        glEnableVertexAttribArray(0);
+        
+        // conserve le nombre de sommets
+        vertex_count= mesh.vertex_count();
+    }
+    
+    void release( )
+    {
+        glDeleteVertexArrays(1, &vao);
+        glDeleteBuffers(1, &vertex_buffer);
+    }
+};
+
+// init de l'application :
+    Mesh mesh= read_mesh("data/cube.obj");
+    if(!mesh.vertex_count()) return -1;
+    
+    // creer le vertex buffer et le vao
+    m_objet.create(mesh);
+    
+    // mesh n'est plus necessaire
+    mesh.release();
+
+// draw de l'application :
+    // selectionner le program
+    glUseProgram( );
+    // parametrer le program, cf tuto9
+    { ... }
+    
+    // selectionner les buffers et les attributs de l'objet 
+    glBindVertexArray(m_objet.vao);
+    
+    // dessiner les triangles de l'objet
+    glDrawArrays(GL_TRIANGLES, 0, m_objet.vertex_count);
+\endcode
+
+les différentes variantes de glDraw() sont expliquées dans \ref draw.
+*/
+

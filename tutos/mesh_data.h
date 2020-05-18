@@ -78,7 +78,7 @@ void bounds( const MeshData& data, Point& pmin, Point& pmax );
 void normals( MeshData& data );
 
 //! construit les sommets. prepare l'affichage openGL, avec glDrawArrays().
-MeshData vertices( const MeshData& data );
+MeshData vertices( MeshData& data );
 
 
 #endif

@@ -1,0 +1,189 @@
+
+/*! \addtogroup matiere lumière et matière 
+
+La lumière est émise par une source (de lumière ...), se propage dans la scène, rebondit sur un objet, se propage de nouveau et finit par arriver sur la camera.
+La matière d'un objet influence comment la lumière se diffuse autour de lui (apres le rebond) et définit l'apparence de l'objet, son aspect : mat, brilliant, transparent, etc.
+
+quelques exemples d'apparence :
+<table style="width:60%">
+<tr> 
+    <td> <IMG SRC="cheveux.png" width="95%"> 
+    <td> <IMG SRC="laine.png" width="95%"> 
+</tr> 
+<tr> 
+    <td> <IMG SRC="mat.png" width="95%"> 
+    <td> <IMG SRC="reflets.png" width="95%"> 
+    <td> <IMG SRC="miroir.png" width="95%"> 
+</tr> 
+</table>
+
+Les objets n'ont pas toujours une surface bien définie : comme les cheveux, la laine, la végétation, etc. Pour les autres, pas de problèmes pour décrire leur surface. Comme 
+ces cas sont aussi plus simples à dessiner, on va se concentrer dessus. 
+
+Pour créer une image, un minimum réaliste, il faut simuler les différentes étapes de la propagation de la lumière et surtout définir comment calculer / simuler le "rebond" 
+de la lumière sur (la surface d') un objet. Ce rebond est décrit par le modèle de la matière de l'objet qui s'appelle _brdf_ (abbrégé français de _fonction de reflexion 
+bidirectionnelle_, brdf c'est bien...). 
+
+De manière générale, un modèle permet d'écrire que la lumière réfléchie dans une direction \f$ \vec{o} \f$ après le rebond est juste le produit de la lumière incidente
+\f$ L_i( \vec{l} ) \f$ et de la _brdf_, notée \f$ f_r() \f$ :
+\f[
+    f_r( \vec{o}, \vec{l} ) L_i( \vec{l} )
+\f]
+
+la lumière incidente, notée \f$ L_i() \f$, arrive depuis la direction \f$ \vec{l} \f$, et \f$ f _r( \vec{o}, \vec{l} ) \f$ estime quelle fraction de cette énergie est 
+réchéchie dans la direction \f$ \vec{o} \f$, vers l'observateur / la camera. 
+
+Bien sur, on pourrait scanner les matières et en déduire les valeurs de \f$ f_r() \f$, il existe quelques bases de données, mais les matières interressantes nécessitent trop de 
+stockage (et trop de temps pour faire les mesures). 
+
+Du coup, il existe plusieurs modèles simplifiés. Par exemple : les matières mattes, les miroirs, les reflets, les matières composées de plusieurs couches (comme la peau, les 
+objets vernis, certaines peintures) etc. que l'on peut calculer directement.
+
+Il y a 2 modèles simples : le cas d'une reflexion parfaitement diffuse (une apparence matte) et une réflexion parfaitement spéculaire (un miroir). Ce sont les premiers 
+travaux de Lambert, en 1760, et de Fresnel, en 1823, qui permettent de calculer le "rebond" de la lumière sur une surface plane / lisse.
+
+Ces travaux sont complétés, dans les années 1960, et aboutissent aux modèles à microfacettes actuellement utilisés pour décrire la réflexion de la lumière 
+sur une surface rugueuse qui est représentée comme une distribution de miroirs microscopiques. 
+
+<table style="width:60%">
+<tr> 
+    <td> <IMG SRC="anisotrope.png" width="95%"> 
+    <td> <IMG SRC="anisotrope1.png" width="95%"> 
+    <td> <IMG SRC="anisotrope2.png" width="95%"> 
+</tr> 
+</table>
+
+
+## emission par la source de lumière
+
+Si une source de lumière emet une certaine quantité de lumière, un _flux_ exprimés en Watts, quelle quantité se propage jusqu'à un point de l'espace ?
+Sur l'ensemble des points se trouvant à une distance \f$ d \f$ de la source, on pourra mesurer la même valeur de flux. Le flux émis se répartit sur les \f$ 4 \pi d^2 \f$ points 
+(l'aire de la sphère de rayon \f$ d \f$), du coup, en un seul point, on ne mesure que \f$ \frac{1}{4 \pi d^2} \f$ du total emis par la source.
+
+<IMG SRC="carre.png" width="25%"> 
+
+
+## réflexion diffuse / Lambert 
+
+Si la surface sur laquelle on mesure la lumière incidente n'est pas orientée vers la source de lumière, le flux reçu se dépose sur plus de points, et chaque point ne 
+mesure que \f$ \cos \theta \f$ du flux reçu.
+
+<IMG SRC="cos.png" width="25%"> 
+
+Pour résumer, le flux reçu par une surface est exprimé par unité d'aire de cette surface. Il dépend de la distance à la source (de son _carré_) et de l'orientation de la 
+surface (du cosinus entre la _normale_ et la direction vers la source).
+
+L'apparence d'un objet parfaitement diffus est identique quelque soit la direction d'observation \f$ \vec{o} \f$, la matière réflechit la même quantité de lumière. On peut 
+écrire :
+\f[
+	L_r( \vec{o} ) = k \cdot L_i( \vec{l} ) \cos \theta 
+\f]
+
+\f$ L_r( \vec{o} ) \f$ est la quantité de lumière _réfléchie_ dans la direction \f$ \vec{o} \f$. 
+Le paramètre \f$ k \f$ compris entre 0 et 1, indique simplement que l'objet est très sombre ou très clair.
+
+_rappel :_  \f$ L_i( \vec{l} ) \f$ est la quantité de lumière incidente depuis la direction \f$ \vec{l} \f$, la direction vers la source.
+
+Donc oui, le modèle de Lambert pour les réflexions / matières diffuses est une constante entre 0 et 1 : 
+\f[
+	f_r( \vec{o}, \vec{l} ) = k
+\f]
+
+
+## réflexion spéculaire et coefficients de Fresnel
+
+Au contraire de la réflexion diffuse qui répartit la lumière incidente dans toutes les directions réflechies, la réflexion spéculaire ne réfléchit la lumière que dans une seule
+direction et se sont les coefficients de Fresnel qui permettent de calculer quelle fraction de la lumière incidente se réfléchit dans cette direction.
+
+Toutes les matières ne se comportent pas de la même manière, elles sont caractérisées par un _indice de réfraction_ \f$ \eta \f$, qui permet de déduire le coefficient 
+de reflexion de Fresnel \f$ F() \f$ :
+
+\f{eqnarray*}{ 
+	F(\vec{n}, \vec{l}) & = & \frac{1}{2}  \left( \frac{g - c}{g + c} \right)^2 \left( 1 + \left( \frac{c(g + c) -1}{c(g - c) +1} \right)^2 \right)\\
+                    c   & = & \cos \angle(\vec{n}, \vec{l}) = \cos \theta \\
+                    g^2 & = & \eta^2 + c^2 -1
+\f} 
+
+Une approximation est couramment utilisée, cf [Schlick 94](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.50.2297&rep=rep1&type=pdf) :
+\f{eqnarray*}{ 
+	F(\vec{n}, \vec{l}) & = & F_0 + (1 - F_0) (1 - c)^5\\
+	c                   & = & \cos \angle(\vec{n}, \vec{l}) = \cos \theta \\
+	F_0                 & = & \left( \frac{\eta - 1}{\eta +1} \right)^2
+\f} 
+
+Cette approximation exploite une propriété des équations de Fresnel, l'indice de réfraction \f$ \eta \f$ permet de déduire le coefficient à indicence normale \f$ F_0 \f$ 
+(la lumière arrive dans la direction de la normale et \f$ \theta = 0° \f$ ) et, par construction, toutes les matières ont une réflexion de 1 à incidence rasante 
+(la lumière arrive dans le plan tangent et \f$ \theta = 90° \f$).
+
+Connaissant la direction miroir de \f$ \vec{l} \f$ par rapport à la normale de la surface on peut écrire la réflexion :
+\f[
+	L_r( \vec{m} ) = F(\vec{n}, \vec{l}) L_i( \vec{l} )
+\f]
+et 
+
+<IMG SRC="fresnel.png" width="20%"> 
+
+\f[
+	\vec{m} = 2 (\vec{n} \cdot \vec{l}) \vec{n} - \vec{l}
+\f]
+
+Par contre, pour formuler cette réflexion qui n'existe que pour la direction \f$ \vec{m} \f$, avec la fonction \f$ f_r() \f$, il faut prendre quelques précautions, pour 
+s'assurer de renvoyer 0 pour les directions \f$ \vec{o} \f$ différentes de  \f$ \vec{m} \f$ :
+
+\f{eqnarray*}
+	f_r( \vec{o}, \vec{l} ) & = & 0 \mbox{ si } \vec{o} \not= \vec{m}\\
+				& = & \frac{ F(\vec{n}, \vec{l}) }{ \cos \theta } \mbox{ si } \vec{o} = \vec{m}\\
+\f}
+
+Les coefficients de Fresnel permettent d'estimer la reflexion de toutes les matières lorsque la surface est parfaitement lisse, comme un miroir. Il y a 2 types de 
+coefficients de Fresnel : ceux qui sont réels et ceux qui sont complexes (avec une partie imaginaire). Seuls les métaux ont des coefficients complexes, on observe l'effet
+dans la couleur du reflet : le reflet d'un métal est coloré (et permet d'identifier le métal), alors que les autres matières ont un reflet de couleur neutre (ils réflechissent la 
+couleur de la source).
+
+Ces coefficients sont mesurés pour pas mal de matières : quelques exemples sur [wikipedia](https://en.wikipedia.org/wiki/List_of_refractive_indices)
+
+
+## en pratique
+
+La formulation un peu bizarre (avec la division par \f$ \cos \theta \f$) dans le cas de reflexion spéculaire permet de formuler la lumière réfléchie de la même manière que 
+le cas diffus :
+\f[
+	L_r( \vec{o} ) = f_r( \vec{o}, \vec{l} ) \cdot L_i( \vec{l} ) \cos \theta 
+\f]
+c'est la fonction de reflexion, la _brdf_ qui change en fonction des matières, pas son utilisation.
+
+Pour calculer la couleur d'un pixel de l'image, il faut calculer la couleur de la lumière réflechie par le point de l'objet visible à travers le pixel : c'est à dire \f$ L_r( \vec{o} ) \f$.
+il faut aussi connaitre la position de la camera \f$ c \f$, la position du point \f$ p \f$, la normale de la surface à cette position \f$ \vec{n} \f$, la position de la source de 
+lumière \f$ s \f$, son emission \f$ L_e \f$, et, enfin les paramètres de la matière :
+	- soit la constante \f$ k \f$ et une couleur pour les reflexions diffuses, 
+	- soit l'indice de réfraction \f$ \eta \f$ (ou \f$ F_0 \f$) et éventuellement la couleur du reflet métallique pour les réflexions spéculaires.
+	
+Ces informations permettent d'évaluer tous les termes et de finir les calculs :
+	- \f$ \vec{o} = c - p \f$,
+	- \f$ \vec{l} = s - p \f$
+	- \f$ L_i( \vec{l} )= L_e \f$
+
+Par contre, il y a une information que l'on ne connait pas directment avec une api3d classique : quelle est la lumière incidente pour les directions qui ne correspondent pas
+à une source de lumière ?? du coup, il est difficile de dessiner un miroir : puisque la couleur d'un pixel d'un miroir dépend de la couleur de l'objet dans la direction 
+miroir \f$ \vec{m} \f$. La solution classique est d'utiliser du lancer de rayon pour traiter ce cas, ou d'utiliser une approximation comme les cubemaps, par exemple...
+
+Dernier détail, d'ou vient la couleur ?? La physique décrit la réflexion de la lumière pour une seule longueur d'onde, pas pour l'ensemble du domaine visible que nos yeux
+percoivent. Dans le cas d'une matière diffuse, c'est la valeur du paramètre \f$ k \f$ qui change en fonction de la longueur d'onde et donne une couleur à un objet _éclairé_. 
+Mais la couleur n'est qu'une perception du cerveau, elle n'existe pas dans la physique de la réflexion de la lumière. Et surtout, une matière n'a pas de couleur... par contre,
+un objet _éclairé_ peut être observé et donc possède une couleur. Tout ça pour dire, que quand on dit qu'un objet est _rouge_, cela sous entend qu'il apparait de cette 
+couleur lorsqu'il est éclairé normalement, par le soleil...
+
+Du coup, pour simplifier les calculs, ont fait couramment une grosse approximation : la réflexion n'est évaluée que pour une longueur d'onde (qu'on suppose au milieu
+du domaine visible) et cette valeur est multipliée par la "couleur de base" la matière. Par exemple pour un objet rouge, représenté par \f$ rouge_{RGB} \f$, on aura :
+\f[
+	L_r( \vec{o} )_{RGB} = rouge_{RGB} \cdot f_r( \vec{o}, \vec{l} ) \cdot L_e
+\f]
+
+si on souhaite utiliser une source de "couleur", il est aussi possible d'utiliser \f$ L_{e_{RGB}} \f$. Mais __attention__ il est frequent d'obtenir du noir, par exemple : une source 
+rouge qui éclaire un objet bleu. Alors que si l'on avait fait les calculs pour chaque longueur d'onde, on aurait bien trouvé une "couleur" réfléchie...
+
+La suite, comment écrire des shaders pour faire ces calculs : \ref brdf.
+
+Résumé du fonctionnement des shaders : \ref glsl.
+
+*/

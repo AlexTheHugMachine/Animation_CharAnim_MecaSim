@@ -1,0 +1,339 @@
+
+/*! \addtogroup uniform_buffers openGL 3.3 : uniform buffers
+
+cf \ref tuto_uniform_buffers.cpp et \ref uniform.glsl
+
+Les uniforms déclarés dans les shaders se manipulent de manière assez directe, mais lorsque plusieurs shaders sont nécessaires pour dessiner une image, 
+re-affecter une valeur à chaque uniform de chaque shader devient plutot lent. De plus, leur taille totale est très limitée (32Ko ou 64Ko), ce qui les rend au final, assez peu pratiques.
+
+Mais il est possible d'associer un buffer à un groupe d'uniforms et d'éliminer la limite de taille. Le même buffer peut rester sélectionné pendant l'exécution de plusieurs shaders 
+et il suffit d'affecter les valeurs une seule fois, en initialisant _correctement_ le contenu du buffer. 
+La déclaration dans le shader ressemble à celle d'une structure, mais utilise le mot clé `uniform` :
+\code
+#version 330
+
+// commun a tous les shaders pour afficher une scene.
+uniform frameData
+{
+    mat4 view;
+    mat4 projection;
+};
+
+#ifdef VERTEX_SHADER
+in vec3 position;
+
+void main( )
+{
+    // compose les transformations
+    mat4 mvp= projection * view * model;
+    gl_Position= mvp * vec4(position, 1);
+}
+#endif
+
+#ifdef FRAGMENT_SHADER
+// affichage simple d'un objet avec une couleur diffuse par matiere.
+uniform simpleData
+{
+    mat4 model;
+    vec3 diffuse[64];
+};
+
+out vec4 fragment_color;
+
+void main( )
+{
+    // exemple, recupere une couleur de la matiere associee au triangle.
+    fragment_color= vec4(diffuse[gl_PrimitiveID % 64], 1);
+}
+#endif
+\endcode
+
+Pour que l'application puisse associer un buffer à la déclaration dans le shader, il faut nommer le groupe d'uniforms, cf `frameData` et `simpleData` dans l'exemple précédent. 
+C'est `glGetUniformBlockIndex()` qui permet de récupérer l'identifiant du groupe d'uniforms.
+Et comme il est possible d'utiliser plusieurs uniform buffers, ils sont numérotés. C'est l'application qui choisit l'indice de l'uniform buffer avec `glUniformBlockBinding()` :
+\code
+// recuperer l'identifiant du groupe d'uniforms frameData
+GLuint block= glGetUniformBlockIndex(program, "frameData");
+// associer l'indice 0 a frameData
+glUniformBlockBinding(program, block, 0);
+
+GLuint buffer;
+// creer et initialiser le buffer
+{ ... }
+
+// selectionner un buffer existant pour affecter une valeur a tous les uniforms du groupe simpleData
+glBindBufferBase(GL_UNIFORM_BUFFER, 0, buffer);
+\endcode
+
+__remarque :__ à partir de openGL 4.2, il est possible de préciser directement l'indice dans la déclaration du groupe d'uniforms :
+\code
+#version 420
+
+layout(binding= 0) uniform frameData
+{
+    mat4 view;
+    mat4 projection;
+};
+\endcode
+
+Pour sélectionner le buffer contenant les valeurs des uniforms, il suffit d'utiliser une variante de `glBindBuffer()` qui utilise un paramètre supplémentaire : l'indice 
+associé au groupe d'uniforms : cf `glBindBufferBase()`. La totalité du buffer est utilisée dans ce cas, mais il est possible de n'utiliser qu'une partie du buffer 
+avec `glBindBufferRange()` qui utilise les paramètres offset et size :
+\code
+glBindBufferBase(GL_UNIFORM_BUFFER, /* indice */ 0, /* buffer */ buffer);                               // associe le contenu complet du buffer
+glBindBufferRange(GL_UNIFORM_BUFFER, /* indice */ 0, /* buffer */ buffer, /* offset */, /* size*/);     // associe une regoin du buffer
+\endcode
+
+L'utilisation des uniform buffers est assez directe, mais il y a une grosse différence par rapport aux uniforms classiques, il n'y a pas d'interface (cf glUniform()) permettant d'affecter 
+des valeurs aux variables déclarées dans le groupe d'uniforms. Il faut le faire "à la main" en remplissant correctement le buffer. Un cpu et un gpu sont des processeurs conçus différemment, 
+et ils n'accèdent pas à la mémoire de la même manière... Il faut donc placer les données au bon endroit dans le buffer pour que les shaders relisent correctement toutes les valeurs. 
+Ce n'est pas très compliqué, voici quelques exemples, pour mieux comprendre les diférences.
+
+__attention__ : par contre, il est existe plusieurs organisations de données, il faut préciser laquelle utiliser avec une décoration :
+\code
+layout(std140) uniform frameData
+{
+    mat4 view;
+    mat4 projection;
+};
+\endcode
+
+_remarque :_ pourquoi `std140` ? tout simplement parce que cette fonctionnalité date de la version 1.40 du langage de shader. Les storage buffers, introduit dans openGL 4.3, utilisent... std430
+
+L'organisation des données suit quelques règles (communes à std140 et std430) :
+    - 4 octets pour les int, uint, float et bool,
+    - 2xfloat pour les vec2, ou 2x type de base pour ivec2, uvec2 et bvec2,
+    - 4xfloat pour les vec3, ou 4x type de base pour ivec3, uvec3 et bvec3
+    - 4xfloat pour les vec4, ou 4x type de base pour ivec4, uvec4 et bvec4
+
+Par contre, __std140 impose d'aligner sur 16 octets les éléments d'un tableau,__ quelque soit le type de l'élement. `int t[4]` occuppe 16 octets par élement dans un buffer, soit 64 octets au lieu 
+de 16 sur un cpu... 
+
+Quelle est l'organisation mémoire, sur cpu, de la structure :
+\code
+struct T
+{
+    vec3 a;
+    vec3 b;
+    vec3 c;
+    float d[3];
+};
+\endcode
+
+`offsetof(type, field)` du c++ renvoie la position en octets d'un champ à l'intérieur d'une structure : 
+
+\code
+offsetof(T, a)   = 0
+offsetof(T, a.x) = 0
+offsetof(T, a.y) = 4
+offsetof(T, a.z) = 8
+offsetof(T, b)   = 12
+...
+offsetof(T, c)   = 24
+...
+offsetof(T, d)   = 36
+offsetof(T, d[0])= 36
+offsetof(T, d[1])= 40
+offsetof(T, d[2])= 44
+
+sizeof(T)= 48
+\endcode
+
+ce qui correspond à l'organisation mémoire :
+\code
+ 0 a.x
+ 4 a.y
+ 8 a.z
+12 b.x
+16 b.y
+20 b.z
+24 c.x
+28 c.y
+32 c.z
+36 d[0]
+40 d[1]
+44 d[2]
+\endcode
+
+sur gpu, on obtient :
+\code
+layout(std140) uniform T
+{
+    vec3 a;
+    vec3 b;
+    vec3 c;
+    float d[3];
+};
+
+offsetof(T, a)   = 0
+offsetof(T, a.x) = 0
+offsetof(T, a.y) = 4
+offsetof(T, a.z) = 8
+offsetof(T, b)   = 16
+...
+offsetof(T, c)   = 32
+...
+offsetof(T, d)   = 48
+offsetof(T, d[0])= 48
+offsetof(T, d[1])= 64
+offsetof(T, d[2])= 80
+
+sizeof(T)= 96
+\endcode
+
+ce qui correspond à :
+\code
+ 0 a.x
+ 4 a.y
+ 8 a.z
+12 ...
+16 b.x
+20 b.y
+24 b.z
+28 ...
+32 c.x
+36 c.y
+40 c.z
+44 ...
+48 d[0]
+52 ...
+56 ...
+60 ...
+64 d[1]
+68 ...
+72 ...
+76 ...
+80 d[2]
+84 ...
+88 ...
+92 ...
+\endcode
+
+comme pour les storage buffers, il est possible de déclarer des variables supplementaires dans la structure cpu pour forcer le compilateur à produire la même organisation 
+mémoire que le  gpu, par exemple :
+\code
+struct Tglsl
+{
+    vec3 a;
+    float pad0;
+    vec3 b;
+    float pad1;
+    vec3 c;
+    float pad2;
+    struct { float v; float pad0; float pad1; float pad2; } c[3];
+};
+\endcode
+
+mais c'est rapidement pénible, surtout pour les tableaux. Une autre solution, pour les cas simples, consiste à n'utiliser que des vec4 :
+\code
+struct Tglsl
+{
+    vec4 a;
+    vec4 b;
+    vec4 c;
+    vec4 c[3];
+};
+\endcode
+
+mais l'affectation des valeurs ne sera pas très naturelle.
+
+La dernière solution consiste à utiliser une fonctionnalité du C++11 qui permet d'indiquer l'alignement des variables en mémoire : `alignas(n)`. C'est mieux, 
+mais les tableaux sont toujours difficiles à déclarer. 
+\code
+typedef alignas(16) float a16float;
+
+struct Tglsl
+{
+    alignas(16) vec3 a;
+    alignas(16) vec3 b;
+    alignas(16) vec3 c;
+    a16float d[3];
+};
+\endcode
+
+\ref tuto_uniform_buffers.cpp propose les différents types dans le namespace `glsl` :
+\code
+namespace glsl {
+    // type de base alignes sur 4 octets
+    template < typename T >
+    struct alignas(4) gscalar
+    {
+        T x;
+        
+        gscalar( ) : x(T()) {}
+        gscalar( const T& v ) : x(v) {}
+        gscalar& operator= ( const T& v ) { x= v; return *this; }
+        operator T ( ) { return x; }
+    };
+    
+    typedef gscalar<float> gfloat;      // pas possible d'utiliser les memes noms que les types de base du c++
+    typedef gscalar<int> gint;
+    typedef gscalar<unsigned int> guint;
+    typedef gscalar<bool> gbool;
+    
+    // vec3 alignes sur 4*alignement type de base, soit 16 octets
+    template < typename T >
+    struct alignas(16) gvec3
+    {
+        alignas(4) T x, y, z;
+        
+        gvec3( ) {}
+        gvec3( const gvec3<T>& v ) : x(v.x), y(v.y), z(v.z) {}
+        gvec3( const ::vec3& v ) : x(v.x), y(v.y), z(v.z) {}
+        gvec3( const Point& v ) : x(v.x), y(v.y), z(v.z) {}
+        gvec3( const Vector& v ) : x(v.x), y(v.y), z(v.z) {}
+        gvec3& operator= ( const gvec3<T>& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        gvec3& operator= ( const ::vec3& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        gvec3& operator= ( const Point& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        gvec3& operator= ( const Vector& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        operator ::vec3 ( ) { return ::vec3(float(x), float(y), float(y)); }
+    };
+
+    typedef gvec3<float> vec3;
+    typedef gvec3<int> ivec3;
+    typedef gvec3<unsigned int> uvec3;
+    typedef gvec3<int> bvec3;
+}
+\endcode
+
+et dans le namespace `glsl::array` pour les tableaux :
+\code
+namespace glsl {
+    namespace array {
+        template < typename T >
+        struct alignas(16) gscalar
+        { ... };
+        
+        typedef gscalar<float> gfloat;
+        typedef gscalar<int> gint;
+        typedef gscalar<unsigned int> guint;
+        typedef gscalar<bool> gbool;    
+    }
+}
+\endcode
+
+ce qui permet au final d'obtenir la déclaration de `T` suivante :
+\code
+    struct Tglsl
+    {
+        glsl::vec3 a;
+        glsl::vec3 b;
+        glsl::vec3 c;
+        glsl::array::gfloat d[3];
+    };
+\endcode
+
+Comme pour les storage buffers, il est également possible de demander au compilateur de shaders l'organisation mémoire utilisée, pour vérifier qu'il n'y a pas de problèmes.
+Le code complet est également dans \ref tuto_uniform_buffers.cpp, voici ce qu'il affiche dans ce cas :
+\code
+loading program 'tutos/uniform.glsl'...
+  uniform 'bufferData' binding 0
+    'vec3 a': offset 0
+    'vec3 b': offset 16
+    'vec3 c': offset 32
+    'vec3 d[0]': offset 48, array size 3, stride 16
+  buffer size 96
+\endcode
+
+
+*/

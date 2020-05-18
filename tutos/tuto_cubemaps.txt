@@ -1,0 +1,498 @@
+
+/*! \addtogroup cubemap utilisation, chargement et création de cubemap
+
+    Les cubemaps openGL sont des textures à 6 faces permettant d'afficher un environnement complet, pre-calculé, ou pas...
+
+# affichage d'un environnement 
+
+cf \ref tuto_draw_cubemap.cpp + draw_cubemap.glsl
+
+## cubemap ?
+
+Les cubemaps sont des textures un peu à part dans openGL, elles ne suivent pas les conventions habituelles mais celles de... [Renderman](https://renderman.pixar.com/), 
+les différences sont décrites dans la doc openGL, mais... d'une manière un peu compacte : une cubemap est _une_ texture composée de 6 faces, et les coordonnées utilisées 
+pour lire une couleur dans une des 6 faces sont décrites [ici](https://www.khronos.org/registry/OpenGL/specs/gl/glspec46.core.pdf#section.8.13) page 253.
+    - les coordonnées sont en 3d, elles représentent une direction sur une sphère, elles sont comprises entre -1 et +1,
+    - l'origine de l'image de chaque face de la cubemap n'est pas en bas à gauche comme pour les autres textures, mais en _haut_ et à _droite_ !!
+    - la face "avant" de la cubemap n'est pas dans la direction -Z, mais +Z...
+    
+résultat, selon les tutos, les explications sont soit inexistantes, soit contradictoires... soit il faudra modifier les images à la main pour obtenir un début de résultat...
+
+### comment ça marche ?
+
+L'idée de la cubemap est de représenter un décor placé autour de la scène, sous forme de texture. Pour observer le décor dans toutes les directions, il faut bien donner une direction, 
+puis utiliser cette direction (ses coordonnées) pour choisir une face de la cubemap et enfin choisir un pixel sur cette face. Cette projection de la direction \f$(r_x, r_y, r_z)\f$ pour 
+obtenir la face et le pixel se fait en  2 temps :
+    - déterminer l'axe dominant de la direction -x, +x, -y, +y, etc, projection sur les faces de la cubemap,
+    - calculer les coordonnées (s, t) du pixel en fonction de l'axe dominant / face de la cubemap, cf tableau 8.19 dans la doc openGL
+    
+axe  | face                        | sm  | tm  | m
+:---:|:----------------------------|----:|----:|--:
++rx  | TEXTURE_CUBE_MAP_POSITIVE_X | −rz | −ry | rx
+−rx  | TEXTURE_CUBE_MAP_NEGATIVE_X |  rz | −ry | rx
++ry  | TEXTURE_CUBE_MAP_POSITIVE_Y |  rx |  rz | ry
+−ry  | TEXTURE_CUBE_MAP_NEGATIVE_Y |  rx | −rz | ry
++rz  | TEXTURE_CUBE_MAP_POSITIVE_Z |  rx | −ry | rz
+−rz  | TEXTURE_CUBE_MAP_NEGATIVE_Z | −rx | −ry | rz
+
+et dans tous les cas les coordonnées du pixel de la face sont \f$ s= \frac{1}{2} \left( \frac{sm}{|m|} +1 \right) \f$ et \f$ t= \frac{1}{2} \left( \frac{tm}{|m|} +1 \right) \f$
+
+Par exemple, pour une direction \f$(1, 0, 0)\f$, l'axe dominant est +x, m= +1 (x), sm= -0 (-z), tm= -0 (-y) et \f$ s= \frac{1}{2} \left( \frac{-0}{|1|} +1 \right) = 0.5 \f$ et 
+\f$ t= \frac{1}{2} \left( \frac{-0}{|1|} +1 \right) = 0.5 \f$, ce qui correspond bien au milieu de la face. on peut recommencer pour les 4 coins de la texture, 
+pour se rendre compte de son orientation : 
+    - \f$(1, -1, -1)\f$ et \f$ s= \frac{1}{2} \left( \frac{ 1}{|1|} +1 \right) = 1 \f$ et \f$ t= \frac{1}{2} \left( \frac{ 1}{|1|} +1 \right) = 1 \f$
+    - \f$(1, -1,  1)\f$ et \f$ s= \frac{1}{2} \left( \frac{-1}{|1|} +1 \right) = 0 \f$ et \f$ t= \frac{1}{2} \left( \frac{ 1}{|1|} +1 \right) = 1 \f$
+    - \f$(1,  1, -1)\f$ et \f$ s= \frac{1}{2} \left( \frac{ 1}{|1|} +1 \right) = 1 \f$ et \f$ t= \frac{1}{2} \left( \frac{-1}{|1|} +1 \right) = 0 \f$
+    - \f$(1,  1,  1)\f$ et \f$ s= \frac{1}{2} \left( \frac{-1}{|1|} +1 \right) = 0 \f$ et \f$ t= \frac{1}{2} \left( \frac{-1}{|1|} +1 \right) = 0 \f$
+    
+dans ce cas, la direction (1, -1, -1) correspond au pixel (1, 1) et la direction (1, 1, 1) correspond au pixel (0, 0).
+
+<table style="width:100%">
+<tr> 
+<td> <IMG SRC="cubemapx.png" width="100%"> face +x, chargée directement... (à l'envers) origine classique, en bas à gauche</td>
+<td> <IMG SRC="cubemapxflip.png" width="100%"> face +x, chargée correctement, vue de l'extérieur du cube, origine en haut à gauche...</td>
+<td> <IMG SRC="cubemapxflip_inside.png" width="100%"> face +x, chargée correctement, vue de l'intérieur du cube... origne en haut à droite...
+</table>
+
+## chargement d'une cubemap
+
+Première étape, supposons que les faces de la cubemap se trouvent dans 6 images, la création d'une texture cubemap est similaire à la création des textures classiques 
+(cf \ref tuto5GL) :
+\code
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+\endcode
+
+par contre, puisqu'il y a 6 images, il faut 6 appels de `glTexImage2D()` au lieu d'un seul, et il faut préciser à chaque fois quelle face de la cubemap est initialisée. Les faces sont 
+identifiées par l'axe et le signe +x, -x, +y -y, etc, cf `GL_TEXTURE_CUBE_MAP_POSITIVE_X`, `GL_TEXTURE_CUBE_MAP_NEGATIVE_X`...
+\code
+    // l'orientation des images n'est pas correct dans cet exemple...
+    Image faces[6]= { ... };
+    
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, /* level */ 0, /* texel format */ GL_RGBA, 
+        /* width, height, border */ width, height, 0,
+        /* data format */ GL_RGBA, /* data type */ GL_UNSIGNED_BYTE, /* data */ faces[0].data());	
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, /* level */ 0, /* texel format */ GL_RGBA, 
+        /* width, height, border */ width, height, 0,
+        /* data format */ GL_RGBA, /* data type */ GL_UNSIGNED_BYTE, /* data */ faces[1].data());	
+    ...
+\endcode
+
+c'est un peu pénible à écrire, mais les constantes `TEXTURE_CUBE_MAP_POSITIVE_X`, `TEXTURE_CUBE_MAP_NEGATIVE_X`, etc forment une séquence indexée, il est plus simple 
+d'écrire :
+\code
+    // l'orientation des images n'est pas correct dans cet exemple...
+    Image faces[6]= { ... };
+    
+    for(int i= 0; i < 6; i++)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
+            /* level */ 0, /* texel format */ GL_RGBA, 
+            /* width, height, border */ width, height, 0,
+            /* data format */ GL_RGBA, /* data type */ GL_UNSIGNED_BYTE, /* data */ faces[i].data());	
+    }
+\endcode
+
+mais bien sur, il faut également retourner les images pour placer leur origine _en haut et à droite pour respecter la convention_, les utilitaires `flipY()` et `flipX()` de image_io.h 
+permettent de le faire simplement :
+\code
+    #include "image_io.h"
+    
+    ImageData faces[6]= { ... };
+    
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+
+    for(int i= 0; i < 6; i++)
+    {
+        // corrige l'orientation des images pour les utiliser comme texture / face d'une cubemap
+        ImageData face= flipX(flipY(faces[i]));
+        
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
+            /* level */ 0, /* texel format */ GL_RGBA, 
+            /* width, height, border */ width, height, 0,
+            /* data format */ GL_RGBA, /* data type */ GL_UNSIGNED_BYTE, /* data */ face.data());
+    }
+\endcode
+
+La plupart du temps, les cubemaps sont fournies comme une seule image, avec les différentes faces disposées en croix, sur une grille de 3 lignes et 4 colonnes. 
+il suffit de découper chaque face au bon endroit, cf `copy()`, et de la re-orienter, cf `flipY()` et `flipX()` (et de vérifier qu'une face est bien carrée) :
+
+<table style="width:100%">
+<tr> 
+<td> <IMG SRC="cubemap_debug_cross.png" width="100%"> 
+<td> <IMG SRC="canyon_small.png" width="100%"> 
+</table>
+
+__attention :__ il y a encore une différence de convention la face `+Z` représente l'avant, et `-Z` l'arrière, `+X` à gauche, `-X` à droite, `+Y` en haut, `-Y` en bas.
+
+\code
+    // les 6 faces sur une croix
+    ImageData image= read_image_data("canyon2.jpg");
+    
+    // dimensions d'une face : l'image est une grille de 3 lignes et 4 colonnes
+    int w= image.width / 4;
+    int h= image.height / 3;
+    // les faces des cubemaps sont carrees
+    assert(w == h);
+    
+    GLenum data_format;
+    GLenum data_type= GL_UNSIGNED_BYTE;
+    if(image.channels == 3)
+        data_format= GL_RGB;
+    else
+        data_format= GL_RGBA;
+    
+    // creer la texture
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+
+    // creer les 6 faces
+    // chaque face de la cubemap est un carre [image.width/4 x image.height/3] dans l'image originale 
+    struct { int x, y; } faces[]= {
+        {0, 1}, // X+
+        {2, 1}, // X-
+        {1, 2}, // Y+
+        {1, 0}, // Y- 
+        {1, 1}, // Z+
+        {3, 1}, // Z-
+    };
+    // position de chaque face dans la grille
+    
+    for(int i= 0; i < 6; i++)
+    {
+        // extrait la face, cf copy() puis la retourne, cf flipX() et flipY()
+        ImageData face= flipX(flipY(copy(image, faces[i].x*w, faces[i].y*h, w, h)));
+        
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
+            GL_RGBA, w, h, 0,
+            data_format, data_type, face.data());
+    }
+\endcode
+
+Comme pour les textures classiques, il ne faut pas oublier de calculer leurs mipmaps et de paramétrer leur filtrage (sinon texture __noire__ à l'utilisation...) :
+\code
+    // parametres de filtrage
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);    
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);    
+    
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+\endcode
+
+et comme c'est toujours la même chose, c'est exactement ce que fait read_cubemap( ) dans tuto_draw_cubemap.cpp.
+
+## affichage / shader
+
+Il suffit de déclarer un `samplerCube` dans le shader et d'utiliser une direction pour accéder à la cubemap :
+\code
+uniform samplerCube texture0;
+
+out vec4 fragment_color;
+void main( )
+{
+    vec3 d= { ... };
+    vec4 color= texture(texture0, d);
+    
+    fragment_color= color;
+}
+\endcode
+_indication :_ repassez dans \ref tuto5GL si nécessaire pour l'utilisation des textures "classiques".
+
+Il y a 2 utilisation des cubemaps, pour afficher le décor et pour modifier la couleur d'un objet placé au milieu du décor.
+
+### afficher une cubemap / l'environnement
+
+Une solution a priori directe consiste à dessiner un cube "à l'infini", mais les détails sont plutot pénibles (vous pouvez consultez les différents tutos sur internet). Une solution 
+bien plus simple consiste à exécuter un fragment shader par pixel de l'image, à calculer la direction correspondante et recupérer la couleur dans la cubemap. oui, c'est presque 
+du lancer de rayons...
+
+L'idée des cubemaps est de représenter un décor : pour chaque pixel, il suffit de calculer une direction dans le repère du monde pour "trouver" le pixel de la cubemap. On connait 
+la position de la camera dans le monde, il suffit de connaitre la position du centre d'un pixel dans le repère du monde, pour déterminer la direction.
+
+Par construction, un point du repère image (x, y, z = 1) à des coordonnées dans le repère monde : il suffit de transformer ses coordonnées par l'inverse des transformations 
+standards :
+\code
+Transform view = camera().view();
+Transform projection = camera().projection();
+Transform viewport = camera().viewport();
+
+// inverse de la composition des transformations repere monde vers repere image
+Transform M= Inverse(viewport * projection * view);
+
+Point p(x, y, 1);   // coordonnees du pixel dans le repere image
+Point pixel= M(p);  // coordonnees du pixel dans le repere monde 
+\endcode
+
+Les coordonnées de la camera dans le repere monde s'obtiennent aussi directement :
+\code
+Transform view= camera().view();
+Transform M= Inverse(view);
+Point origin= Point(0, 0, 0));  // coordonnees de la camera, dans le repere camera... c'est l'origine
+Point camera= M(origin);    // coordonnees dans le repere monde
+\endcode
+
+et la direction de camera vers p s'écrit :
+\code
+Vector direction= pixel - camera; 
+\endcode
+
+Il ne reste plus qu'à écrire le vertex shader qui génére un grand triangle rectangle qui couvre tous les pixels de l'image. Les coordonnées des sommets s'expriment directement 
+dans le repère projectif :
+\code
+    #version 330
+
+    void main( )
+    {
+        // repere projectif
+        vec2 positions[3]= vec2[3]( vec2(-1,-1), vec2(3, -1), vec2(-1, 3) );
+
+        // place le point sur le plan far / z =1... a l'infini
+        gl_Position= vec4(positions[gl_VertexID], 1, 1);
+    }
+\endcode
+
+et le fragment shader qui transforme les coordonnées du pixel vers le monde pour calculer la direction :
+\code
+    #version 330
+    uniform mat4 invMatrix;
+    uniform vec3 camera;
+    uniform samplerCube texture0;
+    
+    out vec4 fragment_color;
+    void main( )
+    {
+        vec4 p= invMatrix * vec4(glFragCoord.xyz, 1);
+        vec3 pixel= p.xyz / p.w;
+        
+        vec3 direction= normalize(pixel - camera);
+        fragment_color= texture(texture0, direction);
+    }
+\endcode
+
+les shaders sont exécutés par `glDrawArrays(GL_TRIANGLES, 0, 3);` dans l'application. 
+
+__derniere remarque__, la géométrie est dessinée exactement sur le plan far, à z = 1, 
+il faut penser à utiliser un ztest `GL_LEQUAL`, au lieu du `GL_LESS` habtiuel pour obtenir une image correcte lorsque le zbuffer est initialisé lui aussi exactement à 1.
+
+code complet est dans tuto_draw_cubemap.cpp et draw_cubemap.glsl
+
+### éclairage par une cubemap / l'environnement
+
+Il est assez direct d'utiliser une cubemap pour simuler un reflet miroir sur un objet. Il faut connaitre la direction camera vers fragment et la normale du fragment dans le 
+repère du monde :
+\code
+// fragment shader
+in vec3 vertex_position;        // position repere monde, calculee par le vertex shader
+in vec3 vertex_normal;          // normale repere monde
+
+uniform vec3 camera_position;   // camera repere monde
+uniform samplerCube texture0;
+
+void main( )
+{
+    vec3 n= normalize(vertex_normal);
+    vec3 v= vertex_position - camera_position;  // direction camera vers fragment
+    vec3 m= reflect(v, n);                      // direction mirroir
+    
+    fragment_color= texture(texture0, m);       
+}
+\endcode
+
+<IMG SRC="cubemap_mirror.png" width="50%"> 
+
+Mais les objets sont rarement des miroirs, comment simuler l'éclairage d'un fragment par l'environnement ? La bonne solution est présentée dans le cours sur l'intégration 
+numérique et l'éclairage global, mais estimer brutalement cette intégrale pour chaque pixel est beaucoup trop lent...
+
+La première idée est liée à un constat : que se passe-t-il si on utilise un mipmap différent de la cubemap avec le shader précédent ?
+\code
+    float level= 4;
+    fragment_color= textureLod(texture0, m, level);
+\endcode
+
+<table style="width:100%">
+<tr> 
+<td> <IMG SRC="cubemap_mirror02.png" width="100%"> level 2 </td>
+<td> <IMG SRC="cubemap_mirror03.png" width="100%"> level 3 </td>
+<td> <IMG SRC="cubemap_mirror04.png" width="100%"> level 4 </td>
+<td> <IMG SRC="cubemap_mirror05.png" width="100%"> level 5 </td>
+</tr> 
+<tr> 
+<td> <IMG SRC="cubemap_mirror06.png" width="100%"> level 6 </td>
+<td> <IMG SRC="cubemap_mirror07.png" width="100%"> level 7 </td>
+<td> <IMG SRC="cubemap_mirror08.png" width="100%"> level 8 </td>
+<td> <IMG SRC="cubemap_mirror09.png" width="100%"> level 9 </td>
+</tr> 
+</table>
+
+Les effets ne sont pas très visibles sur la première ligne, mais les derniers niveaux de la cubemap permettent vraiment de changer l'apparence de l'objet. On peut estimer 
+quel mipmap utiliser en fonction de la matière de l'objet. Cette approximation est détaillée dans ce 
+[blog, archivé et remis en page](https://casual-effects.com/research/McGuire2013CubeMap/index.html).
+
+Mais en gros, avec 2 accès à la cubemap, un pour la partie diffuse et l'autre pour les reflets, il est possible d'obtenir une approximation pour une matière diffuse ou réfléchissante :
+\code
+// fragment shader
+uniform vec3 camera_position;
+uniform samplerCube texture0;
+uniform float alpha= 22;
+uniform float k= 0.8;
+
+in vec3 vertex_position;
+in vec3 vertex_normal;
+out vec4 fragment_color;
+
+void main( )
+{
+    vec3 v= vertex_position - camera_position;  // direction camera
+    vec3 n= normalize(vertex_normal);           // normale
+    vec3 m= reflect(v, n);                      // direction mirroir
+    
+    // approximation
+    float w= textureSize(texture0, 0).x;        // passer en uniform !!
+    float dlevel= log2(w) +1;
+    // diffus : dernier mipmap dans la direction de la normale
+    vec3 diffuse= textureLod(texture0, n, dlevel).rgb;
+    
+    // reflets : mipmap en fonction de la concentration du reflet dans la direction mirroir
+    float glevel= max(0, log2(w * sqrt(3)) - 0.5 * log2(alpha+1));
+    vec3 glossy= textureLod(texture0, m, glevel).rgb;
+    
+    vec3 color= k * diffuse + (1 - k) * glossy;
+    fragment_color= vec4(color, 1);
+}
+\endcode
+
+<table style="width:100%">
+<tr> 
+<td> <IMG SRC="cubemap_brdf01.png" width="100%"> 
+<td> <IMG SRC="cubemap_brdf02.png" width="100%"> 
+<td> <IMG SRC="cubemap_brdf03.png" width="100%"> 
+<td> <IMG SRC="cubemap_brdf04.png" width="100%"> 
+</table>
+_remarque :_ les modèles de matières sont présentés dans \ref brdf.
+
+code complet dans tuto_cubemap.cpp + cubemap.glsl
+
+Bien que très simple, cette solution est une grosse approximation. La partie diffuse devrait tenir compte des 5 faces au dessus de l'horizon et pas seulement de la face dans la 
+direction de la normale.
+
+Une solution correcte et plutot efficace est présentée dans 
+["Real-time Shading with Filtered Importance Sampling"](https://cgg.mff.cuni.cz/~jaroslav/papers/2008-egsr-fis/2008-egsr-fis-final-embedded.pdf), J. Krivanek, M. Colbert, 2008.
+et ["Fast Filtering of Reflection Probes"](https://www.ppsloan.org/publications/ggx_filtering.pdf), J. Manson, P.P. Sloan, 2016.
+
+Il est aussi possible de pré-calculer une approximation de meilleure qualité, 
+cf ["Real Shading in Unreal Engine 4"](https://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf), B. Karris, 2013
+
+Le plus gros défaut de ces méthodes est que la visibilité n'est pas estimée, les pieds de bigguy sont bleus, éclairés par le ciel, alors qu'ils devraient être à l'ombre du corps. Il est 
+possible de corriger ce défaut en pré-calculant l'éclairage ambiant de l'objet. 
+
+# cubemap dynamique
+
+Charger une image est pratique pour initialiser une cubemap, mais dans certains cas, il est nécéssaire de dessiner la scène (animée...) autour d'un personnage pour ensuite 
+l'éclairer. Une solution directe consiste à préparer 6 framebuffers, un par face de la cubemap et à dessiner 6 fois la scène. cf \ref framebuffer. mais c'est assez pénible à écrire 
+et plutot lent.
+
+Une solution plus efficace existe : une cubemap est un tableau de 6 textures, et il est possible d'associer le tableau complet à un framebuffer avec `glFramebufferTexture()` :
+\code
+    GLuint color_cubemap= 0;
+    GLuint depth_cubemap= 0;
+    GLuint framebuffer= 0;
+    
+    // 6 faces couleur
+    glGenTextures(1, &color_cubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, color_cubemap);
+    for(int i= 0; i < 6; i++)
+    {
+        // creer chaque face
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
+            GL_RGBA, w, h, 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    }
+    
+    // parametres de filtrage
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);    
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);    
+    //+ mipmaps
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);    
+    
+    // 6 faces profondeur
+    glGenTextures(1, &depth_cubemap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, depth_cubemap);
+    for(int i= 0; i < 6; i++)
+    {
+        // creer chaque face
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
+            GL_DEPTH_COMPONENT, w, h, 0,
+            GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr);
+    }
+    
+    // framebuffer 
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    // attache les 6 faces couleur + profondeur
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, color_cubemap, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_cubemap, 0);
+    
+    // nettoyage
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+\endcode
+
+Par contre, il faudra indiquer dans quel élement du tableau / face de cubemap dessiner les triangles. Il faudra toujours dessiner 6 fois chaque triangle, une fois par face de la cubemap et 
+c'est la variable `gl_Layer` qui indique quelle texture du tableau / framebuffer / cubemap remplir. Cette fonctionnalité, le _layered rendering_, utilise normalement un _geometry shader_ 
+pour dessiner 6 fois chaque triangle. Les différents tutos sur le sujet ne mentionnent que cette solution, mais il est plus simple et plus efficace de ne _pas_ utiliser de geometry shader et 
+d'utiliser à la place `glDrawInstanced()` pour dessiner 6 fois les triangles. Le vertex shader affectera une valeur à `gl_Layer` en fonction de l'instance. Cette fonctionnalité est disponible 
+sur tous les gpu actuels, cf l'extension [GL_ARB_shader_viewport_layer_array](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_shader_viewport_layer_array.txt).
+
+La seule difficulté est de construire les matrices _view_ qui permettent d'orienter la camera dans le bon sens pour produire images / face de la cubemap en respectant leur 
+convention... Lookat() de mat.h permet de le faire assez facilement :
+\code
+    // prepare les 6 matrices view, une par face de la cubemap
+    // !! attention a la direction 'up' de lookat... rappel : orientation des textures des cubemaps...
+    Transform faces[6];
+    faces[0]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(1, 0, 0),  /* up */ Vector(0, -1, 0));   // +X
+    faces[1]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(-1, 0, 0), /* up */ Vector(0, -1, 0));   // -X
+    
+    faces[2]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(0, 1, 0),  /* up */ Vector(0, 0, 1));    // +Y
+    faces[3]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(0, -1, 0), /* up */ Vector(0, 0, -1));   // -Y
+    
+    faces[4]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(0, 0, 1),  /* up */ Vector(0, -1, 0));   // +Z
+    faces[5]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(0, 0, -1), /* up */ Vector(0, -1, 0));   // -Z
+
+    // projection canonique
+    Transform projection= Perspective(45, 1, 0.01, 100);
+\endcode
+
+Par exemple, pour orienter la camera le long de l'axe +x, il faut utiliser `Lookat(Point(0, 0, 0), Point(1, 0, 0),  Vector(0, -1, 0));` ce qui permet de placer la camera à l'origine, de 
+l'orienter le long de l'axe +x (c'est à dire en regardant le point (1, 0, 0)). Le dernier paramètre, le vecteur qui indique la verticale serait (0, 1, 0) normalement, mais pour respecter
+la convention des cubemaps, il faut retourner la camera, avec la verticale vers le bas...
+
+L'application va dessiner les objets avec `glDrawArraysInstanced(GL_TRIANGLES, 0, n, 6)`, soit 6 copies de chaque triangle, et c'est le vertex shader qui termine le travail :
+\code
+// vertex shader
+uniform mat4 modelMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix[6];
+
+in vec3 position;
+in vec3 normal;
+
+void main( )
+{
+    gl_Position= projectionMatrix * viewMatrix[gl_InstanceID] * modelMatrix * vec4(position, 1);
+    gl_Layer= gl_InstanceID;
+}
+\endcode
+
+`gl_InstanceID` permet de retrouver la transformation à utiliser pour la Ieme face et `gl_Layer` permet de dessiner le triangle dans la face de la cubemap attachée au framebuffer.
+
+code complet dans \ref tuto_dynamic_cubemap.cpp + render_cubemap.glsl
+
+*/

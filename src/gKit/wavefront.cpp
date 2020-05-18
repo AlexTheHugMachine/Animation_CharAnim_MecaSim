@@ -196,7 +196,9 @@ Mesh read_mesh( const char *filename )
     fclose(in);
     
     if(error)
-        printf("loading mesh '%s'...\n[error]\n%s\n\n", filename, line_buffer);
+        printf("[error] loading mesh '%s'...\n%s\n\n", filename, line_buffer);
+    else
+        printf("mesh '%s': %d positions %s %s\n", filename, int(data.positions().size()), data.has_texcoord() ? "texcoord" : "", data.has_normal() ? "normal" : "");
     
     return data;
 }

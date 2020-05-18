@@ -34,19 +34,15 @@ int App::run( )
     // gestion des evenements
     while(events(m_window))
     {
-    #if 0
-        if(laptop_mode() && last_event_count() == 0)
-        {
-            // ne pas redessiner si pas d'evenements...
-            // devrait aussi limiter la consommation sur portable
-            SDL_Delay(16);
-            continue;
-        }
-    #endif
         
-        if(update(global_time(), delta_time()) < 0)
+        //~ if(update(global_time(), delta_time()) < 0)
+        if(prerender() < 0)
             break;
+        
         if(render() < 1)
+            break;
+
+        if(postrender() < 0)
             break;
 
         // presenter le resultat
@@ -54,6 +50,7 @@ int App::run( )
         // cf https://www.khronos.org/opengl/wiki/Swap_Interval#GPU_vs_CPU_synchronization
         // devrait limiter la consommation sur portable
         glFinish();
+        
         SDL_GL_SwapWindow(m_window);
     }
 

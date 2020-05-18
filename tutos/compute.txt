@@ -414,11 +414,19 @@ En cas de problèmes de synchronisation, il est possible d'utiliser une barrièr
 
 exemple complet \ref min_data.cpp
 
+exemple complet \ref tuto_vertex_compute.cpp, illustration des principes : passe 1. compute shader, synchronisation, passe 2. pipeline graphique.
 
 ## notions d'exécution cohérente
 
-\todo
+\todo 
+Les groupes de threads ne sont pas ordonnancés directement par le matériel, ils sont découpés en sous-groupes de gl_SubgroupSize... et l'exécution des threads 
+des sous groupes est synchrone, ils exécutent tous la mếme instruction en même temps et peuvent communiquer directement sans passer par la mémoire partagée...
 
+cf les extensions standard GL_ARB_shader_ballot, GL_ARB_shader_group_vote
+
+et les extensions constructeurs :
+	- AMD GL_AMD_shader_ballot
+	- nvidia GL_NV_shader_thread_group, GL_NV_shader_thread_shuffle
 
 ## limites d'ordonnancement
 
@@ -427,6 +435,13 @@ l'ordonnanceur matériel.
 
 \todo
 
+
+## un peu de lecture 
+
+pour plus de détails et une introduction plus complète, M. Chajdas / AMD a rédigé :
+	- [intro to compute shader](https://anteru.net/blog/2018/intro-to-compute-shaders/index.html)
+	- [more compute shaders](https://anteru.net/blog/2018/more-compute-shaders/index.html)
+	- [even more compute shaders](https://anteru.net/blog/2018/even-more-compute-shaders/index.html)
 
 */
 

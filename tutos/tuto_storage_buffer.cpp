@@ -25,7 +25,7 @@ namespace glsl
         alignas(4) T x, y;
         
         gvec2( ) {}
-        gvec2( const vec2& v ) : x(v.x), y(v.y) {}
+        gvec2( const ::vec2& v ) : x(v.x), y(v.y) {}
     };
     
     typedef gvec2<float> vec2;
@@ -39,7 +39,7 @@ namespace glsl
         alignas(4) T x, y, z;
         
         gvec3( ) {}
-        gvec3( const vec3& v ) : x(v.x), y(v.y), z(v.z) {}
+        gvec3( const ::vec3& v ) : x(v.x), y(v.y), z(v.z) {}
         gvec3( const Point& v ) : x(v.x), y(v.y), z(v.z) {}
         gvec3( const Vector& v ) : x(v.x), y(v.y), z(v.z) {}
     };
@@ -55,7 +55,7 @@ namespace glsl
         alignas(4) T x, y, z, w;
         
         gvec4( ) {}
-        gvec4( const vec4& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
+        gvec4( const ::vec4& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
     };
     
     typedef gvec4<float> vec4;

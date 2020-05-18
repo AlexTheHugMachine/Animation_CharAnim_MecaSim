@@ -18,18 +18,26 @@ Image read_image( const char *filename );
 //! enregistre une image dans un fichier png.
 int write_image( const Image& image, const char *filename );
 
+//! retourne l'image
+Image flipY( const Image& image );
+//! retourne l'image
+Image flipX( const Image& image );
+
+//! renvoie un bloc de l'image
+Image copy( const Image& image, const int xmin, const int ymin, const int width, const int height );
+
 
 //! stockage temporaire des donnees d'une image.
 struct ImageData
 {
-    ImageData( ) : data(), width(0), height(0), channels(0), size(0) {}
-    ImageData( const int w, const int h, const int c, const int s= 1 ) : data(w*h*c*s), width(w), height(h), channels(c), size(s) {}
+    ImageData( ) : pixels(), width(0), height(0), channels(0), size(0) {}
+    ImageData( const int w, const int h, const int c, const int s= 1 ) : pixels(w*h*c*s), width(w), height(h), channels(c), size(s) {}
     
-    std::size_t offset( const int x, const int y ) { return y * width * channels * size + x * channels * size; }
-    const void *buffer( ) const { return &data.front(); }
-    void *buffer( ) { return &data.front(); }
+    size_t offset( const int x, const int y ) const { return y * width * channels * size + x * channels * size; }
+    const void *data( ) const { return &pixels.front(); }
+    void *data( ) { return &pixels.front(); }
     
-    std::vector<unsigned char> data;
+    std::vector<unsigned char> pixels;
     
     int width;
     int height;
@@ -42,6 +50,14 @@ ImageData read_image_data( const char *filename );
 
 //! enregistre des donnees dans un fichier png.
 int write_image_data( ImageData& image, const char *filename );
+
+//! retourne l'image
+ImageData flipY( const ImageData& image );
+//! retourne l'image
+ImageData flipX( const ImageData& image );
+
+//! renvoie un bloc de l'image
+ImageData copy( const ImageData& image, const int xmin, const int ymin, const int width, const int height );
 
 ///@}
 

@@ -38,7 +38,7 @@ ImageData mipmap_resize( const ImageData& image, const int lod )
     assert(image.size == 1);
     
     ImageData level= ImageData(image.width, image.height, image.channels, image.size);
-    level.data= image.data;
+    level.pixels= image.pixels;
     
     int w= level.width;
     int h= level.height;
@@ -54,12 +54,12 @@ ImageData mipmap_resize( const ImageData& image, const int lod )
         for(int i= 0; i < image.channels; i++)
         {
             int m= 0;
-            m= m + level.data[offset(row_stride, stride, 2*x, 2*y, i)];
-            m= m + level.data[offset(row_stride, stride, 2*x +1, 2*y, i)];
-            m= m + level.data[offset(row_stride, stride, 2*x, 2*y +1, i)];
-            m= m + level.data[offset(row_stride, stride, 2*x +1, 2*y +1, i)];
+            m= m + level.pixels[offset(row_stride, stride, 2*x, 2*y, i)];
+            m= m + level.pixels[offset(row_stride, stride, 2*x +1, 2*y, i)];
+            m= m + level.pixels[offset(row_stride, stride, 2*x, 2*y +1, i)];
+            m= m + level.pixels[offset(row_stride, stride, 2*x +1, 2*y +1, i)];
             
-            level.data[offset(w, stride, x, y, i)]= m / 4;
+            level.pixels[offset(w, stride, x, y, i)]= m / 4;
         }
         
         row_stride= w;
@@ -83,7 +83,7 @@ Color average_color( const ImageData& image )
     for(int y= 0; y < image.height; y++)
     for(int x= 0; x < image.width; x++)
     for(int i= 0; i < image.channels; i++)
-        color[i]= color[i] + (float) image.data[offset(image.width, stride, x, y, i)] / 255.f;
+        color[i]= color[i] + (float) image.pixels[offset(image.width, stride, x, y, i)] / 255.f;
     
     return Color(color[0], color[1], color[2], color[3]) / (image.width * image.height);
 }
@@ -116,8 +116,8 @@ int read_textures( std::vector<MaterialData>& materials, const size_t max_size )
         if(total_size > max_size)
         {
             // ne stocke plus les images apres avoir depasse la limite de taille
-            std::vector<unsigned char>().swap(data.diffuse_image.data);
-            std::vector<unsigned char>().swap(data.ns_image.data);
+            std::vector<unsigned char>().swap(data.diffuse_image.pixels);
+            std::vector<unsigned char>().swap(data.ns_image.pixels);
         }
         
         textures.emplace_back(data);
@@ -153,7 +153,7 @@ int read_textures( std::vector<MaterialData>& materials, const size_t max_size )
         
         if(data.use_diffuse && data.diffuse_image.width > 0)
         {
-            if(data.diffuse_image.data.empty())
+            if(data.diffuse_image.pixels.empty())
             {
                 // recharge l'image, si necessaire
                 data.diffuse_image= read_image_data(material.diffuse_filename.c_str());
@@ -170,7 +170,7 @@ int read_textures( std::vector<MaterialData>& materials, const size_t max_size )
         
         if(data.use_ns && data.ns_image.width > 0)
         {
-            if(data.ns_image.data.empty())
+            if(data.ns_image.pixels.empty())
             {
                 // recharge l'image, si necessaire
                 data.ns_image= read_image_data(material.ns_filename.c_str());
@@ -184,8 +184,8 @@ int read_textures( std::vector<MaterialData>& materials, const size_t max_size )
             material.ns_texture= default_texture;
         
         // nettoyage, les images ne sont plus necessaires
-        std::vector<unsigned char>().swap(data.diffuse_image.data);
-        std::vector<unsigned char>().swap(data.ns_image.data);
+        std::vector<unsigned char>().swap(data.diffuse_image.pixels);
+        std::vector<unsigned char>().swap(data.ns_image.pixels);
     }
     
     return total_size;

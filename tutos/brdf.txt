@@ -1,0 +1,484 @@
+
+/*! \addtogroup brdf shader et brdf
+
+# (toute) petite histoire des modèles de matières utilisés en synthèse.
+
+physique :
+- Lambert 1760 : matière diffuse opaque,
+- Fresnel 1823 : réflexion et réfraction par une surface lisse, opaque ou transparente,
+- Torrance - Sparrow 1967 : réflexion par une surface rugueuse : les microfacettes.
+
+utilisation dans la communauté image :
+- modèle diffus de Lambert ??
+- Phong 1975 : reflet symétrique, 
+- Blinn - Phong 1976 : reflet "réaliste", inspiré des microfacettes de Torrance - Sparrow 1967,
+- [Cook - Torrance 1981](https://graphics.pixar.com/library/ReflectanceModel/index.html) : modèle à microfacettes dérivé de Torrance - Sparrow 1967, surface rugueuse opaque,
+- [Walter 2007](https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf) : reformulation du modèle de Cook - Torrance, utilisation de la distribution GGX et de sa normalisation exacte, surface rugueuse opaque ou transparente,
+- [Burley 2012](https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf) : comparaison mesures / modèles, reparamétrisation "intuitive" des paramètres, séparation des métaux des autres matières, modèle Disney,
+- [Heitz 2014](http://jcgt.org/published/0003/02/03/) : normalisation, conservation de l'énergie et validation des modèles à microfacettes, [slides](http://jcgt.org/published/0003/02/03/presentation.pdf)
+- [Burley 2015](https://blog.selfshadow.com/publications/s2015-shading-course/burley/s2015_pbs_disney_bsdf_notes.pdf) : simplification, intégration des validations de Heitz 2014, diffusion 
+
+Le terme PBR vient des travaux de Walter et Burley, l'industrie a enfin compris les avantages de faire les choses correctement...
+
+Tous les modèles de matières s'utilisent de la même manière. Ils permettent de connaitre la lumière réfléchie vers une direction, l'observateur, par exemple :
+\f[L_r(p, \vec{o})= f_r(\vec{l}, \vec{o}) \cdot L_i(p, \vec{l}) \cos \theta_l \f]
+
+La lumière  \f$ L_i(p, \vec{l}) \f$ arrive sur le point p depuis la direction \f$\vec{l}\f$ et le modèle de matière, la _brdf_ \f$f_r(\vec{l}, \vec{o})\f$ indique 
+quelle quantité \f$L_r(p, \vec{o})\f$ est réfléchie par p dans la direction \f$\vec{o}\f$.
+
+## premier shader : matière diffuse, modèle de Lambert
+
+\f[ f_r(\vec{o}, \vec{l})= \frac{k}{\pi}\f]
+
+_remarque :_ pourquoi le  \f$ \frac{1}{\pi} \f$ ? les modèles de matières doivent vérifier quelques propriétés. Les détails sont dans la partie modèles réalistes.
+
+donc oui, ce "modèle" de réflexion est une constante k comprise entre 0 et 1 qui représente à quel point la matière réfléchit la lumière incidente. Et comme il est indépendant 
+de la direction d'observation, la même quantité de lumière est réfléchie dans toutes les directions.
+
+### et avec un shader ? comment on fait ?
+
+on doit calculer :
+\f[L_r(p, \vec{o})= \frac{k}{\pi} \cdot L_i(p, \vec{l}) \cos \theta_l \f]
+
+il suffit de calculer \f$ \cos \theta_l \f$, le cosinus de l'angle entre la normale en p et la direction vers la lumière, et de se rappeler que les 
+calculs sur les points et les vecteurs doivent se faire avec des coordonnées dans le même repère.
+
+<IMG SRC="test.png" width="40%"> 
+	
+en résumé, il faut connaitre, dans le même repère : 
+- p, la position du point éclairé,
+-  \f$ \vec{n} \f$, la normale de la surface au point p,
+-  \f$ \vec{o} \f$, la direction du point p vers l'observateur, la camera,
+-  \f$ \vec{l} \f$, la direction du point p vers la source de lumière,
+- k, la constante de modèle de réflexion.
+
+premier constat, __les normales et les positions doivent faire partie de la description des sommets de l'objet__. elles sont donc accessibles par le vertex shader, 
+mais pas directement par le fragment shader.
+
+la position de la camera, la position de la source de lumière, son emission et la constante k, seront des `uniforms` du fragment shader.
+
+__comment obtenir p et n dans le fragment shader ?__
+
+il suffit de se rappeler que les sorties du vertex shader sont interpolées avant d'être accessibles par le fragment shader. l'interpolation des positions des sommets 
+du triangle calcule, pour chaque pixel, la position dans l'espace du point du triangle se projettant sur le centre du pixel. pour les normales, il ne faut pas oublier 
+que l'interpolation change la longueur des vecteurs.
+le vertex shader déclare 2 sorties, des varyings : `out vec3 p; out vec3 n;` il ne reste plus qu'à calculer leurs coordonnées dans un repère commun...
+
+_quel repère pour les calculs ?_ n'importe quel repère avant la projection : repère objet, scène ou camera. 
+la projection ne préserve par les angles, et comme on doit en calculer plusieurs, autant choisir un repère dans lequel c'est simple à faire.
+
+_remarque :_ repassez dans \ref intro3d ou le cm d'intro openGL, si nécessaire.
+
+
+les exemples suivants font les calculs dans le repère du monde, mais ce n'est peut être pas le plus efficace. _pourquoi ?_
+
+on suppose que l'on connait la position de la source et la position de la camera dans le repère du monde, donc pas de transformation. pour les sommets et les 
+normales, par contre, on connait leur coordonnées dans le repère de l'objet, il faut donc les transformer, en utilisant la matrice `model`.
+
+\code
+#version 330
+
+// vertex shader
+in vec3 position;			    // attribut, repere local de l'objet
+in vec3 normal;				    // attribut, repere local de l'objet
+
+uniform mat4 mvpMatrix;			// transformation du repere local de l'objet vers le repere projectif
+uniform mat4 modelMatrix;		// transformation du repere local de l'objet vers le repere du monde / de la scene
+
+out vec3 p;				        // varying, sortie : position dans le repere du monde 
+out vec3 n;				        // varying, sortie : normale dans le repere du monde
+
+void main( )
+{
+	// resultat obligatoire du vertex shader, position dans le repere projectif
+	gl_Position= mvpMatrix * vec4(position, 1);
+	
+	// calcule la position et la normale du sommet dans le repere du monde, et le transmet au fragment shader,
+	// necessaire pour calculer la lumiere reflechie
+	p= vec3(modelMatrix * vec4(position, 1));
+	n= vec3(modelMatrix * vec4(normal, 0));
+	
+	/* remarque : on peut decomposer toutes les etapes 
+		vec4 p4= modelMatrix * vec4(position, 1);
+		vec4 n4= modelMatrix * vec4(normal, 0);
+		p= p4.xyz / p4.w;
+		n= n4.xyz;
+		
+		mais, comme il n'y a de projection dans la transformation utilisee, p4.w == 1 
+		et comme normal est une direction n4.w == 0...
+	*/
+	
+	/* remarque : il pas necessaire d'utiliser la matrice homogene 4x4 pour transformer un vecteur. on peut aussi ecrire :
+		n= mat3(modelMatrix) * normal;
+		
+		directement en utilisant que la partie 3x3 de la matrice
+	*/
+}
+\endcode
+
+il ne reste plus qu'à écrire le fragment shader qui doit calculer les directions  \f$ \vec{o} \f$ et  \f$ \vec{l} \f$ et \f$ \cos \theta_l \f$ :
+\code
+#version 330
+
+// fragment shader
+in vec3 p;				        // varying, entree : position dans le repere du monde, cf vertex shader
+in vec3 n;				        // varying, entree : normale dans le repere du monde, cf vertex shader
+
+uniform vec3 camera;			// uniform : position de la camera dans le repere du monde, affecte par l'application
+uniform vec3 source;			// uniform : position de la source de lumiere dans le repere du monde, affecte par l'application
+uniform vec3 emission;			// uniform : emission de la source de lumiere (couleur rgb), affecte par l'application
+uniform float k;			    // uniform : parametre de la brdf, affecte par l'application
+
+const float PI= 3.14159265359;		
+
+out vec4 fragment_color;		// sortie du fragment shader, couleur du fragment / pixel
+void main( )
+{
+	// directions 
+	vec3 o= normalize(camera - p);
+	vec3 l= normalize(source - p);
+	// cos
+	float cos_theta= dot(normalize(n), l);
+	
+	// brdf
+	float fr= k / PI;
+	vec3 color= fr * emission * cos_theta;
+	
+	fragment_color= vec4(color, 1);
+}
+\endcode
+
+_une relation utile :_ \f$ \cos \angle(\vec{u}, \vec{v})= \frac{\vec{u} \cdot \vec{v}}{||\vec{u}|| \cdot ||\vec{v}||} \f$, ce qui s'écrit directement :
+`float cos_theta= dot(normalize(u), normalize(v));`
+
+_autre remarque :_ les normales devraient être transformées par une matrice différente de celles des sommets. dans les cas simples, lorsqu'il n'y a pas
+d'étirement ou de changement d'échelle dans la transformation des sommets, les normales subissent la même transformation.
+sinon Transform::normal() renvoie la transformation à utiliser sur les normales.
+
+ce shader suppose que le flux émis par la source arrive intégralement en p, ce qui est faux, il manque un terme  \f$ 1 / ||\vec{l}||^2 \f$ et un 
+cosinus si la source n'est pas un point. cf le cours simulation et integration numérique.
+
+vous pouvez tester avec shader_kit, cf \ref shader_kit :\n
+`bin/shader_kit tutos/brdf_lambert.glsl data/bigguy.obj`
+
+<IMG SRC="shaderkit_lambert.png" width="50%">
+
+## premier reflets : modèle de Blinn Phong
+
+Comment reproduire le type de reflet que l'on peut observer dans cette [expérience](http://resources.mpi-inf.mpg.de/lighttransport/) ?
+<table style="width:100%">
+<tr> 
+	<td> <IMG SRC="white-inset.png" width="100%"> 
+	<td> <IMG SRC="silver-inset.png" width="100%"> 
+	<td> <IMG SRC="mirror-inset.png" width="100%"> 
+</table>
+
+Le modèle de Lambert, permet de reproduire le comportement de gauche (surface presque matte), le modèle de Fresnel reproduit un miroir, le comportement de droite. 
+Comment contrôler le reflet dans le cas intermédiaire ? 
+
+B. Phong en 1975 propose de représenter le reflet comme un cone plus ou moins concentré (avec un angle d'ouverture plus ou moins grand) aligné dans la direction 
+miroir. Ce qui semble raisonnable sur l'exemple illustré ci-dessus. Mais qui a pourtant un gros défaut : un "vrai" reflet se déforme en fonction de l'incidence... le reflet du modèle 
+de Phong reste parfaitement symétrique : ce n'est pas trop choquant sur des objets, mais c'est assez bizarre sur de grandes surfaces, comme un sol, une route, l'ocean, etc.
+
+<table style="width:80%">
+<tr> 
+	<td> <IMG SRC="phong.png" width="100%"> 
+	modèle Phong
+	<td> <IMG SRC="blinn_phong.png" width="100%"> 
+	modèle Blinn - Phong
+</tr> 
+</table>
+
+pour vous convaincre, cherchez des photos d'ocean vu d'avion, ou des photos prises apres la pluie en ville avec les reflets de toutes les lumieres...
+
+J. Blinn en 1976, reformule le modèle de B. Phong 1975 pour mieux reproduire l'étirement des reflets lorsque la lumière est incidente avec un angle 
+important. L'idée est relativement simple : quelle devrait être la direction de la normale pour produire un reflet "miroir" entre les directions \f$ \vec{o} \f$ 
+et \f$ \vec{l} \f$ ? 
+
+_indications :_ on peut calculer la direction miroir de \f$ \vec{l} \f$ par rapport à la normale. \f$ \vec{l} \f$ et \f$ \vec{m} \f$ deviennent symétriques par rappport à la normale :
+le même angle les séparent de la normale. la normale est le bisecteur de \f$ \vec{l} \f$ et \f$ \vec{m} \f$.
+\f[
+	\vec{m} = 2 (\vec{n} \cdot \vec{l}) \vec{n} - \vec{l}
+\f]
+<IMG SRC="fresnel.png" width="20%"> 
+
+_réponse :_ \f$ \vec{h}= \frac{\vec{o} + \vec{l}}{|| \vec{o} + \vec{l} ||}\f$, le bisecteur des 2 vecteurs. du coup la direction \f$ \vec{o} \f$ devient symétrique 
+de \f$ \vec{l} \f$ par rapport à \f$ \vec{h} \f$. Si la normale de la surface est orientée comme \f$ \vec{h} \f$, \f$ \vec{l} \f$ est la direction miroir de \f$ \vec{o} \f$.
+Et plus \f$ \vec{h} \f$ est loin de la normale en p, plus l'observateur est loin du reflet miroir de  \f$ \vec{l} \f$. 
+
+<IMG SRC="testh.png" width="40%"> 
+
+Ne reste plus qu'une question, comment controler la taille,  la concentration du reflet ?
+Il fallait une fonction rapide à calculer (en 1976 les machines n'etaient pas tout à fait les mêmes...) et qui décroit plus ou moins vite vers 0 en fonction d'un paramètre... 
+
+et c'est \f$ \cos^\alpha \theta_h \f$ qui à gagné. mais pas tout à fait :
+<IMG SRC="cosn.png" width="40%">
+
+l'exposant permet bien de controler la taille du reflet, la fonction décroit vers 0 plus ou moins vite, mais plus le reflet est petit, moins il est intense, ce qui est plutot génant...
+la fonction doit vérifier une autre propriété : elle doit etre normalisée, son intégrale, pour \f$ \theta_h \in [0 \, \pi/2] \f$ doit être égale à 1, quelque soit la taille du reflet, la 
+même quantité de lumière est réfléchie sur l'ensemble des directions : \f$ \frac{\alpha +1}{2\pi} \int \cos^\alpha \theta_h \, d\omega = 1\f$
+<IMG SRC="cosnorm.png" width="40%">
+
+Mais si on utilise cette fonction comme _brdf_, il se passe autre chose : la matière réfléchit plus de lumière qu'elle n'en reçoit... c'est encore un problème de normalisation. Il 
+faut s'assurer que pour une direction \f$ \vec{l} \f$ la somme de la lumière réfléchie \f$  f_r(\vec{l}, \vec{o}) \cos \theta_i \f$ est inférieure ou égale à 1 : 
+\f[ \int f_r(\vec{l}, \vec{o}) \cos \theta_i d\omega_i = 1 \f]
+_remarque :_ lorsqu'un modèle de matière vérifie cette condition de normalisation, on dit qu'il _conserve_ l'énergie.
+
+Pour le modèle Blinn - Phong, il n'existe pas de solution parfaite, c'est un compromis, les calculs sont rapidement décrits par [F. Giesen](http://www.farbrausch.de/%7Efg/stuff/phong.pdf) et
+fournissent un résultat simple :
+\f[ f_r(\vec{o}, \vec{l})= \frac{\alpha+8}{8\pi} \cos^\alpha \theta_h\f]
+
+et voila la quantité de lumière réfléchie en fonction de \f$ \theta_l \f$, pour les 3 versions : modèle diffus (courbe bleue), modèle normalisé (courbe rouge) et modèle 
+conservatif (courbe verte) :
+<IMG SRC="conservation.png" width="40%">
+
+Ce modèle, Blinn - Phong conservatif et normalisé, est très simple à calculer, se comporte correctement, mais l'intensité de ses reflets diminue lorsque l'incidence de la 
+lumière augmente, ce qui ne correspond pas vraiment à ce que l'on peut observer dans la nature...
+
+### et avec un shader ? comment on fait ?
+
+La démarche est identique, on doit calculer :
+\f[L_r(p, \vec{o})=  \frac{\alpha+8}{8\pi} \cos^\alpha \theta_h \cdot L_i(p, \vec{l}) \cos \theta_l \f]
+
+il faut connaitre, dans le même repère : 
+- p, la position du point éclairé,
+- \f$ \vec{n} \f$, la normale de la surface au point p,
+- \f$ \vec{o} \f$, la direction du point p vers l'observateur, la camera,
+- \f$ \vec{l} \f$, la direction du point p vers la source de lumière,
+- \f$ \vec{h} \f$, la direction bisectrice de \f$ \vec{o} \f$ et \f$ \vec{l} \f$,
+- \f$ \alpha \f$, le paramètre de concentration du reflet, dit l'_exposant_...
+
+le fragment shader doit calculer les directions  \f$ \vec{o} \f$,\f$ \vec{l} \f$, et \f$ \vec{h} \f$, puis \f$ \cos \theta_l \f$ et \f$ \cos \theta_h \f$ :
+\code
+	// directions
+	vec3 o= normalize(camera - p);
+	vec3 l= normalize(source - p);
+	vec3 h= normalize(o + l);
+	float cos_theta_h= dot(normalize(n), h);
+	
+	// cos
+	float cos_theta= max(0, dot(normalize(n), l));
+	// brdf
+	float fr= (alpha+8) / (8*PI) * pow(cos_theta_h, alpha);
+	vec3 color= emission * fr * cos_theta;    
+\endcode
+
+
+## et alors ? quel modèle pour du verre, du metal, du plastique, de l'eau ?
+
+Comment utiliser ces 2 modèles pour reproduire des matières existantes ? autre manière de formuler les choses : sont-ils capables de reproduire des matières naturelles ?
+
+Première chose à vérifier : existe-t-il des matières purement diffuses ? ou purement réfléchissantes ? la réponse courte est : __non__...
+quelques exemples réels : [filmic games 1](http://filmicworlds.com/blog/everything-is-shiny/) [filmic games 2](http://filmicworlds.com/blog/everything-has-fresnel/).
+
+Mais il est quand même possible de fabriquer un modèle un peu plus souple en moyennant les 2 :
+\f[ f_r(\vec{o}, \vec{l})= \frac{k}{\pi} + (1 - k) \frac{\alpha+8}{8\pi} \cos^\alpha \theta_h \f]
+
+avec k compris entre 0 et 1. Les 2 modèles sont correctement normalisés, donc leur moyenne vérifie les mêmes propriétés.
+
+D'après l'analyse de [B. Burley en 2012](https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf), les matières sont classées 
+en 2 groupes : les métaux et le reste... Les métaux sont des conducteurs qui interagissent avec la lumière différement des autres matières : la couleur du reflet d'un métal permet 
+d'identifier le métal, alors que pour les plastiques, par exemple, la couleur du reflet est neutre, c'est la couleur de la source. Et c'est bien cohérent avec les coefficients de Fresnel, 
+cf \ref matiere.
+
+La manière classique de reproduire cette différence utilise 2 couleurs : une pour le terme diffus et une autre pour le terme réfléchissant. 
+Le terme réfléchissant est une couleur neutre pour un plastique, mais pour un métal, ce sera plutôt :
+ - `Silver :    { 0.971519, 0.959915, 0.915324 }`
+ - `Aluminium : { 0.913183, 0.921494, 0.924524 }`
+ - `Gold :		{ 1       , 0.765557, 0.336057 }`
+ - `Copper :    { 0.955008, 0.637427, 0.538163 }`
+ - `Chromium :  { 0.549585, 0.556114, 0.554256 }`
+ - `Nickel :    { 0.659777, 0.608679, 0.525649 }`
+ - `Titanium :  { 0.541931, 0.496791, 0.449419 }`
+ - `Cobalt :    { 0.662124, 0.654864, 0.633732 }`
+ - `Platinum :  { 0.672411, 0.637331, 0.585456 }`
+
+Pour d'autres matières, une couleur neutre (les 3 canaux ont la meme valeur) :
+ - `Quartz :    { 0.045593, 0.045593, 0.045593 }`
+ - `Ice :       { 0.017908, 0.017908, 0.017908 }`
+ - `Water :     { 0.020373, 0.020373, 0.020373 }`
+ - `Alcohol :   { 0.019955, 0.019955, 0.019955 }`
+ - `Glass :     { 0.04,     0.04,     0.04     }`
+ - `Milk :      { 0.022181, 0.022181, 0.022181 }`
+ - `Ruby :      { 0.077271, 0.077271, 0.077271 }`
+ - `Crystal :   { 0.111111, 0.111111, 0.111111 }`
+ - `Diamond :   { 0.171968, 0.171968, 0.171968 }`
+ - `Skin :      { 0.028,    0.028,    0.028    }`
+
+Et de manière symétrique, un métal n'a pas de terme diffus.
+Ces valeurs ont été compilées et calculées par [S. Lagarde 2011](https://seblagarde.wordpress.com/2011/08/17/feeding-a-physical-based-lighting-mode/).
+Elles sont obtenues par mesure des coefficients de Fresnel puis converties en couleurs. 
+
+Et oui : la plupart des matières ne réfléchissent au total qu'une fraction de la lumière incidente, et ce sont les métaux qui réfléchissent le plus.
+
+Le dernièr paramètre du modèle règle la taille du reflet et ne dépend pas vraiment de la matière elle-même, mais plutot de la surface de l'objet : soit lisse (grand exposant), 
+soit rugueux (petit exposant).
+
+Au final, on utilise une couleur de base, multipliée par le modèle du reflet :
+\f[ 
+	\mbox{cdiffus}_{RGB} \cdot \frac{k}{\pi} \mbox{   (Lambert)} 
+\f]
+et
+\f[ 
+	\mbox{creflet}_{RGB} \cdot \frac{\alpha+8}{8\pi} \cos^\alpha \theta_h \mbox{   (Blinn-Phong)}
+\f]
+
+
+
+## et à part du plastique ? on peut faire autre chose ?
+
+Pour faire mieux, il faut intégrer les coefficients de réflexion et/ou réfraction de Fresnel dans le modèle et aussi mieux choisir la fonction qui reproduit la forme du reflet. 
+
+cf Figure 9 de [Burley 2012](https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf) :
+
+<IMG SRC="figure9_burley2012.png" width="80%">
+
+Les métaux, notamment, ont une forme de reflet que les fonctions classiques reproduisent assez mal. 
+
+
+## reflets réalistes : modèle à microfacettes
+
+Les modèles à microfacettes sont basés sur la physique des années 60. Leur première utilisation en image date de 1984 par Cook et Torrance qui travaillaient alors chez Pixar. 
+Ce modèle a ensuite été utilisé pour produire les premiers court-métrages de Pixar, puis reformulé en 2007, comparé à des mesures en 2012, puis serieusement nettoyé en 2014. 
+Depuis, la quasi totalité des productions utilisent des variantes du même modèle, 
+cf [Burley 2015](https://blog.selfshadow.com/publications/s2015-shading-course/burley/s2015_pbs_disney_bsdf_notes.pdf).
+
+L'idée est de considérer que la surface géométrique de l'objet est en fait un ensemble de facettes miroir microscopiques. Elles ne sont pas observables à notre échelle mais sont 
+responsables de la forme et de l'intensité du reflet. Au lieu de les modéliser explicitement / géométriquement, elles sont représentées par quelques statistiques : distribution 
+d'altitude et distribution d'orientation. 
+
+Un modèle à microfacettes se présente classiquement sous cette forme :
+\f[  
+	f_r(\vec{o}, \vec{l})= \frac{F(\vec{o}, \vec{h}) \, D(\vec{h}) \, G_2(\vec{o}, \vec{l}, \vec{h}) }{4 |\vec{n} \cdot \vec{o}| |\vec{n} \cdot \vec{l}|} 
+\f]
+
+Le terme \f$ F \f$, le coefficient de Fresnel, représente le reflet crée par une facette, \f$ D \f$ correspond au nombre de facettes orientées dans la direction \f$ \vec{h} \f$ et 
+qui créent l'intensité du reflet (plus il y a de micro-facettes orientées dans la bonne direction, plus le reflet est intense).
+Le reste, \f$ G_2 \f$ et le cosinus \f$ |\vec{n} \cdot \vec{o}| \f$  permettent de normaliser \f$ D \f$ pour garantir la conservation d'énergie. 
+C'est au final, le même raisonnement que tout à l'heure, pour normaliser le modèle Blinn-Phong :
+\f[  
+	f_r(\vec{o}, \vec{l})= \frac{F(\vec{o}, \vec{h}) \, D(\vec{h})}{\cos \theta} \left( \frac{G_2(\vec{o}, \vec{l}, \vec{h}) }{4 |\vec{n} \cdot \vec{o}|} \right) 
+\f]
+
+Il ne reste plus qu'à trouver quelles fonctions utiliser pour \f$ D \f$ et \f$ G_2 \f$. Les fonctions sont plus complexes que les modèles précédents mais se calculent sans trop de 
+problèmes.
+
+### D et G_2
+
+Le premier changement est la fonction qui décrit la concentration du reflet, au lieu d'une puissance de cosinus, c'est une fonction issue de travaux en physique qui est couramment 
+utilisée (cf Heitz 2014 pour les détails), en partie parce qu'elle permet de mieux reproduire les reflets des metaux, cf la figure au dessus.
+\f[
+	D( \vec{h} ) = \frac{\chi^+(\vec{h} \cdot \vec{n})}{\pi \alpha^2 \cos^4 \theta_m \left( 1 + \frac{\tan^2 \theta_h}{\alpha^2} \right)^2 }, \mbox{ cf Heitz 2014, eq 71}\\
+\f]
+
+L'autre intéret de cette fonction est que l'on peut la normaliser et obtenir un modèle qui conserve l'énergie :
+
+\f{eqnarray*}{ 
+	G_2( \vec{o}, \vec{l}, \vec{h} )    & = & \frac{\chi^+(\vec{o} \cdot \vec{h}) \chi^+(\vec{l} \cdot \vec{h})} {1 + \Lambda(\vec{o}) + \Lambda(\vec{l})}, \mbox{ cf Heitz 2014, eq 99}\\
+	\mbox{ avec}& : &\\
+	\Lambda(\vec{\omega})               & = & - \frac{1}{2} + \frac{1}{2} \sqrt{1 + \frac{1}{a_\omega^2}}, \mbox{ cf Heitz 2014, eq 72}\\
+	a_\omega                            & = & \frac{1}{\alpha \tan \theta_\omega}\\
+	\mbox{ et}& : &\\
+	\chi^+(x)                           & = & 0 \mbox{ si } x < 0\\
+										& = & 1 \mbox{ sinon }
+\f}
+
+Bon, ca fait pas mal de termes à évaluer, première étape, lesquels peut-on calculer facilement ? 
+
+_rappel :_ on sait calculer facilement \f$ cos \angle(\vec{u}, \vec{v}) \f$ :
+ - \f$ \sin^2 \theta + \cos^2 \theta = 1 \mbox{ donc } \sin^2 \theta = 1 - \cos^2 \theta \mbox{ et } \sin \theta = \sqrt{1 - \cos^2 \theta} \f$
+ - \f$ \tan^2 \theta = \frac{\sin^2 \theta}{\cos^2 \theta} \mbox{ donc } \tan^2 \theta = \frac{1 - \cos^2 \theta}{\cos^2 \theta} \mbox{ et } \tan^2 \theta = \frac{1}{\cos^2 \theta} -1\f$
+
+après quelques manipulations on arrive à :
+\f[
+	D( \vec{h} )        = \chi^+(\vec{h} \cdot \vec{n}) \frac{\alpha^2}{\pi \left( 1 + \cos^2 \theta_h (\alpha^2 -1) \right)^2} 
+						= \chi^+(\vec{h} \cdot \vec{n}) \frac{1}{\pi} \left( \frac{\alpha}{1 + \cos^2 \theta_h (\alpha^2 -1)} \right)^2
+\f]
+
+ensuite on peut re-écrire \f$ \Lambda(\vec{\omega}) = - \frac{1}{2} + \frac{1}{2} \sqrt{1 + \alpha^2 \tan^2 \theta_\omega} = - \frac{1}{2} + \frac{1}{2} \sqrt{1 + \alpha^2 \left( \frac{1}{\cos^2\theta_\omega} -1 \right)} \f$ et :
+\f[
+	G_2( \vec{o}, \vec{l}, \vec{h} ) = \chi^+(\vec{o} \cdot \vec{h}) \chi^+(\vec{l} \cdot \vec{h}) \frac{2}{\sqrt{1 + \alpha^2 \tan^2 \theta_o} \sqrt{1 + \alpha^2 \tan^2 \theta_l}}
+\f]
+
+Le seul paramètre du modèle est la rugosité de la surface des microfacettes \f$ \alpha \f$ : 0 pour une surface parfaitement lisse, et 1 pour une surface parfaitement rugueuse,
+et la forme du reflet est controlée par la fonction D. Cette version utilise la fonction GGX, dérivée des travaux de Trowbridge - Reitz 1975. Cook - Torrance 1984 utilisait une autre 
+fonction, une gaussienne projettée sur l'hemisphère. GGX est actuellement la fonction la plus utilisée, elle permet de mieux reproduire le profil des reflets qu'une gaussienne, 
+voir un peu plus haut, la figure 9 de Burley 2012. \f$ G_2 \f$ n'est pas la forme la plus courante, mais elle permet de mieux reproduire certains comportement, pour les détails cf Heitz 2014.
+
+_pour les curieux :_ si vous vous demandez comment on est passé d'une information spatiale utilisant des distributions d'altitude et d'orientation des microfacettes à une fonction \f$ D(\vec{h}) \f$, la 
+réponse se trouve dans la section 2 (section 2.2 _Microfacet Statistics_) de Heitz 2014.
+
+### et ça conserve l'énergie, au moins ?
+
+pas trop mal...
+
+<IMG SRC="conservation_ggx.png" width="40%">
+
+
+### et avec un shader ?
+
+La démarche est toujours la même, on doit calculer :
+\f[L_r(p, \vec{o})= \frac{F(\vec{o}, \vec{h}) \, G_2(\vec{o}, \vec{l}, \vec{h}) \, D(\vec{h})}{4 |\vec{n} \cdot \vec{o}| |\vec{n} \cdot \vec{l}|} \cdot L_i(p, \vec{l}) \cos \theta_l \f]
+
+Les paramètres du modèle sont la rugosité \f$ \alpha \f$ ainsi que l'indice de réfraction \f$ \eta \f$, ou \f$ F_0 \f$ (on peut calculer l'un en fonction de l'autre), il ne reste plus qu'à évaluer 
+les termes :
+\code
+	// directions
+	vec3 o= normalize(camera - p);
+	vec3 l= normalize(source - p);
+	vec3 h= normalize(o + l);
+	
+	// cos
+	vec3 nn= normalize(n);
+	float cos_theta= max(0, dot(nn, l));
+	float cos_theta_h= max(0, dot(nn, h));
+	float cos_theta_o= max(0, dot(nn, o));
+	
+	// meme hemisphere
+	if(cos_theta <= 0 || cos_theta_h <= 0 || cos_theta_o <= 0)
+		return;
+	
+	// D
+	float D= alpha / (1 + cos_theta_h*cos_theta_h * (alpha*alpha -1));
+	D= D*D / PI;
+	
+	// G2
+	float tan2_theta_o= 1 / (cos_theta_o*cos_theta_o) - 1;
+	float lambda_o= 1 + alpha*alpha * tan2_theta_o;
+	float tan2_theta= 1 / (cos_theta*cos_theta) - 1;
+	float lambda= 1 + alpha*alpha * tan2_theta;
+	float G2= 2 / (sqrt(lambda_o) + sqrt(lambda));
+	
+	// F
+	float F= F0 + (1 - F0) * pow(1 - dot(o, h), 5);
+	
+	// brdf
+	float fr= (F * D * G2) / (4 * cos_theta_o * cos_theta);
+	vec3 color= emission * fr * cos_theta;    
+\endcode
+
+<table style="width:100%">
+<tr> 
+	<td> <IMG SRC="shaderkit_ggx04.png" width="100%"> 
+	<td> <IMG SRC="shaderkit_ggx01.png" width="100%"> 
+	<td> <IMG SRC="shaderkit_lambert.png" width="100%"> 
+</table>
+
+quelques exemples de reflets pour Blinn - Phong et ce modèle à microfacettes :
+<table style="width:100%">
+<tr> 
+	<td> <IMG SRC="brdfc00.png" width="60%"> 
+	<td> <IMG SRC="brdfc40.png" width="60%"> 
+	<td> <IMG SRC="brdfc60.png" width="60%"> 
+<tr> 
+	<td> <IMG SRC="brdfggx00.png" width="60%"> 
+	<td> <IMG SRC="brdfggx40.png" width="60%"> 
+	<td> <IMG SRC="brdfggx60.png" width="60%"> 
+</table>
+
+
+
+## bon alors, c'est quoi le modèle ??
+
+
+*/

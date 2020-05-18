@@ -5,13 +5,13 @@
 #include "mesh.h"
 #include "orbiter.h"
 #include "window.h"
+#include "program.h"
 
 
 //! \addtogroup objet3D
 ///@{
 
 //! \file
-//! dessine un objet du point de vue d'une camera
 
 //! dessine l'objet avec les transformations model, vue et projection.
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection );
@@ -19,17 +19,14 @@ void draw( Mesh& m, const Transform& model, const Transform& view, const Transfo
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection, const GLuint texture );
 
 //! dessine l'objet avec les transformations vue et projection, definies par la camera. model est la transformation identite.
-void draw( Mesh& m, const Orbiter& camera );
+void draw( Mesh& m, Orbiter& camera );
 //! dessine l'objet avec une transformation model. les transformations vue et projection sont celles de la camera
-void draw( Mesh& m, const Transform& model, const Orbiter& camera );
+void draw( Mesh& m, const Transform& model, Orbiter& camera );
 
 //! dessine l'objet avec les transformations vue et projection. model est l'identite. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
-void draw( Mesh& m, const Orbiter& camera, const GLuint texture );
+void draw( Mesh& m, Orbiter& camera, const GLuint texture );
 //! dessine l'objet avec une transformation model. les transformations vue et projection sont celles de la camera. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
-void draw( Mesh& m, const Transform& model, const Orbiter& camera, const GLuint texture );
-
-//! dessine l'objet avec un shader program "specifique"
-void draw( Mesh& m, const GLuint program, const bool use_position= true, const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
+void draw( Mesh& m, const Transform& model, Orbiter& camera, const GLuint texture );
 
 /*! representation des options / parametres d'un draw.
     permet de donner tous les parametres d'un draw de maniere flexible.
@@ -68,9 +65,9 @@ public:
     DrawParam& projection( const Transform& m ) { m_projection= m; return *this; }
 
     //! utilise les transformations view et projection definies par une camera.
-    DrawParam& camera( const Orbiter& o ) { m_view= o.view(); m_projection= o.projection((float) window_width(), (float) window_height(), 45); return *this; }
+    DrawParam& camera( const Orbiter& o ) { m_view= o.view(); m_projection= o.projection(); return *this; }
     //! utilise les transformations view et projection definies par une camera. parametres explicites de la projection.
-    DrawParam& camera( const Orbiter& o, const float width, const float height, const float fov ) { m_view= o.view(); m_projection= o.projection(width, height, fov); return *this; }
+    DrawParam& camera( Orbiter& o, const int width, const int height, const float fov ) { m_view= o.view(); m_projection= o.projection(width, height, fov); return *this; }
     //! eclaire l'objet avec une source ponctuelle, de position p et de couleur c.
     DrawParam& light( const Point& p, const Color& c= White() ) { m_use_light= true; m_light= p; m_light_color=c; return *this; }
     //! plaque une texture a la surface de l'objet.
@@ -83,12 +80,21 @@ public:
     DrawParam& lighting(bool use_light=true) { m_use_light=use_light;  return *this; }
 
     //! dessine l'objet avec l'ensemble des parametres definis.
-    void draw( Mesh& mesh ) const;
-
+    void draw( Mesh& mesh );
+    
     //! renvoie la position de la lumière
     const Point& light() const { return m_light; }
-
+    
 protected:
+    /*! construit un shader program configure.
+    \param use_texcoord force l'utilisation des coordonnees de texture
+    \param use_normal force l'utilisation des normales
+    \param use_color force l'utilisation des couleurs 
+    \param use_light force l'utilisation d'un source de lumiere 
+    \param use_alpha_test force l'utilisation d'un test de transparence, cf utilisation d'une texture avec un canal alpha
+     */
+    GLuint create_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test );
+    
     Transform m_model;
     Transform m_view;
     Transform m_projection;
@@ -104,8 +110,58 @@ protected:
     float m_alpha_min;
 };
 
-//! dessine l'objet avec l'ensemble des parametres definis.
-void draw( Mesh& mesh, const DrawParam& param );
+
+//! description d'un shader program compile.
+struct PipelineProgram
+{
+    std::string filename;
+    std::string definitions;
+    GLuint program;
+};
+
+//! ensemble de shader programs compiles. singleton.
+class PipelineCache
+{
+public:
+    ~PipelineCache( ) 
+    {
+        printf("[pipeline cache] %d programs.\n", int(m_programs.size()));
+        // le contexte est deja detruit lorsque ce destructeur est appelle... 
+        // trop tard pour detruire les programs et les shaders...
+    }
+    
+    //! renvoie un shader program compile.
+    PipelineProgram *find( const char *filename, const char *definitions= "" )
+    {
+        for(auto program : m_programs)
+        {
+            if(program->filename == filename && program->definitions == definitions)
+                return program;
+        }
+        
+        // cree le programme s'il n'existe pas deja...
+        GLuint p= read_program(filename, definitions);
+        program_print_errors(p);
+        
+        PipelineProgram *program= new PipelineProgram {filename, definitions, p};
+        m_programs.push_back(program);
+        return program;
+    }
+    
+    //! access au singleton.
+    static PipelineCache& manager( ) 
+    {
+        static PipelineCache cache;
+        return cache;
+    }
+    
+protected:
+    //! destructeur prive. le singleton ne sera detruit qu'a la fin de l'application... fonctionne correctement avec la classe App. doit etre detruit tant que le contexte openGL existe.
+    PipelineCache( ) : m_programs() {}
+    
+    std::vector<PipelineProgram *> m_programs;
+};
+
 
 ///@}
 #endif

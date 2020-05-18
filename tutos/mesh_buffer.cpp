@@ -75,20 +75,21 @@ MeshBuffer buffers( const MeshData& data )
     std::map<MeshVertex, int> remap;
     for(int i= 0; i < (int) triangles.size(); i++)
     {
+        // matiere du triangle
+        mesh.material_indices.push_back(data.material_indices[triangles[i]]);
+        
+        // associe la matiere de la face a ses sommets
+        if(material_id != data.material_indices[triangles[i]])
+        {
+            // construit les groupes de triangles associes a la meme matiere
+            material_id= data.material_indices[triangles[i]];
+            
+            mesh.material_groups.back().count= 3*i - mesh.material_groups.back().first;
+            mesh.material_groups.push_back( MeshGroup(material_id, 3*i) );
+        }
+        
         for(int k= 0; k < 3; k++)
         {
-            // matiere du triangle
-            mesh.material_indices.push_back(data.material_indices[triangles[i]]);
-            
-            // associe la matiere de la face a ses sommets
-            if(material_id != data.material_indices[triangles[i]])
-            {
-                // construit les groupes de triangles associes a la meme matiere
-                material_id= data.material_indices[triangles[i]];
-                
-                mesh.material_groups.back().count= 3*i - mesh.material_groups.back().first;
-                mesh.material_groups.push_back( MeshGroup(material_id, 3*i) );
-            }
             // indice du kieme sommet du ieme triangle re-ordonne
             int index= 3*triangles[i] + k;
             MeshVertex vertex= MeshVertex(material_id, data.position_indices[index], data.texcoord_indices[index], data.normal_indices[index]);
@@ -125,7 +126,6 @@ MeshBuffer buffers( const MeshData& data )
     
     printf("buffers : %d positions, %d texcoords, %d normals, %d indices, %d groups\n", 
         (int) mesh.positions.size(), (int) mesh.texcoords.size(), (int) mesh.normals.size(), (int) mesh.indices.size(), (int) mesh.material_groups.size());
-    
     
     return mesh;
 }

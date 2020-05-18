@@ -20,7 +20,8 @@ gKit2light est composé de plusieurs utilitaires :
     - text.h permet d'afficher directement du texte sur la fenetre de l'application,
     - widgets.h permet de controler l'application avec une interface graphique minimaliste.
 
-mais il y a aussi pas mal de tutos :
+mais il y a aussi pas mal de tutos / exemple de code :
+    - \ref intro3d,
     - \ref tuto_application,
     - tuto2.cpp utilisation de mesh pour décrire les sommets d'un ou plusieurs triangles et les dessiner,
     - tuto3.cpp transformations, rotation d'un triangle dans l'image,
@@ -31,26 +32,38 @@ mais il y a aussi pas mal de tutos :
     - tuto7.cpp, idem tuto6 mais utilise la classe App pour construire l'application,
     - tuto8.cpp, exemple d'utilisation de App::update() pour modifier la transformation de l'objet en fonction du temps,
     
-    - \ref tuto_mesh_shader, dessine un objet Mesh avec un shader 'utilisateur', sans utiliser le shader par défaut, montre 
-    aussi comment utiliser simplement une, ou plusieurs, textures,
+    - \ref tuto_mesh_shader, dessine un objet Mesh avec un shader 'utilisateur', sans utiliser le shader par défaut, montre aussi comment utiliser simplement une, ou plusieurs, textures,
+    - \ref tuto_mesh_buffer, complète le tuto9 avec la création des buffers et du vertex array object, pour dessiner un objet Mesh, directement avec openGL... 
     
-    - \ref shader_kit.cpp est un utilitaire pour prototyper rapidement des shaders.
+    - \ref matiere, lumière, matière et brdf,
+    - \ref brdf, écrire un shader, matière, brdf, pbr, etc.
+    
+    - \ref shader_kit est un utilitaire pour prototyper rapidement des shaders.
     
 plus ceux dédiés à openGL :
-    - \ref intro3d,
-    - \ref glsl,
     - \ref interfaceC,
+    - \ref glsl,
     - \ref tuto2GL,
     - \ref tuto3GL,
     - \ref tuto4GL,
     - \ref shader_reflect,
     - \ref tuto5GL,
     - \ref draw,
+    - \ref wavefront,
     - \ref framebuffer,
+    - \ref cubemap,
     - \ref time,
+    - \ref uniform_buffers,
     - \ref storage,
     - \ref storage_texture,
-    - \ref compute
+    - \ref compute,
+    - \ref mdi,
+    - \ref ressources.
+    
+et ceux dédiés au lancer de rayons :
+    - \ref intrort,
+    - \ref acceleration
+    
     
 et un utilitaire pour jouer avec les shaders, \ref shader_kit.cpp \ref shader_kit.
 

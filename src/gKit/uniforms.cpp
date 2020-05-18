@@ -51,10 +51,10 @@ int location( const GLuint program, const char *uniform )
             char labelc[1024];
             glGetObjectLabel(GL_PROGRAM, current, sizeof(labelc), NULL, labelc);
             
-            sprintf(error, "uniform( %s %u, '%s' ): invalid shader program %s %u", label, program, uniform, labelc, current); 
+            sprintf(error, "uniform( %s %u, '%s' ): invalid shader program( %s %u )", label, program, uniform, labelc, current); 
         }
     #else
-        sprintf(error, "uniform( program %u, '%s'): invalid shader program %u...", program, uniform, current); 
+        sprintf(error, "uniform( program %u, '%s' ): invalid shader program( %u )...", program, uniform, current); 
     #endif
         
         printf("%s\n", error);

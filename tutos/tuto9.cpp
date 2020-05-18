@@ -2,11 +2,13 @@
 //! \file tuto9.cpp utilisation d'un shader 'utilisateur' pour afficher un objet Mesh
 
 #include "mat.h"
+#include "mesh.h"
 #include "wavefront.h"
 
 #include "orbiter.h"
 #include "program.h"
 #include "uniforms.h"
+#include "draw.h"
 
 #include "app.h"        // classe Application a deriver
 
@@ -52,7 +54,7 @@ public:
     int render( )
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        
         // deplace la camera
         int mx, my;
         unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
@@ -62,11 +64,11 @@ public:
             m_camera.move(mx);
         else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
             m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
-    
+        
         // etape 2 : dessiner m_objet avec le shader program
         // configurer le pipeline 
         glUseProgram(m_program);
-
+        
         // configurer le shader program
         // . recuperer les transformations
         Transform model= RotationX(global_time() / 20);
@@ -79,14 +81,21 @@ public:
         // . parametrer le shader program :
         //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
         program_uniform(m_program, "mvpMatrix", mvp);
+        //   . ou, directement en utilisant openGL :
+        //   int location= glGetUniformLocation(program, "mvpMatrix");
+        //   glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
         
         // . parametres "supplementaires" :
         //   . couleur des pixels, cf la declaration 'uniform vec4 color;' dans le fragment shader
         program_uniform(m_program, "color", vec4(1, 1, 0, 1));
-        // ou program_uniform(m_program, "color", Color(1, 1, 0, 1));
+        //   . ou, directement en utilisant openGL :
+        //   int location= glGetUniformLocation(program, "color");
+        //   glUniform4f(location, 1, 1, 0, 1);
         
         // go !
-        m_objet.draw(m_program);
+        // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
+        // tuto9_color.glsl n'utilise que position. les autres de servent a rien.
+        m_objet.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false);
         
         return 1;
     }

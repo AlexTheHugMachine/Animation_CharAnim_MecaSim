@@ -78,16 +78,15 @@ const char *option_find( std::vector<const char *>& options, const char *ext )
 {
     for(unsigned int i= 0; i < (unsigned int) options.size() ; i++)
     {
-        if(std::string(options[i]).rfind(ext) != std::string::npos)
+        if(options[i] != nullptr && std::string(options[i]).rfind(ext) != std::string::npos)
         {
             const char *option= options[i];
-            options[i]= options.back(); // ne preserve pas l'ordre des arguments... peut mieux faire
-            options.pop_back();
+            options[i]= nullptr;
             return option;
         }
     }
     
-    return NULL;
+    return nullptr;
 }
 
 //! compile les shaders et construit le programme + les buffers + le vertex array.
@@ -100,7 +99,7 @@ int init( std::vector<const char *>& options )
     program= 0;
     const char *option;
     option= option_find(options, ".glsl");
-    if(option != NULL)
+    if(option != nullptr)
     {
         program_filename= Filename(option);
         reload_program();
@@ -111,14 +110,14 @@ int init( std::vector<const char *>& options )
     mesh_pmax= Point(normalize(Vector( 1,  1, 0)) * 2.5f);
     
     option= option_find(options, ".obj");
-    if(option != NULL)
+    if(option != nullptr)
     {
         mesh= read_mesh(option);
-        if(mesh.vertex_buffer_size() > 0)
+        if(mesh.vertex_count() > 0)
         {
             mesh_filename= Filename(option);
             
-            vao= mesh.create_buffers();
+            vao= mesh.create_buffers(mesh.has_texcoord(), mesh.has_normal(), mesh.has_color());
             vertex_count= mesh.vertex_count();
             
             mesh.bounds(mesh_pmin, mesh_pmax);
@@ -133,8 +132,11 @@ int init( std::vector<const char *>& options )
     }
     
     // charge les textures, si necessaire
-    for(unsigned int i= 0; i < (unsigned int) options.size(); i++)
+    for(int i= 0; i < int(options.size()); i++)
     {
+        if(options[i] == nullptr)
+            continue;
+        
         GLuint texture= read_texture(0, options[i]);
         if(texture > 0)
         {
@@ -172,8 +174,7 @@ int quit( )
     release_program(program);
     mesh.release();
     
-    for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
-        glDeleteTextures(1, &textures[i]);
+    glDeleteTextures(textures.size(), textures.data());
     return 0;
 }
 
@@ -210,16 +211,16 @@ int draw( void )
     // deplace la camera
     if(mb & SDL_BUTTON(1))
         camera.rotation(mx, my);      // tourne autour de l'objet
-    else if(mb & SDL_BUTTON(2))
-        camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height()); // deplace le point de rotation
     else if(mb & SDL_BUTTON(3))
+        camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height()); // deplace le point de rotation
+    else if(mb & SDL_BUTTON(2))
         camera.move(mx);           // approche / eloigne l'objet
     
     SDL_MouseWheelEvent wheel= wheel_event();
     if(wheel.y != 0)
     {
         clear_wheel_event();
-        camera.move(16.f * wheel.y);  // approche / eloigne l'objet
+        camera.move(8.f * wheel.y);  // approche / eloigne l'objet
     }
     
     // recupere les transformations
@@ -270,7 +271,7 @@ int draw( void )
         program_uniform(program, "mouse", vec3(mousex, mousey, mb & SDL_BUTTON(1)));
         
         // textures
-        for(unsigned int i= 0; i < (unsigned int) textures.size(); i++)
+        for(int i= 0; i < int(textures.size()); i++)
         {
             char uniform[1024];
             sprintf(uniform, "texture%d", i);
@@ -342,12 +343,16 @@ int draw( void )
     {
         clear_key_state('v');
         if(camera.read_orbiter("orbiter.txt") < 0)
-            camera= Orbiter(mesh_pmin, mesh_pmax);
+        {
+            camera= Orbiter();
+            camera.lookat(mesh_pmin, mesh_pmax);
+        }
     }
     if(key_state('f'))
     {
         clear_key_state('f');
-        camera= Orbiter(mesh_pmin, mesh_pmax);        
+        camera= Orbiter();
+        camera.lookat(mesh_pmin, mesh_pmax);
     }
     
     return 1;
@@ -363,11 +368,11 @@ int main( int argc, char **argv )
     }
     
     Window window= create_window(1024, 640);
-    if(window == NULL) 
+    if(window == nullptr) 
         return 1;
     
     Context context= create_context(window);
-    if(context == NULL) 
+    if(context == nullptr) 
         return 1;
     
     // creation des objets opengl

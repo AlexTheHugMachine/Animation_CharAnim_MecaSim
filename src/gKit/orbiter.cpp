@@ -8,7 +8,7 @@ void Orbiter::lookat( const Point& center, const float size )
 {
     m_center= center;
     m_position= vec2(0, 0);
-    m_rotation= vec2(0, 0);
+    m_rotation= vec2(0, 180);
     m_size= size;
     m_radius= size;
 }
@@ -41,10 +41,19 @@ Transform Orbiter::view( ) const
 {
     return Translation( -m_position.x, -m_position.y, -m_size ) 
         * RotationX(m_rotation.x) * RotationY(m_rotation.y) 
-        * Translation( - Vector(m_center) ); 
+        * Translation( -m_center.x, -m_center.y, -m_center.z ); 
 }
 
-Transform Orbiter::projection( const float width, const float height, const float fov ) const
+Transform Orbiter::projection( const int width, const int height, const float fov )
+{
+    m_width= width;
+    m_height= height;
+    m_fov= fov;
+    
+    return projection();
+}
+
+Transform Orbiter::projection( ) const
 {
     // calcule la distance entre le centre de l'objet et la camera
     //~ Transform t= view();
@@ -53,14 +62,20 @@ Transform Orbiter::projection( const float width, const float height, const floa
     float d= distance(m_center, Point(m_position.x, m_position.y, m_size));     // meme resultat plus rapide a calculer
     
     // regle near et far en fonction du centre et du rayon englobant l'objet 
-    return Perspective(fov, width / height, std::max(0.1f, d - m_radius), std::max(1.f, d + m_radius));
+    return Perspective(m_fov, float(m_width) / float(m_height), std::max(0.1f, d - m_radius), std::max(1.f, d + m_radius));
 }
 
-void Orbiter::frame( const float width, const float height, const float z, const float fov, Point& dO, Vector& dx, Vector& dy ) const
+Transform Orbiter::viewport( ) const
+{
+    return Viewport(m_width, m_height);
+}
+
+//~ void Orbiter::frame( const float width, const float height, const float z, const float fov, Point& dO, Vector& dx, Vector& dy ) const
+void Orbiter::frame( const float z, Point& dO, Vector& dx, Vector& dy ) const
 {
     Transform v= view();
-    Transform p= projection(width, height, fov);
-    Transform viewport= Viewport(width, height);
+    Transform p= projection();
+    Transform viewport= Viewport(m_width, m_height);
     Transform t= viewport * p * v;              // passage monde vers image
     Transform tinv= t.inverse();                // l'inverse, passage image vers monde
     

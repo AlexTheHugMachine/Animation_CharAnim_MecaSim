@@ -1,6 +1,7 @@
 
 #include <cfloat>
 #include <cmath>
+#include <algorithm>
 
 #include "app_time.h"
 
@@ -102,7 +103,7 @@ struct RT : public AppTime
         for(int i= 0; i < m_mesh.triangle_count(); i++)
         {
             TriangleData t= m_mesh.triangle(i);
-            data.push_back( triangle { t.a, Point(t.b) - Point(t.a), Point(t.c) - Point(t.a) } );
+            data.push_back( { Point(t.a), Point(t.b) - Point(t.a), Point(t.c) - Point(t.a) } );
         }
         
         // alloue le buffer

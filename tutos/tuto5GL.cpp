@@ -95,7 +95,7 @@ int init( )
 
     glTexImage2D(GL_TEXTURE_2D, 0,
         GL_RGBA, image.width, image.height, 0,
-        data_format, data_type, image.buffer());
+        data_format, data_type, image.data());
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 

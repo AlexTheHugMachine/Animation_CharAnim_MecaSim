@@ -37,6 +37,9 @@ public:
     int run( );
     
 protected:
+    virtual int prerender( ) { return update(global_time(), delta_time()); }
+    virtual int postrender( ) { return 0; }
+
     Window m_window;
     Context m_context;
 };

@@ -1,0 +1,139 @@
+
+/*!  \addtogroup mdi openGL 4.3 : multi draw indirect
+
+cf \ref tuto_mdi.cpp + \ref indirect.glsl
+
+Les fonctions d'affichage classiques, cf \ref draw, sont relativement efficaces pour dessiner quelques objets, glDrawInstanced( ) permet d'afficher de nombreuses 
+copies du même objet, mais openGL 3.3 ne fournit pas de méthode pour afficher un grand nombre d'objets différents.
+
+En effet, la préparation de chaque draw nécessite pas mal de travail au driver openGL, et c'est finalement le cpu qui limite le nombre d'objets affichables, alors que 
+la carte graphique est sous exploitée. Le tuto \ref time présente une méthode pour mesurer le temps cpu utilisé pour préparer N commandes d'affichage pour la 
+carte graphique, en comparant les solutions précédentes : N commandes ou 1 commande instanciée avec N copies.
+
+openGL 4.3 a introduit de nouvelles variantes de draw : `glMultiDrawArraysIndirect( )` et `glMultiDrawElementsIndirect()` qui permettent de décrire les paramètres 
+d'affichage de plusieurs objets. Le gain d'efficacité se trouve du coté du driver qui ne réalise qu'une seule préparation et soumet toutes les commandes d'affichage 
+à la carte graphique en une seule fois.
+
+Le principe est relativement simple, les paramètres de chaque commande d'affichage sont décrits par une structure, et un tableau de structures est passé en 
+paramètre à MultiDraw().
+\code
+    // parametres pour MultiDrawArraysIndirect
+    struct ArraysParam
+    {
+        unsigned int vertex_count;
+        unsigned int instance_count;
+        unsigned int vertex_base;
+        unsigned int instance_base;
+    };
+\endcode
+
+cette structure permet de décrire les paramétres de glDrawArrays(), glDrawArraysInstanced|BaseInstance(). En gros, voila ce que fait MultiDrawArraysIndirect( ) :
+\code
+MultiDrawArraysIndirect( GLenum primitives, std::vector<ArraysParam>& params )
+{
+    for(int i= 0; i < params.size(); i++)
+        if(params[i].instance_count > 0)
+            // draw instancie
+            glDrawArraysInstancedBaseInstance(primitives, params[i].vertex_base, params[i].vertex_count, params[i].instance_count, params[i].instance_base);
+        else
+            // draw normal
+            glDrawArray(primitives, params[i].vertex_base, params[i].vertex_count);
+}
+\endcode
+
+Pour glDrawElements(), glDrawElementsInstanced(), y compris les variantes permettant de préciser les indices de la première instance et du 
+premier sommet, cf \ref draw glDrawElementsBaseVertex() et glDrawElementsInstancedBaseVertexBaseInstance() (!!)
+la structure est :
+\code
+    // parametres pour MultiDrawElementsIndirect
+    struct ElementsParam
+    {
+        unsigned int index_count;
+        unsigned int instance_count;
+        unsigned int first_index;		// cf parametre offset de glDrawElements()
+        unsigned int vertex_base;
+        unsigned int instance_base;
+    };
+\endcode
+
+
+Dernier détail, le tableau de structures doit être dans un buffer sélectionné sur `GL_DRAW_INDIRECT_BUFFER`.
+
+Le code d'exemple \ref tuto_mdi.cpp + \ref indirect.glsl transfere un tableau de ~1000 draws et permet de comparer le temps d'excécution des 2 solutions.
+Voici les temps mesurés :
+    - afficher ~1000 bigguy, avec 1000 glDrawArrays() : 10ms pour le cpu, <2ms pour le gpu,
+    - glMultiDrawArraysIndirect(), 50us pour le cpu, <2ms pour le gpu...
+
+L'utilisation la plus interressante de MultiDraw() est de remplir le buffer directement sur la carte graphique avec un shader, ce qui évite de le transférer 
+à chaque affichage. Le (compute) shader peut, par exemple, faire quelques tests de visibilité et déterminer s'il est nécessaire de dessiner chaque objet.
+
+Mais, dans ce cas, un problème se pose : il faut connaitre, dans l'application, le nombre de commandes / d'objets à dessiner pour utiliser glMultiDrawArraysIndirect( )... 
+La solution est fournie par une variante de MultiDraw() : `glMultiDrawArraysIndirectCountARB( )`. Le nombre de commandes / d'objets à dessiner se trouve dans (une variable d) 
+un buffer sélectionné sur `GL_PARAMETER_BUFFER_ARB`. Cette fonction n'est pas encore standard, mais elle est disponible sur toutes les cartes graphiques. C'est 
+l'extension `GL_ARB_indirect_parameters` qui permet de l'utiliser.
+
+cf \ref tuto_mdi_count.cpp + \ref indirect_cull.glsl + \ref indirect_remap.glsl pour un exemple complet, 
+avec un compute shader qui décide de dessiner un objet, ou pas, et qui comptabilise les objets à dessiner par `glMultiDrawArraysIndirectCountARB( )`.
+
+__remarque :__ vérifier que l'extension est bien disponible avant de l'utiliser, sinon c'est segfault, la librairie GLEW utilisée par gKit permet d'écrire directement le test
+\code
+#include "glcore.h"	// deja inclut par window.h, app.h, etc.
+
+init( ) :
+    // verifier la presence de l'extension
+    if(GLEW_ARB_indirect_parameters == 0)
+        // erreur, extension non disponible
+        return -1;
+\endcode
+
+
+## organisation des données
+
+Le seul problème de la famille MultiDraw() est la nécessité d'organiser les données : par exemple, tous les objets que l'on souhaite dessiner avec un appel
+de MultiDraw() doivent être décrits par les mêmes buffers et le même VAO... toutes les textures nécessaires doivent être sélectionnées, les transformations, les 
+uniforms, etc.
+
+La variable gl_DrawIDARB de GLSL numérote les commandes, ce qui permet de retrouver toutes les informations de l'objet, mais il faut les organiser sous 
+cette forme. En gros, les paramètres `uniform` deviennent des tableaux, indexés par gl_DrawIDARB. En pratique on utilisera des uniform buffers ou des storage buffers 
+pour ne pas être bloqué par la limite de taille des uniforms.
+
+De même, il faut concaténer les attributs des objets dans un (gros) buffer et configurer le vao correspondant. L'objectif n'est pas de dessiner toute la scène
+avec un seul MultiDraw(), mais de limiter leur nombre à une valeur raisonnable. Par exemple, les objets animés ne seront pas transformés par le même vertex shader
+que les objets statiques, les objets opaques ne seront pas dessinés avec le même fragment shader que les objets transparents... et comme il n'est pas possible de 
+changer de shader program objet par objet avec MultiDraw(), il faudra nécessairement plusieurs appels pour afficher ces différents types d'objets.
+
+Voici le vertex shader utilisé par l'exemple, cf \ref indirect.glsl :
+\code
+#extension GL_ARB_shader_draw_parameters : require
+// necessaire pour utiliser gl_DrawIDARB
+
+layout(location= 0) in vec3 position;
+
+uniform mat4 vpMatrix;		// projection * view
+uniform mat4 model[1000];	// model
+
+void main( )
+{
+    // recupere la transformation model de l'objet et transforme le sommet...
+    gl_Position= vpMatrix * model[gl_DrawIDARB] * vec4(position, 1);
+}
+\endcode
+
+__remarque :__ la variable gl_DrawID n'est pas encore inclue dans une version standard d'openGL, il faut donc utiliser une extension GLSL. Il suffit d'ajouter, dans 
+le source du shader, une ligne donnant le nom de chaque extension nécessaire :
+\code
+#extension GL_ARB_shader_draw_parameters : require
+\endcode
+
+Pour etre complet, il faut aussi vérifier la présence de l'extension openGL dans l'init de l'application :
+\code
+#include "glcore.h"	// deja inclut par window.h, app.h, etc.
+
+init( ) :
+    // verifier la presence de l'extension
+    if(GLEW_ARB_shader_draw_parameters == 0)
+        // erreur, extension non disponible
+        return -1;
+\endcode
+
+*/

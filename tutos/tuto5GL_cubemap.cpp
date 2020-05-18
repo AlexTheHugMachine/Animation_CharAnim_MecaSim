@@ -9,6 +9,7 @@
 
 #include "program.h"
 #include "uniforms.h"
+#include "texture.h"
 
 #include "mesh.h"
 #include "wavefront.h"
@@ -43,7 +44,8 @@ int init( )
     program_print_errors(program_cubemap);
     
     // etape 2 : charger un mesh, (avec des normales), vao + vertex buffer
-    Mesh mesh= read_mesh("data/bigguy.obj");
+    //~ Mesh mesh= read_mesh("data/bigguy.obj");
+    Mesh mesh= read_mesh("data/cube.obj");
     if(mesh.vertex_count() == 0)
         return -1;      // gros probleme, pas de sommets...
 
@@ -64,10 +66,11 @@ int init( )
 
     // configurer l'attribut position, cf declaration dans le vertex shader : in vec3 position;
     GLint position= glGetAttribLocation(program, "position");
-    if(position < 0)
-        return -1;
-    glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(position);
+    if(position >= 0)
+    {
+        glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(position);
+    }
     
     // normal buffer
     if(!mesh.normal_buffer_size())
@@ -81,11 +84,12 @@ int init( )
     glBufferData(GL_ARRAY_BUFFER, mesh.normal_buffer_size(), mesh.normal_buffer(), GL_STATIC_DRAW);
 
     GLint normal= glGetAttribLocation(program, "normal");
-    if(normal < 0)
-        return -1;
-    glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(normal);
-
+    if(normal >= 0)
+    {
+        glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(normal);
+    }
+    
     // nettoyage
     mesh.release();
     glBindVertexArray(0);
@@ -93,7 +97,9 @@ int init( )
 
     // etape 3 : texture
 #if 0
-    ImageData image= read_image_data("data/debug2x2red.png");
+    ImageData tmp= read_image_data("data/debug2x2red.png");
+    //~ ImageData image= flipX(flipY(tmp));
+    ImageData image= flipY(tmp);
     
     // solution 1, utiliser une seule texture *carree* et la copier sur les 6 faces de la cubemap
     int size= image.width;
@@ -112,32 +118,34 @@ int init( )
     // creer les 6 faces 
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0,
         GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
+        data_format, data_type, image.data());
     
     glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0,
         GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
+        data_format, data_type, image.data());
     
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0,
         GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
+        data_format, data_type, image.data());
         
     glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0,
         GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
+        data_format, data_type, image.data());
         
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0,
         GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
+        data_format, data_type, image.data());
         
     glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0,
         GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
-#else
+        data_format, data_type, image.data());
+#endif
 
+#if 0
+    // les 6 faces sur une bande
     ImageData image= read_image_data("tutos/cubemap_debug.png");
     
-    // solution 2, utiliser 6 images differentes. pour simplifier, les 6 images sont regroupees sur une bande horizontale.
+    // les 6 images sont regroupees sur une bande horizontale.
     int size= image.width / 6;
     
     GLenum data_format;
@@ -152,57 +160,113 @@ int init( )
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
 
     // creer les 6 faces
-    // chaque face de la cubemap est un rectangle dans l'image originale :
+    // chaque face de la cubemap est un bloc [image.width/6 x image.height] dans l'image originale 
+    int faces[]= { 0, 1, 2, 3, 4, 5 };
+    
     // largeur totale de l'image
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, image.width);
-    // position du coin du rectangle dans l'image originale
-    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0*size);
-    
-    // transferer les pixels
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
-    
-    // position du coin de l'image en pixel
-    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 1*size);
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
-    
-    // position du coin de l'image en pixel
-    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 2*size);
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
+    for(int i= 0; i < 6; i++)
+    {
+        // extrait la face 
+        ImageData face= flipX(flipY(copy(image, faces[i]*size, 0, size, size)));
+        //~ ImageData face= copy(image, faces[i]*size, 0, size, size);
         
-    // position du coin de l'image en pixel
-    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 3*size);
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
+        // transferer les pixels
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
+            GL_RGBA, size, size, 0,
+            data_format, data_type, face.data());
+    }
+#endif
+    
+#if 1
+// http://paulbourke.net/miscellaneous/cubemaps/
+
+    // les 6 faces sur une croix
+    ImageData image= read_image_data("canyon2.jpg");
+    //~ ImageData image= read_image_data("html/cubemap_debug_cross.png");
+    
+    int w= image.width / 4;
+    int h= image.height / 3;
+    assert(w == h);
+    
+    GLenum data_format;
+    GLenum data_type= GL_UNSIGNED_BYTE;
+    if(image.channels == 3)
+        data_format= GL_RGB;
+    else // par defaut
+        data_format= GL_RGBA;
+    
+    // creer la texture
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+
+    // creer les 6 faces
+    // chaque face de la cubemap est un rectangle [image.width/4 x image.height/3] dans l'image originale 
+    struct { int x, y; } faces[]= {
+        {0, 1}, // X+
+        {2, 1}, // X-
+        {1, 2}, // Y+
+        {1, 0}, // Y- 
+        {1, 1}, // Z+
+        {3, 1}, // Z-
+    };
+    
+    for(int i= 0; i < 6; i++)
+    {
+        ImageData face= flipX(flipY(copy(image, faces[i].x*w, faces[i].y*h, w, h)));
+        //~ ImageData face= copy(image, faces[i].x*w, faces[i].y*h, w, h);
         
-    // position du coin de l'image en pixel
-    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 4*size);
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
+            GL_RGBA, w, h, 0,
+            data_format, data_type, face.data());
+    }
+#endif
+
+#if 0
+    // 6 images
+    const char *filenames[]= {
+        "data/cubemap/cubemap_opensea/opensea_posx.png",
+        "data/cubemap/cubemap_opensea/opensea_negx.png",
+        "data/cubemap/cubemap_opensea/opensea_posy.png",
+        "data/cubemap/cubemap_opensea/opensea_negy.png",
+        "data/cubemap/cubemap_opensea/opensea_posz.png",
+        "data/cubemap/cubemap_opensea/opensea_negz.png"
+        //~ "data/cubemap/skybox/left.jpg",
+        //~ "data/cubemap/skybox/right.jpg",
+        //~ "data/cubemap/skybox/top.jpg",
+        //~ "data/cubemap/skybox/bottom.jpg",
+        //~ "data/cubemap/skybox/back.jpg",
+        //~ "data/cubemap/skybox/front.jpg",
+    };
+    
+    // creer la texture
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+    
+    for(int i= 0; i < 6; i++)
+    {
+        ImageData tmp= read_image_data(filenames[i]);
+        //~ ImageData image= flipX(flipY(tmp));
+        ImageData image= flipY(tmp);    // les faces haut/bas sont retouchees a la main...
         
-    // position du coin de l'image en pixel
-    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 5*size);
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0,
-        GL_RGBA, size, size, 0,
-        data_format, data_type, image.buffer());
+        GLenum data_format;
+        GLenum data_type= GL_UNSIGNED_BYTE;
+        if(image.channels == 3)
+            data_format= GL_RGB;
+        else // par defaut
+            data_format= GL_RGBA;
+        
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X +i, 0,
+            GL_RGBA, image.width, image.height, 0,
+            data_format, data_type, image.data());
+    }
 #endif
     
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     
     // filtrage "correct" sur les bords du cube...
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    
-    // nettoyage
+    //~ glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
     
     // etape 4 : vao pour dessiner la cubemap a l'infini
     glGenVertexArrays(1, &vao_null);
@@ -223,7 +287,8 @@ int init( )
 
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
-    glEnable(GL_CULL_FACE);
+    //~ glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
     return 0;
 }
 
@@ -291,7 +356,7 @@ int draw( )
         // sampler2D declare par le fragment shader
         GLint location= glGetUniformLocation(program, "texture0");
         glUniform1i(location, 0);
-        // ou program_uniform(program, "texture0", 0);
+        // ou program_uniform(program, "texture0", texture);
 
         glDrawArrays(GL_TRIANGLES, 0, vertex_count);
     }
@@ -307,13 +372,20 @@ int draw( )
         // sampler2D declare par le fragment shader
         GLint location= glGetUniformLocation(program_cubemap, "texture0");
         glUniform1i(location, 0);
-        // ou program_uniform(program, "texture0", 0);
+        // ou program_uniform(program, "texture0", texture);
         
         program_uniform(program_cubemap, "vpInvMatrix", Inverse(projection * view));
         program_uniform(program_cubemap, "camera_position", Inverse(view)(Point(0, 0, 0)));
         
         // dessine un triangle qui couvre tous les pixels de l'image
         glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+    
+    if(key_state('s'))
+    {
+        clear_key_state('s');
+        static int calls= 0;
+        screenshot("cubemaps", ++calls);
     }
     
     // nettoyage

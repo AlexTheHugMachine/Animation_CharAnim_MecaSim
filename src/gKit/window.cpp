@@ -10,11 +10,13 @@
 
 #include <cassert>
 #include <cstdio>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+
 #include <vector>
 #include <set>
 #include <string>
-#include <cstdio>
-#include <cstring>
 #include <iostream>
 
 #include <SDL2/SDL_power.h>
@@ -23,6 +25,8 @@
 #include "window.h"
 
 
+
+static float aspect= 1;
 
 static int width= 0;
 static int height= 0;
@@ -150,12 +154,14 @@ int run( Window window, int (*draw)() )
 static int event_count= 0;
 int last_event_count( ) { return event_count; }
 
-static bool laptop= false;
-bool laptop_mode( ) { return laptop; }
 
 int events( Window window )
 {
     event_count= 0;
+    
+    // proportions de la fenetre
+    SDL_GetWindowSize(window, &width, &height);
+    aspect= float(width) / float(height);
     
     // gestion des evenements
     SDL_Event event;
@@ -169,8 +175,10 @@ int events( Window window )
                 // redimensionner la fenetre...
                 if(event.window.event == SDL_WINDOWEVENT_RESIZED)
                 {
-                    // conserve les dimensions de la fenetre
-                    width= event.window.data1;
+                    // conserve les proportions de la fenetre
+                    //~ width= event.window.data1;
+                    //~ height= event.window.data2;
+                    width= std::floor(event.window.data2 * aspect);
                     height= event.window.data2;
                     SDL_SetWindowSize(window, width, height);
 
@@ -279,7 +287,7 @@ void release_window( Window window )
 //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
 static
 void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
-    const char *message, void *userParam )
+    const char *message, const void *userParam )
 {
     static std::set<std::string> log;
     if(log.insert(message).second == false)
@@ -310,7 +318,7 @@ Context create_context( Window window, const int major, const int minor )
 #endif
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 15);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     Context context= SDL_GL_CreateContext(window);
@@ -324,19 +332,11 @@ Context create_context( Window window, const int major, const int minor )
     SDL_GL_SetSwapInterval(-1);
     if(SDL_GL_GetSwapInterval() != -1)
     {
-        printf("Vsync ON\n");
+        printf("vsync ON\n");
         SDL_GL_SetSwapInterval(1);
     }
     else
-        printf("Vsync-late ON\n");
-    
-    laptop= false;
-    SDL_PowerState power= SDL_GetPowerInfo(nullptr, nullptr);
-    if(power != SDL_POWERSTATE_NO_BATTERY)
-    {
-        laptop= true;
-        printf("running on a laptop...\n");
-    }
+        printf("adaptive vsync ON\n");
     
 #ifndef NO_GLEW
     // initialise les extensions opengl
@@ -357,8 +357,12 @@ Context create_context( Window window, const int major, const int minor )
     if(GLEW_ARB_debug_output)
     {
         printf("debug output enabled...\n");
+        // selectionne tous les messages
         glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-//        glDebugMessageCallbackARB(debug, NULL);
+        // desactive les messages du compilateur de shaders
+        glDebugMessageControlARB(GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
+        
+        glDebugMessageCallbackARB(debug, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
 #endif

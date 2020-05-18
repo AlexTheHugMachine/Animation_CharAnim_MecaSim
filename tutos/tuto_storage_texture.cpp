@@ -51,7 +51,7 @@ public:
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
         
         glClearDepth(1.f);                          // profondeur par defaut
-        glDepthFunc(GL_LESS);                       // ztest, conserver l'intersection la plus proche de la camera
+        glDepthFunc(GL_LESS);                       // ztest, conserver l'intersection la plus proche de la m_camera
         glEnable(GL_DEPTH_TEST);                    // activer le ztest
 
         return 0;   // ras, pas d'erreur
@@ -81,20 +81,42 @@ public:
         GLuint zero= 0;
         glClearTexImage(m_texture, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &zero);
         
-        // deplace la camera
+        // recupere les mouvements de la souris
         int mx, my;
         unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
-        if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
-            m_camera.rotation(mx, my);
-        else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
-            m_camera.move(mx);
-        else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
-            m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
+        int mousex, mousey;
+        SDL_GetMouseState(&mousex, &mousey);
+
+        // deplace la m_camera
+        if(mb & SDL_BUTTON(1))
+            m_camera.rotation(mx, my);      // tourne autour de l'objet
+        else if(mb & SDL_BUTTON(3))
+            m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height()); // deplace le point de rotation
+        else if(mb & SDL_BUTTON(2))
+            m_camera.move(mx);           // approche / eloigne l'objet
+
+        SDL_MouseWheelEvent wheel= wheel_event();
+        if(wheel.y != 0)
+        {
+            clear_wheel_event();
+            m_camera.move(8.f * wheel.y);  // approche / eloigne l'objet
+        }
+
+        if(key_state('r'))
+        {
+            clear_key_state('r');
+            reload_program(m_program, "tutos/tuto_storage_texture.glsl");
+            program_print_errors(m_program);
+            
+            reload_program(m_program_display, "tutos/storage_texture_display.glsl");
+            program_print_errors(m_program_display);            
+        }
+        
         
         // passe 1 : compter le nombre de fragments par pixel
         glUseProgram(m_program);
         
-        Transform model= RotationY(global_time() / 20);
+        Transform model= RotationY(global_time() / 60);
         Transform view= m_camera.view();
         Transform projection= m_camera.projection(window_width(), window_height(), 45);
         Transform mv= view * model;
@@ -106,7 +128,9 @@ public:
         glBindImageTexture(0, m_texture, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
         program_uniform(m_program, "image", 0);
         
-        m_mesh.draw(m_program);
+        // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
+        // le shader n'utilise que position. les autres de servent a rien.
+        m_mesh.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false);
         
         if(key_state(' ') == 0)
         {

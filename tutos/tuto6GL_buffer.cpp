@@ -2,6 +2,7 @@
 //! \file tuto6GL_buffer.cpp utilisation de glDrawArraysInstanced() et attributs d'instance sotckes dans un buffer
 
 #include <cstdlib>
+#include <ctime>
 
 #include "vec.h"
 #include "mat.h"

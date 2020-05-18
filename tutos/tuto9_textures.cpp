@@ -2,12 +2,14 @@
 //! \file tuto9_textures.cpp utilisation d'un shader 'utilisateur' pour afficher un objet Mesh avec une texture.
 
 #include "mat.h"
+#include "mesh.h"
 #include "wavefront.h"
 #include "texture.h"
 
 #include "orbiter.h"
 #include "program.h"
 #include "uniforms.h"
+#include "draw.h"
 
 #include "app.h"        // classe Application a deriver
 
@@ -90,14 +92,16 @@ public:
         program_uniform(m_program, "mvpMatrix", mvp);
         
         // . parametres "supplementaires" :
-        //   . utilisation d'une texture configuree sur l'unite 0, cf texture= read_texture(0, "...");
+        //   . utilisation d'une texture configuree sur l'unite 0, le fragment shader declare "uniform sampler2D texture0;"
         program_use_texture(m_program, "texture0", 0, m_texture0);
         
-        //   . utilisation d'une texture configuree sur l'unite 1, cf texture= read_texture(1, "...");
+        //   . utilisation d'une texture configuree sur l'unite 1, le fragment shader declare "uniform sampler2D texture1;" 
         program_use_texture(m_program, "texture1", 1, m_texture1);
         
         // go !
-        m_objet.draw(m_program);
+        // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
+        // tuto9_textures.glsl n'utilise que position et texcoord. les autres de servent a rien.
+        m_objet.draw(m_program, /* use position */ true, /* use texcoord */ true, /* use normal */ false, /* use color */ false);
         return 1;
     }
     
