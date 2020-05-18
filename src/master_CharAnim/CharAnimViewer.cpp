@@ -23,7 +23,8 @@ int CharAnimViewer::init()
 {
     Viewer::init();
     cout<<"==>master_CharAnim/CharAnimViewer"<<endl;
-    m_camera.lookat( Point(0,100,10), 1000 );
+    m_camera.lookat( Point(0,0,0), 1000 );
+	m_camera.rotation(180, 0);
     gl.light( Point(300, 300, 300 ) );
 
     //b_draw_grid = false;
