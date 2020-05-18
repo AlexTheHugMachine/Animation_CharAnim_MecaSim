@@ -15,7 +15,9 @@ uniform mat4 mvpMatrix;
     layout(location= 2) in vec3 normal;
     uniform mat4 normalMatrix;
     out vec3 vertex_normal;
-#else
+#endif
+
+#if defined USE_LIGHT || !defined USE_NORMAL
     uniform mat4 mvMatrix;
     out vec3 vertex_position;
 #endif
@@ -36,7 +38,9 @@ void main( )
 
 #ifdef USE_NORMAL
     vertex_normal= mat3(normalMatrix) * normal;
-#else
+#endif
+
+#if defined USE_LIGHT || !defined USE_NORMAL
     vertex_position= vec3(mvMatrix * vec4(position, 1));
 #endif
 
@@ -61,8 +65,6 @@ void main( )
 
 #ifdef USE_NORMAL
     in vec3 vertex_normal;
-#else
-    in vec3 vertex_position;
 #endif
 
 #ifdef USE_COLOR
@@ -72,6 +74,10 @@ void main( )
 #ifdef USE_LIGHT
 uniform vec3 light;
 uniform vec4 light_color;
+#endif
+
+#if defined USE_LIGHT || !defined USE_NORMAL
+in vec3 vertex_position;
 #endif
 
 uniform vec4 mesh_color= vec4(1, 1, 1, 1);
@@ -110,6 +116,7 @@ void main( )
         color= color * light_color;
     #else
         cos_theta= normal.z; //abs(dot(normal, normalize(vertex_position)));
+        //~ cos_theta= abs(dot(normal, normalize(vertex_position)));
     #endif
     
     // hachure les triangles mal orientes
