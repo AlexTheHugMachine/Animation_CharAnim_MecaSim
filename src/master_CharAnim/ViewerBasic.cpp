@@ -34,7 +34,27 @@ int ViewerBasic::init()
 {
 	SDL_SetWindowTitle(m_window, "Chaan");
     cout<<"==>ViewerBasic"<<endl;
-    // etat par defaut openGL
+
+	int major = 0;
+	int minor = 0;
+	glGetIntegerv(GL_MAJOR_VERSION, &major);
+	glGetIntegerv(GL_MINOR_VERSION, &minor);
+	cout << "OpenGL version " << major << " " << minor << endl;
+	const GLubyte* txt;
+	
+	txt = glGetString(GL_VENDOR);
+	if (txt) cout << "OpenGl Vendor "<< (const char*)txt<< endl;
+	
+	txt = glGetString(GL_RENDERER);
+	if (txt) cout << "OpenGl Renderer " << (const char*)txt << endl;
+	
+	txt = glGetString(GL_VERSION);
+	if (txt) cout << "OpenGl Version " << (const char*)txt << endl;
+
+	txt = glGetString(GL_SHADING_LANGUAGE_VERSION);
+	if (txt) cout << "OpenGl Shading Language Version " << (const char*)txt << endl;
+
+	// etat par defaut openGL
     glClearColor(0.5f, 0.5f, 0.9f, 1);
 //    glClearDepthf(1);
     //glDepthFunc(GL_LESS);
@@ -50,7 +70,6 @@ int ViewerBasic::init()
 //
 //    //glEnable (GL_BLEND);
 //    //glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 
     m_camera.lookat( Point(0,0,0), 30 );
     gl.light( Point(0, 20, 20), White() );
