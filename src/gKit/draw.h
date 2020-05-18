@@ -65,7 +65,7 @@ public:
     DrawParam& projection( const Transform& m ) { m_projection= m; return *this; }
 
     //! utilise les transformations view et projection definies par une camera.
-    DrawParam& camera( const Orbiter& o ) { m_view= o.view(); m_projection= o.projection(); return *this; }
+    DrawParam& camera( Orbiter& o ) { m_view= o.view(); m_projection= o.projection(window_width(), window_height(), 45); return *this; }
     //! utilise les transformations view et projection definies par une camera. parametres explicites de la projection.
     DrawParam& camera( Orbiter& o, const int width, const int height, const float fov ) { m_view= o.view(); m_projection= o.projection(width, height, fov); return *this; }
     //! eclaire l'objet avec une source ponctuelle, de position p et de couleur c.
