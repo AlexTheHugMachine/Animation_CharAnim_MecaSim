@@ -71,8 +71,14 @@ int CharAnimViewer::render()
     //m_world.draw();
 
 	// Affiche le skeleton
-    //draw_skeleton( m_ske );
+    draw_skeleton( m_ske );
 
+	draw_cylinder( Scale(10,100,10) );
+	draw_sphere( Translation(20, 0, 0) * Scale(10,10,10) );
+
+
+
+#if 0			// exercice du cours
 	const int MAX = 5;
 	float A[] = { -10, -20, -30, -40, -50 };
 	float B[] = { -15, -10, 0, 10, 45 };
@@ -101,11 +107,8 @@ int CharAnimViewer::render()
 	Transform C22B = Translation(0, 100, 0) * RotationZ(-ac);
 	Transform C22W = B2W * C22B;
 	draw_cylinder(C22W*S1);
+#endif
 
-
-	//draw_cylinder(Point(0, 0, 0), Point(0, 100, 0), 20);
-	//draw_cylinder()
-	//draw_sphere()
 
     return 1;
 }
