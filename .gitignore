@@ -1,0 +1,13 @@
+extern/
+.vs/gKit2light/v15/
+obj/
+bin/
+
+*.cbp
+*.depend
+*.layout
+*.make
+*.vcxproj*
+*.sln
+*.workspace
+Makefile
