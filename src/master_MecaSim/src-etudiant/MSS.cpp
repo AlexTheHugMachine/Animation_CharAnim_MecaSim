@@ -45,25 +45,12 @@
 /**
 * Calcul de la longueur au repos d un ressort.
  */
-void Ressort::SetLrepos() 
+void Ressort::SetLrepos()
 {
-    // Variables intermediaires
-    float var0, var1, var2, var3;
-    
-    // Calcul de la longueur du ressort entre les deux particules
-    Vector a = GetParticuleA()->GetPosition();
-    Vector b = GetParticuleB()->GetPosition();
-    
-    var1 = a.x - b.x;
-    var2 = a.y - b.y;
-    var3 = a.z - b.z;
-    
-    var0 = (var1 * var1) + (var2 * var2) + (var3 * var3);
-    
+    // Calcul de la longueur du ressort entre les deux particules :
     // Distance entre les particules A et B constituant le ressort
     // l(A,B) = sqrt( (xA-xB)2 + (yA-yB)2 + (zA-zB)2)
-    _Spring->_L0 = sqrt(var0);
-
+    _Spring->_L0 = length(GetParticuleA()->GetPosition() - GetParticuleB()->GetPosition());
 }
 
 

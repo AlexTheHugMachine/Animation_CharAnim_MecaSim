@@ -52,7 +52,14 @@ void SolveurExpl::CalculAccel_ForceGravite(Vector g,
                                            std::vector<Vector> &Force,
                                            std::vector<float> &M)
 {
-    
+ 
+
+
+ 			//// Cas SPH
+            // On a calcule dans Force[i] : fij / rho_i
+            // Il ne reste qu a ajoute le vecteur g
+            // a_i = fij / rho_i + g
+
     
 }//void
 

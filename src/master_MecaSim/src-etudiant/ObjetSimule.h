@@ -82,7 +82,7 @@ public:
     virtual void initMeshObjet() = 0;
     
     /*! Gestion des collisions */
-    virtual void CollisionPlan() = 0;
+    virtual void Collision() = 0;
     
     /*! Simulation de l objet */
     virtual void Simulation(Vector gravite, float viscosite, int Tps) = 0;

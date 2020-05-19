@@ -169,7 +169,7 @@ void ObjetSimuleSPH::Simulation(Vector gravite, float viscosite, int Tps)
     /* Gestion des collisions  */
     // Reponse : rebond
     // Penser au Translate de l objet dans la scene pour trouver plan coherent
-    CollisionPlan();
+    Collision();
     
     // Affichage des positions
     // AffichagePos(Tps);

@@ -85,7 +85,7 @@ public:
 	void Simulation(int Tps);
     
     /*! Gestion des collisions. Rajoutez des parametres si besoin. */
-    void CollisionPlan();
+    void Collision();
 	
 	/*! Interation de l utilisateur avec chacun des enfants */
 	void Interaction(Vector MousePos);

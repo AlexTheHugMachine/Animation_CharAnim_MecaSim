@@ -79,7 +79,7 @@ void SolveurImpl::Allocation_Structure(int nb_som)
  * X, Y, PP, W, W1, W2, Df_Dx, Df_Dx_diag, Df_Dv, Df_Dv_diag.
  */
 void SolveurImpl::Init(int nb_som,
-                       MSS * _SytemeMasseRessort)
+                       MSS * _SystemeMasseRessort)
 {
     
     // Pour initialiser chaque element df/dx ou df/dv
@@ -110,7 +110,7 @@ void SolveurImpl::Init(int nb_som,
         Df_Dv_diag[i] = init_element;
         
         /// RessortList relies a la particule NumPart_i
-        std::vector<Ressort *>& RessortList_i = _SytemeMasseRessort->GetParticule(i)->GetRessortList();
+        std::vector<Ressort *>& RessortList_i = _SystemeMasseRessort->GetParticule(i)->GetRessortList();
         
         /// Nombre de ressorts relies a la particule NumPart_i
         int NbRessortList_i = RessortList_i.size();
@@ -141,7 +141,7 @@ void SolveurImpl::Init(int nb_som,
  * Utilisation formulation Volino ou Baraff.
  */
 void SolveurImpl::Remplissage_df_dx_dv(int nb_som,
-                                       MSS * _SytemeMasseRessort,
+                                       MSS * _SystemeMasseRessort,
                                        std::vector<Vector> &P)
 {
    

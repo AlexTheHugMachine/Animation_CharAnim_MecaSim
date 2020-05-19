@@ -53,7 +53,7 @@ public:
     void Simulation(Vector gravite, float viscosite, int Tps);
     
     /*! Gestion des collisions */
-    void CollisionPlan();
+    void Collision();
     
     /*! Mise a jour du Mesh (pour affichage) de l objet en fonction des nouvelles positions calculees */
     void updateVertex();
@@ -93,7 +93,7 @@ public:
     unsigned int _NFacets;
     
     /// Declaration du systeme masse-ressort (maillage point de vue de la simulation)
-    MSS * _SytemeMasseRessort;
+    MSS * _SystemeMasseRessort;
     
     /// Choix du schema d integration
     std::string _Integration;

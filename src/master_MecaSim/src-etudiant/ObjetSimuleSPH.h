@@ -62,7 +62,7 @@ public:
     void damp_reflect(int which, float barrier, int indice_part);
   
     /*! Gestion des collisions  */
-    void CollisionPlan();
+    void Collision();
     
     /*! Mise a jour du Mesh (pour affichage) de l objet en fonction des nouvelles positions calculees */
     void updateVertex();

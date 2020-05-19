@@ -189,7 +189,7 @@ void ObjetSimuleParticule::Simulation(Vector gravite, float viscosite, int Tps)
     /* ! Gestion des collisions avec sol et bords de la fenetre */
     // Reponse : rebond
     // Penser au Translate de l objet dans la scene pour trouver plan coherent
-    CollisionPlan();
+    Collision();
     
     // Affichage des positions
     // AffichagePos(Tps);

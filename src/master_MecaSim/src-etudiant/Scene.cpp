@@ -160,15 +160,15 @@ void Scene::Simulation(int Tps)
 /**
  * Gestion des collisions.
  */
-void Scene::CollisionPlan()
+void Scene::Collision()
 {
-    //std::cout << "----------------- Scene::CollisionPlan()-------------" << std::endl;
+    //std::cout << "----------------- Scene::Collision()-------------" << std::endl;
     
     ListeNoeuds::iterator e;
     
     for(e=_enfants.begin(); e!=_enfants.end(); e++)
     {
-        (*e)->CollisionPlan();
+        (*e)->Collision();
     }
 }
 

@@ -63,7 +63,7 @@ public:
     void Simulation(Vector gravite, float viscosite, int Tps);
     
     /*! Gestion des collisions. Rajoutez parametre si besoin. */
-    void CollisionPlan();
+    void Collision();
     
     /*! Creation du maillage (pour l affichage) de l objet simule de type RigidBody */
     void initMeshObjet();
@@ -123,7 +123,7 @@ public:
     ///---- Info relatives a la derivee de l etat du systeme
     // Derivee de l etat du systeme : X'(t) = d/dt X(t)
     // - d/dt x(t) = v(t) - vitesse du baycentre
-    // - d/dt R(t) = r'(t) = w(t) x R(t)
+    // - d/dt R(t) = R'(t) = w(t) x R(t)
     // - d/dt P(t) = F(t) - les forces
     // - d/dt L(t) = moment de la force (torque) = sum_i (ri(t) - x(t)) x Fi(t)
     

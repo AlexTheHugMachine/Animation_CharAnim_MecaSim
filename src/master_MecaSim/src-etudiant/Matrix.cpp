@@ -144,32 +144,31 @@ Matrix & Matrix::operator*= (float factor)
 
 
 /*
- * Surcharge operateur *=.
+ * Surcharge operateur *=.A*=B -> Renvoie A*B.
  */
 Matrix & Matrix::operator*= (const Matrix & matrix)
 {
     Matrix result;
     
-    result(0) = (m_Values[0] * matrix(0)) + (m_Values[3] * matrix(1)) + (m_Values[6] * matrix(2));
-    result(1) = (m_Values[1] * matrix(0)) + (m_Values[4] * matrix(1)) + (m_Values[7] * matrix(2));
-    result(2) = (m_Values[2] * matrix(0)) + (m_Values[5] * matrix(1)) + (m_Values[8] * matrix(2));
+    result(0) = (m_Values[0] * matrix(0)) + (m_Values[1] * matrix(3)) + (m_Values[2] * matrix(6));
+    result(1) = (m_Values[0] * matrix(1)) + (m_Values[1] * matrix(4)) + (m_Values[2] * matrix(7));
+    result(2) = (m_Values[0] * matrix(2)) + (m_Values[1] * matrix(5)) + (m_Values[2] * matrix(8));
     
-    result(3) = (m_Values[0] * matrix(3)) + (m_Values[3] * matrix(4)) + (m_Values[6] * matrix(5));
-    result(4) = (m_Values[1] * matrix(3)) + (m_Values[4] * matrix(4)) + (m_Values[7] * matrix(5));
-    result(5) = (m_Values[2] * matrix(3)) + (m_Values[5] * matrix(4)) + (m_Values[8] * matrix(5));
+    result(3) = (m_Values[3] * matrix(0)) + (m_Values[4] * matrix(3)) + (m_Values[5] * matrix(6));
+    result(4) = (m_Values[3] * matrix(1)) + (m_Values[4] * matrix(4)) + (m_Values[5] * matrix(7));
+    result(5) = (m_Values[3] * matrix(2)) + (m_Values[4] * matrix(5)) + (m_Values[5] * matrix(8));
     
-    result(6) = (m_Values[0] * matrix(6)) + (m_Values[3] * matrix(7)) + (m_Values[6] * matrix(8));
-    result(7) = (m_Values[1] * matrix(6)) + (m_Values[4] * matrix(7)) + (m_Values[7] * matrix(8));
-    result(8) = (m_Values[2] * matrix(6)) + (m_Values[5] * matrix(7)) + (m_Values[8] * matrix(8));
+    result(6) = (m_Values[6] * matrix(0)) + (m_Values[7] * matrix(3)) + (m_Values[8] * matrix(6));
+    result(7) = (m_Values[6] * matrix(1)) + (m_Values[7] * matrix(4)) + (m_Values[8] * matrix(7));
+    result(8) = (m_Values[6] * matrix(2)) + (m_Values[7] * matrix(5)) + (m_Values[8] * matrix(8));
     
     *this = result;
     
     return *this;
 }
 
-
 /*
- * Surcharge de l operateur +=.
+ * Surcharge de l operateur +=. A+=B -> renvoie A+B.
  */
  Matrix & Matrix::operator+= (const Matrix & matrix)
 {
@@ -183,7 +182,7 @@ Matrix & Matrix::operator*= (const Matrix & matrix)
 
 
 /*
- * Surcharge de l operateur -=.
+ * Surcharge de l operateur -=. A-=B -> renvoie A-B.
  */
 Matrix & Matrix::operator-= (const Matrix & matrix)
 {
@@ -234,10 +233,23 @@ float Matrix::operator()(unsigned row, unsigned column) const
 /*
  * Renvoie le vecteur ligne de la matrice selon l indice de ligne donne.
  */
-Vector Matrix::GetAxis(unsigned int row) const
+Vector Matrix::GetLine(unsigned int row) const
 {
-    return Vector(m_Values[row * 3 + 0], m_Values[row * 3 + 1], m_Values[row * 3 + 2]);
+    return Vector(m_Values[row * 3 + 0],
+                  m_Values[row * 3 + 1],
+                  m_Values[row * 3 + 2]);
 }
+
+/*
+ * Renvoie le vecteur colonne de la matrice selon l indice de colonne donne.
+ */
+Vector Matrix::GetColumn(unsigned int col) const
+{
+    return Vector(m_Values[col + 0],
+                  m_Values[col + 3],
+                  m_Values[col + 6]);
+}
+
 
 
 /*
@@ -245,8 +257,12 @@ Vector Matrix::GetAxis(unsigned int row) const
  */
 float Matrix::Determinant() const
 {
-    return m_Values[0] * m_Values[4] * m_Values[8] + m_Values[1] * m_Values[5] * m_Values[6] + m_Values[2] * m_Values[3] * m_Values[7]
-    -  m_Values[2] * m_Values[4] * m_Values[6] - m_Values[0] * m_Values[5] * m_Values[7] - m_Values[1] * m_Values[3] * m_Values[8];
+    return m_Values[0] * m_Values[4] * m_Values[8]
+    + m_Values[1] * m_Values[5] * m_Values[6]
+    + m_Values[2] * m_Values[3] * m_Values[7]
+    -  m_Values[2] * m_Values[4] * m_Values[6]
+    - m_Values[0] * m_Values[5] * m_Values[7]
+    - m_Values[1] * m_Values[3] * m_Values[8];
 }
 
 
@@ -255,7 +271,7 @@ float Matrix::Determinant() const
  */
 void Matrix::Inverse()
 {
-    float determinant = Determinant();
+    float determinant = this->Determinant();
     if(determinant != 0)
     {
         determinant = 1.f / determinant;
@@ -323,8 +339,20 @@ Matrix Matrix::TransposeConst() const
 /* mais ne faisant pas partie de la class Matrix        */
 /********************************************************/
 
+
 /*
- * Multiplication de la matrice par un scalaire.
+ * Multiplication de la matrice par un scalaire. a*M
+ */
+Matrix operator* (float factor, const Matrix & matrix)
+{
+    Matrix result(matrix);
+    result *= factor;
+
+    return result;
+}
+
+/*
+ * Multiplication de la matrice par un scalaire. M*a
  */
 Matrix operator* (const Matrix & matrix, float factor)
 {
@@ -336,39 +364,39 @@ Matrix operator* (const Matrix & matrix, float factor)
 
 
 /*
- * Renvoi la multiplication de deux matrices.
+ * Renvoi la multiplication de deux matrices. A*B dans ce sens
  */
 Matrix operator* (const Matrix & matrixA, const Matrix & matrixB)
 {
     Matrix result;
-    
-    result(0) = (matrixA(0) * matrixB(0)) + (matrixA(3) * matrixB(1)) + (matrixA(6) * matrixB(2));
-    result(1) = (matrixA(1) * matrixB(0)) + (matrixA(4) * matrixB(1)) + (matrixA(7) * matrixB(2));
-    result(2) = (matrixA(2) * matrixB(0)) + (matrixA(5) * matrixB(1)) + (matrixA(8) * matrixB(2));
-    
-    result(3) = (matrixA(0) * matrixB(3)) + (matrixA(3) * matrixB(4)) + (matrixA(6) * matrixB(5));
-    result(4) = (matrixA(1) * matrixB(3)) + (matrixA(4) * matrixB(4)) + (matrixA(7) * matrixB(5));
-    result(5) = (matrixA(2) * matrixB(3)) + (matrixA(5) * matrixB(4)) + (matrixA(8) * matrixB(5));
-    
-    result(6) = (matrixA(0) * matrixB(6)) + (matrixA(3) * matrixB(7)) + (matrixA(6) * matrixB(8));
-    result(7) = (matrixA(1) * matrixB(6)) + (matrixA(4) * matrixB(7)) + (matrixA(7) * matrixB(8));
-    result(8) = (matrixA(2) * matrixB(6)) + (matrixA(5) * matrixB(7)) + (matrixA(8) * matrixB(8));
-    
+
+    result(0) = (matrixA(0) * matrixB(0)) + (matrixA(1) * matrixB(3)) + (matrixA(2) * matrixB(6));
+    result(1) = (matrixA(0) * matrixB(1)) + (matrixA(1) * matrixB(4)) + (matrixA(2) * matrixB(7));
+    result(2) = (matrixA(0) * matrixB(2)) + (matrixA(1) * matrixB(5)) + (matrixA(2) * matrixB(8));
+
+    result(3) = (matrixA(3) * matrixB(0)) + (matrixA(4) * matrixB(3)) + (matrixA(5) * matrixB(6));
+    result(4) = (matrixA(3) * matrixB(1)) + (matrixA(4) * matrixB(4)) + (matrixA(5) * matrixB(7));
+    result(5) = (matrixA(3) * matrixB(2)) + (matrixA(4) * matrixB(5)) + (matrixA(5) * matrixB(8));
+
+    result(6) = (matrixA(6) * matrixB(0)) + (matrixA(7) * matrixB(3)) + (matrixA(8) * matrixB(6));
+    result(7) = (matrixA(6) * matrixB(1)) + (matrixA(7) * matrixB(4)) + (matrixA(8) * matrixB(7));
+    result(8) = (matrixA(6) * matrixB(2)) + (matrixA(7) * matrixB(5)) + (matrixA(8) * matrixB(8));
+
     return result;
 }
 
 
 /*
- * Renvoi la multiplication d une matrice par un vecteur.
+ * Renvoi la multiplication d une matrice par un vecteur. A*X avec X vertical
  */
 Vector operator* (const Matrix & matrix, const Vector & coord)
 {
     Vector result;
-    
-    result.x = coord.x * matrix(0) + coord.y * matrix(3) + coord.z * matrix(6);
-    result.y = coord.x * matrix(1) + coord.y * matrix(4) + coord.z * matrix(7);
-    result.z = coord.x * matrix(2) + coord.y * matrix(5) + coord.z * matrix(8);
-    
+
+    result.x = coord.x * matrix(0) + coord.y * matrix(1) + coord.z * matrix(2);
+    result.y = coord.x * matrix(3) + coord.y * matrix(4) + coord.z * matrix(5);
+    result.z = coord.x * matrix(6) + coord.y * matrix(7) + coord.z * matrix(8);
+
     return result;
 }
 
@@ -386,24 +414,17 @@ Matrix operator+ (const Matrix & matrixA, const Matrix & matrixB)
 
 
 /*
- * Renvoi la multiplication d une vecteur par une matrice.
+ * Renvoi la multiplication d un vecteur X (horizontal) par une matrice A
+ * resultat : vecteur horizontal.
  */
-Matrix operator* (const Vector & coord, const Matrix & matrix)
+Vector operator* (const Vector & coord, const Matrix & matrix)
 {
-    Matrix result;
-    
-    result(0) = (matrix(0) + matrix(1) + matrix(2)) * coord.x;
-    result(1) = (matrix(0) + matrix(1) + matrix(2)) * coord.y;
-    result(2) = (matrix(0) + matrix(1) + matrix(2)) * coord.z;
-    
-    result(3) = (matrix(3) + matrix(4) + matrix(5)) * coord.x;
-    result(4) = (matrix(3) + matrix(4) + matrix(5)) * coord.y;
-    result(5) = (matrix(3) + matrix(4) + matrix(5)) * coord.z;
-    
-    result(6) = (matrix(6) + matrix(7) + matrix(8)) * coord.x;
-    result(7) = (matrix(6) + matrix(7) + matrix(8)) * coord.y;
-    result(8) = (matrix(6) + matrix(7) + matrix(8)) * coord.z;
-    
+    Vector result;
+
+    result.x = coord.x * matrix(0) + coord.x * matrix(3) + coord.x * matrix(6);
+    result.y = coord.y * matrix(1) + coord.y * matrix(4) + coord.y * matrix(7);
+    result.z = coord.z * matrix(2) + coord.z * matrix(5) + coord.z * matrix(8);
+
     return result;
 }
 
@@ -420,7 +441,7 @@ Matrix operator- (const Matrix & matrixA, const Matrix & matrixB)
 
 
 /*
- * Retourne le matrice (vecteur *).
+ * Retourne le matrice (vecteur * equivalent a : -w cross).
  */
 Matrix StarMatrix(const Vector & vector)
 {
@@ -429,22 +450,21 @@ Matrix StarMatrix(const Vector & vector)
     Matrix matrix;
     matrix(0) = 0;
     matrix(1) = -direction.z;
-    matrix(2) = +direction.y;
+    matrix(2) = direction.y;
     
-    matrix(3) = +direction.z;
+    matrix(3) = direction.z;
     matrix(4) = 0;
     matrix(5) = -direction.x;
     
     matrix(6) = -direction.y;
-    matrix(7) = +direction.x;
+    matrix(7) = direction.x;
     matrix(8) = 0;
     
     return (matrix);
 }
 
-
 /*
- * Renvoie la matrice transposee.
+ * Renvoie la matrice transposee. Renvoie X*X^t avec X vertical.
  */
 Matrix MultiplyTransposedAndOriginal(const Vector & coord)
 {
