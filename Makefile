@@ -6,18 +6,18 @@ ifndef config
 endif
 export config
 
-PROJECTS := master_MecaSim_corrige
+PROJECTS := master_MecaSim_etudiant
 
 .PHONY: all clean help $(PROJECTS)
 
 all: $(PROJECTS)
 
-master_MecaSim_corrige: 
-	@echo "==== Building master_MecaSim_corrige ($(config)) ===="
-	@${MAKE} --no-print-directory -C . -f master_MecaSim_corrige.make
+master_MecaSim_etudiant: 
+	@echo "==== Building master_MecaSim_etudiant ($(config)) ===="
+	@${MAKE} --no-print-directory -C . -f master_MecaSim_etudiant.make
 
 clean:
-	@${MAKE} --no-print-directory -C . -f master_MecaSim_corrige.make clean
+	@${MAKE} --no-print-directory -C . -f master_MecaSim_etudiant.make clean
 
 help:
 	@echo "Usage: make [config=name] [target]"
@@ -31,6 +31,6 @@ help:
 	@echo "TARGETS:"
 	@echo "   all (default)"
 	@echo "   clean"
-	@echo "   master_MecaSim_corrige"
+	@echo "   master_MecaSim_etudiant"
 	@echo ""
 	@echo "For more information, see http://industriousone.com/premake/quick-start"

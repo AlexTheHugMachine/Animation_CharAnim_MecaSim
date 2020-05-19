@@ -31,6 +31,7 @@
 #include <math.h>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 
 // Fichiers de master_meca_sim

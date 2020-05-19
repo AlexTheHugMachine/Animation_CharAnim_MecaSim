@@ -1,0 +1,12 @@
+.vs/*
+bin/
+extern/
+*.sln
+*.workspace
+*.layout
+*.cbp
+*.make
+*.vc*
+*.depend
+obj
+Makefile*
