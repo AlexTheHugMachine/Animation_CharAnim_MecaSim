@@ -45,8 +45,8 @@ int CharAnimViewer::init()
     cout<<m_bvh<<endl;
     cout<<endl<<"========================"<<endl;
 
-    //m_ske.init( m_bvh );
-    //m_ske.setPose( m_bvh, -1);// met le skeleton a la pose au repos
+    m_ske.init( m_bvh );
+    m_ske.setPose( m_bvh, -1);// met le skeleton a la pose au repos
 
     return 0;
 }
