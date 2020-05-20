@@ -36,7 +36,7 @@ int CharAnimViewer::init()
     init_sphere();
 
 
-    //m_bvh.init("data/bvh/Robot.bvh" );
+    //m_bvh.init("../data/bvh/Robot.bvh" );
 	m_bvh.init( smart_path("data/bvh/danse.bvh") );
 
     m_frameNumber = 0;
@@ -69,45 +69,60 @@ int CharAnimViewer::render()
     Viewer::manageCameraLight();
     gl.camera(m_camera);
 
+	// Affiche les particules physiques (Question 3 : interaction personnage sphere/ballon)
     //m_world.draw();
 
-	// Affiche le skeleton
+
+	// Affiche le skeleton à partir de la structure linéaire (tableau) Skeleton
     draw_skeleton( m_ske );
 
-	draw_cylinder( Scale(10,100,10) );
-	draw_sphere( Translation(20, 0, 0) * Scale(10,10,10) );
+
+
+
 
 
 
 #if 0			// exercice du cours
-	const int MAX = 5;
-	float A[] = { -10, -20, -30, -40, -50 };
-	float B[] = { -15, -10, 0, 10, 45 };
-	float C[] = { -55, -30, 20, -30, -45 };
+	float A[] = { 0, -10, -20, -30, -40 };
+	float B[] = { 0, -10, -20, -30, -40 };
+	float C[] = { 0, -10, -20, -30, -40 };
+	float D[] = { 0, 10, 20, 30, 40 };
+	float a, b, c, d;
 
-	static int t = 0;
-	t = (t + 1) % MAX;
-	float c = 0.5;
-	float a = (1-c) * A[t] + c*A[(t+1)%MAX];
-	float b = B[t];
-	float ac = C[t];
+	static int t = 3;
+	//if (t == 4) t = 0; else t++;
 
-	Transform S = Scale(10, 100, 10);
+	a = A[t];
+	b = B[t];
+	c = C[t];
+	d = D[t];
+
+	Transform scaleS = Scale(12, 12, 12);
+	Transform scaleA = Scale(20, 20, 20);
+	Transform scale = Scale(10, 100, 10);
 	Transform A2W = RotationZ(a);
-	draw_cylinder( A2W*S );
+	draw_cylinder(A2W*scale);
+	draw_sphere(A2W*scaleS);
+	draw_axe(A2W*scaleA);
 
-	Transform B2A = Translation(0, 100, 0) * RotationZ( b);
+	Transform B2A = Translation(0, 100, 0) * RotationZ(b);
 	Transform B2W = A2W * B2A;
-	draw_cylinder(  B2W*S);
+	draw_cylinder(B2W*scale);
+	draw_sphere(B2W*scaleS);
+	draw_axe(B2W*scaleA);
 
-	Transform C12B = Translation(0, 100, 0) * RotationZ(ac);
-	Transform C12W = B2W * C12B;
-	Transform S1 = Scale(6, 30, 6);
-	draw_cylinder(C12W*S1);
+	Transform scaleP = Scale(5, 50, 5);
+	Transform C2B = Translation(0, 100, 0) * RotationZ(c);
+	Transform C2W = B2W * C2B;
+	draw_cylinder(C2W*scaleP);
+	draw_sphere(C2W*scaleS);
+	draw_axe(C2W*scaleA);
 
-	Transform C22B = Translation(0, 100, 0) * RotationZ(-ac);
-	Transform C22W = B2W * C22B;
-	draw_cylinder(C22W*S1);
+	Transform D2B = Translation(0, 100, 0) * RotationZ(d);
+	Transform D2W = B2W * D2B;
+	draw_cylinder(D2W*scaleP);
+	draw_axe(D2W*scaleA);
+	draw_sphere(D2W*scaleS);
 #endif
 
 

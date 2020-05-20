@@ -1,5 +1,5 @@
 extern/
-.vs/gKit2light/v15/
+.vs/
 obj/
 bin/
 
@@ -11,3 +11,5 @@ bin/
 *.sln
 *.workspace
 Makefile
+
+.vs/gKit2light/v16/

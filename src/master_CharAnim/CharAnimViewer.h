@@ -23,6 +23,7 @@ public:
 	static CharAnimViewer& singleton() { return *psingleton;  }
 
 protected:
+	void bvhDrawRec(const chara::BVHJoint& bvh, const Transform& f2w, int f);
 
     chara::BVH m_bvh;
     int m_frameNumber;
