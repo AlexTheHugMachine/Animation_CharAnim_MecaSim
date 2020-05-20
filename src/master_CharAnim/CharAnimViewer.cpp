@@ -36,8 +36,8 @@ int CharAnimViewer::init()
     init_sphere();
 
 
-    //m_bvh.init("../data/bvh/Robot.bvh" );
-	m_bvh.init( smart_path("data/bvh/danse.bvh") );
+    m_bvh.init("data/bvh/Robot.bvh" );
+	//m_bvh.init( smart_path("data/bvh/danse.bvh") );
 
     m_frameNumber = 0;
     cout<<endl<<"========================"<<endl;
