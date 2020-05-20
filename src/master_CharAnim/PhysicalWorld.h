@@ -37,7 +37,6 @@ public:
     std::size_t particlesCount() const { return m_part.size(); }
     void setParticlesCount(int ns) { m_part.resize(ns); }
 
-	//TODO
 	//int addParticle(const Vector& p);
 	//void addLine(const Vector& p1, const Vector& p2);
 	//void addCube(const Vector& center, float l);
@@ -45,6 +44,8 @@ public:
 
 	void update(const float dt);
 	void draw();
+    void collision(const Point& p, const float radius);
+
 
 protected:
     std::vector<Particle> m_part;

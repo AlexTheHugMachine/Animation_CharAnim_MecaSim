@@ -63,23 +63,24 @@ public:
 	}
 
 	//! Collision with any point p of radius radius (this will be used for kicking with the character's bones)
-	void collision(const Point& p, const float radius);
-	//{
+	void collision(const Point& p, const float radius)
+	{
 	//	if (m_radius < 0) return;
 	//	if (... TODO
-	//}
+	}
 
 	//! add force to the particles
 	void addForce(const Vector& force)
 	{
-		//TODO: add force
+		m_f = m_f + force;
 	}
 
 
 	//! Apply gravity
 	void addEarthGravity()
 	{
-		//TODO: apply gravity, call addForce
+		// apply gravity, call addForce
+		addForce( Vector(0.f, 0.f, -m_mass * 9.81f) );
 	}
 
 	const Point& position() const { return m_p; }
