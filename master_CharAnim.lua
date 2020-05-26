@@ -1,3 +1,7 @@
+if _PREMAKE_VERSION >="5.0" then
+	location ("build/")
+end
+
 
 no_project = true
 dofile "./premake4.lua"
@@ -16,3 +20,4 @@ project("master_CharAnim")
 	includedirs { gfx_masterCharAnim_dir .. "/src/master_CharAnim/" }
     files ( gkit_files )
     files ( master_CharAnim_files )
+	location ("build/")
