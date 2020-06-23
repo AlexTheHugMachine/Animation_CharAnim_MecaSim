@@ -108,5 +108,5 @@ void DrawParam::draw( Mesh& mesh )
     if(m_use_alpha_test)
         program_uniform(program, "alpha_min", m_alpha_min);
     
-    mesh.draw(program, /* position */ true, use_texcoord, use_normal, use_color);
+    mesh.draw(program, /* position */ true, use_texcoord, use_normal, use_color, /* material_index */ false);
 }

@@ -51,8 +51,6 @@ Mesh read_mesh( const char *filename )
     std::vector<vec3> positions;
     std::vector<vec2> texcoords;
     std::vector<vec3> normals;
-    MaterialLib materials;
-    int default_material_id= -1;
     int material_id= -1;
     
     std::vector<int> idp;
@@ -131,13 +129,9 @@ Mesh read_mesh( const char *filename )
             // force une matiere par defaut, si necessaire
             if(material_id == -1)
             {
-                if(default_material_id == -1)
-                    // creer une matiere par defaut
-                    default_material_id= data.mesh_material(Material());
+                material_id= data.materials().default_material_index();
                 
-                material_id= default_material_id;
                 data.material(material_id);
-                
                 printf("usemtl default\n");
             }
             
@@ -163,9 +157,9 @@ Mesh read_mesh( const char *filename )
         {
            if(sscanf(line, "mtllib %[^\r\n]", tmp) == 1)
            {
-               materials= read_materials( std::string(pathname(filename) + tmp).c_str() );
+               Materials materials= read_materials( std::string(pathname(filename) + tmp).c_str() );
                // enregistre les matieres dans le mesh
-               data.mesh_materials(materials.data);
+               data.materials(materials);
            }
         }
         
@@ -173,21 +167,10 @@ Mesh read_mesh( const char *filename )
         {
            if(sscanf(line, "usemtl %[^\r\n]", tmp) == 1)
            {
-               material_id= -1;
-               for(unsigned int i= 0; i < (unsigned int) materials.names.size(); i++)
-                    if(materials.names[i] == tmp)
-                        material_id= i;
-                
+               material_id= data.materials().find(tmp);
                 if(material_id == -1)
-                {
-                    // force une matiere par defaut, si necessaire
-                    if(default_material_id == -1)
-                        default_material_id= data.mesh_material(Material());
-                    
-                    material_id= default_material_id;
-                }
+                    material_id= data.materials().insert(Material(Color(0.8)), tmp);
                 
-                // selectionne une matiere pour le prochain triangle
                 data.material(material_id);
            }
         }
@@ -263,9 +246,9 @@ int write_mesh( const Mesh& mesh, const char *filename )
 }
 
 
-MaterialLib read_materials( const char *filename )
+Materials read_materials( const char *filename )
 {
-    MaterialLib materials;
+    Materials materials;
     
     FILE *in= fopen(filename, "rt");
     if(in == NULL)
@@ -301,13 +284,12 @@ MaterialLib read_materials( const char *filename )
         {
             if(sscanf(line, "newmtl %[^\r\n]", tmp) == 1)
             {
-                materials.names.push_back( tmp );
-                materials.data.push_back( Material() );
-                material= &materials.data.back();
+                int id= materials.insert(Material(Black()), tmp);
+                material= &materials.material(id);
             }
         }
         
-        if(material == NULL)
+        if(material == nullptr)
             continue;
         
         if(line[0] == 'K')
@@ -327,6 +309,16 @@ MaterialLib read_materials( const char *filename )
             if(sscanf(line, "Ns %f", &n) == 1)          // Ns, puissance / concentration du reflet, modele blinn phong
                 material->ns= n;
         }
+        
+        else if(line[0] == 'm')
+        {
+            if(sscanf(line, "map_Kd %[^\r\n]", tmp) == 1)
+                material->diffuse_texture= materials.insert_texture( std::string(pathname(filename) + tmp).c_str() );
+                
+            else if(sscanf(line, "map_Ks %[^\r\n]", tmp) == 1)
+                material->ns_texture= materials.insert_texture( std::string(pathname(filename) + tmp).c_str() );
+        }
+        
     }
     
     fclose(in);

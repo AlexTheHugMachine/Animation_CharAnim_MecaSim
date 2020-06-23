@@ -133,7 +133,7 @@ void Mesh::clear( )
     m_normals.clear();
     m_colors.clear();
     m_indices.clear();
-    m_materials.clear();
+    //~ m_materials.clear();
     m_triangle_materials.clear();
 }
 
@@ -175,27 +175,19 @@ Mesh& Mesh::restart_strip( )
     return *this;
 }
 
-
-unsigned int Mesh::mesh_material( const Material& m )
+Materials& Mesh::materials( )
 {
-    m_materials.push_back(m);
-    return (unsigned int) m_materials.size() -1;
+    return m_materials;
 }
 
-void Mesh::mesh_materials( const std::vector<Material>& m )
+const Materials& Mesh::materials( ) const
 {
-    m_materials= m;
+    return m_materials;
 }
 
-int Mesh::mesh_material_count( ) const
+void Mesh::materials( const Materials& materials )
 {
-    return (int) m_materials.size();
-}
-
-const Material& Mesh::mesh_material( const unsigned int id ) const
-{
-    assert((size_t) id < m_materials.size());
-    return m_materials[id];
+    m_materials= materials;
 }
 
 Mesh& Mesh::material( const unsigned int id )
@@ -204,21 +196,21 @@ Mesh& Mesh::material( const unsigned int id )
     return *this;
 }
 
+const std::vector<unsigned int>& Mesh::material_indices( ) const
+{
+    return m_triangle_materials;
+}
+
+int Mesh::triangle_material_index( const unsigned int id ) const
+{
+    assert((size_t) id < m_triangle_materials.size());
+    return m_triangle_materials[id];
+}
+
 const Material &Mesh::triangle_material( const unsigned int id ) const
 {
     assert((size_t) id < m_triangle_materials.size());
-    assert((size_t) m_triangle_materials[id] < m_materials.size());
-    return m_materials[m_triangle_materials[id]];
-}
-
-const std::vector<Material>& Mesh::mesh_materials( ) const
-{
-    return m_materials;
-}
-
-const std::vector<unsigned int>& Mesh::materials( ) const
-{
-    return m_triangle_materials;
+    return m_materials.material(m_triangle_materials[id]);
 }
 
 int Mesh::triangle_count( ) const
@@ -227,9 +219,9 @@ int Mesh::triangle_count( ) const
         return 0;
     
     if(m_indices.size() > 0)
-        return (int) m_indices.size() / 3;
+        return int(m_indices.size() / 3);
     else
-        return (int) m_positions.size() / 3;
+        return int(m_positions.size() / 3);
 }
 
 TriangleData Mesh::triangle( const unsigned int id ) const
@@ -305,7 +297,7 @@ void Mesh::bounds( Point& pmin, Point& pmax ) const
     }
 }
 
-GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, const bool use_color )
+GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index )
 {
     if(m_positions.size() == 0)
         return 0;
@@ -317,6 +309,8 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
         printf("[oops] mesh: no normal array...\n");
     if(use_color && !has_color())
         printf("[oops] mesh: no color array...\n");
+    if(use_material_index && !has_material_index())
+        printf("[oops] mesh: no material index array...\n");
 #endif
     
     if(m_vao)
@@ -334,6 +328,8 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
         m_vertex_buffer_size+= normal_buffer_size();
     if(use_color && has_color())
         m_vertex_buffer_size+= color_buffer_size();
+    if(use_material_index && has_material_index())
+        m_vertex_buffer_size+= m_positions.size() * sizeof(unsigned char);
     
     // allouer le buffer
     glGenBuffers(1, &m_buffer);
@@ -349,12 +345,12 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer_size, index_buffer(), GL_STATIC_DRAW);
     }
 
-    update_buffers(use_texcoord,  use_normal, use_color);
+    update_buffers(use_texcoord,  use_normal, use_color, use_material_index);
     
     return m_vao;
 }
 
-int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color )
+int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index )
 {
     assert(m_vao > 0);
     assert(m_buffer > 0);
@@ -372,6 +368,8 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
         size+= normal_buffer_size();
     if(use_color && has_color())
         size+= color_buffer_size();
+    if(use_material_index && has_material_index())
+        size+= m_positions.size() * sizeof(unsigned char);
     
     if(size != m_vertex_buffer_size)
     {
@@ -379,7 +377,7 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
         glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
         // utilise un buffer dynamique, si le mesh a change
         
-        printf("[warning] resize buffer %d: %dK\n", m_buffer, size/1024);
+        printf("[warning] resize buffer %d: %dK\n", m_buffer, int(size/1024));
     }
     
     // transferer les attributs et configurer le format de sommet (vao)
@@ -416,6 +414,26 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
         glEnableVertexAttribArray(3);
     }
     
+    if(use_material_index && has_material_index())
+    {
+        assert(int(m_triangle_materials.size()) == triangle_count());
+        
+        offset= offset + size;
+        size= m_positions.size() * sizeof(unsigned char);
+        // prepare un indice de matiere par sommet / 3 indices par triangle
+        std::vector<unsigned char> buffer(m_positions.size());
+        for(int i= 0; i < int(m_triangle_materials.size()); i++)
+        {
+            int index= m_triangle_materials[i];
+            buffer[3*i]= index;
+            buffer[3*i+1]= index;
+            buffer[3*i+2]= index;
+        }
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, buffer.data());
+        glVertexAttribIPointer(4, 1, GL_UNSIGNED_BYTE, 0, (const void *) offset);
+        glEnableVertexAttribArray(4);
+    }
+    
     // index buffer
     size= index_buffer_size();
     if(size != m_index_buffer_size)
@@ -431,7 +449,7 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
     return 1;
 }
 
-void Mesh::draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color )
+void Mesh::draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index )
 {
     if(program == 0)
     {
@@ -440,12 +458,12 @@ void Mesh::draw( const GLuint program, const bool use_position, const bool use_t
     }
     
     if(m_vao == 0)
-        create_buffers(has_texcoord(), has_normal(), has_color());
+        create_buffers(has_texcoord(), has_normal(), has_color(), has_material_index());
     assert(m_vao != 0);
     
     if(m_update_buffers)
-        update_buffers(has_texcoord(), has_normal(), has_color());
-
+        update_buffers(has_texcoord(), has_normal(), has_color(), has_material_index());
+    
     // transfere toutes les donnees disponibles (et correctement definies)
     // le meme mesh peut etre dessine avec plusieurs shaders utilisant des attributs differents... 
     
@@ -510,6 +528,13 @@ void Mesh::draw( const GLuint program, const bool use_position, const bool use_t
                 printf("[oops] color attribute '%s' in %s: no data... undefined draw !!\n", name, label);
             if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC4)
                 printf("[oops] attribute '%s' is not declared as a vec4 in %s... undefined draw !!\n", name, label);
+        }
+        else if(location == 4)  // attribut material_index necessaire
+        {
+            if(!use_material_index || !has_material_index())
+                printf("[oops] material_index attribute '%s' in %s: no data... undefined draw !!\n", name, label);
+            if(glsl_size != 1 || glsl_type != GL_UNSIGNED_INT)
+                printf("[oops] attribute '%s' is not declared as a uint in %s... undefined draw !!\n", name, label);
         }
     }
 #endif
