@@ -1,0 +1,17 @@
+# Blender MTL File: 'Robot.blend'
+# Material Count: 3
+
+newmtl Black
+Ns 5
+Kd 0.057805 0.057805 0.057805
+Ks 0.500000 0.500000 0.500000
+
+newmtl Grey
+Ns 25
+Kd 0.467197 0.464126 0.418706
+Ks 0.500000 0.500000 0.500000
+
+newmtl Main
+Ns 25
+Kd 0.737911 0.364143 0.047922
+Ks 0.500000 0.500000 0.500000
