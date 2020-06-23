@@ -21,8 +21,7 @@ public:
     
     int init( )
     {
-        //~ m_objet= read_mesh("data/cube.obj");
-        m_objet= read_mesh("landscape.obj");
+        m_objet= read_mesh("data/robot.obj");
         if(m_objet.materials().count() == 0)
             // pas de matieres, pas d'affichage
             return -1;
