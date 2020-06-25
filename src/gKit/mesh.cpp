@@ -213,6 +213,130 @@ const Material &Mesh::triangle_material( const unsigned int id ) const
     return m_materials.material(m_triangle_materials[id]);
 }
 
+struct triangle_sort
+{
+    const std::vector<unsigned int>& materials;
+    
+    triangle_sort( const Mesh& mesh ) : materials(mesh.material_indices()) {}
+    
+    bool operator() ( const int& a, const int& b ) const
+    {
+        return materials[a] < materials[b];
+    }
+};
+
+std::vector<TriangleGroup> Mesh::groups( )
+{
+    if(m_primitives != GL_TRIANGLES)
+        return {};
+    
+    // pas de matieres... renvoyer un seul groupe
+    if(m_triangle_materials.size() == 0)
+    {
+        if(m_indices.size())
+            return { {0, 0, int(m_indices.size())} };
+        else
+            return { {0, 0, int(m_positions.size())} };
+    }
+    
+    // trie les triangles par matiere
+    std::vector<int> remap(triangle_count());
+    for(int i= 0; i < int(remap.size()); i++)
+        remap[i]= i;
+    
+    std::stable_sort(remap.begin(), remap.end(), triangle_sort(*this));
+    
+    // re-organise les triangles, et construit les groupes
+    std::vector<TriangleGroup> groups;
+    if(m_indices.size())
+    {
+        int first= 0;
+        int material_id= m_triangle_materials[remap[0]];
+        
+        // re-organise l'index buffer...
+        std::vector<unsigned int> indices;
+        std::vector<unsigned int> material_indices;
+        for(int i= 0; i < int(remap.size()); i++)
+        {
+            int id= m_triangle_materials[remap[i]];
+            if(id != material_id)
+            {
+                groups.push_back( {material_id, first, 3*i - first} );
+                first= 3*i;
+                material_id= id;
+            }
+            
+            indices.push_back(m_indices[3*remap[i]]);
+            indices.push_back(m_indices[3*remap[i]+1]);
+            indices.push_back(m_indices[3*remap[i]+2]);
+            
+            material_indices.push_back(id);
+        }
+        
+        // dernier groupe
+        groups.push_back( {material_id, first, int(3 * remap.size()) - first} );
+        
+        std::swap(m_indices, indices);
+        std::swap(m_triangle_materials, material_indices);
+    }
+    else
+    {
+        int first= 0;
+        int material_id= m_triangle_materials[remap[0]];
+        
+        // re-organise les attributs !!
+        std::vector<vec3> positions;
+        std::vector<vec2> texcoords;
+        std::vector<vec3> normals;
+        std::vector<vec4> colors;
+        std::vector<unsigned int> material_indices;
+        for(int i= 0; i < int(remap.size()); i++)
+        {
+            int id= m_triangle_materials[remap[i]];
+            if(id != material_id)
+            {
+                groups.push_back( {material_id, first, 3*i - first} );
+                first= 3*i;
+                material_id= id;
+            }
+            
+            positions.push_back(m_positions[3*remap[i]]);
+            positions.push_back(m_positions[3*remap[i]+1]);
+            positions.push_back(m_positions[3*remap[i]+2]);
+            if(has_texcoord())
+            {
+                texcoords.push_back(m_texcoords[3*remap[i]]);
+                texcoords.push_back(m_texcoords[3*remap[i]+1]);
+                texcoords.push_back(m_texcoords[3*remap[i]+2]);
+            }
+            if(has_normal())
+            {
+                normals.push_back(m_normals[3*remap[i]]);
+                normals.push_back(m_normals[3*remap[i]+1]);
+                normals.push_back(m_normals[3*remap[i]+2]);
+            }
+            if(has_color())
+            {
+                colors.push_back(m_colors[3*remap[i]]);
+                colors.push_back(m_colors[3*remap[i]+1]);
+                colors.push_back(m_colors[3*remap[i]+2]);
+            }
+            
+            material_indices.push_back(id);
+        }
+        
+        // dernier groupe
+        groups.push_back( {material_id, first, int(3 * remap.size()) - first} );
+        
+        std::swap(m_positions, positions);
+        std::swap(m_texcoords, texcoords);
+        std::swap(m_normals, normals);
+        std::swap(m_colors, colors);
+    }
+    
+    return groups;
+}
+
 int Mesh::triangle_count( ) const
 {
     if(m_primitives != GL_TRIANGLES)
@@ -451,6 +575,14 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
 
 void Mesh::draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index )
 {
+    if(m_indices.size())
+        draw(0, int(m_indices.size()), program, use_position, use_texcoord, use_normal, use_color, use_material_index);
+    else
+        draw(0, int(m_positions.size()), program, use_position, use_texcoord, use_normal, use_color, use_material_index);
+}
+
+void Mesh::draw( const int first, const int n, const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index )
+{
     if(program == 0)
     {
         printf("[oops]  no program... can't draw !!");
@@ -469,78 +601,80 @@ void Mesh::draw( const GLuint program, const bool use_position, const bool use_t
     
     glBindVertexArray(m_vao);
     
-#ifndef GK_RELEASE
-    char label[1024]= { 0 };
-    #ifdef GL_VERSION_4_3
+    #ifndef GK_RELEASE
     {
-        char tmp[1024];
-        glGetObjectLabel(GL_PROGRAM, program, sizeof(tmp), nullptr, tmp);
-        sprintf(label, "program( %u '%s' )", program, tmp);
+        char label[1024]= { 0 };
+        #ifdef GL_VERSION_4_3
+        {
+            char tmp[1024];
+            glGetObjectLabel(GL_PROGRAM, program, sizeof(tmp), nullptr, tmp);
+            sprintf(label, "program( %u '%s' )", program, tmp);
+        }
+        #else
+            sprintf(label, "program( %u )", program); 
+        #endif
+        
+        // verifie que le program est selectionne
+        GLuint current;
+        glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *) &current);
+        if(current != program)
+            printf("[oops] %s: not active... undefined draw !!\n", label); 
+        
+        // verifie que les attributs necessaires a l'execution du shader sont presents dans le mesh...
+        // etape 1 : recuperer le nombre d'attributs
+        GLint n= 0;
+        glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &n);
+        
+        // etape 2 : recuperer les infos de chaque attribut
+        char name[1024];
+        for(int index= 0; index < n; index++)
+        {
+            GLint glsl_size;
+            GLenum glsl_type;
+            glGetActiveAttrib(program, index, sizeof(name), nullptr, &glsl_size, &glsl_type, name);
+
+            GLint location= glGetAttribLocation(program, name);
+            if(location == 0)       // attribut position necessaire a l'execution du shader
+            {
+                if(!use_position || !has_position())
+                    printf("[oops] position attribute '%s' in %s: no data... undefined draw !!\n", name, label);
+                if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC3)
+                    printf("[oops] position attribute '%s' is not declared as a vec3 in %s... undefined draw !!\n", name, label);
+            }
+            else if(location == 1)  // attribut texcoord necessaire 
+            {
+                if(!use_texcoord || !has_texcoord())
+                    printf("[oops] texcoord attribute '%s' in %s: no data... undefined draw !!\n", name, label);
+                if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC2)
+                    printf("[oops] texcoord attribute '%s' is not declared as a vec2 in %s... undefined draw !!\n", name, label);
+            }
+            else if(location == 2)  // attribut normal necessaire
+            {
+                if(!use_normal || !has_normal())
+                    printf("[oops] normal attribute '%s' in %s: no data... undefined draw !!\n", name, label);
+                if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC3)
+                    printf("[oops] attribute '%s' is not declared as a vec3 in %s... undefined draw !!\n", name, label);
+            }
+            else if(location == 3)  // attribut color necessaire
+            {
+                if(!use_color || !has_color())
+                    printf("[oops] color attribute '%s' in %s: no data... undefined draw !!\n", name, label);
+                if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC4)
+                    printf("[oops] attribute '%s' is not declared as a vec4 in %s... undefined draw !!\n", name, label);
+            }
+            else if(location == 4)  // attribut material_index necessaire
+            {
+                if(!use_material_index || !has_material_index())
+                    printf("[oops] material_index attribute '%s' in %s: no data... undefined draw !!\n", name, label);
+                if(glsl_size != 1 || glsl_type != GL_UNSIGNED_INT)
+                    printf("[oops] attribute '%s' is not declared as a uint in %s... undefined draw !!\n", name, label);
+            }
+        }
     }
-    #else
-        sprintf(label, "program( %u )", program); 
     #endif
     
-    // verifie que le program est selectionne
-    GLuint current;
-    glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *) &current);
-    if(current != program)
-        printf("[oops] %s: not active... undefined draw !!\n", label); 
-    
-    // verifie que les attributs necessaires a l'execution du shader sont presents dans le mesh...
-    // etape 1 : recuperer le nombre d'attributs
-    GLint n= 0;
-    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &n);
-    
-    // etape 2 : recuperer les infos de chaque attribut
-    char name[1024];
-    for(int index= 0; index < n; index++)
-    {
-        GLint glsl_size;
-        GLenum glsl_type;
-        glGetActiveAttrib(program, index, sizeof(name), nullptr, &glsl_size, &glsl_type, name);
-
-        GLint location= glGetAttribLocation(program, name);
-        if(location == 0)       // attribut position necessaire a l'execution du shader
-        {
-            if(!use_position || !has_position())
-                printf("[oops] position attribute '%s' in %s: no data... undefined draw !!\n", name, label);
-            if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC3)
-                printf("[oops] position attribute '%s' is not declared as a vec3 in %s... undefined draw !!\n", name, label);
-        }
-        else if(location == 1)  // attribut texcoord necessaire 
-        {
-            if(!use_texcoord || !has_texcoord())
-                printf("[oops] texcoord attribute '%s' in %s: no data... undefined draw !!\n", name, label);
-            if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC2)
-                printf("[oops] texcoord attribute '%s' is not declared as a vec2 in %s... undefined draw !!\n", name, label);
-        }
-        else if(location == 2)  // attribut normal necessaire
-        {
-            if(!use_normal || !has_normal())
-                printf("[oops] normal attribute '%s' in %s: no data... undefined draw !!\n", name, label);
-            if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC3)
-                printf("[oops] attribute '%s' is not declared as a vec3 in %s... undefined draw !!\n", name, label);
-        }
-        else if(location == 3)  // attribut color necessaire
-        {
-            if(!use_color || !has_color())
-                printf("[oops] color attribute '%s' in %s: no data... undefined draw !!\n", name, label);
-            if(glsl_size != 1 || glsl_type != GL_FLOAT_VEC4)
-                printf("[oops] attribute '%s' is not declared as a vec4 in %s... undefined draw !!\n", name, label);
-        }
-        else if(location == 4)  // attribut material_index necessaire
-        {
-            if(!use_material_index || !has_material_index())
-                printf("[oops] material_index attribute '%s' in %s: no data... undefined draw !!\n", name, label);
-            if(glsl_size != 1 || glsl_type != GL_UNSIGNED_INT)
-                printf("[oops] attribute '%s' is not declared as a uint in %s... undefined draw !!\n", name, label);
-        }
-    }
-#endif
-    
     if(m_indices.size() > 0)
-        glDrawElements(m_primitives, (GLsizei) m_indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(m_primitives, n, GL_UNSIGNED_INT, (void *) (unsigned long int) (first * sizeof(unsigned int)));
     else
-        glDrawArrays(m_primitives, 0, (GLsizei) m_positions.size());
+        glDrawArrays(m_primitives, first, n);
 }

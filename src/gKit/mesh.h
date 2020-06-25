@@ -93,6 +93,14 @@ struct TriangleData
     vec2 ta, tb, tc;    //!< texcoords
 };
 
+//! representation d'un ensemble de triangles de meme matiere.
+struct TriangleGroup
+{
+    int material_index; //!< indice de la matiere du groupe de triangles
+    int first;          //!< premier triangle du groupe
+    int n;              //!< nombre de triangles du groupe
+};
+
 
 //! representation d'un objet / maillage.
 class Mesh
@@ -229,6 +237,9 @@ public:
     int triangle_material_index( const unsigned int id ) const;
     //! renvoie la matiere d'un triangle.
     const Material &triangle_material( const unsigned int id ) const;
+    
+    //! renvoie les groupes de triangles de meme matiere. permet d'afficher l'objet matiere par matiere.
+    std::vector<TriangleGroup> groups( );
     //@}
     
     //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet (boite englobante alignee sur les axes, aabb).
@@ -322,6 +333,8 @@ public:
     GLuint create_buffers( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     //! dessine l'objet avec un shader program. 
     void draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
+    //! dessine une partie de l'objet avec un shader program.
+    void draw( const int first, const int n, const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     
 private:    
     //! modifie les buffers openGL, si necessaire.
