@@ -130,7 +130,7 @@ public:
         
         // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
         // le shader n'utilise que position. les autres de servent a rien.
-        m_mesh.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false);
+        m_mesh.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false, /* material */ false );
         
         if(key_state(' ') == 0)
         {
