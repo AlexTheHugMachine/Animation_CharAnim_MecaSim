@@ -130,10 +130,10 @@ Mesh read_mesh( const char *filename )
             if(material_id == -1)
             {
                 material_id= data.materials().default_material_index();
-                
-                data.material(material_id);
                 printf("usemtl default\n");
             }
+            
+            data.material(material_id);
             
             for(int v= 2; v +1 < (int) idp.size(); v++)
             {
@@ -166,13 +166,7 @@ Mesh read_mesh( const char *filename )
         else if(line[0] == 'u')
         {
            if(sscanf(line, "usemtl %[^\r\n]", tmp) == 1)
-           {
                material_id= data.materials().find(tmp);
-                if(material_id == -1)
-                    material_id= data.materials().insert(Material(Color(0.8)), tmp);
-                
-                data.material(material_id);
-           }
         }
     }
     
