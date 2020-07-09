@@ -181,7 +181,7 @@ protected:
     
 int main( int argc, char **argv )
 {
-    const char *filename= "cornell.obj";
+    const char *filename= "data/cornell.obj";
     if(argc > 1)
         filename= argv[1];
     
