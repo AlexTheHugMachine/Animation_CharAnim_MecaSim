@@ -73,11 +73,11 @@ struct Materials
     
     int count( ) const { return int(materials.size()); }
     
-    const char *name( const int id ) const { return names[id].c_str(); }
-    const char *name( const int id ) { return names[id].c_str(); }
+    const char *name( const int id ) const { assert(id != -1); assert(id < int(materials.size())); return names[id].c_str(); }
+    const char *name( const int id ) { assert(id != -1); assert(id < int(materials.size())); return names[id].c_str(); }
     
-    const Material& material( const int id ) const { return materials[id]; }
-    Material& material( const int id ) { return materials[id]; }
+    const Material& material( const int id ) const { assert(id != -1); assert(id < int(materials.size())); return materials[id]; }
+    Material& material( const int id ) { assert(id != -1); assert(id < int(materials.size())); return materials[id]; }
     
     const Material& material( const char *name )
     {

@@ -132,6 +132,7 @@ tutos = {
     "tuto8",
     "tuto9",
     "tuto9_materials",
+    "tuto9_groups",
     "tuto9_texture1",
     "tuto9_textures",
     "tuto9_buffers",

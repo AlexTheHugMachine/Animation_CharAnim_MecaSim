@@ -28,7 +28,7 @@ public:
         
         printf("%d materials.\n", m_objet.materials().count());
         
-        // recupere les groupes de triangles.
+        // trie les triangles par matiere et recupere les groupes de triangles utilisant la meme mateire.
         m_groups= m_objet.groups();
         
         Point pmin, pmax;
@@ -63,41 +63,60 @@ public:
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        // etape 2 : dessiner m_objet avec le shader program
-        // configurer le pipeline 
-        glUseProgram(m_program);
-        
-        // configurer le shader program
         // . recuperer les transformations
         Transform model= RotationY(global_time() / 40);
         Transform view= camera().view();
-        Transform projection= camera().projection(window_width(), window_height(), 45);
+        Transform projection= camera().projection();
         
-        // . composer les transformations : model, view et projection
-        Transform mv= view * model;
-        Transform mvp= projection * mv;
-        
-        // . parametrer le shader program :
-        //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
-        program_uniform(m_program, "mvpMatrix", mvp);
-        program_uniform(m_program, "mvMatrix", mv);
-        
-        //   . ou, directement en utilisant openGL :
-        //   int location= glGetUniformLocation(program, "mvpMatrix");
-        //   glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
-        
-        // affiche chaque groupe
-        for(int i= 0; i < int(m_groups.size()); i++)
+    #if 0
+        // option 2 : dessiner m_objet avec le shader program
         {
-            const Material& material= m_objet.materials().material(m_groups[i].material_index);
+            // configurer le pipeline 
+            glUseProgram(m_program);
             
-            // . parametres "supplementaires" :
-            //   . couleur diffuse des matieres
-            program_uniform(m_program, "material_color", material.diffuse);
+            // configurer le shader program
+            // . composer les transformations : model, view et projection
+            Transform mv= view * model;
+            Transform mvp= projection * mv;
             
-            // go !
-            // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
-            m_objet.draw(m_groups[i].first, m_groups[i].n, m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ true, /* use color */ false, /* use material index*/ false);
+            // . parametrer le shader program :
+            //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+            program_uniform(m_program, "mvpMatrix", mvp);
+            program_uniform(m_program, "mvMatrix", mv);
+            
+            //   . ou, directement en utilisant openGL :
+            //   int location= glGetUniformLocation(program, "mvpMatrix");
+            //   glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
+            
+            // afficher chaque groupe
+            for(int i= 0; i < int(m_groups.size()); i++)
+            {
+                const Material& material= m_objet.materials().material(m_groups[i].material_index);
+                
+                // . parametres "supplementaires" :
+                //   . couleur diffuse de la matiere du groupe de triangle
+                program_uniform(m_program, "material_color", material.diffuse);
+                
+                //   . c'est aussi le bon moment pour changer de texture, par exemple...
+                // program_use_texture(m_program, "material_texture", ... );
+                
+                // go !
+                // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
+                // + quels triangles dessiner...
+                m_objet.draw(m_groups[i].first, m_groups[i].n, m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ true, /* use color */ false, /* use material index*/ false);
+            }
+        }
+    #endif
+    
+        // option 1 : avec les utilitaires draw()
+        {
+            DrawParam pipeline;
+            pipeline.model(model).camera(camera());
+            
+            for(int i= 0; i < int(m_groups.size()); i++)
+            {
+                pipeline.draw(m_groups[i], m_objet);
+            }
         }
         
         return 1;

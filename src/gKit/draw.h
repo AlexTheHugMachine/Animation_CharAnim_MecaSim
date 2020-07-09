@@ -81,6 +81,7 @@ public:
 
     //! dessine l'objet avec l'ensemble des parametres definis.
     void draw( Mesh& mesh );
+    void draw( const TriangleGroup& group, Mesh& mesh );
     
     //! renvoie la position de la lumière
     const Point& light() const { return m_light; }
