@@ -10,14 +10,14 @@
 #include "uniforms.h"
 #include "draw.h"
 
-#include "app.h"        // classe Application a deriver
+#include "app_camera.h"        // classe Application a deriver
 
 
-class TP : public App
+class TP : public AppCamera
 {
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    TP( ) : App(1024, 640) {}
+    TP( ) : AppCamera(1024, 640) {}
     
     int init( )
     {
@@ -25,8 +25,11 @@ public:
         if(m_objet.materials().count() == 0)
             // pas de matieres, pas d'affichage
             return -1;
-        
         printf("%d materials.\n", m_objet.materials().count());
+        
+        // etape 1 : creer le shader program
+        m_program= read_program("tutos/tuto9_materials.glsl");
+        program_print_errors(m_program);
         
         // recupere les matieres.
         // le shader declare un tableau de 16 matieres
@@ -38,13 +41,10 @@ public:
         for(int i= 0; i < materials.count(); i++)
             m_colors[i]= materials.material(i).diffuse;
         
+        // placer la camera
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
-        m_camera.lookat(pmin, pmax);
-
-        // etape 1 : creer le shader program
-        m_program= read_program("tutos/tuto9_materials.glsl");
-        program_print_errors(m_program);
+        camera().lookat(pmin, pmax);
         
         // etat openGL par defaut
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
@@ -70,25 +70,15 @@ public:
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        // deplace la camera
-        int mx, my;
-        unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
-        if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
-            m_camera.rotation(mx, my);
-        else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
-            m_camera.move(mx);
-        else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
-            m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
-        
-        // etape 2 : dessiner m_objet avec le shader program
+        // dessiner m_objet avec le shader program
         // configurer le pipeline 
         glUseProgram(m_program);
         
         // configurer le shader program
         // . recuperer les transformations
         Transform model= RotationY(global_time() / 40);
-        Transform view= m_camera.view();
-        Transform projection= m_camera.projection(window_width(), window_height(), 45);
+        Transform view= camera().view();
+        Transform projection= camera().projection(window_width(), window_height(), 45);
         
         // . composer les transformations : model, view et projection
         Transform mv= view * model;
@@ -110,7 +100,8 @@ public:
         
         // go !
         // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
-        // tuto9_color.glsl n'utilise que position. les autres de servent a rien.
+        // tuto9_materials.glsl n'utilise que position et material_index. les autres de servent a rien.
+        // 1 draw pour tous les triangles de l'objet.
         m_objet.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ true, /* use color */ false, /* use material index*/ true);
         
         return 1;

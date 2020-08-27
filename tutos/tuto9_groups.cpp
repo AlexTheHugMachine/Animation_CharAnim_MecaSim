@@ -30,12 +30,15 @@ public:
         
         // trie les triangles par matiere et recupere les groupes de triangles utilisant la meme mateire.
         m_groups= m_objet.groups();
+        /* remarque : c'est long, donc il vaut mieux le faire une seule fois au debut du programme...
+         */
         
+        // placer la camera
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
         camera().lookat(pmin, pmax);
         
-        // etape 1 : creer le shader program
+        // creer le shader program, uniquement necessaire pour l'option 2, cf render()
         m_program= read_program("tutos/tuto9_groups.glsl");
         program_print_errors(m_program);
         
@@ -68,7 +71,18 @@ public:
         Transform view= camera().view();
         Transform projection= camera().projection();
         
-    #if 0
+    #if 1
+        // option 1 : avec les utilitaires draw()
+        {
+            DrawParam pipeline;
+            pipeline.model(model).camera(camera());
+            
+            for(int i= 0; i < int(m_groups.size()); i++)
+            {
+                pipeline.draw(m_groups[i], m_objet);
+            }
+        }
+    #else
         // option 2 : dessiner m_objet avec le shader program
         {
             // configurer le pipeline 
@@ -102,23 +116,14 @@ public:
                 
                 // go !
                 // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
-                // + quels triangles dessiner...
+                // tuto9_groups.glsl n'utilise que position. les autres de servent a rien.
+                
+                // 1 draw par groupe de triangles...
                 m_objet.draw(m_groups[i].first, m_groups[i].n, m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ true, /* use color */ false, /* use material index*/ false);
             }
         }
     #endif
-    
-        // option 1 : avec les utilitaires draw()
-        {
-            DrawParam pipeline;
-            pipeline.model(model).camera(camera());
-            
-            for(int i= 0; i < int(m_groups.size()); i++)
-            {
-                pipeline.draw(m_groups[i], m_objet);
-            }
-        }
-        
+
         return 1;
     }
 

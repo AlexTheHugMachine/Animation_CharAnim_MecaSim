@@ -26,7 +26,7 @@ public:
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
         m_camera.lookat(pmin, pmax);
-
+        
         // etape 1 : creer le shader program
         m_program= read_program("tutos/tuto9_color.glsl");
         program_print_errors(m_program);
