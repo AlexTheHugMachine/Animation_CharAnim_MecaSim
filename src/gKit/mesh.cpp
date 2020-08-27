@@ -332,6 +332,7 @@ std::vector<TriangleGroup> Mesh::groups( )
         std::swap(m_texcoords, texcoords);
         std::swap(m_normals, normals);
         std::swap(m_colors, colors);
+        std::swap(m_triangle_materials, material_indices);
     }
     
     return groups;
@@ -501,7 +502,7 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
         glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
         // utilise un buffer dynamique, si le mesh a change
         
-        printf("[warning] resize buffer %d: %dK\n", m_buffer, int(size/1024));
+        //~ printf("[warning] resize buffer %d: %dK\n", m_buffer, int(size/1024));
     }
     
     // transferer les attributs et configurer le format de sommet (vao)
@@ -544,6 +545,7 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
         
         offset= offset + size;
         size= m_positions.size() * sizeof(unsigned char);
+        
         // prepare un indice de matiere par sommet / 3 indices par triangle
         std::vector<unsigned char> buffer(m_positions.size());
         for(int i= 0; i < int(m_triangle_materials.size()); i++)
@@ -553,6 +555,7 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
             buffer[3*i+1]= index;
             buffer[3*i+2]= index;
         }
+        
         glBufferSubData(GL_ARRAY_BUFFER, offset, size, buffer.data());
         glVertexAttribIPointer(4, 1, GL_UNSIGNED_BYTE, 0, (const void *) offset);
         glEnableVertexAttribArray(4);
