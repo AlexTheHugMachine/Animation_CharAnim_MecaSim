@@ -166,56 +166,7 @@ connaitre le sommet à transformer.
 cette solution n'est pas directement exploitable, il faut définir les valeurs de M et T pour compiler le shader. et autre détail, les uniforms ne 
 permettent pas de stocker beaucoup de valeurs, seulement 64KB sont utilisables.
 
-mais il est possible d'associer un buffer à un tableau d'uniforms ou d'utiliser directement les shader storage buffers, cf \ref storage.
-la déclaration d'un uniform associé à un buffer ressemble à une déclaration de struture, appellé un uniform block dans GLSL :
-\code
-uniform MaterialBlock
-{
-    vec4 colors[];
-};
-
-uniform IndexBlock
-{
-    int color_indices[];
-};
-
-out vec4 fragment_color;
-void main( )
-{
-    int color_index= color_indices[gl_PrimitiveID];
-    vec4 color= colors[color_index];
-    
-    fragment_color= color;
-}
-\endcode
-
-le nom du block permet à l'application d'associer l'uniform à un buffer. et comme plusieurs buffers peuvent être utilisés simultanément par 
-un shader, ils sont numérotés, et c'est l'application qui choisit le numero :
-\code
-// creer et remplir le buffer avec les parametres des matieres.
-GLuint material_buffer= .... ;
-
-// recuperer l'identifiant du block a associer au buffer
-GLuint material_block= glGetUniformBlockIndex(program, "MaterialBlock");
-
-// les uniform blocks sont numerotes, et c'est l'application qui doit choisir le numero...
-
-// associe le numero 0 au bloc "MaterialBLock"
-glUniformBlockBinding(program, material_block, 0);      
-// associe le contenu d'un buffer au block numero 0
-glBindBufferBase(GL_UNIFORM_BUFFER, 0, material_buffer);
-
-// on recommence pour les indices, avec un autre numero
-
-// creer et remplir le buffer contenant l'indice de la matiere de chaque triangle
-GLuint material_index_buffer= ... ;
-GLuint index_block= glGetUniformBlockIndex(program, "IndexBlock");
-glUniformBlockBinding(program, index_block, 1);
-glBindBufferBase(GL_UNIFORM_BUFFER, 1, material_index_buffer);
-\endcode
-
-et voila, il ne reste qu'à dessiner l'objet avec un seul draw, et le fragment shader peut récupérer directement la description de la matière de chaque 
-triangle.
+mais il est possible d'associer un _storage_ buffer à un tableau, cf \ref storage.
 
 
 ## autre chose ?
@@ -264,6 +215,8 @@ de matières à 255, ce qui permet de réduire l'occuppation mémoire.
 
 _remarque :_ utiliser glVertexAttribIPointer() pour configurer un attribut entier.
 
+cette solution est incluse dans Mesh... exemple complet d'utilisation dans tuto9_materials.cpp + tuto9_materials.glsl.
+
 
 ## et avec des textures ?
 
@@ -297,6 +250,9 @@ mais on peut faire mieux avec les _bindless textures_ introduites par l'extensio
 la solution de base fonctionne toujours, il suffit d'afficher les triangles tries par matiere et de selectionner les textures avant de dessiner. 
 on peut limiter le nombre de changements de textures en triant aussi les matieres par textures.
 
+un exemple complet de cette solution est dans tuto9_groups.cpp et tuto9_groups.glsl et fonctionne avec un Mesh chargé par read_mesh(), Mesh::groups() 
+renvoie les groupes de triangles à afficher.
+
 la solution classique demande de réorganiser les textures : il est possible de créer des tableaux de textures et chaque tableau est sélectionné 
 sur seule unité de texture. comme on peut créer des tableaux d'au moins 2048 textures, cette solution règle correctement le problème. 
 par contre, il faut trier les textures par dimensions et par type de texel pour trouver celles que l'on peut grouper dans le même tableau et 
@@ -311,12 +267,6 @@ cf mesh_viewer.cpp material_data.cpp pour le code complet.
 
 si vous ne souhaitez pas manipuler les textures, dans un premier temps, read_textures() calcule aussi la couleur moyenne des images, ce qui
 permet quand meme d'afficher une approximation de la scène. cf mesh_viewer.cpp 
-
-\image html sponza_texture.png
-(avec les textures)
-
-\image html sponza_average.png
-(avec les couleurs moyennes des textures)
 
  */
  

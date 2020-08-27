@@ -30,9 +30,12 @@ mais il y a aussi pas mal de tutos / exemple de code :
     - tuto6.cpp idem tuto5, charge une texture et la plaque sur l'objet dessiné.
     
     - tuto7.cpp, idem tuto6 mais utilise la classe App pour construire l'application,
+    - tuto7_camera.cpp, idem tuto7 mais utilise la classe AppCamera, qui définit une camera par défaut,
     - tuto8.cpp, exemple d'utilisation de App::update() pour modifier la transformation de l'objet en fonction du temps,
     
     - \ref tuto_mesh_shader, dessine un objet Mesh avec un shader 'utilisateur', sans utiliser le shader par défaut, montre aussi comment utiliser simplement une, ou plusieurs, textures,
+    - \ref tuto9_materials.cpp, dessine toutes les matières d'un objet Mesh avec un shader 'utilisateur', avec un seul `glDraw()`,
+    - \ref tuto9_groups.cpp, dessiner toutes les matières d'un objet Mesh avec, ou sans shader 'utilisateur', avec un `glDraw()` par matiere, 
     - \ref tuto_mesh_buffer, complète le tuto9 avec la création des buffers et du vertex array object, pour dessiner un objet Mesh, directement avec openGL... 
     
     - \ref matiere, lumière, matière et brdf,
@@ -62,7 +65,8 @@ plus ceux dédiés à openGL :
     
 et ceux dédiés au lancer de rayons :
     - \ref intrort,
-    - \ref acceleration
+    - \ref acceleration,
+    - \ref precision...
     
     
 et un utilitaire pour jouer avec les shaders, \ref shader_kit.cpp \ref shader_kit.

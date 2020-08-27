@@ -182,10 +182,12 @@ de Phong reste parfaitement symétrique : ce n'est pas trop choquant sur des obj
 
 <table style="width:80%">
 <tr> 
-	<td> <IMG SRC="phong.png" width="100%"> 
-	modèle Phong
-	<td> <IMG SRC="blinn_phong.png" width="100%"> 
-	modèle Blinn - Phong
+	<td> <IMG SRC="phong.png" width="100%">
+	<td> <IMG SRC="blinn_phong.png" width="100%">
+</tr> 
+<tr> 
+	<td> modèle Phong 
+	<td> modèle Blinn - Phong
 </tr> 
 </table>
 
@@ -200,6 +202,7 @@ le même angle les séparent de la normale. la normale est le bisecteur de \f$ \
 \f[
 	\vec{m} = 2 (\vec{n} \cdot \vec{l}) \vec{n} - \vec{l}
 \f]
+
 <IMG SRC="fresnel.png" width="20%"> 
 
 _réponse :_ \f$ \vec{h}= \frac{\vec{o} + \vec{l}}{|| \vec{o} + \vec{l} ||}\f$, le bisecteur des 2 vecteurs. du coup la direction \f$ \vec{o} \f$ devient symétrique 
@@ -212,11 +215,13 @@ Ne reste plus qu'une question, comment controler la taille,  la concentration du
 Il fallait une fonction rapide à calculer (en 1976 les machines n'etaient pas tout à fait les mêmes...) et qui décroit plus ou moins vite vers 0 en fonction d'un paramètre... 
 
 et c'est \f$ \cos^\alpha \theta_h \f$ qui à gagné. mais pas tout à fait :
+
 <IMG SRC="cosn.png" width="40%">
 
 l'exposant permet bien de controler la taille du reflet, la fonction décroit vers 0 plus ou moins vite, mais plus le reflet est petit, moins il est intense, ce qui est plutot génant...
 la fonction doit vérifier une autre propriété : elle doit etre normalisée, son intégrale, pour \f$ \theta_h \in [0 \, \pi/2] \f$ doit être égale à 1, quelque soit la taille du reflet, la 
 même quantité de lumière est réfléchie sur l'ensemble des directions : \f$ \frac{\alpha +1}{2\pi} \int \cos^\alpha \theta_h \, d\omega = 1\f$
+
 <IMG SRC="cosnorm.png" width="40%">
 
 Mais si on utilise cette fonction comme _brdf_, il se passe autre chose : la matière réfléchit plus de lumière qu'elle n'en reçoit... c'est encore un problème de normalisation. Il 
@@ -293,7 +298,7 @@ Le terme réfléchissant est une couleur neutre pour un plastique, mais pour un 
  - `Cobalt :    { 0.662124, 0.654864, 0.633732 }`
  - `Platinum :  { 0.672411, 0.637331, 0.585456 }`
 
-Pour d'autres matières, une couleur neutre (les 3 canaux ont la meme valeur) :
+Pour les autres matières, une couleur neutre (les 3 canaux ont la meme valeur) :
  - `Quartz :    { 0.045593, 0.045593, 0.045593 }`
  - `Ice :       { 0.017908, 0.017908, 0.017908 }`
  - `Water :     { 0.020373, 0.020373, 0.020373 }`
