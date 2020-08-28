@@ -8,11 +8,11 @@ pour l'utiliser, il faut installer quelques dépendances, selon le système que 
 
 gKit2light est composé de plusieurs utilitaires :
     - window.h fournit un squelette d'application, app.h fournit une classe application de base,
-    - mesh.h permet de décrire et d'afficher des objets 3d,
     - image.h et color.h permettent de charger, d'enregistrer et de manipuler des images, pixel par pixel,
     - vec.h et mat.h définissent des vecteurs, des matrices pour manipuler des transformations, des points, des vecteurs,
     - program.h permet de compiler facilement des shaders,
     - uniforms.h permet de définir les valeurs des uniforms des shaders,
+    - mesh.h permet de décrire des objets 3d,
     - orbiter.h permet de déplacer une caméra autour d'un objet pour l'observer, 
     - draw.h affiche un mesh pour le point de vue d'une caméra, 
     - wavefront.h permet de charger et d'enregistrer des fichiers .obj,
