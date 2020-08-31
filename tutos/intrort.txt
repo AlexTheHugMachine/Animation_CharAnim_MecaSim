@@ -94,7 +94,7 @@ autre convention : origine et direction. direction est le vecteur entre l'origin
 _remarque :_ on connait un autre point sur le rayon, c'est le centre de projection de la camera, ou la position de la camera. Les coordonnées sont (0, 0, 0) 
 dans le repère camera :
 \f[
-origine_{scene} = ( Image \times Projection )^{-1} \times \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}\\
+origine_{scene} = ( View )^{-1} \times \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}\\
 \f]
 
 # intersection ?

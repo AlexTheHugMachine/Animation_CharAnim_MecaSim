@@ -235,6 +235,7 @@ fournissent un résultat simple :
 
 et voila la quantité de lumière réfléchie en fonction de \f$ \theta_l \f$, pour les 3 versions : modèle diffus (courbe bleue), modèle normalisé (courbe rouge) et modèle 
 conservatif (courbe verte) :
+
 <IMG SRC="conservation.png" width="40%">
 
 Ce modèle, Blinn - Phong conservatif et normalisé, est très simple à calculer, se comporte correctement, mais l'intensité de ses reflets diminue lorsque l'incidence de la 

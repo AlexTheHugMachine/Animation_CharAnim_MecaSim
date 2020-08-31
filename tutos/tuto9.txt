@@ -146,7 +146,7 @@ program_uniform(program, "color", Red());
     
 // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
 // le shader de test n'utilise que position.
-mesh.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false, /* use material index */ false);
+mesh.draw(program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false, /* use material index */ false);
 \endcode
 
 cf \ref tuto9.cpp pour un exemple complet qui utilise un uniform supplémentaire, qui permet de donner la même couleur aux pixels de l'objet.
@@ -157,14 +157,14 @@ mesh.draw(mesh, program, /* use position */ true, /* use texcoord */ false, /* u
 \endcode
 
 Mesh::draw( ) vérifie (en mode debug, en tout cas) que les attributs déclarés dans le vertex shader sont disponibles dans le Mesh. par exemple, si le vertex 
-shader déclare un attribut normale par sommet mais que ces valeurs ne sont pas dans le Mesh, le shader ne peut pas fonctionner...
+shader déclare / utilise un attribut normale par sommet mais que ces valeurs ne sont pas dans le Mesh, le shader ne peut pas fonctionner...
 
 cf \ref tuto_mesh_buffer pour un exemple complet qui alloue et initialise un buffer pour stocker les positions des sommets du Mesh et qui configure 
 un format de sommet (un vertex array object) pour dessiner un objet directement avec openGL, sans utiliser les utilitaires draw( ).
 
-Si plusieurs shaders, ou plusieurs paramètres (couleurs, matieres, textures, etc) sont nécessaires pour dessiner les triangles de l'objet, il y a au moins 2 solutions : 
-	- créer un attribut de sommet, l'indice de la matiere du sommet / triangle, cf tuto9_materials.cpp, tuto9_materials.glsl,
-	- ou trier les triangles par matiere et dessiner chaque groupe, l'un après l'autre, cf tuto9_groups.cpp, tuto9_groups.glsl,
+Si plusieurs shaders, ou plusieurs paramètres (couleurs, matieres, etc) sont nécessaires pour dessiner les triangles de l'objet, il y a au moins 2 solutions : 
+	- créer un attribut de sommet, l'indice de la matiere du sommet / triangle et dessiner tous les triangles, cf tuto9_materials.cpp, tuto9_materials.glsl, recupère l'indice de la matiere de chaque triangle,
+	- ou trier les triangles par matiere et dessiner chaque groupe de triangles, l'un après l'autre, matière par matière, cf tuto9_groups.cpp, tuto9_groups.glsl.
 
 
 ## debugger un shader
@@ -226,7 +226,7 @@ Dernière étape, configurer le pipeline pour utiliser la texture, vous pouvez l
     // go !
     // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
     // le shader utilise position et texcoord.
-    m_objet.draw(m_program, /* use position */ true, /* use texcoord */ true, /* use normal */ false, /* use color */ false, /* use material index */ false);
+    m_objet.draw(program, /* use position */ true, /* use texcoord */ true, /* use normal */ false, /* use color */ false, /* use material index */ false);
 \endcode
 cf \ref tuto9_texture1.cpp pour un exemple complet qui charge une texture.
 
@@ -259,7 +259,7 @@ C'est la même chose, par contre, il faut charger et configurer une unité de te
     // go !
     // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
     // le shader utilise position et texcoord.
-    m_objet.draw(m_program, /* use position */ true, /* use texcoord */ true, /* use normal */ false, /* use color */ false, /* use material index */ false);
+    m_objet.draw(program, /* use position */ true, /* use texcoord */ true, /* use normal */ false, /* use color */ false, /* use material index */ false);
 \endcode
 
 cf \ref tuto9_textures.cpp pour un exemple complet qui charge et utilise 2 textures.

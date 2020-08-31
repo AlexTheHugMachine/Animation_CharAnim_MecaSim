@@ -13,6 +13,7 @@ uniform mat4 mvMatrix;
 out vec3 vertex_position;
 out vec3 vertex_normal;
 flat out uint vertex_material;
+/* decoration flat : le varying est un entier, donc pas vraiment interpolable... il faut le declarer explicitement */
 
 void main( )
 {
@@ -21,7 +22,9 @@ void main( )
     // position et normale dans le repere camera
     vertex_position= vec3(mvMatrix * vec4(position, 1));
     vertex_normal= mat3(mvMatrix) * normal;
-    // indice de la matiere 
+    // ... comme d'habitude
+    
+    // et transmet aussi l'indice de la matiere au fragment shader...
     vertex_material= material;
 }
 
@@ -33,7 +36,7 @@ out vec4 fragment_color;
 
 in vec3 vertex_position;
 in vec3 vertex_normal;
-flat in uint vertex_material;
+flat in uint vertex_material;	// !! decoration flat, le varying est marque explicitement comme non interpolable  !!
 
 #define MAX_MATERIALS 16
 uniform vec4 materials[MAX_MATERIALS];
@@ -43,7 +46,10 @@ void main( )
     vec3 l= normalize(-vertex_position);        // la camera est la source de lumiere.
     vec3 n= normalize(vertex_normal);
     float cos_theta= max(0, dot(n, l));
-    fragment_color= materials[vertex_material] * cos_theta;
+    
+    // recupere la couleur de la matiere du triangle, en fonction de son indice.
+    vec4 color= materials[vertex_material];
+    fragment_color= color * cos_theta;
 }
 
 #endif
