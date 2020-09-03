@@ -342,11 +342,11 @@ public:
         {
             clear_key_state('r');
             
-            m_program_render= read_program("tutos/render_cubemap.glsl");
+            reload_program(m_program_render, "tutos/render_cubemap.glsl");
             program_print_errors(m_program_render);
-            m_program_draw= read_program("tutos/draw_cubemap.glsl");
+            reload_program(m_program_draw, "tutos/draw_cubemap.glsl");
             program_print_errors(m_program_draw);
-            m_program= read_program("tutos/cubemap.glsl");
+            reload_program(m_program, "tutos/cubemap.glsl");
             program_print_errors(m_program);
         }
         
