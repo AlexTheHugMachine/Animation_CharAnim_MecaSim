@@ -117,7 +117,7 @@ int init( std::vector<const char *>& options )
         {
             mesh_filename= Filename(option);
             
-            vao= mesh.create_buffers(mesh.has_texcoord(), mesh.has_normal(), mesh.has_color());
+            vao= mesh.create_buffers(mesh.has_texcoord(), mesh.has_normal(), mesh.has_color(), mesh.has_material_index());
             vertex_count= mesh.vertex_count();
             
             mesh.bounds(mesh_pmin, mesh_pmax);

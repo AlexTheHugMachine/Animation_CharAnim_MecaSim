@@ -149,7 +149,7 @@ public:
         
         // go !
         // mesh associe les donnees positions, texcoords, normals et colors aux attributs declares dans le vertex shader
-        draw(m_objet, m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false);
+        m_objet.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false, /* use material index*/ false);
         // relisez le tuto9 sur l'utilisation des shaders et de mesh
 
         // et pour afficher un autre cube d'une autre couleur ?

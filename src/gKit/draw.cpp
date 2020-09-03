@@ -49,12 +49,6 @@ void draw( Mesh& m, DrawParam& param )
     param.draw(m);
 }
 
-void draw( Mesh& m, GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color  )
-{
-    //~ m.draw(program, m.has_position(), m.has_texcoord(), m.has_normal(), m.has_color());
-    m.draw(program, use_position, use_texcoord, use_normal, use_color);
-}
-
 GLuint DrawParam::create_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test )
 {
     std::string definitions;
@@ -114,5 +108,44 @@ void DrawParam::draw( Mesh& mesh )
     if(m_use_alpha_test)
         program_uniform(program, "alpha_min", m_alpha_min);
     
-    mesh.draw(program, /* position */ true, use_texcoord, use_normal, use_color);
+    mesh.draw(program, /* position */ true, use_texcoord, use_normal, use_color, /* material_index */ false);
+}
+
+void DrawParam::draw( const TriangleGroup& group, Mesh& mesh )
+{
+    bool use_texcoord= m_use_texture && m_texture > 0 && mesh.has_texcoord();
+    bool use_normal= mesh.has_normal();
+    bool use_color= mesh.has_color();
+    
+    // etape 1 : construit le program en fonction des attributs du mesh et des options choisies
+    GLuint program= create_program(mesh.primitives(), use_texcoord, use_normal, use_color, m_use_light, m_use_alpha_test);
+    
+    glUseProgram(program);
+    if(group.material_index != -1 && group.material_index < mesh.materials().count())
+        program_uniform(program, "mesh_color", mesh.materials().material(group.material_index).diffuse);
+    else
+        program_uniform(program, "mesh_color", mesh.materials().default_material().diffuse);
+    
+    Transform mv= m_view * m_model;
+    Transform mvp= m_projection * mv;
+    
+    program_uniform(program, "mvpMatrix", mvp);
+    program_uniform(program, "mvMatrix", mv);
+    if(use_normal)
+        program_uniform(program, "normalMatrix", mv.normal()); // transforme les normales dans le repere camera.
+    
+    // utiliser une texture, elle ne sera visible que si le mesh a des texcoords...
+    if(use_texcoord && m_texture > 0)
+        program_use_texture(program, "diffuse_color", 0, m_texture);
+    
+    if(m_use_light)
+    {
+        program_uniform(program, "light", m_view(m_light));       // transforme la position de la source dans le repere camera, comme les normales
+        program_uniform(program, "light_color", m_light_color);
+    }
+    
+    if(m_use_alpha_test)
+        program_uniform(program, "alpha_min", m_alpha_min);
+    
+    mesh.draw(group.first, group.n, program, /* position */ true, use_texcoord, use_normal, use_color, /* material_index */ false);
 }

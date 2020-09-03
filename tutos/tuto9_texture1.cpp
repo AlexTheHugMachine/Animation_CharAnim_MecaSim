@@ -92,7 +92,9 @@ public:
         program_use_texture(m_program, "texture0", 0, m_texture);
         
         // go !
-        draw(m_objet, m_program, /* use position */ true, /* use texcoord */ true, /* use normal */ false, /* use color */ false);
+        // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
+        // tuto9_texture1.glsl n'utilise que position et texcoord. les autres de servent a rien.
+        m_objet.draw(m_program, /* use position */ true, /* use texcoord */ true, /* use normal */ false, /* use color */ false, /* use material index*/ false);
         return 1;
     }
 

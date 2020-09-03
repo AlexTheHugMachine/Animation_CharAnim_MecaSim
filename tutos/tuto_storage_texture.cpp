@@ -128,7 +128,9 @@ public:
         glBindImageTexture(0, m_texture, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
         program_uniform(m_program, "image", 0);
         
-        m_mesh.draw(m_program);
+        // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
+        // le shader n'utilise que position. les autres de servent a rien.
+        m_mesh.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false, /* material */ false );
         
         if(key_state(' ') == 0)
         {

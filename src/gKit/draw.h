@@ -12,8 +12,6 @@
 ///@{
 
 //! \file
-//! dessine un objet avec un shader deja parametre.
-void draw( Mesh& m, GLuint program, const bool use_position= true, const bool use_texcoord= true, const bool use_normal= true, const bool use_color=true );
 
 //! dessine l'objet avec les transformations model, vue et projection.
 void draw( Mesh& m, const Transform& model, const Transform& view, const Transform& projection );
@@ -67,7 +65,7 @@ public:
     DrawParam& projection( const Transform& m ) { m_projection= m; return *this; }
 
     //! utilise les transformations view et projection definies par une camera.
-    DrawParam& camera( const Orbiter& o ) { m_view= o.view(); m_projection= o.projection(); return *this; }
+    DrawParam& camera( Orbiter& o ) { m_view= o.view(); m_projection= o.projection(window_width(), window_height(), 45); return *this; }
     //! utilise les transformations view et projection definies par une camera. parametres explicites de la projection.
     DrawParam& camera( Orbiter& o, const int width, const int height, const float fov ) { m_view= o.view(); m_projection= o.projection(width, height, fov); return *this; }
     //! eclaire l'objet avec une source ponctuelle, de position p et de couleur c.
@@ -83,6 +81,7 @@ public:
 
     //! dessine l'objet avec l'ensemble des parametres definis.
     void draw( Mesh& mesh );
+    void draw( const TriangleGroup& group, Mesh& mesh );
     
     //! renvoie la position de la lumière
     const Point& light() const { return m_light; }
@@ -158,7 +157,7 @@ public:
     }
     
 protected:
-    //! destructeur prive. le singleton ne sera detruit qu'a la fin de l'application... fonctionne correctement avec la classe App. doit etre detruit tant que le contexte openGL existe.
+    //! destructeur prive. le singleton ne sera detruit qu'a la fin de l'application... doit etre detruit tant que le contexte openGL existe.
     PipelineCache( ) : m_programs() {}
     
     std::vector<PipelineProgram *> m_programs;

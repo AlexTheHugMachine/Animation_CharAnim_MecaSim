@@ -149,7 +149,7 @@ public:
         program_uniform(m_program, "texture0", int(0));
         
         // dessine l'objet, les attributs position et normale sont necessaires a l'execution du shader.
-        draw(m_objet, m_program, /* position */ true, /* texcoord */ false, /* normal */ true, /* color */ false);
+        m_objet.draw(m_program, /* position */ true, /* texcoord */ false, /* normal */ true, /* color */ false, /* material */ false);
         
         // etape 2 : affiche la cube map
         // inverse de la composition des transformations repere monde vers repere image

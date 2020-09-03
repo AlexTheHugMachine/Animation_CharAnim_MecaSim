@@ -231,6 +231,7 @@ Transform Rotation( const Vector& u, const Vector& v )
     float s= length(w); // sin theta
     float c= dot(a, b); // cos theta
     
+    // meme matrice de rotation qu'au dessus , cf Rotation(axis, angle), l'axe est le vecteur w, s et c sont le sinus et le cosinus de l'angle
     return Transform(
         w.x * w.x + (1 - w.x * w.x ) * c,
         w.x * w.y * (1 - c ) - w.z * s,
