@@ -399,6 +399,8 @@ render():
     draw(objet, position, camera());
 \endcode
 
+code complet dans tuto_transformations.cpp
+
 par contre, il faut ajuster la taille du deplacement : normalement `render()` est appellée 60 fois par secondes, et la valeur du déplacement devient une vitesse, 
 en 1 seconde l'objet de déplace 60 fois...
 

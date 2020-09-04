@@ -127,8 +127,11 @@ tutos = {
     "tuto4",
     "tuto5",
     "tuto6",
+    
     "tuto7",
     "tuto7_camera",
+    "tuto_transformations",
+
     "tuto8",
     "tuto9",
     "tuto9_materials",
@@ -138,7 +141,7 @@ tutos = {
     "tuto9_buffers",
     "tuto10",
     
-    "tuto_transform",
+--~     "tuto_transform",
     "tuto_pad",
     
     "tuto1GL",
@@ -168,7 +171,8 @@ tutos = {
     
     "tuto_rayons",
     "tuto_englobant",
-    "tuto_bvh"
+    "tuto_bvh",
+    
 }
 
 for i, name in ipairs(tutos) do
