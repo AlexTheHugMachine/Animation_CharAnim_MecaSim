@@ -9,7 +9,7 @@
 #include "text.h"
 
 
-//! \addtogroup application utilitaires pour creer une application
+//! \addtogroup application
 
 //! \file
 //! classe application, avec mesure integree du temps d'execution cpu et gpu.
