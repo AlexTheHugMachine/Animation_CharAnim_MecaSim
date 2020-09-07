@@ -61,6 +61,8 @@ on peut illustrer les différentes étapes de l'algorithme, en utilisant un cube
 
 <IMG SRC="englobant_repartition.png" width="30%"> 
 
+# Répartition
+
 Il y a encore quelques détails à régler avant d'écrire la solution complète : si on découpe un englobant en 2 parties, il peut très bien arriver qu'un triangle 
 touche les 2 parties, il faudra donc inclure le triangle dans les 2 ensembles de triangles testés par la suite de l'algorithme. ce qui veut dire allouer de la 
 mémoire à chaque appel récursif pour représenter l'ensemble `{ t }`... et ça va être très long. 
@@ -228,8 +230,8 @@ void divide( const BBox& bounds,
     
     // construit les englobants des triangles de la partie 1 / a gauche
     // les triangles se trouvent dans [tbegin .. m)
-    BBox left= triangles[tbegin].bounds();                                         // englobant du premier triangle
-    for(int i= tbegin+1; i < m; i++)                                        // insere les sommets des autres triangles
+    BBox left= triangles[tbegin].bounds();                              // englobant du premier triangle
+    for(int i= tbegin+1; i < m; i++)                                    // insere les sommets des autres triangles
         left.insert(triangles[i].bounds());
     
     // place les rayons qui touchent l'englobant au debut du tableau

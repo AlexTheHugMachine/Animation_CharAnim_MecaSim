@@ -1,12 +1,12 @@
 
 /*! \addtogroup compute openGL 4.3 : compute shaders
 
-### compute shader ? qu'est ce que c'est ?
+# compute shader ? qu'est ce que c'est ?
 
 des shaders qui calculent ensemble ? ils ne font pas parti du pipeline graphique classique, mais ils utilisent aussi des buffers, et des textures pour lire 
 les donnéees et écrire les résultats. La principale différence avec les fragment shaders est qu'ils peuvent communiquer et échanger des données.
 
-### comment ça marche ?
+## comment ça marche ?
 
 les compute shaders s'exécutent par groupe, chaque shader peut être vu comme un thread, et un groupe de threads est mis en exécution sur 
 un processeur graphique. Chaque thread peut communiquer avec les autres threads de son groupe, ils partagent des ressources (mémoire commune, 
@@ -65,7 +65,7 @@ glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &groups_max[1]);
 glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &groups_max[2]);
 \endcode
 
-### parallélisme de données
+## parallélisme de données
 
 Tous les algorithmes ne sont pas aussi simples que transformer tous les sommets d'un maillage, calculer une couleur pour tous les pixels d'une image.
 Dans ces 2 cas, il y a le même nombre de résultats que de données et chaque thread n'écrit qu'un seul résultat et la place du résultat de chaque thread
@@ -238,7 +238,7 @@ plutot interressant...
 
 exemple complet \ref min_data.cpp
 
-### synchronisation et opérations atomiques
+## synchronisation et opérations atomiques
 
 `barrier()` et `memoryBarrier()` permettent de synchroniser l'exécution des threads d'un groupe, mais il est quand même très fréquent de devoir synchroniser 
 les groupes entre eux. La  synchronisation externe par l'application fonctionne mais reste une solution très lourde. Un autre solution existe : les shaders 
@@ -276,7 +276,7 @@ avec une synchronisation externe. Une meilleure solution consiste à conserver l
 limitant le nombre de threads manipulant la même variable avec des opérations atomiques. L'idée est de créer une variable atomique par groupe puis de fusionner 
 les résultats. Cette hiérarchie est expliquée sur gpuopen.com cf http://gpuopen.com/fast-compaction-with-mbcnt/.
 
-### mémoire partagée
+## mémoire partagée
 
 Les compute shaders ont également accès à la mémoire partagée des processeurs. C'est une zone de mémoire dédiée, locale à chaque processeur qui est 
 beaucoup plus rapide d'accès que la mémoire video, mais seuls 32Ko ou 64Ko sont disponibles. Une variable ou un tableau partagé se déclare dans le shader 
@@ -306,13 +306,13 @@ L'utilisation de la mémoire partagée n'est pas obligatoire, mais pour les algo
 des filtres pour flouter/débruiter/analyser une image, des opérations sur des matrices, etc.
 
 
-## et on peut faire quoi avec tout ca ?
+# et on peut faire quoi avec tout ca ?
 
 Pour utiliser un compute shader, il faut, comme d'habitude, le compiler, le linker pour obtenir un programme et le paramétrer, donner des valeurs à ses uniforms, 
 sélectionner des buffers, des textures, etc. avant de pouvoir l'exécuter avec `glComputeDispatch( )`.
 
 
-### compiler un compute shader
+## compiler un compute shader
 
 c'est la même chose qu'un shader program "classique", mais il n'y a qu'un seul shader de type GL_COMPUTE_SHADER dans le program.
 
@@ -342,7 +342,7 @@ else
 
 vous pouvez aussi utiliser `read_program( )` et `program_print_errors()` de program.h, le source du shader doit être dans un bloc `#ifdef COMPUTE_SHADER / #endif`.
 
-### paramétrer un compute shader 
+## paramétrer un compute shader 
 
 Les compute shaders ont les mêmes entrées que les autres shaders, des uniforms, des buffers, des textures et des samplers. c'est exactement la même chose. 
 Par contre, ils ne s'exécutent pas dans le pipeline graphique, donc ils n'écrivent pas leurs résultats automatiquement, il faut décrire ou stocker les résultats.
@@ -354,7 +354,7 @@ les shaders peuvent écrire dans 2 types d'objets openGL :
 __remarque :__ les opérations atomiques lisent et écrivent dans les buffers (`atomicAdd()`, `atomicMin()`, etc.) et/ou les textures (`imageAtomicAdd()`, `imageAtomicMin()`, etc.).
 
 
-### exécuter un compute shader
+## exécuter un compute shader
 
 c'est `glComputeDispatch()` qui provoque l'exécution des shaders. Il faut fournir le nombre de groupes de shaders à lancer. Dernière précision, le nombre 
 de groupes est un ivec3, les shaders peuvent être organisés en 1d, 2d ou en 3d, selon la dimension des données à manipuler.
@@ -416,7 +416,7 @@ exemple complet \ref min_data.cpp
 
 exemple complet \ref tuto_vertex_compute.cpp, illustration des principes : passe 1. compute shader, synchronisation, passe 2. pipeline graphique.
 
-## notions d'exécution cohérente
+# notions d'exécution cohérente
 
 \todo 
 Les groupes de threads ne sont pas ordonnancés directement par le matériel, ils sont découpés en sous-groupes de gl_SubgroupSize... et l'exécution des threads 
@@ -428,7 +428,7 @@ et les extensions constructeurs :
 	- AMD GL_AMD_shader_ballot
 	- nvidia GL_NV_shader_thread_group, GL_NV_shader_thread_shuffle
 
-## limites d'ordonnancement
+# limites d'ordonnancement
 
 Les ressources disponibles par processeur graphique sont limitées : le nombre de registres, la quantité de mémoire partagée, le nombre de groupes gérés par 
 l'ordonnanceur matériel.
@@ -436,7 +436,7 @@ l'ordonnanceur matériel.
 \todo
 
 
-## un peu de lecture 
+# un peu de lecture 
 
 pour plus de détails et une introduction plus complète, M. Chajdas / AMD a rédigé :
 	- [intro to compute shader](https://anteru.net/blog/2018/intro-to-compute-shaders/index.html)

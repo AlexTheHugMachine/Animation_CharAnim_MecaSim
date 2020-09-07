@@ -98,7 +98,7 @@ ou pour des valeurs > 1 :
 \endcode
 
 
-## et alors ?
+# et alors ?
 
 comment utiliser la taille de l'intervalle / la precision d'un `float` pour décaler l'origine du rayon de test ?
 
@@ -163,7 +163,7 @@ et cette solution `p + 10 * epsilon_point(p) * pn` marche correctement sur des s
 <IMG SRC="quixel-epsilon10-1024.png" width="45%"> 
 
 
-## c'est quand meme moche ? non ? 
+# c'est quand meme moche ? non ? 
  
 un peu oui, on a simplement remplacé une constante absolue 1/1000 par une constante relative \f$ 10*\epsilon(x) \f$ ... qui a tout de meme l'avantage 
 d'etre simple à estimer et raisonnablement robuste. 
