@@ -9,7 +9,7 @@ créer et configurer le shader avant de pouvoir dessiner l'objet, ainsi que resp
 
 repassez dans \ref intro3d et \ref glsl, si nécessaire.
 
-## créer un shader program
+# créer un shader program
 
 les détails sont dans \ref tuto2GL, le plus simple est d'utiliser l'utilitaire read_program() fournit par program.h :
 
@@ -22,7 +22,7 @@ program= read_program("...");
 program_print_errors(program);
 \endcode
 
-## configurer un shader program
+# configurer un shader program
 
 les shaders sont des fonctions comme les autres, pour produire leurs résultats, il faut d'abord affecter une valeur à leurs paramètres avant de pouvoir les exécuter.
 par exemple, un vertex shader déclare, en général, 2 types de paramètres : les uniforms et les attributs de sommet (la position, la couleur, la normale, etc...)
@@ -119,7 +119,7 @@ Transform mvp= projection * view * model;   // P(V(M*p))
 \endcode
 
 
-## dessiner
+# dessiner
 
 Une fois le shader program complètement paramétré, il ne reste plus qu'à dessiner l'objet avec `Mesh::draw( program ... )`. Un dernier détail, il faut indiquer quels 
 attributs sont nécessaires à l'exécution des shaders, cf les parametres `bool` :
@@ -167,7 +167,7 @@ Si plusieurs shaders, ou plusieurs paramètres (couleurs, matieres, etc) sont n�
 	- ou trier les triangles par matiere et dessiner chaque groupe de triangles, l'un après l'autre, matière par matière, cf tuto9_groups.cpp, tuto9_groups.glsl.
 
 
-## debugger un shader
+# debugger un shader / recharger
 
 relancer l'application à chaque fois qu'un shader plante, n'est pas très pratique, il est possible de recharger les shaders à la volée, sans quitter l'application, cf 
 reload_program() de `program.h`.
@@ -193,7 +193,7 @@ GLuint program;
 
 __attention :__ les uniforms sont re-initialisés à 0 par la compilation d'un shader.
 
-## et avec une texture ?
+# et avec une texture ?
 
 Il y a plusieurs étapes :
     - d'abord charger la texture, cf GLuint texture= read_texture(0, fichier ); documenté dans texture.h,

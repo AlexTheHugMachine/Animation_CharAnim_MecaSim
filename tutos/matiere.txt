@@ -54,7 +54,7 @@ sur une surface rugueuse qui est représentée comme une distribution de miroirs
 </table>
 
 
-## emission par la source de lumière
+# emission par la source de lumière
 
 Si une source de lumière emet une certaine quantité de lumière, un _flux_ exprimés en Watts, quelle quantité se propage jusqu'à un point de l'espace ?
 Sur l'ensemble des points se trouvant à une distance \f$ d \f$ de la source, on pourra mesurer la même valeur de flux. Le flux émis se répartit sur les \f$ 4 \pi d^2 \f$ points 
@@ -63,7 +63,7 @@ Sur l'ensemble des points se trouvant à une distance \f$ d \f$ de la source, on
 <IMG SRC="carre.png" width="25%"> 
 
 
-## réflexion diffuse / Lambert 
+# réflexion diffuse / Lambert 
 
 Si la surface sur laquelle on mesure la lumière incidente n'est pas orientée vers la source de lumière, le flux reçu se dépose sur plus de points, et chaque point ne 
 mesure que \f$ \cos \theta \f$ du flux reçu.
@@ -90,7 +90,7 @@ Donc oui, le modèle de Lambert pour les réflexions / matières diffuses est un
 \f]
 
 
-## réflexion spéculaire et coefficients de Fresnel
+# réflexion spéculaire et coefficients de Fresnel
 
 Au contraire de la réflexion diffuse qui répartit la lumière incidente dans toutes les directions réflechies, la réflexion spéculaire ne réfléchit la lumière que dans une seule
 direction et se sont les coefficients de Fresnel qui permettent de calculer quelle fraction de la lumière incidente se réfléchit dans cette direction.
@@ -143,7 +143,7 @@ couleur de la source).
 Ces coefficients sont mesurés pour pas mal de matières : quelques exemples sur [wikipedia](https://en.wikipedia.org/wiki/List_of_refractive_indices)
 
 
-## en pratique
+# en pratique
 
 La formulation un peu bizarre (avec la division par \f$ \cos \theta \f$) dans le cas de reflexion spéculaire permet de formuler la lumière réfléchie de la même manière que 
 le cas diffus :

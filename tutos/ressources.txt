@@ -46,7 +46,7 @@ que fait le driver pour modifier le contenu du buffer, et les différences peuve
 __En résumé,__ une solution correcte pour openGL 3 ou 4 consiste tout simplement à utiliser les bons flags lors de la création des buffers. On peut même s'autoriser a créer un premier 
 buffer statique, puis de le transformer en buffer dynamique lorsque l'on souhaite modifier son contenu, c'est ce que fait Mesh::create_buffers(), par exemple.
 
-## ça rame !! on peut pas faire mieux ?
+# ça rame !! on peut pas faire mieux ?
 OpenGL 4.4 a introduit de nouvelles fonctionnalités qui permettent d'obtenir de meilleures performances quelque soit l'architecture des cartes graphiques :
 - `glBufferStorage()` pour allouer des buffers et déclarer explicitement leur utilisation,
 - `glMapBufferRange()` pour écrire les données directement dans la zone de transfert vers la carte graphique, en évitant les copies réalisées par le driver.

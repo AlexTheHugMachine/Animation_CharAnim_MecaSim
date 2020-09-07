@@ -15,7 +15,7 @@ il y a 2 types de solutions, soit decouper le triangle pour ne garder que la par
 puisque c'est elle qui introduit le probleme.
 
 
-## découper le triangle
+# découper le triangle
 en regardant plus en détails, on s'apercoit qu'il n'y a qu'un cas qui est vraiment génant, c'est lorsqu'un sommet est derrière la camera. 
 un sommet trop à gauche, ou trop à droite (trop haut, trop bas, et trop loin) n'est pas vraiment génant.
 
@@ -32,7 +32,7 @@ qui va etre genant pour calculer l'intersection des aretes et du plan... ou pour
 comment calculer l'intersection d'une arete avec le plan near dans l'espace homogene ? cf ["homogenous clipping"](http://fabiensanglard.net/polygon_codec/clippingdocument/Clipping.pdf), 
 sections 8 et 9
 
-## sans projection
+# sans projection
 l'autre categorie de solution utilise une approche différente qui ne fait pas de projection.
 
 les tests d'inclusion des pixels se font en 2d, dans le plan image, après la projection. si on ne veut pas calculer la projection, 
@@ -52,7 +52,7 @@ en calcul du volume signé des tetrahedres formés par le point p et les faces a
 est l'interieur du volume eabc, et le pixel fait parti du triangle. c'est le même test qu'avec l'aire, le volume sera positif si p se trouve
 du "bon" coté de chaque face du tetrahedre.
 
-## sans projection et dans l'espace homogene
+# sans projection et dans l'espace homogene
 une derniere solution réalise le test "est ce que le centre du pixel est inclus dans le triangle" sans faire de projection, directement 
 dans l'espace projectif homogène. cf ["Triangle scan conversion using 2D Homogeneous coordinate"](http://diglib.eg.org/bitstream/handle/10.2312/EGGH.EGGH97.089-095/089-095.pdf?sequence=1&isAllowed=y) M. Olano, T. Greer, 1997
 
