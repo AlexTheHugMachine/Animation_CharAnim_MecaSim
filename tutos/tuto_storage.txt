@@ -78,7 +78,7 @@ glBufferData(GL_SHADER_STORAGE_BUFFER, /* size */, /* data */, GL_STATIC_READ);
 
 __attention :__ `glBindBufferBase()` sélectionne le buffer à la fois sur `GL_SHADER_STORAGE_BUFFER` et sur la version numérotée `GL_SHADER_STORAGE_BUFFER 0`. 
 
-## alignement des données...
+# alignement des données...
 
 L'utilisation des storage buffers est assez directe, mais il y a une grosse différence par rapport aux uniforms classiques, il n'y a pas d'interface (cf `glUniform())` 
 permettant d'affecter des valeurs aux variables déclarées dans le block. Il faut le faire "à la main" en remplissant _correctement_ le buffer qui sera associé au block. 
@@ -305,7 +305,7 @@ glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(TriangleGLSL) * triangles.size(), 
 
 cf \ref tuto_storage_buffer.cpp 
 
-### vérifier l'alignement
+# vérifier l'alignement
 
 En cas de doute sur l'organisation mémoire d'un block, comment connaître la position des variables ? openGL 4.3 a introduit 2 fonctions 
 `glGetProgramInterface( ) / glGetProgramResource( )` permettant d'énumérer les blocks associés à des buffers et de récupérer 

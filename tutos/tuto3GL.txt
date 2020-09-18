@@ -47,7 +47,7 @@ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // effacer l'image et le zbu
 \endcode
 
 
-## ztest et zbuffer
+# ztest et zbuffer
 
 pour obtenir une visibilité correcte lorsque plusieurs triangles se dessinent sur le même pixel, il faut indiquer lequel garder, celui dont la 
 profondeur est la plus petite, ou la plus grande, ou égale, etc.
@@ -67,7 +67,7 @@ glDisable(GL_DEPTH_TEST);       // desactiver le ztest
 \endcode
 
 
-## élimination des faces arrières / back face culling
+# élimination des faces arrières / back face culling
 
 lorsque les triangles décrivent la surface d'un objet opaque, les triangles à l'arrière de l'objet ne sont pas visibles, il est assez simple de les 
 détecter, cf \ref intro3d, par contre, il faut donner l'orientation normale des faces, sens trigo ou horaire, et choisir lesquelles on veut supprimer 
@@ -95,7 +95,7 @@ glEnable(GL_CULL_FACE);
 \endcode
 
 
-## attributs de sommets, vertex array object, vao
+# attributs de sommets, vertex array object, vao
 
 pour dessiner des triangles, il faut décrire les informations associées aux sommets, indiquer ou les trouver, leur organisation mémoire, 
 et indiquer à quelles entrées du vertex shader elles sont associées.
@@ -117,7 +117,7 @@ glBindVertexArray(vao);
 \endcode
 
 
-## uniforms et shader program
+# uniforms et shader program
 
 après avoir compilé et linké un shader program, cf \ref tuto2GL, il faut le sélectionner pour configurer le pipeline :
 \code
@@ -204,7 +204,7 @@ __attention :__ vérifiez que la bonne surchage soit utilisee, si l'uniform est 
     - `6u` ou `unsigned(6)` ou `(unsigned) 6`.
     
 
-## glDraw( )
+# glDraw( )
 
 on peut enfin dessiner les 12 triangles, c'est à dire les indices de 0 à 36.
 

@@ -16,14 +16,14 @@ ces 3 fonctions sont appelées dans le main.
 La classe App permet également d'écrire une application avec une conception légèrement différente mais avec les mêmes fonctionnalités. 
 cf tuto7.cpp pour un exemple.
 
-## création de la fenêtre et du contexte openGL
+# création de la fenêtre et du contexte openGL
 
 La création d'une fenêtre et la gestion des évènements clavier / souris dépend du système : windows, mac os, linux, etc. la librairie 
 [SDL2](http://libsdl.org) permet d'écrire un seul code qui fonctionnera sur tous ces systèmes. 
 
 La démarche est plutot directe, il faut initialiser SDL2, créer la fenêtre, créer un contexte openGL et traiter les évènements claviers / souris.
 
-### étape 1 : intialiser SDL2
+## étape 1 : intialiser SDL2
 
 \code
 #include "SDL2/SDL.h"
@@ -41,7 +41,7 @@ int main( )
 }
 \endcode
 
-### étape 2 : créer une fenêtre
+## étape 2 : créer une fenêtre
 
 C'est la fonction SDL_CreateWindow( ) qui s'en charge, il faut lui fournir plusieurs paramètres : un titre, la position et la taille de la fenêtre et une 
 option indiquant qu'openGL doit pouvoir dessiner dedans.
@@ -65,7 +65,7 @@ int main( )
 }
 \endcode
 
-### étape 3 : créer et configurer le contexte openGL
+## étape 3 : créer et configurer le contexte openGL
 
 Il existe plusieurs versions d'openGL, il faut indiquer laquelle choisir, ainsi qu'activer ou pas, le mode debug pour obtenir des messages d'erreurs. 
 c'est la fonction SDL_GL_SetAttribute( ) qui permet de passer tous les paramètres.
@@ -117,7 +117,7 @@ selon les systèmes c'est inutile (mac os) ou obligatoire (windows). c'est la li
 \endcode
 
 
-### étape 4 : traiter les évènements
+## étape 4 : traiter les évènements
 
 La fenêtre est ouverte, le contexte openGL est crée, il ne reste plus qu'à dessiner quelquechose, mais il faut aussi savoir quand s'arreter ! et savoir 
 que l'utilisateur a bougé la souris, cliqué, ou enfoncé une touche sur le clavier, ce qui permettra de déplacer la camera, des objets, etc.
@@ -158,7 +158,7 @@ _attention :_ ne pas oublier le SDL_GL_SwapWindow(), qui permet d'afficher ce qu
 code complet dans tuto1.cpp et tuto1GL.cpp.
 
 
-### résumé :
+# résumé :
 voila, c'est un peu long, il y a pas mal de doc à lire sur le fonctionnement de SDL2, mais ce n'est pas bien compliqué. et comme c'est toujours la même chose, 
 les fonctions create_window( ), create_context(), run() et events() documentées dans window.h font exactement ca. ce qui permet de simplifier pas mal le code
 et de se concentrer sur openGL.
@@ -267,6 +267,5 @@ int draw( )
 
 à quoi sert le clear_key_state( ) ? vu que draw( ) est appelée 60 fois par seconde, il est probable que la touche reste enfoncée pendant
 une bonne dixaine d'appels, reinitialiser l'état de la touche permet d'éviter d'enregistrer 10 fois l'image...
-
 
  */

@@ -18,7 +18,7 @@ il y a plusieurs choses à faire :
 \image html mesh_kit.png bigguy texturé
 
 
-## pipeline graphique et textures
+# pipeline graphique et textures
 
 c'est le fragment shader qui donne sa couleur à un pixel de l'image. si l'on souhaite utiliser la couleur d'un pixel de la texture, il faut que le fragment shader puisse
 lire cette couleur. 2 informations sont nécessaires : la texture elle même et les coordonnées du pixel dans la texture. 
@@ -37,12 +37,12 @@ _autre explication_ : le fragment shader ne peut pas accéder aux attributs de s
 du vertex shader pour que le fragment shader récupère cette information (associée aux sommets). et les varyings sont interpolés par le pipeline.
 
 
-## une texture
+# une texture
 
 on commence par le cas simple, utiliser une seule texture. première étape, charger une image et créer un objet openGL texture qui stocke l'image sous une forme utilisable
 par les shaders.
 
-### charger une image, créer un objet texture openGL
+## charger une image, créer un objet texture openGL
 
 pour créer un objet texture, il faut utiliser glGenTextures( ), la démarche est la même que pour les autres objets openGL :
 \code
@@ -119,7 +119,7 @@ int init( )
 
 et comme c'est toujours la même chose, `make_texture( )` et `read_texture( )` de texture.h font exactement ça.
 
-### décrire les coordonnées de texture des sommets de l'objet
+## décrire les coordonnées de texture des sommets de l'objet
 
 deuxième étape : fournir les coordonnées dans la texture des sommets de l'objet, il faut les stocker dans un vertex buffer et décrire correctement le format de sommet 
 (cf \ref tuto4GL).
@@ -167,7 +167,7 @@ _remarque :_ les coordonnées dans la texture sont en 2d, comme on peut s'y atte
 _attention :_ l'api openGL et le langage des shaders, GLSL, n'appellent pas les types de la même manière, un vec2 GLSL est décrit comme 2, GL_FLOAT dans l'application pour l'api openGL.
 un vec3 GLSL, est décrit par 3, GL_FLOAT, etc.
 
-### écrire le fragment shader (et le vertex shader)
+## écrire le fragment shader (et le vertex shader)
 
 troisième étape, les shaders ! 
 
@@ -278,7 +278,7 @@ void main( )
 
 il ne reste plus qu'à configurer le pipeline pour dessiner un objet texturé !
 
-### configurer le pipeline
+## configurer le pipeline
 
 quatrième étape, configurer le pipeline :
 	- vertex array object, configuration du format de sommet, cf glBindVertexArray( ),
@@ -325,7 +325,7 @@ int draw( )
 le code complet ressemble a \ref tuto5GL.cpp
 
 
-## texture filtrée et mipmaps...
+# texture filtrée et mipmaps...
 
 comme suggéré dans la section création des textures, une texture est composée de plusieurs niveaux / couches... _pourquoi ?_
 
@@ -456,7 +456,7 @@ il faut aussi configurer le pipeline lors du glDraw( ), cf glBindSampler( ). lor
 au final, le code complet ressemble à tuto5GL_sampler.cpp
 
 
-## plusieurs textures
+# plusieurs textures
 
 lorsqu'un fragment shader veut utiliser plusieurs textures en même temps pour calculer la couleur d'un pixel, openGL utilise le même principe que pour 
 les attributs de sommets : elles sont numérotées. les textures et leurs paramètres de filtrage (sampler) sont décrits dans plusieurs _unités de textures_. 

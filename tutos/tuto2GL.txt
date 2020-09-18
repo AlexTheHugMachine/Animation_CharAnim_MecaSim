@@ -24,7 +24,7 @@ la partie la plus longue est finalement la vérification et la récupération de
 _rappel :_  les objets openGL sont manipulés à travers des identifiants numériques, openGL définit le type GLuint 
 spécialement pour ça. vous pouvez repasser dans \ref interfaceC, si nécessaire.
 
-## lire les sources
+# lire les sources
 
 le plus simple en C++, renvoie une chaine de caractères std::string :
 \code
@@ -48,7 +48,7 @@ std::string read( const char *filename )
 }
 \endcode
 
-## créer et compiler les shaders
+# créer et compiler les shaders
 
 \code
 	GLenum type= GL_VERTEX_SHADER;	 // ou GL_FRAGMENT_SHADER...
@@ -68,7 +68,7 @@ puis compiler le shader :
 	glCompileShader(shader);
 \endcode
 
-## vérifier les erreurs de compilation du shader
+# vérifier les erreurs de compilation du shader
 
 un objet shader openGL maintient un état de compilation ainsi que les messages d'erreurs (et sonsource également). 
 il suffit de l'interroger avec glGetShader( ) :
@@ -106,7 +106,7 @@ la bonne taille et enfin récupérer les messsages...
 si tout c'est bien passé pour le premier shader, on peut passer au 2ieme, seul le type de shader change : ce sera
 GL_FRAGMENT_SHADER au lieu de GL_VERTEX_SHADER.
 
-## créer et linker le program
+# créer et linker le program
 
 la démarche est la même que pour les shaders, il faut indiquer au program quels shaders linker ensemble avec
 glAttachShader( ), puis vérifier les erreurs,
@@ -151,7 +151,7 @@ une fois que le program est correctement compilé et linké, avant de dessiner a
 tous ses uniforms et associer un buffer à ses attributs cf \ref tuto3GL et \ref tuto4GL. 
 il est aussi possible, pour vérifier que l'on a rien oublié, de demander au shader program quels sont les uniforms déclarés, leur nom, leur type, leur valeur, etc. pour vérifier que l'initialisation est correcte. cf \ref shader_reflect.
 
-## formatage des erreurs
+# formatage des erreurs
 
 par contre les messages d'erreurs sont très succints et n'affichent qu'un numéro de ligne sans aucun contexte, ce qui est assez pénible 
 pour corriger l'erreur.
@@ -238,7 +238,7 @@ vous pouvez compiler les shaders comme vous voulez et utiliser uniquement progra
 _pour les curieux :_ le source est dispo program.cpp, fonctions print_line( ) et print_errors( ).
 
 
-## utilitaires : program.h
+# utilitaires : program.h
 
 \ref program.h fournit une fonction permettant de compiler plusieurs shaders écrits dans le même fichier, cf read_program( ). 
 \code
