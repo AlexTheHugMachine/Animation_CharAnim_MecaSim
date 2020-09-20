@@ -105,6 +105,29 @@ for(int z= 0; z < n; z++)
 }
 \endcode
 
+
+# maillage indexé
+
+Dans certains cas, il est plus simple de décrire l'objet comme un ensemble de sommets indexés par les triangles. Un triangle est donc un triplet d'indices de sommets, au lieu d'être 
+représenté par un triplet de sommets.
+
+exemple :
+\code
+Mesh objet= Mesh(GL_TRIANGLES);
+
+// stocke 3 sommets
+// et conserve leurs indices
+unsigned int a= objet.vertex( 0, 0, 0 );
+unsigned int b= objet.vertex( 1, 0, 0 );
+unsigned int c= objet.vertex( 0, 1, 0 );
+
+// ajoute un triangle : indice des 3 sommets
+objet.triangle(a, b, c);
+\endcode
+
+et accessoirement, décrire les objets de cette manière permet à la carte graphique de les afficher un peu plus vite (c'est surtout visible pour les "gros" objets composés 
+de >1M de triangles)
+
 # dessiner un objet / camera
 
 pour observer une scène / un objet, il faut également une camera, un point de vue. La classe Orbiter est un type particulier de camera, différente des cameras classiques 
@@ -180,6 +203,9 @@ Mesh objet= read_mesh( /* filename */ "..." );
 Point pmin, pmax;
 objet.bounds(pmin, pmax);
 // pmin et pmax contiennent les points extremes de l'englobant de l'objet.
+
+// regler la region de la scene observee par la camera
+camera().lookat(pmin, pmax);
 \endcode
 
 

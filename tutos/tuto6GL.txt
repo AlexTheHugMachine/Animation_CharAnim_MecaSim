@@ -21,7 +21,7 @@ sans utiliser l'indexation, il faut décrire les 3 sommets des 12 triangles : 12
 contre 36 dans l'autre...
 
 
-### glDrawArrays et Mesh
+# glDrawArrays et Mesh
 
 s'il n'existe pas d'index buffer dans l'objet, il suffit de créer un vertex buffer et de configurer un vao :
 \code
@@ -54,7 +54,7 @@ glUniform( ... );
 glDrawArrays(GL_TRIANGLES, /* first */ 0, /* count */ mesh.vertex_count());
 \endcode
 
-### glDrawElements et Mesh
+# glDrawElements et Mesh
 
 la démarche est la même, il faut créer l'index buffer, en plus du vertex buffer et bien sur configurer le vao :
 \code
@@ -114,7 +114,7 @@ en consultant la doc d'openGL, d'autres fonctions existent, à quoi servent-elle
 - glDrawElementsBaseVertex( ) : permet de dessiner facilement un objet indexé, lorsque les attributs de ces sommets ne sont pas au début du vertex buffer... 
 
 
-## draw instanced, dessiner plusieurs copies 
+# draw instanced, dessiner plusieurs copies 
 
 dans pas mal de cas, il est nécessaire d'afficher plusieurs fois le même objet ou des variantes du même objet. par exemple, des unités dans un jeu de stratégie, 
 des arbres pour afficher une forêt, des touffes d'herbes pour une prairie, des _cubes_, etc.
@@ -203,7 +203,7 @@ change de valeur, pour chaque sommet (divisor == 0), ou pour chaque instance (di
 __remarque :__ oui, ça permet d'avoir des propriétés d'instances qui sont définies pour un groupe d'instances, mais ce n'est pas très flexible...
 
 
-## draw base vertex, organisation des données
+# draw base vertex, organisation des données
 
 si les données de plusieurs objets sont rangées dans le même vertex buffer, ca permet de ne configurer et de n'utiliser qu'un seul vao, ce qui peut simplifier 
 le code d'affichage de plusieurs objets et permet aussi au driver de faire moins de travail.
@@ -255,7 +255,7 @@ count.push_back(3);
 glMultiDrawArrays(GL_TRIANGLES, /* first */ &first.front(), /* count */ &count.front(), /* draw count */ first.size());
 \endcode
 
-### et avec glDrawElements( ) ?
+## et avec glDrawElements( ) ?
 
 La solution précédente est simple à utiliser tant que l'affichage des objets peut se faire avec glDrawArrays(), si les objets utilisent un index buffer / des sommets partagés,
 glDrawElements( ) ne permet pas directement de faire la même chose... _pourquoi ?_
@@ -293,12 +293,12 @@ __bonus :__ il y a une autre solution, qui utilise toujours glDrawElements() mai
 `012023 + 456`
 
 
-## et les autres ?
+# et les autres ?
 
 les glDrawInstancedBaseInstance( ) permettent de faire la même chose avec les buffers d'attributs d'instances.
 
 l'autre draw interressant et plus souple que draw instanced s'appelle glMultiDraw( ) et surtout glMultiDrawIndirect( ), mais il n'est utilisable qu'à partir d'openGL 4.3.
 
-todo 
+cf \ref mdi
 
 */

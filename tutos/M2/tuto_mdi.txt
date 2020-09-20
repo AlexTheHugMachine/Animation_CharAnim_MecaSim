@@ -87,7 +87,7 @@ init( ) :
 \endcode
 
 
-## organisation des données
+# organisation des données
 
 Le seul problème de la famille MultiDraw() est la nécessité d'organiser les données : par exemple, tous les objets que l'on souhaite dessiner avec un appel
 de MultiDraw() doivent être décrits par les mêmes buffers et le même VAO... toutes les textures nécessaires doivent être sélectionnées, les transformations, les 
