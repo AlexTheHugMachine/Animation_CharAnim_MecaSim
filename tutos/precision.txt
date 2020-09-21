@@ -3,26 +3,35 @@
 
 Le lancer de rayon fonctionne plutot bien :
 
-<IMG SRC="ray_spheres.png" width="50%"> 
+<IMG SRC="ray_spheres.png" width="90%"> 
 
 mais dès que l'on calcule des ombres, on tombe sur un probleme assez pénible :
 
-<IMG SRC="epsilon_shadows.png" width="50%"> 
+<IMG SRC="epsilon_shadows.png" width="90%"> 
 
 les images sont pleines de défauts... __pourquoi ?__
 
 les `float` utilisés pour les calculs ne sont que des approximations, plus ou moins précises des nombres réels, et le point d'intersection exact
 peut se trouver n'importe ou dans une région autour de la valeur des `float` qui le représente :
 
-<IMG SRC="epsilon_intersection.png" width="40%"> 
+<IMG SRC="epsilon_intersection.png" width="45%"> 
 
 et lorsque l'on teste la visibilité de la source de lumière, on utilise ce point d'intersection comme origine du rayon de test. Selon la position de 
 ce point, le résultat sera correct (s'il est au-dessus de l'objet intersecté par le rayon), ou pas (lorsqu'il est sous la surface). Une solution 
 classique décale l'origine du rayon de test pour l'éloigner de la surface de l'objet :
 
-<IMG SRC="ray_shadows.png" width="40%"> 
+<IMG SRC="ray_shadows.png" width="45%"> 
 
-mais il faut choisir de quelle distance éloigner l'origine du rayon de test... une solution simple utilise une constante, 1/1000 par exemple, 
+mais il faut choisir de quelle distance éloigner l'origine du rayon de test... une solution simple utilise une constante, 1/1000 par exemple :
+\code
+    Point p= { ... }; // intersection du rayon 
+    Vector n= { ... }; // normale au point d'intersection
+    
+    // decale l'origine du rayon vers la source de lumiere
+    const float epsilon= float(1.0 / 1000.0);
+    Point origine= p + epsilon * n;
+\endcode
+
 mais cette valeur, ne fontionnera pas avec toutes les scenes... __pourquoi ?__
 
 <table style="width:90%">
@@ -33,7 +42,7 @@ mais cette valeur, ne fontionnera pas avec toutes les scenes... __pourquoi ?__
 
 parce que la précision des `float` est __relative__, pas _absolue_... plus un `float` est grand, moins il est précis, et la taille de la boite / la distance 
 nécessaire pour décaler l'origine du rayon de test doit augmenter. La cornell box est inclut dans un cube de taille 10, alors que le manege est dans 
-un cube de taille ~10000... et il faut un décalage très différent dans ces 2 cas... C'est meme pire, pour le manege ou le grand huit en arriere 
+un cube de taille `> 10000`... et il faut un décalage très différent dans ces 2 cas... C'est meme pire, pour le manege ou le grand huit en arriere 
 plan, il faut aussi des valeurs différentes...
 
 pour vous convaincre, executez ce petit code qui affiche le premier float qui ne peut pas représenter exactement `valeur + 1/1000` :
@@ -54,7 +63,7 @@ et les valeurs plus grandes que 32000 ne permettent pas de représenter exacteme
 les `float` 32bits représentent les réels en utilisant un entier 24bits et un exposant sur 8bits, ils ne peuvent donc représenter exactement 
 que \f$ 2^{32} \f$ réels... chaque `float` représente donc un intervalle de réels, qui grandit avec la valeur du `float`. on peut connaitre la taille de cet
 intervalle en utilisant `std::numeric_limits<float>::epsilon()`, qui représente l'intervalle pour la valeur 1. pour les autres valeurs, il suffit de 
-calculer \f$ valeur * (1 + epsilon) \f$
+calculer \f$ valeur * (1 + epsilon) \f$, pour obtenir le prochain `float` représentable :
 
 voila la taille des intervalles pour les valeurs < 100000 :
 \code
@@ -159,9 +168,28 @@ estimée par une constante, voila quelques exemples :
 
 et cette solution `p + 10 * epsilon_point(p) * pn` marche correctement sur des scènes très différentes :
 
-<IMG SRC="carnival-epsilon10-1024.png" width="45%"> 
-<IMG SRC="quixel-epsilon10-1024.png" width="45%"> 
+<table style="width:90%">
+<tr> 
+    <td> <IMG SRC="carnival-epsilon10-1024.png" width="100%"> 
+    <td> <IMG SRC="quixel-epsilon10-1024.png" width="100%"> 
+</table>
 
+## et si l'extrémité du rayon est aussi sur un objet ?
+
+il faut decaler l'origine (le point p) et l'extrémité (le point q) du rayon de test :
+\code
+Point p= { ... };
+Vector pn= { ... };
+
+Point q= { ... }:
+Vector qn= { ... };
+
+Point origine= p + 10 * epsilon_point(p) * pn;
+Point extremite= q + 10 * epsilon_point(q) * qn;
+Ray test(origine, extremite);
+if(Hit hit= intersect(ray ... )) 
+    ... ;
+\endcode
 
 # c'est quand meme moche ? non ? 
  
