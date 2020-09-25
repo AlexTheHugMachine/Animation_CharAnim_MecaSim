@@ -32,6 +32,43 @@ struct RayHit
 };
 
 
+struct BBox
+{
+    Point pmin, pmax;
+    
+    BBox( ) : pmin(), pmax() {}
+    
+    BBox( const Point& p ) : pmin(p), pmax(p) {}
+    BBox( const BBox& box ) : pmin(box.pmin), pmax(box.pmax) {}
+    
+    BBox& insert( const Point& p ) { pmin= min(pmin, p); pmax= max(pmax, p); return *this; }
+    BBox& insert( const BBox& box ) { pmin= min(pmin, box.pmin); pmax= max(pmax, box.pmax); return *this; }
+    
+    float centroid( const int axis ) const { return (pmin(axis) + pmax(axis)) / 2; }
+    
+    bool intersect( const RayHit& ray ) const
+    {
+        Vector invd= Vector(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
+        return intersect(ray, invd);
+    }
+    
+    bool intersect( const RayHit& ray, const Vector& invd ) const
+    {
+        Point rmin= pmin;
+        Point rmax= pmax;
+        if(ray.d.x < 0) std::swap(rmin.x, rmax.x);
+        if(ray.d.y < 0) std::swap(rmin.y, rmax.y);
+        if(ray.d.z < 0) std::swap(rmin.z, rmax.z);
+        Vector dmin= (rmin - ray.o) * invd;
+        Vector dmax= (rmax - ray.o) * invd;
+        
+        float tmin= std::max(dmin.z, std::max(dmin.y, std::max(dmin.x, 0.f)));
+        float tmax= std::min(dmax.z, std::min(dmax.y, std::min(dmax.x, ray.t)));
+        return (tmin <= tmax);
+    }
+};
+
+
 struct Triangle
 {
     Point p;            // sommet a du triangle
@@ -71,42 +108,13 @@ struct Triangle
         ray.u= u;
         ray.v= v;
     }
-};
-
-
-struct BBox
-{
-    Point pmin, pmax;
     
-    BBox( ) : pmin(), pmax() {}
-    
-    BBox( const Point& p ) : pmin(p), pmax(p) {}
-    BBox& insert( const Point& p ) { pmin= min(pmin, p); pmax= max(pmax, p); return *this; }
-    
-    float centroid( const int axis ) const { return (pmin(axis) + pmax(axis)) / 2; }
-    
-    bool intersect( const RayHit& ray ) const
+    BBox bounds( ) const 
     {
-        Vector invd= Vector(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
-        return intersect(ray, invd);
-    }
-    
-    bool intersect( const RayHit& ray, const Vector& invd ) const
-    {
-        Point rmin= pmin;
-        Point rmax= pmax;
-        if(ray.d.x < 0) std::swap(rmin.x, rmax.x);
-        if(ray.d.y < 0) std::swap(rmin.y, rmax.y);
-        if(ray.d.z < 0) std::swap(rmin.z, rmax.z);
-        Vector dmin= (rmin - ray.o) * invd;
-        Vector dmax= (rmax - ray.o) * invd;
-        
-        float tmin= std::max(dmin.z, std::max(dmin.y, std::max(dmin.x, 0.f)));
-        float tmax= std::min(dmax.z, std::min(dmax.y, std::min(dmax.x, ray.t)));
-        return (tmin <= tmax);
+        BBox box(p);
+        return box.insert(p+e1).insert(p+e2);
     }
 };
-
 
 
 // construction de l'arbre / BVH
@@ -152,9 +160,7 @@ struct triangle_less1
     bool operator() ( const Triangle& triangle ) const
     {
         // re-construit l'englobant du triangle
-        BBox bounds(triangle.p);
-        bounds.insert(triangle.p + triangle.e1);
-        bounds.insert(triangle.p + triangle.e2);
+        BBox bounds= triangle.bounds();
         return bounds.centroid(axis) < cut;
     }
 };
@@ -224,28 +230,18 @@ protected:
         
         // construire le fils gauche
         // les triangles se trouvent dans [begin .. m)
-        BBox bounds_left(triangles[begin].p);                                         // englobant du premier triangle
-        bounds_left.insert(triangles[begin].p + triangles[begin].e1);                // on insere les 3 sommets...
-        bounds_left.insert(triangles[begin].p + triangles[begin].e2);
-        for(int i= begin+1; i < m; i++)                                        // insere les sommets des autres triangles
-        {
-            bounds_left.insert(triangles[i].p);
-            bounds_left.insert(triangles[i].p + triangles[i].e1);
-            bounds_left.insert(triangles[i].p + triangles[i].e2);
-        }
+        BBox bounds_left= triangles[begin].bounds();            // englobant du premier triangle
+        for(int i= begin+1; i < m; i++)                         // insere les sommets des autres triangles
+            bounds_left.insert(triangles[i].bounds());
+        
         int left= build(bounds_left, begin, m);
         
         // on recommence pour le fils droit
         // les triangles se trouvent dans [m .. end)
-        BBox bounds_right(triangles[m].p);
-        bounds_right.insert(triangles[m].p + triangles[m].e1);
-        bounds_right.insert(triangles[m].p + triangles[m].e2);
+        BBox bounds_right= triangles[m].bounds();
         for(int i= m+1; i < end; i++)
-        {
-            bounds_right.insert(triangles[i].p);
-            bounds_right.insert(triangles[i].p + triangles[i].e1);
-            bounds_right.insert(triangles[i].p + triangles[i].e2);
-        }
+            bounds_right.insert(triangles[i].bounds());
+        
         int right= build(bounds_right, m, end);
         
         int index= nodes.size();
