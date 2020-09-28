@@ -1,0 +1,195 @@
+
+/*! \addtogroup sah construction de BVH optimal, SAH et parcours efficace
+
+Construire un arbre BVH permet d'accélérer l'intersection d'un rayon avec un ensemble de triangles, cf \ref acceleration, en évitant de calculer
+toutes les intersections.
+La solution proposée dans le tuto précédent est correcte, mais il existe de nombreuses manières de répartir un ensemble de triangles
+en 2 sous-groupes pour construire les fils de chaque noeud de l'arbre... et certaines seront plus efficaces que d'autres...
+
+par exemple, on peut trier les triangles le long d'un axe et répartir la première moitiée dans le fils gauche et l'autre dans le fils droit, au
+lieu de couper l'englobant spatialement au milieu et de répartir les triangles entre les fils du noeud en fonction de leur position par rapport 
+au milieu de l'englobant, comme suggéré dans \ref acceleration.
+
+_Comment comparer ces deux solutions et comment choisir la meilleure ?_
+
+il est bien sur possible de constuire les 2 arbres et de vérifier leur efficacité :
+
+<IMG SRC="sponza_ao.png" width="45%"> 
+
+- solution 1 : trier les triangles et répartir chaque moitiée dans un fils, construction BVH 0.6s, rendu 28s,
+- solution 2 : répartir les triangles dans chaque fils en fonction de leur position dans l'englobant, construction BVH 0.1s, rendu 10s,
+- solution 3 : ?? construction BVH 0.8s, rendu 8s.
+
+La solution 1 construit un arbre équilibré, la moitiée des triangles est affectée à chaque fils, la solution 2 par contre, construit un arbre 
+déséquilibré, mais qui est plus rapide à parcourir...
+
+La solution 3, compare plusieurs répartitions et choisit la meilleure pour construire chaque noeud... la construction est plus longue, mais 
+permet de gagner du temps sur le calcul de l'image. Mais il va falloir cogiter un peu pour évaluer si une répartition est interessante ou pas...
+
+
+# Géométrie et probabilité
+
+On peut résumer notre problème à cette question : "pour N rayons qui traversent un noeud, combien visitent chaque fils ?", ou, encore plus simple : 
+"pour N rayons qui traversent un englobant, combien traversent un autre englobant (inclut dans le premier) ??"...
+
+De manière assez surprenante, la réponse à cette question est très simple, c'est un des premiers résultats de la géométrie intégrale. 
+
+Pour 2 objets convexes, F et P, avec F inclut dans P, comme les englobants d'un pere et d'un fils, si N droites uniformes traversent le noeud P,
+alors \f$ \frac{aire(F)}{aire(P)} N\f$ droites traversent le fils F... 
+ou interprété différement :
+\f[ 
+    \frac{aire(F)}{aire(P)} 
+\f]
+représente le nombre de fois ou le fils est visité (sachant que le pere est visité). et c'est assez logique : plus un fils est gros, plus il sera visité lors 
+du parcours de l'arbre...
+
+Ces notions sont définies plus précisement dans :\n
+["Some Integral Geometry Tools to Estimate the Complexity of 3D Scenes"](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.31.8104), 
+F. Cazals, M. Sbert, 1997.
+
+et si A et B sont les fils de P,  \f$ \frac{aire(A)+aire(B)}{aire(P)} \in [0 .. 2]\f$ représente le nombre de fils visité en moyenne.\n
+(_remarque :_ on obtient bien 2 lorsque les fils A et B font la meme taille que P)
+
+_plus intuitivement, :_ on peut se représenter les 2N points d'intersections des N droites avec l'englobant P du pere :
+
+<IMG SRC="sah_box1.png" width="35%"> 
+
+si une autre boite plus petite se trouve dans P, moins de droites et de points d'intersections la touchent : et le rapport des nombres de points
+d'intersections correspond au nombre de fois ou la petite boite est touchée par les droites.
+
+<IMG SRC="sah_box2.png" width="35%"> 
+
+ce résultat est issu des proba, et il faut imaginer qu'en moyenne, sur une infinité de tests avec N droites, on a le bon résultat...
+
+si plusieurs petites boites se trouvent dans P, le rapport des points d'intersections correspond, en _moyenne_, au nombre de boites touchées
+par les droites.
+
+<IMG SRC="sah_box3.png" width="35%"> 
+
+
+## et alors ?
+
+on peut utiliser cette relation pour comparer plusieurs répartitions de triangles entre les 2 fils d'un noeud... 
+chaque fils est associé à un sous-ensemble de triangles, si on connait le nombre de visite des fils, on peut calculer le nombre de tests 
+d'intersections rayon/triangle...
+
+_exemple :_ on a T triangles. sans répartition, il faudra tous les tester pour chaque rayon : on calculera T tests rayon/triangle. 
+si on répartit les triangles en 2 sous-ensembles T1 et T2, on peut aussi calculer l'englobant F1 des triangles T1 et l'englobant F2 des triangles T2 et 
+on connait l'englobant P des T triangles. 
+
+_combien de tests rayon/triangle pour la répartition ?_ 
+
+on peut estimer \f$ \frac{aire(F1)}{aire(P)}\f$ et \f$ \frac{aire(F2)}{aire(P)}\f$, 
+le nombre de fois ou les fils 1 et 2 seront visités. donc on fera au total \f$ \frac{aire(F1)}{aire(P)} \times T1 \f$ tests rayon/triangle lors des visites 
+du fils 1, et \f$ \frac{aire(F2)}{aire(P)} \times T2 \f$ tests rayon/triangle pour le fils 2. 
+
+Pour les droites visitant les 2 fils, on fera autant de tests rayon/triangle que sans la répartition, par contre dans les autres cas, on fera moins de
+tests, mais il faudra aussi tester les englobants des 2 fils.
+
+les 2 répartitions utilisées pour construire le BVH reviennent soit à controler le nombre de triangles T1 et T2, soit à controler les englobants F1 et F2 :
+    - solution 1 : T1= T/2, T2= T/2, puis on estime les englobants F1 et F2,
+    - solution 2 : F1= P/2, F2= P/2, puis on répartit les triangles dans F1 et F2 pour connaitre T1 et T2.
+
+_remarque :_ quand on coupe l'englobant P en 2 moitiées, quelle est l'aire de chaque moitiée ? _indication :_ ce n'est pas la moitiée de l'aire de P... 
+on ne découpe le cube que sur un seul axe, pas sur tous...
+
+# combien de répartitions ?
+
+maintenant que l'on sait comparer plusieurs répartitions, il ne reste plus qu'à toutes les évaluer, garder la meilleure, et hop, magie, on a le meilleur 
+arbre possible...
+
+_comment ça, c'est débile comme solution ?_ ben, il y a \f$ 2^T \f$ manières de répartir T triangles en 2 groupes... ca fait un poil beaucoup... 
+meme pour T= 32, comme dans la cornell_box, on a pas du tout envie de les tester, et pour T= 64 on a pas le temps de faire le calcul...
+
+## et alors ?
+
+on va limiter le nombre de répartitions de triangles que l'on va tester... on ne regarde que la projection des englobants des triangles triés sur les 
+3 axes, ce qui ne fait que 3T répartitions à tester. _mieux, non ?_ ben, ça dépend...
+
+De manière générale, on va construitre un arbre binaire avec T feuilles (1 triangle par feuille), donc on aura T-1 noeuds internes et 2T-1 
+englobants au total. On peut estimer a priori combien de noeuds internes vont etre testes, et combien de feuilles vont etre testées :
+
+\f[
+\begin{eqnarray*}
+	noeuds &=& \sum_{i=1}^{T-1}\frac{aire(n_i)}{aire(racine)}\\
+	feuilles &=& \sum_{i=1}^{T} \frac{aire(f_i)}{aire(racine)} \\
+\end{eqnarray*}
+\f]
+
+avec \f$ \{ n_i \} \f$ les noeuds internes, et \f$ \{ f_i \} \f$ les feuilles. 
+
+on sait que pour chaque visite d'un noeud interne, on teste l'intersection du rayon avec les englobants des 2 fils, et pour chaque visite d'une feuille
+on teste l'intersection du rayon avec un triangle. Si on mesure le temps d'execution d'un test d'intersection rayon/englobant, noté \f$ C_{box} \f$ et
+le temps d'execution d'un test rayon/triangle, noté \f$ C_{triangle} \f$, on peut estimer le temps moyen d'intersection d'un rayon avec les englobants
+et les triangles de l'arbre :
+\f[
+	C= \sum_{i=1}^{T-1}\frac{aire(n_i)}{aire(racine)} \times 2C_{box} + \sum_{i=1}^{T} \frac{aire(f_i)}{aire(racine)} \times C_{triangle}
+\f]
+
+et il ne reste plus qu'à minimiser \f$ C \f$, le temps d'intersection, ou de manière générale, le _cout_ de l'arbre...
+
+cette formulation a été introduite dans :\n
+[”Heuristics for ray tracing using space subdivison”](http://graphicsinterface.org/wp-content/uploads/gi1989-22.pdf) J.D. MacDonald, K.S. Booth, 1989\n
+et cette manière de construire un BVH s'appelle SAH, pour surface area heuristic.
+
+on peut évaluer le cout des arbres construit par les solutions précédentes : 
+- solution 1 : trier les triangles et répartir chaque moitiée dans un fils, construction BVH 0.6s, rendu 28s, cout 233,
+- solution 2 : répartir les triangles dans chaque fils en fonction de leur position dans l'englobant, construction BVH 0.1s, rendu 10s, cout 106,
+- solution 2+ : idem que la solution 2, mais évalue chaque axe et utilise la meilleure répartition, construction BVH 0.1s, rendu 8s, cout 112,
+- soltuion 3 : ?? construction BVH 0.8s, rendu 7s, cout 86
+
+## ??
+
+que peut-on modifier/optimiser dans l'expression précédente ? les feuilles et leurs englobants sont fixés par la géométrie/les triangles. le nombre
+de noeuds internes est fixé lui aussi (cf arbre binaire...), donc le seul dégré de liberté est la taille des englobants des noeuds internes... et on sait 
+deja qu'il faut qu'ils soient les plus petits possibles pour limiter le nombre de tests d'intersection des englobants.
+
+## glouton ?
+
+construire un arbre de recherche optimal n'est pas simple, mais on peut utiliser une statégie gloutone qui essaye de répartir récursivement les 
+triangles en 2 groupes. L'algorithme démarre avec l'ensemble complet des triangles de la scène, le coupe en 2, puis recommence récursivement sur 
+chaque sous ensemble. chaque étape de l'algorithme permet de construire un noeud et ses 2 fils et s'arrete, en créant une feuille, lorsqu'il ne 
+reste plus qu'un seul triangle. c'est la même stratégie que l'algorithme de répartition dans \ref acceleration.
+
+pour chaque noeud, on souhaite trouver la répartition des triangles qui minimise le _cout_ du noeud : c'est à dire 
+\f[
+    2C_{box} + \frac{aire(F1) \times T1 \times C_{triangle} + aire(F2) \times T2 \times C_{triangle}}{aire(P)} 
+\f]
+avec F1 l'englobant des T1 triangles associés au fils 1, et F2, l'englobant des T2 triangles associés au fils 2.
+autrement dit, pour chaque visite du noeud, on estime le temps nécessaire à tester l'intersection des englobants des 2 fils, et pour chaque visite 
+d'un fils, on estime le temps nécessaire à tester l'intersection avec le sous ensemble correspondant de triangles.
+
+mais comme vu au dessus, on ne peut pas tester la totalité des répartitions possible de triangles, on va 'juste' en tester un nombre raisonnable.
+Une solution classique est de trier les triangles le long de chaque axe et de tester chaque répartition obtenue en balayant les triangles par ordre 
+croissant : 
+	- premier triangle dans le fils 1, les autres dans le fils 2, 
+	- les 2 premiers triangles dans le fils 1, les autres dans le fils 2, 
+	- les 3 premiers triangles dans le fils 1, les autres dans le fils 2,
+	- etc. 
+	- le dernier triangle dans le fils 2, les autres dans le fils 1, 
+	
+ce qui nous donne T-1 répartitions possibles par axe. on évalue le cout de chacune et on garde la meilleure, la plus petite, que l'on utilise pour 
+construire les 2 fils et recommencer.
+
+_reamrque :_ oui, si le temps estimé est plus grand que \f$ T \times C_{triangle} \f$ (tester tous les triangles) la répartition n'est pas très 
+interressante, et c'est probablement le bon moment d'arreter la recursion et de créer une feuille dans l'arbre.
+
+Les détails complets de cet algorithme sont dans :\n
+["Ray Tracing Deformable Scenes using Dynamic Bounding Volume Hierarchies"](http://www.sci.utah.edu/~wald/Publications/2007/DynBVH/togbvh.pdf) I. Wald, S. Boulos, P. Shirley, 2007.\n
+(_remarque :_ si vous ne lisez qu'un seul article de lancer de rayons cette année, lisez celui-la, même si certaines optimisations ne sont plus utilisées actuellement)
+
+Cette solution est toujours considérée comme la référence, mais n'est plus vraiment utilisée... _pourquoi ?_ la complexité de l'algorithme est 
+trop importante, cf le [master theorm](https://fr.wikipedia.org/wiki/Master_theorem) qui permet d'estimer la complexite d'un algorithme récursif. 
+chaque étape de cette méthode nécessite un tri en \f$O(n \log n)\f$ suivi d'un balayage en \f$ O(n) \f$, et au total l'algorithme à une complexité 
+\f$ O(n^2) \f$ voire pire... à l'heure actuelle les scènes sont composées de millions, voir de milliards de triangles et cet algorithme de référence
+est bien trop long... mais on peut se demander comment obtenir un algorithme avec une complexité plus interessante comme \f$O(n \log n)\f$. La 
+encore le master theorem fournit la réponse, il faut que la complexité de chaque étape soit linéaire, en \f$ O(n) \f$... le tri n'est donc pas possible !
+
+Mais on peut remplacer le tri par un hachage spatial, qui lui est en \f$ O(n) \f$. les détails sont dans :\n
+["On fast Construction of SAH-based Bounding Volume Hierarchies"](http://www.sci.utah.edu/~wald/Publications/2007/ParallelBVHBuild/fastbuild.pdf) I. Wald, 2007.\n
+(_remarque :_ si vous ne lisez qu'un seul article de construction d'arbre cette année, lisez celui-la...)
+
+
+
+
+*/

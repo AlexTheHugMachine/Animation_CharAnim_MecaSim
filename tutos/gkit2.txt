@@ -67,6 +67,7 @@ plus ceux dédiés à openGL :
 et ceux dédiés au lancer de rayons :
     - \ref intrort,
     - \ref acceleration,
+    - \ref sah,
     - \ref precision...
     
     
