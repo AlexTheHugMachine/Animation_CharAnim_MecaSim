@@ -1,4 +1,6 @@
-*! \addtogroup sah construction de BVH optimal, SAH et parcours efficace
+
+
+/*! \addtogroup sah construction de BVH optimal, SAH et parcours efficace
 
 Construire un arbre BVH permet d'accélérer l'intersection d'un rayon avec un ensemble de triangles, cf \ref acceleration, en évitant de calculer
 toutes les intersections.
@@ -466,7 +468,6 @@ par contre, les feuilles contiennent plus de triangles qu'il faudra tester.
 
 Tous les algorithmes de parcours visitent tous les noeuds et toutes les feuilles le long du rayon. Par contre, certains sont plus rapides que d'autres...
 ils ne parcourent que la partie strictement nécessaire de l'arbre pour trouver la feuille contenant le triangle touché par le rayon.
-
 
 
 */
