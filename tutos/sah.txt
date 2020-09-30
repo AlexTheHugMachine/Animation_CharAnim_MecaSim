@@ -1,4 +1,5 @@
 
+
 /*! \addtogroup sah construction de BVH optimal, SAH et parcours efficace
 
 Construire un arbre BVH permet d'accélérer l'intersection d'un rayon avec un ensemble de triangles, cf \ref acceleration, en évitant de calculer
@@ -17,7 +18,76 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
 <IMG SRC="sponza_ao.png" width="45%"> 
 
 - solution 1 : trier les triangles et répartir chaque moitiée dans un fils, construction BVH 0.6s, rendu 28s,
+    \code
+    int build_node( const int begin, const int end )
+    {
+        assert(begin < end);
+        
+        // construire l'englobant des triangles
+        BBox bounds= triangles_bounds(begin, end);
+        
+        if(end - begin < 2)			                // construire une feuille, s'il ne reste plus qu'un triangle
+        {
+            int index= nodes.size();
+            nodes.push_back( {bounds.pmin, bounds.pmax, -begin, -end} );
+            return index;
+        }
+        
+        // axe le plus etire de l'englobant        
+        int axis= bounds.max();
+        
+        // trier les triangles sur l'axe
+        std::sort(triangles.data() + begin, triangles.data() + end, triangle_less(axis));
+        
+        // repartir les triangles et construire les fils du noeud
+        int left= build_node(begin, (begin + end) / 2);
+        int right= build_node((begin + end) / 2, end);
+        
+        // construire le noeud
+        int index= nodes.size();
+        nodes.push_back( {bounds.pmin, bounds.pmax, left, right} );
+        return index;
+    }
+    \endcode
+
 - solution 2 : répartir les triangles dans chaque fils en fonction de leur position dans l'englobant, construction BVH 0.1s, rendu 10s,
+    \code
+
+    int build_node( const int begin, const int end )
+    {
+        assert(begin < end);
+        
+        // construire l'englobant des centres des triangles
+        BBox cbounds= centroid_bounds(begin, end);
+        // construire aussi l'englobant des triangles
+        BBox bounds= triangles_bounds(begin, end);
+        
+        // axe le plus etire de l'englobant
+        int axis= cbounds.max(); 
+        
+        // repartir les triangles 
+        auto *p= std::partition(triangles.data() + begin, triangles.data() + end, 
+            centroid_less(axis, cbounds.centroid(axis));
+        int m= std::distance(triangles.data(), p);
+        
+        if(m == begin || m == end)              // l'englobant est degenere, construire une feuille
+        {
+            int index= int(nodes.size());
+            nodes.push_back( {bounds.pmin, bounds.pmax, -begin, -end} );
+            return index;
+        }
+        
+        // repartir les triangles et construire les fils du noeud
+        int left= build_node(begin, m);
+        int right= build_node(m, end);
+        
+        // construire le noeud
+        int index= int(nodes.size());
+        nodes.push_back( {bounds.pmin, bounds.pmax, left, right} );
+        return index;
+    }    
+    \endcode
+    
 - solution 3 : ?? construction BVH 0.8s, rendu 8s.
 
 La solution 1 construit un arbre équilibré, la moitiée des triangles est affectée à chaque fils, la solution 2 par contre, construit un arbre 
@@ -111,8 +181,8 @@ englobants au total. On peut estimer a priori combien de noeuds internes vont et
 
 \f[
 \begin{eqnarray*}
-	noeuds &=& \sum_{i=1}^{T-1}\frac{aire(n_i)}{aire(racine)}\\
-	feuilles &=& \sum_{i=1}^{T} \frac{aire(f_i)}{aire(racine)} \\
+    noeuds &=& \sum_{i=1}^{T-1}\frac{aire(n_i)}{aire(racine)}\\
+    feuilles &=& \sum_{i=1}^{T} \frac{aire(f_i)}{aire(racine)} \\
 \end{eqnarray*}
 \f]
 
@@ -123,7 +193,7 @@ on teste l'intersection du rayon avec un triangle. Si on mesure le temps d'execu
 le temps d'execution d'un test rayon/triangle, noté \f$ C_{triangle} \f$, on peut estimer le temps moyen d'intersection d'un rayon avec les englobants
 et les triangles de l'arbre :
 \f[
-	C= \sum_{i=1}^{T-1}\frac{aire(n_i)}{aire(racine)} \times 2C_{box} + \sum_{i=1}^{T} \frac{aire(f_i)}{aire(racine)} \times C_{triangle}
+    C= \sum_{i=1}^{T-1}\frac{aire(n_i)}{aire(racine)} \times 2C_{box} + \sum_{i=1}^{T} \frac{aire(f_i)}{aire(racine)} \times C_{triangle}
 \f]
 
 et il ne reste plus qu'à minimiser \f$ C \f$, le temps d'intersection, ou de manière générale, le _cout_ de l'arbre...
@@ -132,15 +202,9 @@ cette formulation a été introduite dans :\n
 [”Heuristics for ray tracing using space subdivison”](http://graphicsinterface.org/wp-content/uploads/gi1989-22.pdf) J.D. MacDonald, K.S. Booth, 1989\n
 et cette manière de construire un BVH s'appelle SAH, pour surface area heuristic.
 
-on peut évaluer le cout des arbres construit par les solutions précédentes : 
-- solution 1 : trier les triangles et répartir chaque moitiée dans un fils, construction BVH 0.6s, rendu 28s, cout 233,
-- solution 2 : répartir les triangles dans chaque fils en fonction de leur position dans l'englobant, construction BVH 0.1s, rendu 10s, cout 106,
-- solution 2+ : idem que la solution 2, mais évalue chaque axe et utilise la meilleure répartition, construction BVH 0.1s, rendu 8s, cout 112,
-- soltuion 3 : ?? construction BVH 0.8s, rendu 7s, cout 86
+# construction de BVH par minimisation du cout / SAH
 
-## ??
-
-que peut-on modifier/optimiser dans l'expression précédente ? les feuilles et leurs englobants sont fixés par la géométrie/les triangles. le nombre
+que peut-on modifier/optimiser dans l'expression du cout d'un arbre ? les feuilles et leurs englobants sont fixés par la géométrie/les triangles. le nombre
 de noeuds internes est fixé lui aussi (cf arbre binaire...), donc le seul dégré de liberté est la taille des englobants des noeuds internes... et on sait 
 deja qu'il faut qu'ils soient les plus petits possibles pour limiter le nombre de tests d'intersection des englobants.
 
@@ -160,14 +224,89 @@ autrement dit, pour chaque visite du noeud, on estime le temps nécessaire à te
 d'un fils, on estime le temps nécessaire à tester l'intersection avec le sous ensemble correspondant de triangles.
 
 mais comme vu au dessus, on ne peut pas tester la totalité des répartitions possible de triangles, on va 'juste' en tester un nombre raisonnable.
-Une solution classique est de trier les triangles le long de chaque axe et de tester chaque répartition obtenue en balayant les triangles par ordre 
-croissant : 
-	- premier triangle dans le fils 1, les autres dans le fils 2, 
-	- les 2 premiers triangles dans le fils 1, les autres dans le fils 2, 
-	- les 3 premiers triangles dans le fils 1, les autres dans le fils 2,
-	- etc. 
-	- le dernier triangle dans le fils 2, les autres dans le fils 1, 
-	
+
+_remarque :_ on peut tout de même utiliser cette estimation pour choisir le meilleur axe pour répartir les triangles (cf solution 2+) :
+\code
+int build_node( const int begin, const int end )
+{
+    assert(begin < end);
+    
+    // construire l'englobant des centres des triangles
+    BBox cbounds= centroid_bounds(begin, end);
+    // construire aussi l'englobant des triangles
+    BBox bounds= triangles_bounds(begin, end);
+    
+    float area= bounds.area();
+    float min_cost= FLT_MAX;
+    int min_axis= -1;
+    // teste les 3 axes
+    for(int axis= 0; axis < 3; axis++)
+    {
+        // repartir les triangles 
+        BBox left, right;
+        int left_n= 0, right_n= 0;
+        
+        float cut= cbounds.centroid(axis);          // milieu de l'axe
+        for(int i= begin; i < end; i++)
+        {
+            if(triangles[i].centroid(axis) < cut)  // a gauche
+            {
+                left_n++;
+                left= BBox(left, triangles[i].bounds());
+            }
+            else                                    // a droite
+            {
+                right_n++;
+                right= BBox(right, triangles[i].bounds());
+            }
+        }
+    
+        float cost= 2                               // 2 tests rayon/boite
+            + left.area() / area * left_n           // + visites du fils 1 * triangles du fils 1
+            + right.area() / area * right_n;        // + visites du fils 2 * triangles du fils 2 
+        
+        if(cost < min_cost)                         // conserve la meilleure repartition
+        {
+            min_cost= cost;
+            min_axis= axis;
+        }
+    }
+    
+    int m= begin;
+    if(min_axis != -1)
+    {
+        // repartir les triangles 
+        auto *p= std::partition(triangles.data() + begin, triangles.data() + end, 
+            centroid_less(min_axis, cbounds.centroid(min_axis));
+        m= std::distance(triangles.data(), p);
+    }
+    
+    if(m == begin || m == end)                      // construire une feuille si la partition est degeneree
+    {
+        int index= int(nodes.size());
+        nodes.push_back( {bounds.pmin, bounds.pmax, -begin, -end} );
+        return index;
+    }
+    
+    // repartir les triangles et construire les fils du noeud
+    int left= build_node(begin, m);
+    int right= build_node(m, end);
+    
+    // construire le noeud
+    int index= int(nodes.size());
+    nodes.push_back( {bounds.pmin, bounds.pmax, left, right} );
+    return index;
+}
+\endcode
+
+Une solution classique pour tester un nombre raisonnable de répartitions est de trier les triangles le long de chaque axe et de tester chaque répartition 
+obtenue en balayant les triangles par ordre croissant : 
+    - premier triangle dans le fils 1, les autres dans le fils 2, 
+    - les 2 premiers triangles dans le fils 1, les autres dans le fils 2, 
+    - les 3 premiers triangles dans le fils 1, les autres dans le fils 2,
+    - etc. 
+    - le dernier triangle dans le fils 2, les autres dans le fils 1, 
+    
 ce qui nous donne T-1 répartitions possibles par axe. on évalue le cout de chacune et on garde la meilleure, la plus petite, que l'on utilise pour 
 construire les 2 fils et recommencer.
 
@@ -181,7 +320,7 @@ Les détails complets de cet algorithme sont dans :\n
 Cette solution est toujours considérée comme la référence, mais n'est plus vraiment utilisée... _pourquoi ?_ la complexité de l'algorithme est 
 trop importante, cf le [master theorm](https://fr.wikipedia.org/wiki/Master_theorem) qui permet d'estimer la complexite d'un algorithme récursif. 
 chaque étape de cette méthode nécessite un tri en \f$O(n \log n)\f$ suivi d'un balayage en \f$ O(n) \f$, et au total l'algorithme à une complexité 
-\f$ O(n^2) \f$ voire pire... à l'heure actuelle les scènes sont composées de millions, voir de milliards de triangles et cet algorithme de référence
+trop importante... à l'heure actuelle les scènes sont composées de millions, voir de milliards de triangles et cet algorithme de référence
 est bien trop long... mais on peut se demander comment obtenir un algorithme avec une complexité plus interessante comme \f$O(n \log n)\f$. La 
 encore le master theorem fournit la réponse, il faut que la complexité de chaque étape soit linéaire, en \f$ O(n) \f$... le tri n'est donc pas possible !
 
@@ -189,7 +328,146 @@ Mais on peut remplacer le tri par un hachage spatial, qui lui est en \f$ O(n) \f
 ["On fast Construction of SAH-based Bounding Volume Hierarchies"](http://www.sci.utah.edu/~wald/Publications/2007/ParallelBVHBuild/fastbuild.pdf) I. Wald, 2007.\n
 (_remarque :_ si vous ne lisez qu'un seul article de construction d'arbre cette année, lisez celui-la...)
 
+\code
+struct Bucket
+{
+    BBox bounds;
+    int n;
+};
+#define BUCKETS_MAX 16
 
+int build_node( const int begin, const int end )
+{
+    assert(end > begin);
+    
+    // construire l'englobant des centres des triangles
+    BBox cbounds= centroid_bounds(begin, end);
+    // construire aussi l'englobant des triangles
+    BBox bounds= triangles_bounds(begin, end);
+    
+    // compare le cout de la repartition sur chaque axe et garde le meilleur...
+    float area= bounds.area();    
+    int min_axis= -1;
+    int min_index= -1;
+    float min_cost= FLT_MAX;
+    for(int axis= 0; axis < 3; axis++)
+    {
+        // hachage spatial
+        Bucket buckets[BUCKETS_MAX];
+        
+        for(int i= begin; i < end; i++)
+        {
+            int k= BUCKETS_MAX * (triangles[i].centroid(axis) - cbounds.pmin(axis)) 
+                / (cbounds.pmax(axis) - cbounds.pmin(axis));
+            if(k <= 0) k= 0;
+            if(k >= BUCKETS_MAX) k= BUCKETS_MAX -1;
+            
+            buckets[k].bounds.insert(triangles[i].bounds());    // englobant des triangles de la cellule k
+            buckets[k].n++;                                     // nombre de triangles de la cellule k
+        }
+        
+        // evalue chaque repartition possible : fils 1 cellules entre 0 et i, le fils 2 recupere les autres...
+        // 1|n-1, 2|n-2, 3|n-3 ... n-1|1
+        for(int i= 1; i < BUCKETS_MAX-1; i++)
+        {
+            BBox left;
+            int left_n= 0;
+            for(int k= 0; k < i; k++)                           // cellules de 0 à i
+            {
+                left_n+= buckets[k].n;
+                left.insert(buckets[k].bounds);
+            }
+
+            BBox right;
+            int right_n= 0;
+            for(int k= i; k < BUCKETS_MAX; k++)                 // cellules de i a n
+            {
+                right_n+= buckets[k].n;
+                right.insert(buckets[k].bounds);
+            }
+            
+            // evalue le cout de la repartition
+            float cost= 2                                       // 2 tests rayon/boite
+                + left.area() / area * left_n                   // + visites du fils 1 * triangles du fils 1
+                + right.area() / area * right_n;                // + visites du fils 2 * triangles du fils 2 
+                
+            if(cost < min_cost)                                 // garde la meilleure repartition
+            {
+                min_cost= cost;
+                min_axis= axis;
+                min_index= i;
+            }
+        }
+    }
+    
+    // repartir les triangles 
+    int m= begin;
+    if(min_axis != -1)
+    {
+        auto *p= std::partition(triangles.data() + begin, triangles.data() + end, 
+            bucket_less(min_index, min_axis, cbounds));
+        m= std::distance(triangles.data(), p);
+    }
+    
+    if(m == begin || m == end)
+    {
+        // construit une feuille si la partition est degeneree,
+        // ou si repartir les triangles est moins interressant que de construire une feuille de plusieurs triangles...
+        // quel est le cout de n triangles ?
+        
+        int index= int(nodes.size());
+        nodes.push_back( {bounds.pmin, bounds.pmax, -begin, -end} );
+        return index;
+    }
+    
+    // repartir les triangles et construire les fils du noeud
+    int left= build_node(nodes, begin, m);
+    int right= build_node(nodes, m, end);
+    
+    // construire le noeud
+    int index= int(nodes.size());
+    nodes.push_back( {bounds.pmin, bounds.pmax, left, right} );
+    return index;
+}
+\endcode
+
+## et ça marche ?
+
+on peut évaluer le cout des arbres construit par les solutions précédentes (_et les comparer au temps de rendu mesurés..._) :
+- solution 1 : trier les triangles et répartir chaque moitiée dans un fils, construction BVH 0.6s, rendu 28s, cout 177,
+- solution 2 : répartir les triangles dans chaque fils en fonction de leur position dans l'englobant, construction BVH 0.1s, rendu 10s, cout 106, 
+- solution 2+ : idem solution 2, mais évalue le cout sur chaque axe et utilise la meilleure répartition, construction BVH 0.2s, rendu 8s, cout 112,
+- solution 3 : minimisation du SAH par hachage spatial, construction BVH 0.8s, rendu 6s, cout 86.
+
+ainsi que le nombre de noeuds et de feuilles visités : 
+- solution 1 : rendu 28s, cout 177, noeuds visités 156, feuilles 20
+- solution 2 : rendu 10s, cout 106, noeuds visités 86, feuilles 20
+- solution 2+ : rendu 8s, cout 116, noeuds visités 96, feuilles 20
+- solution 3 : rendu 6s, cout 86, noeuds visités 66, feuilles 20
+
+c'est pas mal, effectivement, évaluer plusieurs répartitions pour construire chaque noeud de l'arbre prend un peu de temps, mais les intersections 
+rayon/arbre sont nettement plus rapides.
+
+autre remarque : le cout ne représente pas exactement le temps d'exécution, par exemple pour les solutions 2 et 2+...
+
+
+### peut mieux faire...
+
+il est quand meme dommage de créer autant de feuilles, non ?? le cout d'un noeud donne une indication : on peut arreter la construction de l'arbre
+et créer une feuille, lorsque le plus petit cout estimé est plus grand que tester les T triangles. et par construction, s'il y a moins de noeuds et de 
+feuilles, le cout total de l'arbre sera plus petit.
+
+- solution 2+ : noeuds 524533, cout 116, noeuds visités 96, feuilles 20 vs noeuds 270889, cout 106, noeuds visités 77, feuilles 9 
+- solution 3 : noeuds 524533, cout 86, noeuds visités 66, feuilles 20 vs noeuds 262013, cout 77, noeuds visités 53, feuilles 7
+
+le temps d'exécution diminue légèrement mais surtout l'arbre contient beaucoup moins de noeuds internes et sera plus compact en mémoire.
+par contre, les feuilles contiennent plus de triangles qu'il faudra tester.
+
+
+# parcours efficace
+
+Tous les algorithmes de parcours visitent tous les noeuds et toutes les feuilles le long du rayon. Par contre, certains sont plus rapides que d'autres...
+ils ne parcourent que la partie strictement nécessaire de l'arbre pour trouver la feuille contenant le triangle touché par le rayon.
 
 
 */
