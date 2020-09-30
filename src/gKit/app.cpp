@@ -27,24 +27,22 @@ int App::run( )
 {
     if(init() < 0)
         return -1;
-
+    
     // configure openGL
     glViewport(0, 0, window_width(), window_height());
-
+    
     // gestion des evenements
     while(events(m_window))
     {
-        
-        //~ if(update(global_time(), delta_time()) < 0)
         if(prerender() < 0)
             break;
         
         if(render() < 1)
             break;
-
+        
         if(postrender() < 0)
             break;
-
+        
         // presenter le resultat
         // force openGL a finir d'executer toutes les commandes, 
         // cf https://www.khronos.org/opengl/wiki/Swap_Interval#GPU_vs_CPU_synchronization
@@ -53,7 +51,7 @@ int App::run( )
         
         SDL_GL_SwapWindow(m_window);
     }
-
+    
     if(quit() < 0)
         return -1;
     return 0;
