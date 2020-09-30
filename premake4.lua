@@ -43,8 +43,6 @@ solution "gKit2light"
         linkoptions { "-flto"}
     
     configuration { "windows", "gmake", "x32" }
-        location "build"
-        debugdir "."
         buildoptions { "-U__STRICT_ANSI__"} -- pour definir M_PI
         buildoptions { "-std=c++11", "-fpermissive" }
         defines { "WIN32", "_WIN32" }
@@ -53,8 +51,6 @@ solution "gKit2light"
         links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
     
     configuration { "windows", "codeblocks", "x32" }
-        location "build"
-        debugdir "."
         buildoptions { "-U__STRICT_ANSI__"} -- pour definir M_PI
         buildoptions { "-std=c++11", "-fpermissive" }
         defines { "WIN32", "_WIN32" }

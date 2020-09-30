@@ -13,11 +13,13 @@
     #include "GL/glew.h"
 
     #ifdef WIN32
-    #  ifdef __MINGW32__    // codeblocks
+    #  ifdef __MINGW32__        // codeblocks
     #    define DEBUGCALLBACK __stdcall
     #  elif defined(_MSC_VER)   // vstudio
     #    define DEBUGCALLBACK 
     #  endif
+    #else                       // linux
+    #  define DEBUGCALLBACK 
     #endif
 #endif
 
