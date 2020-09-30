@@ -42,23 +42,31 @@ solution "gKit2light"
         buildoptions { "-flto"}
         linkoptions { "-flto"}
     
-    configuration { "windows" }
-        defines { "WIN32", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
-        defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
-    
     configuration { "windows", "gmake", "x32" }
-        buildoptions { "-std=c++11"}
+        location "build"
+        debugdir "."
+        buildoptions { "-U__STRICT_ANSI__"} -- pour definir M_PI
+        buildoptions { "-std=c++11", "-fpermissive" }
+        defines { "WIN32", "_WIN32" }
         includedirs { "extern/mingw/include" }
         libdirs { "extern/mingw/lib" }
         links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
     
     configuration { "windows", "codeblocks", "x32" }
-        buildoptions { "-std=c++11"}
+        location "build"
+        debugdir "."
+        buildoptions { "-U__STRICT_ANSI__"} -- pour definir M_PI
+        buildoptions { "-std=c++11", "-fpermissive" }
+        defines { "WIN32", "_WIN32" }
         includedirs { "extern/mingw/include" }
         libdirs { "extern/mingw/lib" }
         links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
     
 if _PREMAKE_VERSION >="5.0" then
+    configuration { "windows" }
+        defines { "WIN32", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
+        defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
+
     configuration { "windows", "vs2017" }
         location "build"
         debugdir "."
