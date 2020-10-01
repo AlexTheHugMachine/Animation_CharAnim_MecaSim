@@ -592,7 +592,7 @@ rayons, ceux qui viennent de la camera, par exemple, ni pour ceux qui testent le
 l'estimation du nombre de visite de chaque noeud est exacte pour des _droites_ uniformes, mais il y a plusieurs rayons sur chaque droite qui traverse
 un noeud... 
 
-[”On Quality Metrics of Bounding Volume Hierarchies”](https://mediatech.aalto.fi/~timo/publications/aila2013hpg_paper.pdf) 
+[”On Quality Metrics of Bounding Volume Hierarchies”](https://research.nvidia.com/publication/quality-metrics-bounding-volume-hierarchies) 
 T. Aila, T. Karras, S. Laine, 2013\n
 compare les différentes solutions et vérifie que l'on peut améliorer la qualité de l'estimation en tenant compte de l'aire des triangles/de la géométrie
 présente dans l'englobant d'un noeud. 
