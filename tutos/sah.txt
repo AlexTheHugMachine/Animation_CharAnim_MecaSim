@@ -29,7 +29,7 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
         if(end - begin < 2)			                // construire une feuille, s'il ne reste plus qu'un triangle
         {
             int index= nodes.size();
-            nodes.push_back( {bounds.pmin, bounds.pmax, -begin, -end} );
+            nodes.push_back( make_leaf(bounds, begin, end) );
             return index;
         }
         
@@ -45,7 +45,7 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
         
         // construire le noeud
         int index= nodes.size();
-        nodes.push_back( {bounds.pmin, bounds.pmax, left, right} );
+        nodes.push_back( make_node(bounds, left, right) );
         return index;
     }
     \endcode
@@ -73,7 +73,7 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
         if(m == begin || m == end)              // l'englobant est degenere, construire une feuille
         {
             int index= int(nodes.size());
-            nodes.push_back( {bounds.pmin, bounds.pmax, -begin, -end} );
+            nodes.push_back( make_leaf(bounds, begin, end) );
             return index;
         }
         
@@ -83,7 +83,7 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
         
         // construire le noeud
         int index= int(nodes.size());
-        nodes.push_back( {bounds.pmin, bounds.pmax, left, right} );
+        nodes.push_back( make_node(bounds, left, right) );
         return index;
     }    
     \endcode
@@ -284,7 +284,7 @@ int build_node( const int begin, const int end )
     if(m == begin || m == end)                      // construire une feuille si la partition est degeneree
     {
         int index= int(nodes.size());
-        nodes.push_back( {bounds.pmin, bounds.pmax, -begin, -end} );
+        nodes.push_back( make_leaf(bounds, begin, end) );
         return index;
     }
     
@@ -294,7 +294,7 @@ int build_node( const int begin, const int end )
     
     // construire le noeud
     int index= int(nodes.size());
-    nodes.push_back( {bounds.pmin, bounds.pmax, left, right} );
+    nodes.push_back( make_node(bounds, left, right) );
     return index;
 }
 \endcode
@@ -416,7 +416,7 @@ int build_node( const int begin, const int end )
         // quel est le cout de n triangles ?
         
         int index= int(nodes.size());
-        nodes.push_back( {bounds.pmin, bounds.pmax, -begin, -end} );
+        nodes.push_back( make_leaf(bounds, begin, end) );
         return index;
     }
     
@@ -426,7 +426,7 @@ int build_node( const int begin, const int end )
     
     // construire le noeud
     int index= int(nodes.size());
-    nodes.push_back( {bounds.pmin, bounds.pmax, left, right} );
+    nodes.push_back( make_node(bounds, left, right) );
     return index;
 }
 \endcode
@@ -457,8 +457,10 @@ il est quand meme dommage de créer autant de feuilles, non ?? le cout d'un noeu
 et créer une feuille, lorsque le plus petit cout estimé est plus grand que tester les T triangles. et par construction, s'il y a moins de noeuds et de 
 feuilles, le cout total de l'arbre sera plus petit.
 
-- solution 2+ : noeuds 524533, cout 116, noeuds visités 96, feuilles 20 vs noeuds 270889, cout 106, noeuds visités 77, feuilles 9 
-- solution 3 : noeuds 524533, cout 86, noeuds visités 66, feuilles 20 vs noeuds 262013, cout 77, noeuds visités 53, feuilles 7
+- solution 2+ : noeuds 524533, cout 116, noeuds visités 96, feuilles 20\n
+    vs noeuds 270889, cout 106, noeuds visités 77, feuilles 9 
+- solution 3 : noeuds 524533, cout 86, noeuds visités 66, feuilles 20\n
+    vs noeuds 262013, cout 77, noeuds visités 53, feuilles 7
 
 le temps d'exécution diminue légèrement mais surtout l'arbre contient beaucoup moins de noeuds internes et sera plus compact en mémoire.
 par contre, les feuilles contiennent plus de triangles qu'il faudra tester.
@@ -466,8 +468,152 @@ par contre, les feuilles contiennent plus de triangles qu'il faudra tester.
 
 # parcours efficace
 
-Tous les algorithmes de parcours visitent tous les noeuds et toutes les feuilles le long du rayon. Par contre, certains sont plus rapides que d'autres...
-ils ne parcourent que la partie strictement nécessaire de l'arbre pour trouver la feuille contenant le triangle touché par le rayon.
+Tous les algorithmes de parcours visitent tous les noeuds et toutes les feuilles touchés par le rayon. Par contre, certains sont plus rapides que 
+d'autres... ils ne parcourent que la partie strictement nécessaire de l'arbre pour trouver la feuille contenant le triangle touché par le rayon.
+
+<IMG SRC="parcours1.png" width="45%"> 
+
+Si l'on souhaite trouver rapidement l'intersection la plus proche de l'origine du rayon, il est necessaire de parcourir les feuilles dans le bon ordre :
+par position croissante le long du rayon. c'est direct lorsque les englobants sont séparés, mais moins évident lorsqu'ils se chevauchent comme dans 
+les BVH :
+
+<IMG SRC="parcours2.png" width="45%"> 
+
+et le problème est de choisir dans quel ordre visiter les fils des noeuds internes pour parcourir les feuilles le long du rayon en s'éloignant de l'origine 
+du rayon. Les différents cas sont représentés sur le schéma précédent. Lorsque les englobants des fils sont séparés, pas de problème, il suffit de
+comparer la position des points d'entrés dans les englobants. Lorsqu'ils se chevauchent partiellement, la comparaison des points 
+d'entrés fournit également la bonne réponse. Reste le dernier cas, les points d'entrée sont confondus, et il suffit de comparer les points de sorties.
+
+On peut résumer le choix de l'ordre de visite des fils :
+\code
+visit( node, ray )
+{
+    { bool left, float left_tmin, float left_tmax } = left_node.bounds.intersect(ray);
+    { bool right, float right_tmin, float right_tmax } = right_node.bounds.intersect(ray);
+
+    if(left && right)                       // les 2 fils sont touches par le rayon
+    {
+        if(left_tmin < right_tmin)          // parcours de gauche a droite
+        {
+            // les points d'entree sont differents
+            visit(left_node, ray);
+            visit(right_node, ray);
+        }
+        else if(left_tmin == right_tmim && left_tmax < right_tmax)
+        {
+            // si les points d'entree sont egaux, comparer les points de sorties
+            visit(left_node, ray);
+            visit(right_node, ray);
+        }
+        else                                // dans les autres cas, parcours de droite a gauche
+        {                                   
+            visit(right_node, ray);
+            visit(left_node, ray);
+        }
+    }
+    else if(left)                           // uniquement le fils gauche
+        visit(left_node, ray);
+    else if(right)                          // uniquement le fils droit
+        visit(right_node, ray);
+}
+\endcode
+
+En pratique, il est plus simple (et plus robuste numériquement) de comparer la position du milieu des intersections avec les englobants :
+\code
+visit( node, ray )
+{
+    { bool left, float left_tmin, float left_tmax } = left_node.bounds.intersect(ray);
+    { bool right, float right_tmin, float right_tmax } = right_node.bounds.intersect(ray);
+
+    if(left && right)                       // les 2 fils sont touches par le rayon
+    {
+        float left_centroid= (left_tmin + left_tmax) / 2;
+        float right_centroid= (right_tmin, right_tmax) / 2;
+        if(left_centroid < right_centroid)  // parcours de gauche a droite
+        {
+            visit(left_node, ray);
+            visit(right_node, ray);
+        }
+        else                                // parcours de droite a gauche
+        {                       
+            visit(right_node, ray);
+            visit(left_node, ray);
+        }
+    }
+    else if(left)                           // uniquement le fils gauche
+        visit(left_node, ray);
+    else if(right)                          // uniquement le fils droit
+        visit(right_node, ray);
+}
+\endcode
+
+## et alors ? 
+
+sur le musée, 1500000 triangles 
+
+<IMG SRC="history_bvh.png" width="45%"> 
+
+- parcours classique, 4.5s, cf \ref acceleration
+- parcours ordonné, 2.5s
+
+pas mal, pour quelques lignes de code...
+
+## peut mieux faire...
+
+Le parcours présenté est récursif et on a supposé que le prochain noeud parcouru était un des fils du noeud, mais ce choix n'est pas optimal, 
+il ne garanti pas de visiter les feuilles dans l'ordre croissant le long du rayon...
+
+que se passe-t-il dans ce cas : 
+
+<IMG SRC="parcours3.png" width="35%"> 
+
+le parcours récursif commence par visiter le noeud bleu et ses fils, puis visite le noeud rouge et ses fils, alors que le bon ordre serait plutot : 
+    - fils gauche bleu,
+    - fils gauche rouge,
+    - fils droit bleu,
+    - fils droit rouge,
+    
+c'est à dire l'ordre _global_ des fils... le prochain noeud à visiter n'est pas un des fils du noeud, mais le plus proche de l'origine du rayon, 
+parmi ceux qui reste à visiter...
+
+on peut construire ce parcours en conservant une file de noeuds à visiter, au lieu d'une pile. mais dans la plupart des cas, extraire le prochain
+noeud à visiter en parcourant la file est trop long, et le gain sur le nombre de noeuds visités ne compense pas le temps de mise à jour de la file.
+
+les détails sont dans :\n
+["Ray tracing complex scenes"](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.124.4731&rep=rep1&type=pdf) T.L. Kay, J.T. Kajiya, 1986
+
+
+# ça marche ? ou pas (trop) ?
+
+il existe de nombreuses manières de construire des BVH, et certaines fonctionnent mieux que d'autres. Il reste tout de même une question : 
+comment estimer _correctement_ le temps moyen d'intersection d'un rayon. l'heuristique présentée dans les sections précédentes peut etre assez 
+éloignée de la réalité. _pourquoi ?_ le modèle de cout suppose que les rayons sont distribués uniformement, et ce n'est pas le cas pour tous les 
+rayons, ceux qui viennent de la camera, par exemple, ni pour ceux qui testent les ombres et les pénombres d'une source de lumière. Autre limitation,
+l'estimation du nombre de visite de chaque noeud est exacte pour des _droites_ uniformes, mais il y a plusieurs rayons sur chaque droite qui traverse
+un noeud... 
+
+[”On Quality Metrics of Bounding Volume Hierarchies”](https://mediatech.aalto.fi/~timo/publications/aila2013hpg_paper.pdf) 
+T. Aila, T. Karras, S. Laine, 2013\n
+compare les différentes solutions et vérifie que l'on peut améliorer la qualité de l'estimation en tenant compte de l'aire des triangles/de la géométrie
+présente dans l'englobant d'un noeud. 
+
+[”Cost prediction for ray shooting in octrees”](http://cis.poly.edu/chiang/cprt-CGTA-final.pdf)
+B. Aronov, H. Brönnimann, A.Y. Chang, Y.J. Chiang, 2005\n
+introduit une formulation différente, qui détermine le nombre moyen de _rayons_ qui visitent chaque noeud. 
+
+le principe de l'estimation est relativement intuitif : si une droite traverse l'englobant d'un noeud sans toucher de géométrie (sans créer un point 
+d'intersection), on considère qu'elle ne porte qu'un seul rayon. par contre, si une droite touche un triangle, elle genere 2 rayons, si elle touche 2 
+triangles, elle genere 3 rayons, etc. Si on peut estimer ou connaitre le nombre moyen d'intersections pour un ensemble uniforme de droites, on peut
+estimer le nombre de rayons... 
+
+la solution est très simple, en utilisant une fois de plus la même propriete : la somme des aires des triangles divisée par l'aire de l'englobant... 
+la définition se trouve aussi dans :\n
+["Some Integral Geometry Tools to Estimate the Complexity of 3D Scenes"](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.31.8104), 
+F. Cazals, M. Sbert, 1997.
+
+par contre, pour faire cette estimation pendant la construction d'un bvh, il va falloir déterminer l'aire de la géométrie présente dans l'englobant
+du noeud, et donc calculer l'aire de l'intersection des triangles (avec l'englobant) ... c'est numériquement assez pénible à faire (de manière robuste), 
+et aussi très (trop) long à calculer...
 
 
 */
