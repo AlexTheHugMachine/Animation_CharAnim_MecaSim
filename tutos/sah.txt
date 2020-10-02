@@ -587,10 +587,10 @@ les détails sont dans :\n
 
 il existe de nombreuses manières de construire des BVH, et certaines fonctionnent mieux que d'autres. Il reste tout de même une question : 
 comment estimer _correctement_ le temps moyen d'intersection d'un rayon. l'heuristique présentée dans les sections précédentes peut etre assez 
-éloignée de la réalité. _pourquoi ?_ le modèle de cout suppose que les rayons sont distribués uniformement, et ce n'est pas le cas pour tous les 
-rayons, ceux qui viennent de la camera, par exemple, ni pour ceux qui testent les ombres et les pénombres d'une source de lumière. Autre limitation,
-l'estimation du nombre de visite de chaque noeud est exacte pour des _droites_ uniformes, mais il y a plusieurs rayons sur chaque droite qui traverse
-un noeud... 
+éloignée de la réalité. par exemple, les solutions 2 et 2+, le temps de parcours mesuré ne correspond pas à l'estimation... _pourquoi ?_ le modèle de 
+cout suppose que les rayons sont distribués uniformement, et ce n'est pas le cas pour tous les rayons, ceux qui viennent de la camera, par exemple, 
+ni pour ceux qui testent les ombres et les pénombres d'une source de lumière. Autre limitation, l'estimation du nombre de visite de chaque noeud 
+est exacte pour des _droites_ uniformes, mais il y a plusieurs rayons sur chaque droite qui traverse un noeud... 
 
 [”On Quality Metrics of Bounding Volume Hierarchies”](https://research.nvidia.com/publication/quality-metrics-bounding-volume-hierarchies) 
 T. Aila, T. Karras, S. Laine, 2013\n
@@ -599,14 +599,15 @@ présente dans l'englobant d'un noeud.
 
 [”Cost prediction for ray shooting in octrees”](http://cis.poly.edu/chiang/cprt-CGTA-final.pdf)
 B. Aronov, H. Brönnimann, A.Y. Chang, Y.J. Chiang, 2005\n
-introduit une formulation différente, qui détermine le nombre moyen de _rayons_ qui visitent chaque noeud. 
+introduit une formulation différente du cout d'un noeud et d'un arbre, qui détermine le nombre moyen de _rayons_ qui visitent chaque noeud (et 
+cette estimation utilise l'aire des triangles présents dans l'englobant du noeud). 
 
-le principe de l'estimation est relativement intuitif : si une droite traverse l'englobant d'un noeud sans toucher de géométrie (sans créer un point 
-d'intersection), on considère qu'elle ne porte qu'un seul rayon. par contre, si une droite touche un triangle, elle genere 2 rayons, si elle touche 2 
-triangles, elle genere 3 rayons, etc. Si on peut estimer ou connaitre le nombre moyen d'intersections pour un ensemble uniforme de droites, on peut
+le principe de cette estimation est relativement intuitif : si une droite traverse l'englobant d'un noeud sans toucher de géométrie (sans créer un point 
+d'intersection), on considère qu'elle ne porte qu'un seul rayon. par contre, si une droite touche un triangle, elle génère 2 rayons, si elle touche 2 
+triangles, elle génère 3 rayons, etc. Si on peut estimer ou connaitre le nombre moyen d'intersections pour un ensemble uniforme de droites, on peut
 estimer le nombre de rayons... 
 
-la solution est très simple, en utilisant une fois de plus la même propriete : la somme des aires des triangles divisée par l'aire de l'englobant... 
+la solution est très simple, en utilisant une fois de plus la même propriété : la somme des aires des triangles divisée par l'aire de l'englobant... 
 la définition se trouve aussi dans :\n
 ["Some Integral Geometry Tools to Estimate the Complexity of 3D Scenes"](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.31.8104), 
 F. Cazals, M. Sbert, 1997.
@@ -614,6 +615,46 @@ F. Cazals, M. Sbert, 1997.
 par contre, pour faire cette estimation pendant la construction d'un bvh, il va falloir déterminer l'aire de la géométrie présente dans l'englobant
 du noeud, et donc calculer l'aire de l'intersection des triangles (avec l'englobant) ... c'est numériquement assez pénible à faire (de manière robuste), 
 et aussi très (trop) long à calculer...
+
+
+# comment ça, les arbres équilibrés ne sont pas efficaces ?
+
+Lorsque l'on compare les solutions 1 et 2 : 
+    - solution 1 : trier les triangles et répartir chaque moitiée dans un fils, construction BVH 0.6s, rendu 28s, cout 177,
+    - solution 2 : répartir les triangles dans chaque fils en fonction de leur position dans l'englobant, construction BVH 0.1s, rendu 10s, cout 106,
+    
+le résultat est quand même surprenant... mais il ne faut pas confondre la structure de l'arbre (la hauteur du fils gauche et du fils droit) avec la 
+méthode de répartition des triangles. Dans les arbres binaires de recherche classiques (sur des valeurs simples), répartir le même nombre de 
+valeurs dans les 2 fils produit un arbre efficace à parcourir. _pourquoi ?_ le nombre de visites des fils est equilibré, il y a autant de recherches qui 
+visitent chaque fils (lorsque les recherches sont distribuées uniformement sur les valeurs organisées dans l'arbre), et chaque fils n'est visité que 
+par la moitié des recherches. Pour obtenir le même comportement avec les BVH, il faut minimiser et équilibrer le nombre de visites des fils. Les 
+différentes méthodes de construction minimisent le nombre de visites, mais l'équilibre n'est pas explicitement recherché. Il n'est pas toujours
+possible de garantir qu'en moyenne un seul fils est visité : il faudrait que \f$ \frac{aire(F1) + aire(F2)}{aire(P)} <= 1 \f$ pour chaque 
+noeud de l'arbre.
+
+mais bien sur, on peut essayer de restructurer le bvh pour équilibrer sa structure (hauteur des 2 fils équivalente) :\n
+["Tree Rotations for Improving Bounding Volume Hierarchies"](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.331.9382&rep=rep1&type=pdf) A. Kensler, 2008
+et\n
+["Fast Insertion-Based Optimization of Bounding Volume Hierarchies"](https://dspace.cvut.cz/bitstream/handle/10467/15603/2013-Fast-Insertion-Based-Optimization-of-Bounding-Volume-Hierarchies.pdf?sequence=1) J. Bittner, M. Hapala, V. Havran, 2013
+
+_pour les curieux :_ comment construire un arbre binaire de recherche optimal, en temps raisonnable ?\n
+["Nearly Optimal Binary Search Trees"](http://edoc.mpg.de/get.epl?fid=40685&did=344677&ver=0) K. Mehlhorn, 1975
+
+_que peut-on faire (de plus) pour minimiser le nombre moyen de fils visités ?_
+
+Pour être efficace, chaque noeud devrait vérifier : \f$ \frac{aire(F1) + aire(F2)}{aire(P)} <= 1 \f$ (un seul fils visité en moyenne), lorsque ce n'est 
+pas le cas, il est possible d'utiliser plus de fils pour mieux répartir les triangles :\n
+["Shallow Bounding Volume Hierarchies for Fast SIMD Ray Tracing ofIncoherent Rays"](https://www.uni-ulm.de/fileadmin/website_uni_ulm/iui.inst.100/institut/Papers/QBVH.pdf) H. Dammertz, J. Hanika, A. Keller, 2008
+
+ ou de découper les triangles génants :\n
+["Spatial splits in bounding volume hierarchies"](https://www.nvidia.com/docs/IO/77714/sbvh.pdf) M. Stich, H. Friedrich, A. Dietrich, 2009
+
+
+
+# et si les objets bougent ? 
+
+
+# et s'il y a pleins d'instances ?
 
 
 */
