@@ -147,6 +147,7 @@ _exemple :_ on a T triangles. sans répartition, il faudra tous les tester pour 
 si on répartit les triangles en 2 sous-ensembles T1 et T2, on peut aussi calculer l'englobant F1 des triangles T1 et l'englobant F2 des triangles T2 et 
 on connait l'englobant P des T triangles. 
 
+
 _combien de tests rayon/triangle pour la répartition ?_ 
 
 on peut estimer \f$ \frac{aire(F1)}{aire(P)}\f$ et \f$ \frac{aire(F2)}{aire(P)}\f$, 
@@ -154,7 +155,7 @@ le nombre de fois ou les fils 1 et 2 seront visités. donc on fera au total \f$ 
 du fils 1, et \f$ \frac{aire(F2)}{aire(P)} \times T2 \f$ tests rayon/triangle pour le fils 2. 
 
 Pour les droites visitant les 2 fils, on fera autant de tests rayon/triangle que sans la répartition, par contre dans les autres cas, on fera moins de
-tests, mais il faudra aussi tester les englobants des 2 fils.
+tests, mais il faudra aussi tester les englobants des 2 fils. La répartition ne sera interessante que si on fait moins de T tests rayon/triangle en moyenne.
 
 les 2 répartitions utilisées pour construire le BVH reviennent soit à controler le nombre de triangles T1 et T2, soit à controler les englobants F1 et F2 :
     - solution 1 : T1= T/2, T2= T/2, puis on estime les englobants F1 et F2,
@@ -162,6 +163,90 @@ les 2 répartitions utilisées pour construire le BVH reviennent soit à control
 
 _remarque :_ quand on coupe l'englobant P en 2 moitiées, quelle est l'aire de chaque moitiée ? _indication :_ ce n'est pas la moitiée de l'aire de P... 
 on ne découpe le cube que sur un seul axe, pas sur tous...
+
+
+_quel est le meilleur axe pour répartir les triangles ?_
+
+Pour les 2 solutions précédentes, au lieu de choisir l'axe le plus étiré de l'englobant des triangles, on peut maintenant estimer quel est l'axe le plus 
+interessant. il suffit d'estimer le nombre de tests rayon/triangle pour chaque axe et d'utiliser l'axe avec l'estimation la plus petite :
+
+\code
+// exemple, tester les repartitions sur 3 axes et garder la meilleure...
+int build_node( const int begin, const int end )
+{
+    assert(begin < end);
+    
+    // construire l'englobant des centres des triangles
+    BBox cbounds= centroid_bounds(begin, end);
+    // construire aussi l'englobant des triangles
+    BBox bounds= triangles_bounds(begin, end);
+    
+    float area= bounds.area();
+    float min_cost= FLT_MAX;
+    int min_axis= -1;
+    // teste les 3 axes
+    for(int axis= 0; axis < 3; axis++)
+    {
+        // repartir les triangles 
+        BBox left, right;
+        int left_n= 0, right_n= 0;
+        
+        float cut= cbounds.centroid(axis);          // milieu de l'axe
+        for(int i= begin; i < end; i++)
+        {
+            if(triangles[i].centroid(axis) < cut)  // a gauche
+            {
+                left_n++;
+                left= BBox(left, triangles[i].bounds());
+            }
+            else                                    // a droite
+            {
+                right_n++;
+                right= BBox(right, triangles[i].bounds());
+            }
+        }
+    
+        float cost= 
+              left.area() / area * left_n           // + visites du fils 1 * triangles du fils 1
+            + right.area() / area * right_n;        // + visites du fils 2 * triangles du fils 2 
+        
+        if(cost < min_cost)                         // conserve la meilleure repartition
+        {
+            min_cost= cost;
+            min_axis= axis;
+        }
+    }
+    
+    int m= begin;
+    if(min_axis != -1)
+    {
+        // repartir les triangles 
+        auto *p= std::partition(triangles.data() + begin, triangles.data() + end, 
+            centroid_less(min_axis, cbounds.centroid(min_axis));
+        m= std::distance(triangles.data(), p);
+    }
+    
+    if(m == begin || m == end)                      // construire une feuille si la partition est degeneree
+    {
+        int index= int(nodes.size());
+        nodes.push_back( make_leaf(bounds, begin, end) );
+        return index;
+    }
+    
+    // repartir les triangles et construire les fils du noeud
+    int left= build_node(begin, m);
+    int right= build_node(m, end);
+    
+    // construire le noeud
+    int index= int(nodes.size());
+    nodes.push_back( make_node(bounds, left, right) );
+    return index;
+}
+\endcode
+
+_pour les curieux :_ combien de noeuds font un choix différent ? construisez un arbre avec cette solution et comparez l'axe sélectionné 
+avec l'axe le plus étiré. est-ce que l'heuristique est correcte ? ou est-elle régulièrement fausse ? pouvez-vous déterminer dans quel cas ?
+
 
 # combien de répartitions ?
 
@@ -225,79 +310,6 @@ d'un fils, on estime le temps nécessaire à tester l'intersection avec le sous 
 
 mais comme vu au dessus, on ne peut pas tester la totalité des répartitions possible de triangles, on va 'juste' en tester un nombre raisonnable.
 
-_remarque :_ on peut tout de même utiliser cette estimation pour choisir le meilleur axe pour répartir les triangles (cf solution 2+) :
-\code
-int build_node( const int begin, const int end )
-{
-    assert(begin < end);
-    
-    // construire l'englobant des centres des triangles
-    BBox cbounds= centroid_bounds(begin, end);
-    // construire aussi l'englobant des triangles
-    BBox bounds= triangles_bounds(begin, end);
-    
-    float area= bounds.area();
-    float min_cost= FLT_MAX;
-    int min_axis= -1;
-    // teste les 3 axes
-    for(int axis= 0; axis < 3; axis++)
-    {
-        // repartir les triangles 
-        BBox left, right;
-        int left_n= 0, right_n= 0;
-        
-        float cut= cbounds.centroid(axis);          // milieu de l'axe
-        for(int i= begin; i < end; i++)
-        {
-            if(triangles[i].centroid(axis) < cut)  // a gauche
-            {
-                left_n++;
-                left= BBox(left, triangles[i].bounds());
-            }
-            else                                    // a droite
-            {
-                right_n++;
-                right= BBox(right, triangles[i].bounds());
-            }
-        }
-    
-        float cost= 2                               // 2 tests rayon/boite
-            + left.area() / area * left_n           // + visites du fils 1 * triangles du fils 1
-            + right.area() / area * right_n;        // + visites du fils 2 * triangles du fils 2 
-        
-        if(cost < min_cost)                         // conserve la meilleure repartition
-        {
-            min_cost= cost;
-            min_axis= axis;
-        }
-    }
-    
-    int m= begin;
-    if(min_axis != -1)
-    {
-        // repartir les triangles 
-        auto *p= std::partition(triangles.data() + begin, triangles.data() + end, 
-            centroid_less(min_axis, cbounds.centroid(min_axis));
-        m= std::distance(triangles.data(), p);
-    }
-    
-    if(m == begin || m == end)                      // construire une feuille si la partition est degeneree
-    {
-        int index= int(nodes.size());
-        nodes.push_back( make_leaf(bounds, begin, end) );
-        return index;
-    }
-    
-    // repartir les triangles et construire les fils du noeud
-    int left= build_node(begin, m);
-    int right= build_node(m, end);
-    
-    // construire le noeud
-    int index= int(nodes.size());
-    nodes.push_back( make_node(bounds, left, right) );
-    return index;
-}
-\endcode
 
 Une solution classique pour tester un nombre raisonnable de répartitions est de trier les triangles le long de chaque axe et de tester chaque répartition 
 obtenue en balayant les triangles par ordre croissant : 
@@ -310,7 +322,7 @@ obtenue en balayant les triangles par ordre croissant :
 ce qui nous donne T-1 répartitions possibles par axe. on évalue le cout de chacune et on garde la meilleure, la plus petite, que l'on utilise pour 
 construire les 2 fils et recommencer.
 
-_reamrque :_ oui, si le temps estimé est plus grand que \f$ T \times C_{triangle} \f$ (tester tous les triangles) la répartition n'est pas très 
+_remarque :_ oui, si le temps estimé est plus grand que \f$ T \times C_{triangle} \f$ (tester tous les triangles) la répartition n'est pas très 
 interressante, et c'est probablement le bon moment d'arreter la recursion et de créer une feuille dans l'arbre.
 
 Les détails complets de cet algorithme sont dans :\n
