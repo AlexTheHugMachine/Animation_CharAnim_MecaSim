@@ -248,23 +248,26 @@ protected:
         
         // construire le fils gauche
         // les triangles se trouvent dans [begin .. m)
-        BBox bounds_left= triangles[begin].bounds();            // englobant du premier triangle
-        for(int i= begin+1; i < m; i++)                         // insere les sommets des autres triangles
-            bounds_left.insert(triangles[i].bounds());
-        
+        BBox bounds_left= triangle_bounds(begin, m);
         int left= build(bounds_left, begin, m);
         
         // on recommence pour le fils droit
         // les triangles se trouvent dans [m .. end)
-        BBox bounds_right= triangles[m].bounds();
-        for(int i= m+1; i < end; i++)
-            bounds_right.insert(triangles[i].bounds());
-        
+        BBox bounds_right= triangle_bounds(m, end);
         int right= build(bounds_right, m, end);
         
         int index= nodes.size();
         nodes.push_back(make_node(bounds, left, right));
         return index;
+    }
+    
+    BBox triangle_bounds( const int begin, const int end )
+    {
+        BBox bbox= triangles[begin].bounds();
+        for(int i= begin +1; i < end; i++)
+            bbox.insert(triangles[i].bounds());
+        
+        return bbox;
     }
     
     void intersect( const int index, RayHit& ray, const Vector& invd ) const

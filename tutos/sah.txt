@@ -24,7 +24,7 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
         assert(begin < end);
         
         // construire l'englobant des triangles
-        BBox bounds= triangles_bounds(begin, end);
+        BBox bounds= triangle_bounds(begin, end);
         
         if(end - begin < 2)			                // construire une feuille, s'il ne reste plus qu'un triangle
         {
@@ -60,7 +60,7 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
         // construire l'englobant des centres des triangles
         BBox cbounds= centroid_bounds(begin, end);
         // construire aussi l'englobant des triangles
-        BBox bounds= triangles_bounds(begin, end);
+        BBox bounds= triangle_bounds(begin, end);
         
         // axe le plus etire de l'englobant
         int axis= cbounds.max(); 
@@ -179,7 +179,7 @@ int build_node( const int begin, const int end )
     // construire l'englobant des centres des triangles
     BBox cbounds= centroid_bounds(begin, end);
     // construire aussi l'englobant des triangles
-    BBox bounds= triangles_bounds(begin, end);
+    BBox bounds= triangle_bounds(begin, end);
     
     float area= bounds.area();
     float min_cost= FLT_MAX;
@@ -355,7 +355,7 @@ int build_node( const int begin, const int end )
     // construire l'englobant des centres des triangles
     BBox cbounds= centroid_bounds(begin, end);
     // construire aussi l'englobant des triangles
-    BBox bounds= triangles_bounds(begin, end);
+    BBox bounds= triangle_bounds(begin, end);
     
     // compare le cout de la repartition sur chaque axe et garde le meilleur...
     float area= bounds.area();    
