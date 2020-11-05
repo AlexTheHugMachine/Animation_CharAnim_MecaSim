@@ -211,6 +211,7 @@ tutosM2 = {
 
     "tuto_is",
     "tuto_raytrace_fragment",
+    "tuto_raytrace_compute",
 }
 
 for i, name in ipairs(tutosM2) do
