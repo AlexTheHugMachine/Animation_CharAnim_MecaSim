@@ -21,11 +21,11 @@ GLuint texture= { ... };
 GLint unit= 0;
 glBindImageTexture( unit, /* texture */ texture, /* level */ 0, 
     /* layered */ GL_TRUE, /* layer */ 0, 
-    /* access */ GL_WRITE_ONLY, /* format */ GL_RGBA8UI );
+    /* access */ GL_WRITE_ONLY, /* format */ GL_RGBA8 );
 \endcode
 
 Pour des textures 2d classiques, les paramètres layered et layer sont ignorés. Il faut donc préciser la texture, le niveau de mipmap à sélectionner, le type d'accès 
-(lecture seule `GL_READ_ONLY`, écriture seule `GL_WRITE_ONLY`, mixte `GL_READ_WRITE`) et le format interne des texels (GL_RGBA8UI pour les textures classiques 
+(lecture seule `GL_READ_ONLY`, écriture seule `GL_WRITE_ONLY`, mixte `GL_READ_WRITE`) et le format interne des texels (GL_RGBA8 pour les textures classiques 
 avec des valeurs 0..255 par canal et 4 canaux, rgb et a) à utiliser lorsque le shader écrit une valeur dans l'image.
 
 Dernière étape, fournir au shader, le numéro de l'unité sur laquelle la texture est sélectionnée, c'est le même principe que pour les unités de textures et les samplers :
@@ -48,25 +48,25 @@ La déclaration doit aussi être décorée avec le format des données en cas de
 est sélectionnée :
 \code
 layout(binding= 0) writeonly uniform image2D image;
-layout(binding= 0, rgba8ui) readonly uniform uimage2D image;
-layout(binding= 0, rgba8ui) coherent uniform uimage2D image;
+layout(binding= 0, rgba8) readonly uniform image2D image;
+layout(binding= 0, rgba8) coherent uniform image2D image;
 \endcode
 
 __attention :__ les accès déclarés dans le shader et par l'application (cf `glBindImageTexture()`) doivent être les mêmes.
 
 Tous les formats de textures ne sont pas disponibles, seuls les versions 1, 2 et 4 canaux existent : `r`, `rg`, `rgba`, par contre les formats sont les memes, 8bits entiers, 
 16bits réels, 32bits réels et entiers, signés ou pas. Ils sont désignés par les suffixes : `8`, `16` ou `32` pour la taille et par `i`, `ui` ou `f` pour entier, entier non signé et réel.
-Voici les types courants : `rgba8ui`, `rgba32f`, `r32ui`.
+Voici les types courants : `rgba8`, `rgba32f`, `r32ui`.
 
 ### lecture
 
-c'est la fonction `imageLoad( image, ivec2 pixel )` qui permet de lire une valeur. Les coordonnées du pixel sont comprises entre 0 et largur / hauteur. La valeur renvoyée
+c'est la fonction `imageLoad( image, ivec2 pixel )` qui permet de lire une valeur. Les coordonnées du pixel sont comprises entre 0 et largeur / hauteur. La valeur renvoyée
 dépend de la déclaration de l'image. `image2D` renvoie un vec4, `uimage2D` renvoie un uvec4, etc.
 
 L'image doit etre déclarée en lecture :
 \code
 // shader
-layout(binding= 0, rgba8ui) readonly uniform uimage2D image;
+layout(binding= 0, rgba8) readonly uniform image2D image;
 
 void main( )
 {
@@ -81,7 +81,7 @@ GLint unit= 0;
 
 glBindImageTexture( unit, texture, /* level*/ 0, 
     /* layered */ GL_TRUE, /* layer */ 0, 
-    /* access */ GL_READ_ONLY, /* format*/ GL_RGBA8UI );
+    /* access */ GL_READ_ONLY, /* format*/ GL_RGBA8 );
     
 GLint location= glGetUniformLocation(program, "image");
 glUniform1i(location, unit);    
@@ -109,7 +109,7 @@ GLint unit= 0;
 
 glBindImageTexture( unit, texture, /* level*/ 0, 
     /* layered */ GL_TRUE, /* layer */ 0, 
-    /* access */ GL_WRITE_ONLY, /* format*/ GL_RGBA8UI );
+    /* access */ GL_WRITE_ONLY, /* format*/ GL_RGBA8 );
 
 GLint location= glGetUniformLocation(program, "image");
 glUniform1i(location, unit);    
@@ -135,8 +135,8 @@ void main( )
 // application
 GLuint program= { ... };
 GLuint texture= { ... };
-GLint unit= 0;
 
+GLint unit= 0;
 glBindImageTexture( unit, texture, /* level*/ 0, 
     /* layered */ GL_TRUE, /* layer */ 0, 
     /* access */ GL_READ_WRITE, /* format*/ GL_R32UI );
@@ -145,24 +145,182 @@ GLint location= glGetUniformLocation(program, "image");
 glUniform1i(location, unit);    
 \endcode
 
-# créer une texture GL_R32UI / entiers
+# exemples 
 
-Les textures classiques stockent des couleurs soit directement avec des réels (`GL_RGBA32F`), soit avec des entiers normalisés (`GL_RGBA` ou `GL_RGBA8`). 
-Pour créer une texture permettant de stocker des entiers non normalisés, il faut utiliser `GL_RED_INTEGER` pour un canal, et `GL_RG_INTEGER`, 
-`GL_RGB_INTEGER` ou `GL_RGBA_INTEGER`, pour 2, 3, et 4 canaux.
+voici quelques exemples de création, configuration et de shader :
 
+## texture avec des pixels de type 1 float
+
+1 canal float, format de texture GL_R32F / GL_RED :
+
+application :
 \code
-GLuint texture= 0;
-glGenTextures(1, &texture);
-glBindTexture(GL_TEXTURE_2D, texture);
-glTexImage2D(GL_TEXTURE_2D, 0,
-    GL_R32UI, width, height, 0,
-    GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
+// creation
+GLenum texel_format= GL_R32F;
+GLenum data_format= GL_RED;
+GLenum data_type= GL_FLOAT;
 
+GLint texture= 0;
+glGenTexures(1, &texture);
+glBindTexture(GL_TEXTURE_2D, texture);
+glTexImage2D(GL_TEXTURE_2D, /* mipmap level */ 0, texel_format, width, height, 0, 
+    data_format, data_type, nullptr);
 // pas de mipmaps
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+// configuration
+GLint unit= 0;
+glBindImageTexture(unit, texture, /* mipmap level */ 0, 
+    /* layered */ GL_TRUE, /* layer */ 0, 
+    /* access */ GL_READ_WRITE, /* texel format */ texel_format );
 \endcode
 
+les autres acces sont GL_READ_ONLY (que lecture), GL_WRITE_ONLY (qu'ecriture), GL_READ_WRITE (lecture / ecriture). à modifier en fonction
+de ce que fait le shader (uniquement imageLoad(), uniquement imageStore(), ou les 2...)
+
+shader : déclaration `image2D`, texels de type float
+\code
+layout(binding= ..., r32f) coherent image2D image;
+// on peut remplacer coherent (acces en lecture / ecriture) par readonly, ou writeonly, en fonction de l'utilisation de la texture, 
+// cf imageLoad(), imageStore();
+// ne pas oublier de changer le parametre du glBindImageTexture() dans l'application...
+
+imageStore(image, ivec2(x, y), vec4(r, 0,0,0));
+// imageStore prend toujours un vec4() en parametre. la texture ne contient qu'un seul canal, vec4(r, 0, 0, 0);
+
+vec4 pixel= imageLoad(image, ivec2(x, y));
+// imageLoad renvoie toujours un vec4. la texture ne contient qu'un seul canal, cf pixel.r
+float color= pixel.r;
+\endcode
+
+## texture avec des pixels de type 2 ou 4 floats
+
+2 canaux float, format de texture GL_RG32F / GL_RG :
+
+4 canaux float, format de texture GL_RGBA32F / GL_RGBA :
+
+application :
+\code
+// creation
+GLenum texel_format= GL_RG32F;		// ou GL_RGBA32F pour 4 canaux float
+GLenum data_format= GL_RG;		    // ou GL_RGBA pour 4 canaux
+GLenum data_type= GL_FLOAT;
+
+GLint texture= 0;
+glGenTexures(1, &texture);
+glBindTexture(GL_TEXTURE_2D, texture);
+glTexImage2D(GL_TEXTURE_2D, /* mipmap level */ 0, texel_format, width, height, 0, 
+    data_format, data_type, nullptr);
+// pas de mipmaps
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+// configuration
+GLint unit= 0;
+glBindImageTexture(unit, texture, /* mipmap level */ 0, 
+    /* layered */ GL_TRUE, /* layer */ 0, 
+    /* access */ GL_READ_WRITE, /* texel format */ texel_format );
+\endcode
+
+shader :
+\code
+layout(binding= ..., rg32f) coherent image2D image;
+// rg32f pour 2 canaux, ou rgba32f pour 4 canaux
+// on peut remplacer coherent (acces en lecture / ecriture) par readonly, ou writeonly, en fonction de l'utilisation de la texture, 
+// cf imageLoad(), imageStore();
+
+imageStore(image, ivec2(x, y), vec4(r, g, 0,0));
+// imageStore prend toujours un vec4() en parametre. la texture ne contient que 2 canaux, vec4(r, g, 0, 0);
+
+// si la texture contient 4 canaux float
+// imageStore(image, ivec2(x, y), vec4(r, g, b, a));
+
+vec4 pixel= imageLoad(image, ivec2(x, y));
+// imageLoad renvoie toujours un vec4. la texture contient 2 canaux, cf pixel.rg
+vec2 color= pixel.rg;
+
+// ou vec4 color= pixel;               si la texture contient 4 canaux
+\endcode
+
+## texture avec des pixels de type 1 uint / unsigned int
+
+application :
+\code
+// creation
+GLenum texel_format= GL_R32UI;
+GLenum data_format= GL_RED_INTEGER;
+GLenum data_type= GL_UNSIGNED_INTEGER;
+
+GLint texture= 0;
+glGenTexures(1, &texture);
+glBindTexture(GL_TEXTURE_2D, texture);
+glTexImage2D(GL_TEXTURE_2D, /* mipmap level */ 0, texel_format, width, height, 0, 
+    data_format, data_type, nullptr);
+// pas de mipmaps
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+// configuration
+GLint unit= 0;
+glBindImageTexture(unit, texture, /* mipmap level */ 0, 
+    /* layered */ GL_TRUE, /* layer */ 0, 
+    /* access */ GL_READ_WRITE, /* texel format */ texel_format );
+\endcode
+
+shader : déclaration `uimage2D`, pour des texels int ou uint.
+\code
+layout(binding= ..., r32ui) coherent uimage2D image;
+
+imageStore(image, ivec2(x, y), uvec4(r, 0,0,0));
+// imageStore prend toujours un uvec4() en parametre. la texture ne contient qu'un seul canal uint, uvec4(r, 0, 0, 0);
+
+uvec4 pixel= imageLoad(image, ivec2(x, y));
+// imageLoad renvoie toujours un uvec4. la texture ne contient qu'un seul canal, cf pixel.r
+uint color= pixel.r;
+\endcode
+
+## texture avec des pixels de type 2 ou 4 uint
+
+
+2 canaux uint, format de texture GL_RG32UI / GL_RG_INTEGER :
+
+4 canaux uint, format de texture GL_RGBA32UI / GL_RGBA_INTEGER :
+
+application :
+\code
+// creation
+GLenum texel_format= GL_RG32UI;                 // ou GL_RGBA32UI pour 4 canaux
+GLenum data_format= GL_RG_INTEGER;              // ou GL_RGBA_INTEGER pour 4 canaux
+GLenum data_type= GL_UNSIGNED_INTEGER;
+
+GLint texture= 0;
+glGenTexures(1, &texture);
+glBindTexture(GL_TEXTURE_2D, texture);
+glTexImage2D(GL_TEXTURE_2D, /* mipmap level */ 0, texel_format, width, height, 0, 
+    data_format, data_type, nullptr);
+// pas de mipmaps
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+// configuration
+GLint unit= 0;
+glBindImageTexture(unit, texture, /* mipmap level */ 0, 
+    /* layered */ GL_TRUE, /* layer */ 0, 
+    /* access */ GL_READ_WRITE, /* texel format */ texel_format );
+\endcode
+
+shader : déclaration `uimage2D`, pour des texels int ou uint.
+\code
+layout(binding= ..., rg32ui) coherent uimage2D image;
+// rg32ui pour 2 canaux uint, ou rgba32ui pour 4 canaux uint
+
+imageStore(image, ivec2(x, y), uvec4(r, g, 0,0));
+// imageStore prend toujours un uvec4() en parametre.
+
+// si la texture contient 4 canaux uint
+// imageStore(image, ivec2(x, y), uvec4(r, g, b, a));
+
+uvec4 pixel= imageLoad(image, ivec2(x, y));
+// imageLoad renvoie toujours un uvec4.
+uvec2 color= pixel.rg;
+\endcode
 
 */
 
