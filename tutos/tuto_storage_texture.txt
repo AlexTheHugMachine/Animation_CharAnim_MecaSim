@@ -265,7 +265,7 @@ glBindImageTexture(unit, texture, /* mipmap level */ 0,
     /* access */ GL_READ_WRITE, /* texel format */ texel_format );
 \endcode
 
-shader : déclaration `uimage2D`, pour des texels int ou uint.
+shader : déclaration `uimage2D`, pour des texels uint
 \code
 layout(binding= ..., r32ui) coherent uimage2D image;
 
@@ -278,7 +278,6 @@ uint color= pixel.r;
 \endcode
 
 ## texture avec des pixels de type 2 ou 4 uint
-
 
 2 canaux uint, format de texture GL_RG32UI / GL_RG_INTEGER :
 
@@ -306,7 +305,7 @@ glBindImageTexture(unit, texture, /* mipmap level */ 0,
     /* access */ GL_READ_WRITE, /* texel format */ texel_format );
 \endcode
 
-shader : déclaration `uimage2D`, pour des texels int ou uint.
+shader : déclaration `uimage2D`, pour des texels uint.
 \code
 layout(binding= ..., rg32ui) coherent uimage2D image;
 // rg32ui pour 2 canaux uint, ou rgba32ui pour 4 canaux uint
@@ -321,6 +320,98 @@ uvec4 pixel= imageLoad(image, ivec2(x, y));
 // imageLoad renvoie toujours un uvec4.
 uvec2 color= pixel.rg;
 \endcode
+
+## texture avec des pixels de type int
+
+application :
+\code
+// creation
+GLenum texel_format= GL_R32I;                 // ou GL_RGBA32I pour 4 canaux, GL_RG32I pour 2 canaux
+GLenum data_format= GL_RED_INTEGER;           // ou GL_RGBA_INTEGER pour 4 canaux, GL_RG_INTEGER pour 2 canaux
+GLenum data_type= GL_INTEGER;
+
+GLint texture= 0;
+glGenTexures(1, &texture);
+glBindTexture(GL_TEXTURE_2D, texture);
+glTexImage2D(GL_TEXTURE_2D, /* mipmap level */ 0, texel_format, width, height, 0, 
+    data_format, data_type, nullptr);
+// pas de mipmaps
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+// configuration
+GLint unit= 0;
+glBindImageTexture(unit, texture, /* mipmap level */ 0, 
+    /* layered */ GL_TRUE, /* layer */ 0, 
+    /* access */ GL_READ_WRITE, /* texel format */ texel_format );
+\endcode
+
+shader : déclaration `iimage2D`, pour des texels int.
+\code
+layout(binding= ..., r32i) coherent iimage2D image;
+// rg32i pour 2 canaux int, ou rgba32i pour 4 canaux int
+
+imageStore(image, ivec2(x, y), ivec4(r, g, 0,0));
+// imageStore prend toujours un ivec4() en parametre.
+
+// si la texture contient 4 canaux int
+// imageStore(image, ivec2(x, y), ivec4(r, g, b, a));
+
+ivec4 pixel= imageLoad(image, ivec2(x, y));
+// imageLoad renvoie toujours un ivec4.
+ivec2 color= pixel.r;
+\endcode
+
+# glTexImage2D() texel_format, data_format, quoi ?
+
+`glTexImage2D` fait 2 choses différentes, créer la texture et initialiser son contenu et ses paramètres sont plus ou moins redondants, et il est
+assez simple de se tromper. 
+_pourquoi ?_ tout simplement parce que le driver converti les données passées en paramètres vers le format interne / le format des pixels et les 
+paramètres `data_format, data_type` permettent d'interpreter correctement les données pour appliquer la bonne conversion.
+
+openGL 4.3 a introduit une nouvelle api pour créer des textures : `glTexStorage2D()` qui ne fait que créer / allouer la texture. et `glTexSubImage2D` 
+permet d'initialiser le contenu de la texture (c'est possible aussi avec openGL 3.3).
+
+on peut écrire un code de création de texture plus simple avec openGL 4.3 :
+\code
+// creation
+GLenum texel_format= GL_RGBA;
+
+GLint texture;
+glGenTextures(1, &texture);
+glBindTexture(GL_TEXTURE_2D, texture);
+glTexStorage2D(GL_TEXTURE_2D, /* mipmap levels */ 1, /* format */ texel_format, width, height);
+// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); est implicite
+\endcode
+
+cette fonction crée directement tous les niveaux de mipmap. pas la peine de le fournir avec un `glTexParameteri()`.
+
+si l'on souhaite transférer des données, pour initialiser les niveaux de mipmap, on utilise ensuite :
+\code
+// glBindTexture(GL_TEXTURE_2D, texture);
+// si necessaire
+glTexSubImage2D(GL_TEXTURE_2D, /* mipmap level */ 0,
+    /* rectangle a initialiser : x, y, w, h */ 0, 0, width, height,
+    /* data format */, /* data type */, /* data */ ... );
+\endcode
+
+## openGL 4.4 : initialiser une texture avec une couleur / valeur constante
+
+des textures sont souvent utlisées pour stocker des infos ou des résultats de compute shaders, et il faut régulièrement re-initialiser le 
+contenu d'une texture, et assez souvent, on souhaite uniquement une valeur constante pour tous les pixels. openGL 3.3 oblige à faire un peu
+de gynmastique : il faut creer un tableau de pixels de la bonne taille et utiliser glTexSubImage2D().
+
+_remarque :_ et oui, c'est lent, puisqu'il faut transférer tous les pixels de la texture vers la mémoire du gpu.
+
+openGL 4.4 à introduit `glClearTexImage()` pour cette initialisation par une valeur constante. c'est plus simple et plus rapide :
+\code
+// initialiser tous les pixels de la texture a 1
+float color[4]= { 1, 1, 1, 1 };
+glClearTexImage(texture, /* mipmap level */ 0, /* data format */ GL_RGBA, /* data type */ GL_FLOAT, /* data */ color);
+\endcode
+
+les paramètres `data_format, data_type` sont les memes que ceux de `glTexImage2D()`, bien sur (les conversions sont les memes)...
+
+cf tuto_storage_texture.cpp pour un exemple sur une texture GL_R32UI...
 
 */
 
