@@ -47,7 +47,7 @@ struct Histogram : public App
         // cree le buffer pour stocker l'histogramme
         glGenBuffers(1, &m_histogram);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_histogram);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_COPY);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_READ);
         
         m_program= read_program("tutos/M2/histogram1.glsl");
         program_print_errors(m_program);

@@ -47,7 +47,7 @@ struct Histogram : public App
         // cree le buffer pour stocker l'histogramme
         glGenBuffers(1, &m_histogram);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_histogram);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_COPY);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_READ);
         
         m_program= read_program("tutos/M2/histogram.glsl");
         program_print_errors(m_program);
@@ -119,6 +119,7 @@ struct Histogram : public App
         glBeginQuery(GL_TIME_ELAPSED, m_time_query);
         {
             // go !!
+            for(int i= 0; i < 100; i++)
             glDispatchCompute(nx, ny, 1);
             
             // attendre le resultat
@@ -137,6 +138,7 @@ struct Histogram : public App
         // attendre le resultat de la requete
         GLint64 gpu_time= 0;
         glGetQueryObjecti64v(m_time_query, GL_QUERY_RESULT, &gpu_time);
+        gpu_time/= 100;
         printf("gpu  %02dms %03dus\n\n", int(gpu_time / 1000000), int((gpu_time / 1000) % 1000));    
         
         return 0;       // une seule fois
