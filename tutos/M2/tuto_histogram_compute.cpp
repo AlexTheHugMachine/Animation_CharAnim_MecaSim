@@ -49,7 +49,7 @@ struct Histogram : public App
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_histogram);
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_COPY);
         
-        m_program= read_program("tutos/M2/histogram1.glsl");
+        m_program= read_program("tutos/M2/histogram.glsl");
         program_print_errors(m_program);
         
         glGetProgramiv(m_program, GL_COMPUTE_WORK_GROUP_SIZE, m_threads);
