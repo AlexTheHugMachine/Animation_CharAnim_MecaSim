@@ -37,7 +37,7 @@ std::string pathname( const std::string& filename )
 
 Mesh read_mesh( const char *filename )
 {
-    FILE *in= fopen(filename, "rt");
+    FILE *in= fopen(filename, "rb");
     if(in == NULL)
     {
         printf("[error] loading mesh '%s'...\n", filename);
