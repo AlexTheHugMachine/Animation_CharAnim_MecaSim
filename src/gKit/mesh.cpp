@@ -606,7 +606,7 @@ void Mesh::draw( const int first, const int n, const GLuint program, const bool 
     
     #ifndef GK_RELEASE
     {
-        char label[1024]= { 0 };
+        char label[2048]= { 0 };
         #ifdef GL_VERSION_4_3
         {
             char tmp[1024];

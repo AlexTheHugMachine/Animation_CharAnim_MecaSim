@@ -17,11 +17,11 @@ int location( const GLuint program, const char *uniform )
     GLint location= glGetUniformLocation(program, uniform);
     if(location < 0)
     {
-        char error[1024]= { 0 };
+        char error[4096]= { 0 };
     #ifdef GL_VERSION_4_3
         {
             char label[1024];
-            glGetObjectLabel(GL_PROGRAM, program, sizeof(label), NULL, label);
+            glGetObjectLabel(GL_PROGRAM, program, sizeof(label), nullptr, label);
             
             sprintf(error, "uniform( %s %u, '%s' ): not found.", label, program, uniform); 
         }
@@ -43,13 +43,13 @@ int location( const GLuint program, const char *uniform )
     glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *) &current);
     if(current != program)
     {
-        char error[1024]= { 0 };
+        char error[4096]= { 0 };
     #ifdef GL_VERSION_4_3
         {
             char label[1024];
-            glGetObjectLabel(GL_PROGRAM, program, sizeof(label), NULL, label);
+            glGetObjectLabel(GL_PROGRAM, program, sizeof(label), nullptr, label);
             char labelc[1024];
-            glGetObjectLabel(GL_PROGRAM, current, sizeof(labelc), NULL, labelc);
+            glGetObjectLabel(GL_PROGRAM, current, sizeof(labelc), nullptr, labelc);
             
             sprintf(error, "uniform( %s %u, '%s' ): invalid shader program( %s %u )", label, program, uniform, labelc, current); 
         }
