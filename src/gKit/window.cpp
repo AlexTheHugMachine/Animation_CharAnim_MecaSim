@@ -400,26 +400,43 @@ bool exists( const char *filename )
 
 
 static std::string smartpath;
+static std::string path;
 
 const char *smart_path( const char *filename )
 {
     if(exists(filename))
         return filename;
 
-    char *base= SDL_GetBasePath();
-    smartpath= base;
-    SDL_free(base);
+    if(path.empty())
+    {
+        // recupere la variable d'environnement, si elle existe
+        const char *envbase= std::getenv("GKIT_BASE_PATH");
+        if(envbase != nullptr)
+        {
+            path= std::string(envbase);
+            if(path.find_last_of('/') == std::string::npos)
+                path.append("/");       // force un /, si necessaire
+            
+            printf("[base path] %s\n", path.c_str());
+        }
+    }
+    
+    if(path.empty())
+    {
+        char *base= SDL_GetBasePath();
+        printf("[base path] %s\n", base);
+        path= base;
+        SDL_free(base);
+    }
+    
+    smartpath= path + filename;
+    if(exists(smartpath.c_str()))
+        return smartpath.c_str();
 
-    std::string tmp;
-    tmp= smartpath + filename;
-    if(exists(tmp.c_str()))
-        smartpath= tmp;
-
-    tmp= smartpath + "../" + filename;
-    if(exists(tmp.c_str()))
-        smartpath= tmp;
-    else
-        smartpath= filename;
-
-    return smartpath.c_str();
+    smartpath= path + "../" + filename;
+    if(exists(smartpath.c_str()))
+        return smartpath.c_str();
+    
+    return filename; // echec, fichier pas trouve, renvoie quand meme le fichier original. 
+    // (permet au moins d'afficher l'erreur fichier non trouve dans l'application)
 }
