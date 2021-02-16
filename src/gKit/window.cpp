@@ -414,10 +414,11 @@ const char *smart_path( const char *filename )
         if(envbase != nullptr)
         {
             path= std::string(envbase);
-            if(path.find_last_of('/') == std::string::npos)
+            if(!path.empty() && path[path.size() -1] != '/')
+            {
                 path.append("/");       // force un /, si necessaire
-            
-            printf("[base path] %s\n", path.c_str());
+                printf("[base path] %s\n", path.c_str());
+            }
         }
     }
     
