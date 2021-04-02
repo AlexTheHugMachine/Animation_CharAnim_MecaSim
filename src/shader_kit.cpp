@@ -4,6 +4,15 @@
 #include <cstdio>
 #include <cstring>
 
+#ifndef _MSC_VER
+    #include <sys/stat.h>
+#else
+    #include <sys/types.h>
+    #include <sys/stat.h>
+#endif
+
+#include <chrono>
+
 #include "glcore.h"
 #include "window.h"
 
@@ -23,17 +32,36 @@
 
 
 // utilitaire
-struct Filename
+// renvoie la date de la derniere modification d'un fichier
+long int timestamp( const char *filename )
 {
-    char path[1024];
-    
-    Filename( ) { path[0]= 0; }
-    Filename( const char *_filename ) { strcpy(path, _filename); }
-    operator const char *( ) { return path; }
-};
+#ifndef _MSC_VER
+    struct stat info;
+    if(stat(filename, &info) < 0)
+        return 0;
+
+    // verifie aussi que c'est bien un fichier standard
+    if(S_ISREG(info.st_mode))
+        return info.st_mtime;
+
+#else
+    struct _stat64 info;
+    if(_stat64(filename, &info) < 0)
+        return 0;
+
+    // verifie aussi que c'est bien un fichier standard
+    if(info.st_mode & _S_IFREG)
+        return info.st_mtime;   //! \todo a verifier !!
+#endif
+
+    return 0;
+}
+
+
+
 
 // program
-Filename program_filename;
+const char *program_filename;
 GLuint program;
 
 // affichage des erreurs
@@ -41,7 +69,7 @@ std::string program_log;
 int program_area;
 bool program_failed;
 
-Filename mesh_filename;
+const char *mesh_filename;
 Mesh mesh;
 Point mesh_pmin;
 Point mesh_pmax;
@@ -49,19 +77,23 @@ int vertex_count;
 GLuint vao;
 bool wireframe= false;
 
-std::vector<Filename> texture_filenames;
+std::vector<const char *> texture_filenames;
 std::vector<GLuint> textures;
 
 Orbiter camera;
 Widgets widgets;
 
 // application
+long int last_load= 0;
 void reload_program( )
 {
     if(program == 0)
         program= read_program(program_filename);
     else
         reload_program(program, program_filename);
+    
+    // conserve la date du fichier
+    last_load= timestamp(program_filename);
     
     // recupere les erreurs, si necessaire
     program_area= program_format_errors(program, program_log);
@@ -101,7 +133,7 @@ int init( std::vector<const char *>& options )
     option= option_find(options, ".glsl");
     if(option != nullptr)
     {
-        program_filename= Filename(option);
+        program_filename= option;
         reload_program();
     }
     
@@ -115,7 +147,7 @@ int init( std::vector<const char *>& options )
         mesh= read_mesh(option);
         if(mesh.vertex_count() > 0)
         {
-            mesh_filename= Filename(option);
+            mesh_filename= option;
             
             vao= mesh.create_buffers(mesh.has_texcoord(), mesh.has_normal(), mesh.has_color(), mesh.has_material_index());
             vertex_count= mesh.vertex_count();
@@ -123,8 +155,10 @@ int init( std::vector<const char *>& options )
             mesh.bounds(mesh_pmin, mesh_pmax);
             camera.lookat(mesh_pmin, mesh_pmax);
         }
+        
+        // ou generer une erreur ? 
     }
-
+    
     if(vao == 0)
     {
         glGenVertexArrays(1, &vao);
@@ -140,7 +174,7 @@ int init( std::vector<const char *>& options )
         GLuint texture= read_texture(0, options[i]);
         if(texture > 0)
         {
-            texture_filenames.push_back(Filename(options[i]));
+            texture_filenames.push_back(options[i]);
             textures.push_back(texture);
         }
     }
@@ -180,7 +214,6 @@ int quit( )
 
 int draw( void )
 {
-    
     if(wireframe)
     {
         glClearColor(1, 1, 1, 1);
@@ -195,6 +228,20 @@ int draw( void )
     
     // effacer l'image
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    // verification de la date du fichier source des shaders...
+    static float last_time= 0;
+    // toutes les secondes, ca suffit, pas tres malin de le faire 60 fois par seconde...
+    if(global_time() > last_time + 400)
+    {
+        if(timestamp(program_filename) != last_load)
+            // date modifiee, recharger les sources et recompiler...
+            reload_program();
+        
+        // attends le chargement et la compilation des shaders... au cas ou ce soit plus long qu'une seconde...
+        // (oui ca arrive...)
+        last_time= global_time();
+    }
     
     if(key_state('r'))
     {
@@ -286,23 +333,23 @@ int draw( void )
     begin(widgets);
     if(program_failed)
     {
-        label(widgets, "[error] program '%s'", program_filename.path);
+        label(widgets, "[error] program '%s'", program_filename);
         begin_line(widgets);
         text_area(widgets, 20, program_log.c_str(), program_area);
     }
     else
     {
-        label(widgets, "program '%s' running...", program_filename.path);
-        if(mesh_filename[0] != 0)
+        label(widgets, "program '%s' running...", program_filename);
+        if(mesh_filename && mesh_filename[0])
         {
             begin_line(widgets);
-            label(widgets, "mesh '%s', %d vertices %s %s", mesh_filename.path, mesh.vertex_count(),
+            label(widgets, "mesh '%s', %d vertices %s %s", mesh_filename, mesh.vertex_count(),
                 mesh.texcoord_buffer_size() ? "texcoords" : "", mesh.normal_buffer_size() ? "normals" : "");
         }
         for(unsigned int i= 0; i < (unsigned int) texture_filenames.size(); i++)
         {
             begin_line(widgets);
-            label(widgets, "texture%u '%s'", i, texture_filenames[i].path);
+            label(widgets, "texture%u '%s'", i, texture_filenames[i]);
         }
     }
     
