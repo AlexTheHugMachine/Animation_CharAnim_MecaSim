@@ -51,7 +51,7 @@ long int timestamp( const char *filename )
 
     // verifie aussi que c'est bien un fichier standard
     if(info.st_mode & _S_IFREG)
-        return info.st_mtime;   //! \todo a verifier !!
+        return info.st_mtime;
 #endif
 
     return 0;
