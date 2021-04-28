@@ -86,7 +86,7 @@ namespace chara {
 
 		//! Root Joint
 		//chara::BVHJoint* m_root;
-		int m_rootId;
+		long unsigned int m_rootId;
 
 
 		//! internal init: recursive on the children

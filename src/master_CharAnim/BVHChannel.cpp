@@ -130,10 +130,8 @@ void BVHChannel::computeMultiResolution()
 
     assert( m_data.size()==8 );
 
-    int i;
     unsigned int j;
     float m;
-    i = 0;
     vector<float> av(m_data), avav, dat;
     while( av.size()>1 )
     {
@@ -152,7 +150,7 @@ void BVHChannel::computeMultiResolution()
 
         if (av.size()==1) m_multiRav = av[0];
     }
-    printf("BVHChannel::computeMultiResolution(): m_dataSize=%d NmultiRes=%d\n", m_data.size(), m_multiR.size() );
+    printf("BVHChannel::computeMultiResolution(): m_dataSize=%d NmultiRes=%d\n", int(m_data.size()), int(m_multiR.size()) );
 }
 
 
@@ -194,7 +192,7 @@ void BVHChannel::printMultiResData() const
     for(i=0;i<m_multiR.size();++i)
     {
         const vector<float>& dat(m_multiR[i]);
-        printf("%d (size=%d) : ",i, dat.size() );
+        printf("%d (size=%d) : ",i, int(dat.size()) );
         for(j=0;j<dat.size();++j)
         {
             cout<<dat[j]<<" ";

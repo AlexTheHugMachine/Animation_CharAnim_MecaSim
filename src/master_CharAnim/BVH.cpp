@@ -14,7 +14,12 @@ BVH::BVH()
 {
 }
 
-const chara::BVHJoint& BVH::getRoot(void) const { assert(m_rootId >= 0); assert(m_rootId < m_joints.size()); return m_joints[m_rootId]; }
+const chara::BVHJoint& BVH::getRoot(void) const 
+{ 
+	//assert(m_rootId >= 0); 
+	assert(m_rootId < m_joints.size()); 
+	return m_joints[m_rootId]; 
+}
 
 
 //-----------------------------------------------------------------------------

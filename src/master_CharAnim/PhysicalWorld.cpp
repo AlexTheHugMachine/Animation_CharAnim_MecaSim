@@ -6,7 +6,7 @@
 
 void PhysicalWorld::update(const float dt)
 {
-	int i;
+	long unsigned int i;
 	for (i = 0; i<m_part.size(); ++i)
 	{
 		// i_eme particule update
@@ -21,7 +21,7 @@ void PhysicalWorld::update(const float dt)
 
 void PhysicalWorld::draw()
 {
-	int i;
+	long unsigned int i;
 	for (i = 0; i<particlesCount(); ++i)
 	{
 		if (m_part[i].radius()>0)
@@ -32,7 +32,7 @@ void PhysicalWorld::draw()
 
 void PhysicalWorld::collision(const Point& p, const float radius)
 {
-	int i;
+	long unsigned int i;
 	for (i = 0; i<m_part.size(); ++i)
 	{
 		m_part[i].collision(p,radius);
