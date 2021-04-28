@@ -32,6 +32,54 @@ struct RayHit
 };
 
 
+struct BBoxHit
+{
+    float tmin, tmax;
+    
+    BBoxHit() : tmin(FLT_MAX), tmax(-FLT_MAX) {}
+    BBoxHit( const float _tmin, const float _tmax ) : tmin(_tmin), tmax(_tmax) {}
+    float centroid( ) const { return (tmin + tmax) / 2; }
+    operator bool( ) const { return tmin <= tmax; }
+};
+
+
+struct BBox
+{
+    Point pmin, pmax;
+    
+    BBox( ) : pmin(), pmax() {}
+    
+    BBox( const Point& p ) : pmin(p), pmax(p) {}
+    BBox( const BBox& box ) : pmin(box.pmin), pmax(box.pmax) {}
+    
+    BBox& insert( const Point& p ) { pmin= min(pmin, p); pmax= max(pmax, p); return *this; }
+    BBox& insert( const BBox& box ) { pmin= min(pmin, box.pmin); pmax= max(pmax, box.pmax); return *this; }
+    
+    float centroid( const int axis ) const { return (pmin(axis) + pmax(axis)) / 2; }
+    
+    BBoxHit intersect( const RayHit& ray ) const
+    {
+        Vector invd= Vector(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
+        return intersect(ray, invd);
+    }
+    
+    BBoxHit intersect( const RayHit& ray, const Vector& invd ) const
+    {
+        Point rmin= pmin;
+        Point rmax= pmax;
+        if(ray.d.x < 0) std::swap(rmin.x, rmax.x);
+        if(ray.d.y < 0) std::swap(rmin.y, rmax.y);
+        if(ray.d.z < 0) std::swap(rmin.z, rmax.z);
+        Vector dmin= (rmin - ray.o) * invd;
+        Vector dmax= (rmax - ray.o) * invd;
+        
+        float tmin= std::max(dmin.z, std::max(dmin.y, std::max(dmin.x, 0.f)));
+        float tmax= std::min(dmax.z, std::min(dmax.y, std::min(dmax.x, ray.t)));
+        return BBoxHit(tmin, tmax);
+    }
+};
+
+
 struct Triangle
 {
     Point p;            // sommet a du triangle
@@ -71,42 +119,13 @@ struct Triangle
         ray.u= u;
         ray.v= v;
     }
-};
-
-
-struct BBox
-{
-    Point pmin, pmax;
     
-    BBox( ) : pmin(), pmax() {}
-    
-    BBox( const Point& p ) : pmin(p), pmax(p) {}
-    BBox& insert( const Point& p ) { pmin= min(pmin, p); pmax= max(pmax, p); return *this; }
-    
-    float centroid( const int axis ) const { return (pmin(axis) + pmax(axis)) / 2; }
-    
-    bool intersect( const RayHit& ray ) const
+    BBox bounds( ) const 
     {
-        Vector invd= Vector(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
-        return intersect(ray, invd);
-    }
-    
-    bool intersect( const RayHit& ray, const Vector& invd ) const
-    {
-        Point rmin= pmin;
-        Point rmax= pmax;
-        if(ray.d.x < 0) std::swap(rmin.x, rmax.x);
-        if(ray.d.y < 0) std::swap(rmin.y, rmax.y);
-        if(ray.d.z < 0) std::swap(rmin.z, rmax.z);
-        Vector dmin= (rmin - ray.o) * invd;
-        Vector dmax= (rmax - ray.o) * invd;
-        
-        float tmin= std::max(dmin.z, std::max(dmin.y, std::max(dmin.x, 0.f)));
-        float tmax= std::min(dmax.z, std::min(dmax.y, std::min(dmax.x, ray.t)));
-        return (tmin <= tmax);
+        BBox box(p);
+        return box.insert(p+e1).insert(p+e2);
     }
 };
-
 
 
 // construction de l'arbre / BVH
@@ -152,9 +171,7 @@ struct triangle_less1
     bool operator() ( const Triangle& triangle ) const
     {
         // re-construit l'englobant du triangle
-        BBox bounds(triangle.p);
-        bounds.insert(triangle.p + triangle.e1);
-        bounds.insert(triangle.p + triangle.e2);
+        BBox bounds= triangle.bounds();
         return bounds.centroid(axis) < cut;
     }
 };
@@ -183,14 +200,21 @@ struct BVH
     
     void intersect( RayHit& ray ) const
     {
-        intersect(root, ray);
+        Vector invd= Vector(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
+        intersect(root, ray, invd);
+    }
+    
+    void intersect_fast( RayHit& ray ) const
+    {
+        Vector invd= Vector(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
+        intersect_fast(root, ray, invd);
     }
     
 protected:
     // construction d'un noeud
     int build( const BBox& bounds, const int begin, const int end )
     {
-        if(end - begin <= 2)
+        if(end - begin < 2)
         {
             // inserer une feuille et renvoyer son indice
             int index= nodes.size();
@@ -224,28 +248,12 @@ protected:
         
         // construire le fils gauche
         // les triangles se trouvent dans [begin .. m)
-        BBox bounds_left(triangles[begin].p);                                         // englobant du premier triangle
-        bounds_left.insert(triangles[begin].p + triangles[begin].e1);                // on insere les 3 sommets...
-        bounds_left.insert(triangles[begin].p + triangles[begin].e2);
-        for(int i= begin+1; i < m; i++)                                        // insere les sommets des autres triangles
-        {
-            bounds_left.insert(triangles[i].p);
-            bounds_left.insert(triangles[i].p + triangles[i].e1);
-            bounds_left.insert(triangles[i].p + triangles[i].e2);
-        }
+        BBox bounds_left= triangle_bounds(begin, m);
         int left= build(bounds_left, begin, m);
         
         // on recommence pour le fils droit
         // les triangles se trouvent dans [m .. end)
-        BBox bounds_right(triangles[m].p);
-        bounds_right.insert(triangles[m].p + triangles[m].e1);
-        bounds_right.insert(triangles[m].p + triangles[m].e2);
-        for(int i= m+1; i < end; i++)
-        {
-            bounds_right.insert(triangles[i].p);
-            bounds_right.insert(triangles[i].p + triangles[i].e1);
-            bounds_right.insert(triangles[i].p + triangles[i].e2);
-        }
+        BBox bounds_right= triangle_bounds(m, end);
         int right= build(bounds_right, m, end);
         
         int index= nodes.size();
@@ -253,10 +261,19 @@ protected:
         return index;
     }
     
-    void intersect( const int index, RayHit& ray ) const
+    BBox triangle_bounds( const int begin, const int end )
+    {
+        BBox bbox= triangles[begin].bounds();
+        for(int i= begin +1; i < end; i++)
+            bbox.insert(triangles[i].bounds());
+        
+        return bbox;
+    }
+    
+    void intersect( const int index, RayHit& ray, const Vector& invd ) const
     {
         const Node& node= nodes[index];
-        if(node.bounds.intersect(ray))
+        if(node.bounds.intersect(ray, invd))
         {
             if(node.leaf())
             {
@@ -265,13 +282,47 @@ protected:
             }
             else // if(node.internal())
             {
-                intersect(node.internal_left(), ray);
-                intersect(node.internal_right(), ray);
+                intersect(node.internal_left(), ray, invd);
+                intersect(node.internal_right(), ray, invd);
             }
         }
     }
+    
+    void intersect_fast( const int index, RayHit& ray, const Vector& invd ) const
+    {
+        const Node& node= nodes[index];
+        if(node.leaf())
+        {
+            for(int i= node.leaf_begin(); i < node.leaf_end(); i++)
+                triangles[i].intersect(ray);
+        }
+        else // if(node.internal())
+        {
+            const Node& left_node= nodes[node.left];
+            const Node& right_node= nodes[node.right];
+            
+            BBoxHit left= left_node.bounds.intersect(ray, invd);
+            BBoxHit right= right_node.bounds.intersect(ray, invd);
+            if(left && right)                                                   // les 2 fils sont touches par le rayon...
+            {
+                if(left.centroid() < right.centroid())                          // parcours de gauche a droite
+                {
+                    intersect_fast(node.internal_left(), ray, invd);
+                    intersect_fast(node.internal_right(), ray, invd);
+                }
+                else                                                            // parcours de droite a gauche                                        
+                {
+                    intersect_fast(node.internal_right(), ray, invd);
+                    intersect_fast(node.internal_left(), ray, invd);
+                }
+            }
+            else if(left)                                                       // uniquement le fils gauche
+                intersect_fast(node.internal_left(), ray, invd);
+            else if(right)
+                intersect_fast(node.internal_right(), ray, invd);               // uniquement le fils droit
+        }
+    }
 };
-
 
 
 int main( const int argc, const char **argv )
@@ -301,6 +352,7 @@ int main( const int argc, const char **argv )
     }
     
     Image image(1024, 768);
+    //~ Image image(4096, 2048);
 
     // recupere les transformations
     camera.projection(image.width(), image.height(), 45);
@@ -326,7 +378,6 @@ int main( const int argc, const char **argv )
     {
         BVH bvh;
         
-        //~ auto start= std::chrono::high_resolution_clock::now();
         {
             auto start= std::chrono::high_resolution_clock::now();
             // construction 
@@ -361,7 +412,21 @@ int main( const int argc, const char **argv )
             
             auto stop= std::chrono::high_resolution_clock::now();
             int cpu= std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
-            printf("bvh %dms\n", cpu);
+            printf("bvh mt %dms\n", cpu);
+        }
+        
+        {
+            auto start= std::chrono::high_resolution_clock::now();
+            
+            // intersection
+            const int n= int(rays.size());
+            #pragma omp parallel for schedule(dynamic, 1024)
+            for(int i= 0; i < n; i++)
+                bvh.intersect_fast(rays[i]);
+            
+            auto stop= std::chrono::high_resolution_clock::now();
+            int cpu= std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+            printf("bvh fast mt %dms\n", cpu);
         }
     }
     

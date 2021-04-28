@@ -10,7 +10,7 @@
 #include "vec.h"
 #include "mat.h"
 #include "color.h"
-
+#include "materials.h"
 
 //! \addtogroup objet3D utilitaires pour manipuler des objets 3d
 ///@{
@@ -84,16 +84,6 @@ m.triangle(a, c, d);
 \endcode
 */
 
-//! representation d'une matiere.
-struct Material
-{
-    Color diffuse;      //!< couleur diffuse
-    Color specular;     //!< couleur du reflet
-    Color emission;     //!< pour une source de lumiere
-    float ns;           //!< exposant pour les reflets blinn-phong
-    
-    Material( ) : diffuse(0.8f, 0.8f, 0.8f), specular(Black()), emission(), ns(0) {}
-};
 
 //! representation d'un triangle.
 struct TriangleData
@@ -101,6 +91,14 @@ struct TriangleData
     vec3 a, b, c;       //!< positions       
     vec3 na, nb, nc;    //!< normales
     vec2 ta, tb, tc;    //!< texcoords
+};
+
+//! representation d'un ensemble de triangles de meme matiere.
+struct TriangleGroup
+{
+    int material_index; //!< indice de la matiere du groupe de triangles
+    int first;          //!< premier triangle du groupe
+    int n;              //!< nombre de triangles du groupe
 };
 
 
@@ -215,19 +213,14 @@ public:
     
     //! \name description des matieres.
     //@{
-    //! ajoute une description de matiere. et renvoie son indice.
-    unsigned int mesh_material( const Material& m );
-    //! ajoute un ensemble de description de matieres.
-    void mesh_materials( const std::vector<Material>& m );
+    //! renvoie la description des matieres.
+    const Materials& materials( ) const;
+    Materials& materials( );
+    //! remplace la description des matieres.
+    void materials( const Materials& materials );
     
-    //! renvoie le nombre de matieres.
-    int mesh_material_count( ) const;
-    //! renvoie la description de matiere d'indice id.
-    const Material& mesh_material( const unsigned int id ) const;
-    //! renvoie l'ensemble des matieres.
-    const std::vector<Material>& mesh_materials( ) const;
     //! renvoie les indices des matieres des triangles.
-    const std::vector<unsigned int>& materials( ) const;
+    const std::vector<unsigned int>& material_indices( ) const;
     
     //! definit la matiere du prochain triangle. id est l'indice d'une matiere ajoutee par mesh_material() ou mesh_materials( ). ne fonctionne que pour les primitives GL_TRIANGLES, indexees ou pas.
     Mesh& material( const unsigned int id );
@@ -235,12 +228,18 @@ public:
     
     //! \name description des triangles d'un maillage.
     //@{
-    //! renvoie la matiere d'un triangle.
-    const Material &triangle_material( const unsigned int id ) const;
     //! renvoie le nombre de triangles.
     int triangle_count( ) const;
     //! renvoie un triangle.
     TriangleData triangle( const unsigned int id ) const;
+    
+    //! renvoie l'indice de la matiere d'un triangle.
+    int triangle_material_index( const unsigned int id ) const;
+    //! renvoie la matiere d'un triangle.
+    const Material &triangle_material( const unsigned int id ) const;
+    
+    //! renvoie les groupes de triangles de meme matiere. permet d'afficher l'objet matiere par matiere.
+    std::vector<TriangleGroup> groups( );
     //@}
     
     //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet (boite englobante alignee sur les axes, aabb).
@@ -295,6 +294,13 @@ public:
     bool has_texcoord( ) const { return m_texcoords.size() == m_positions.size(); }
     bool has_normal( ) const { return m_normals.size() == m_positions.size(); }
     bool has_color( ) const { return m_colors.size() == m_positions.size(); }
+    bool has_material_index( ) const 
+    { 
+        // solution simple, pas compatible avec un mesh indexe.
+        if(m_indices.size())
+            return false;
+        return m_triangle_materials.size() == m_positions.size() / 3; 
+    }
     //@}
     
     //! renvoie le type de primitives.
@@ -324,13 +330,15 @@ public:
     
     
     //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).
-    GLuint create_buffers( const bool use_texcoord, const bool use_normal, const bool use_color );
+    GLuint create_buffers( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     //! dessine l'objet avec un shader program. 
-    void draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color );
+    void draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
+    //! dessine une partie de l'objet avec un shader program.
+    void draw( const int first, const int n, const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     
 private:    
     //! modifie les buffers openGL, si necessaire.
-    int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color );
+    int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     
     //
     std::vector<vec3> m_positions;
@@ -340,7 +348,7 @@ private:
     
     std::vector<unsigned int> m_indices;
 
-    std::vector<Material> m_materials;
+    Materials m_materials;
     std::vector<unsigned int> m_triangle_materials;
 
     Color m_color;

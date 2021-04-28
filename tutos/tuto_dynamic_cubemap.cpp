@@ -261,7 +261,7 @@ public:
             faces[5]= Lookat(/* from */ Point(0, 0, 0), /* to */ Point(0, 0, -1), /* up */ Vector(0, -1, 0));   // -Z
             
             // dessine chaque objet du decor
-            GLuint vao= m_cube.create_buffers( /* texcoord */ false, /* normal */ true, /* color*/ false);
+            GLuint vao= m_cube.create_buffers( /* texcoord */ false, /* normal */ true, /* color */ false, /* material */ false);
             glBindVertexArray(vao);
             
             glUseProgram(m_program_render);
@@ -311,7 +311,7 @@ public:
             program_uniform(m_program, "texture0", int(0));
             
             // dessine l'objet, les attributs position et normale sont necessaires a l'execution du shader.
-            m_object.draw(m_program, /* position */ true, /* texcoord */ false, /* normal */ true, /* color */ false);
+            m_object.draw(m_program, /* position */ true, /* texcoord */ false, /* normal */ true, /* color */ false, /* material */ false );
             
             // et le reste
             draw(m_ground, Identity(), view, projection);
@@ -342,11 +342,11 @@ public:
         {
             clear_key_state('r');
             
-            m_program_render= read_program("tutos/render_cubemap.glsl");
+            reload_program(m_program_render, "tutos/render_cubemap.glsl");
             program_print_errors(m_program_render);
-            m_program_draw= read_program("tutos/draw_cubemap.glsl");
+            reload_program(m_program_draw, "tutos/draw_cubemap.glsl");
             program_print_errors(m_program_draw);
-            m_program= read_program("tutos/cubemap.glsl");
+            reload_program(m_program, "tutos/cubemap.glsl");
             program_print_errors(m_program);
         }
         

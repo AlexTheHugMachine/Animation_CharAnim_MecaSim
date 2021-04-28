@@ -85,10 +85,12 @@ public:
     // creation des objets de l'application
     int init( )
     {
-        m_objet= read_mesh("data/cube.obj");
+        //~ m_objet= read_mesh("data/cube.obj");
         m_objet= read_mesh("data/bigguy.obj");
+        // m_objet= read_mesh("data/ccbigguy.obj");
         
         m_texture= read_cubemap(0, "tutos/cubemap_debug_cross.png");
+        // m_texture= read_cubemap(0, "canyon2.jpg");
         
         m_program_draw= read_program("tutos/draw_cubemap.glsl");
         program_print_errors(m_program_draw);
@@ -147,7 +149,7 @@ public:
         program_uniform(m_program, "texture0", int(0));
         
         // dessine l'objet, les attributs position et normale sont necessaires a l'execution du shader.
-        m_objet.draw(m_program, /* position */ true, /* texcoord */ false, /* normal */ true, /* color */ false);
+        m_objet.draw(m_program, /* position */ true, /* texcoord */ false, /* normal */ true, /* color */ false, /* material */ false);
         
         // etape 2 : affiche la cube map
         // inverse de la composition des transformations repere monde vers repere image
@@ -172,9 +174,9 @@ public:
         {
             clear_key_state('r');
             
-            m_program_draw= read_program("tutos/draw_cubemap.glsl");
+            reload_program(m_program_draw, "tutos/draw_cubemap.glsl");
             program_print_errors(m_program_draw);
-            m_program= read_program("tutos/cubemap.glsl");
+            reload_program(m_program, "tutos/cubemap.glsl");
             program_print_errors(m_program);
         }
         

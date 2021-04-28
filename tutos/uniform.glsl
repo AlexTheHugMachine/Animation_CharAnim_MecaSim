@@ -1,5 +1,5 @@
 
-//! \file uniforms.glsl
+//! \file uniform.glsl
 
 #version 330 
 

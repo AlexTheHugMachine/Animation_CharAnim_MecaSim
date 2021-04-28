@@ -42,23 +42,27 @@ solution "gKit2light"
         buildoptions { "-flto"}
         linkoptions { "-flto"}
     
-    configuration { "windows" }
-        defines { "WIN32", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
-        defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
-    
     configuration { "windows", "gmake", "x32" }
-        buildoptions { "-std=c++11"}
+        buildoptions { "-U__STRICT_ANSI__"} -- pour definir M_PI
+        buildoptions { "-std=c++11", "-fpermissive" }
+        defines { "WIN32", "_WIN32" }
         includedirs { "extern/mingw/include" }
         libdirs { "extern/mingw/lib" }
         links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
     
     configuration { "windows", "codeblocks", "x32" }
-        buildoptions { "-std=c++11"}
+        buildoptions { "-U__STRICT_ANSI__"} -- pour definir M_PI
+        buildoptions { "-std=c++11", "-fpermissive" }
+        defines { "WIN32", "_WIN32" }
         includedirs { "extern/mingw/include" }
         libdirs { "extern/mingw/lib" }
         links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
     
 if _PREMAKE_VERSION >="5.0" then
+    configuration { "windows" }
+        defines { "WIN32", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
+        defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
+
     configuration { "windows", "vs2017" }
         location "build"
         debugdir "."
@@ -127,16 +131,21 @@ tutos = {
     "tuto4",
     "tuto5",
     "tuto6",
+    
     "tuto7",
     "tuto7_camera",
+    "tuto_transformations",
+
     "tuto8",
     "tuto9",
+    "tuto9_materials",
+    "tuto9_groups",
     "tuto9_texture1",
     "tuto9_textures",
     "tuto9_buffers",
     "tuto10",
     
-    "tuto_transform",
+--~     "tuto_transform",
     "tuto_pad",
     
     "tuto1GL",
@@ -166,7 +175,8 @@ tutos = {
     
     "tuto_rayons",
     "tuto_englobant",
-    "tuto_bvh"
+    "tuto_bvh",
+    
 }
 
 for i, name in ipairs(tutos) do
@@ -201,6 +211,10 @@ tutosM2 = {
 
     "tuto_is",
     "tuto_raytrace_fragment",
+    "tuto_raytrace_compute",
+    "tuto_histogram1_compute",
+    "tuto_histogram2_compute",
+    "tuto_histogram_compute"
 }
 
 for i, name in ipairs(tutosM2) do

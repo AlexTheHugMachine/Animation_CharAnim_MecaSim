@@ -1,7 +1,7 @@
 
 /*! \addtogroup interfaceC interface C openGL
 
-## une api3d est...
+# une api3d est...
 
 un ensemble de fonctions... pour utiliser un pipeline 3D. 
 
@@ -88,7 +88,7 @@ les noms de fonctions sont décorés par un suffixe indiquant le nombre de param
 i pour int, u pour unsigned int, v pour vector, un pointeur sur une ou plusieurs valeurs, etc.)
 
 
-## création des objets openGL
+# création des objets openGL
 
 pour dessiner, il faut en général créer plusieurs types d'objets openGL, la démarche est toujours la même :
     - créer un ou plusieurs identifiants, type `GLuint`, cf la famille de fonctions glGenXXX( ),
@@ -104,7 +104,7 @@ __pourquoi ?__ tous ces objets / ressources openGL permettent de manipuler des d
 pas d'espace d'adressage commun entre le cpu et le gpu : l'application ne peut pas obtenir un pointeur sur une structure allouée sur le gpu. Par contre, toutes les api 3d 
 proposent la même abstraction. Par exemple, allouer de la mémoire gpu pour stocker les coordonnées des sommets des triangles à dessiner est caché derrière les buffers.
 
-### créer un buffer 
+## créer un buffer 
 
 pour créer un seul buffer, il suffit de passer le pointeur sur l'identifiant :
 \code
@@ -117,7 +117,7 @@ le buffer sera ensuite sélectionné avec `glBindBuffer( )`. cf \ref tuto4GL pou
 c'est l'équivalent d'une allocation dynamique, cf `new[]` ou `malloc()`, mais au lieu de récupérer un pointeur, on obtient un _identifiant_ de la zone mémoire 
 allouée sur le gpu.
 
-### créer un vertex array object
+## créer un vertex array object
 
 \code
 GLuint vao;
@@ -139,7 +139,7 @@ struct vertex
 pour chaque membre, il y aura un attribut de sommet openGL déclaré en utilisant `glVertexAttribPointer()`. cf \ref tuto4GL
 
 
-### créer une texture
+## créer une texture
 
 \code
 GLuint texture;
@@ -151,7 +151,7 @@ la texture sera ensuite sélectionnée avec `glBindTexture( )`, cf \ref tuto5GL.
 c'est la même idée que pour les buffers, une texture est un tableau de couleurs, les fonctions `glTexImageXXX()` permettent de déclarer les dimensions de l'image
 et de décrire la structure qui représente une couleur.
 
-### créer un shader, un shader program
+## créer un shader, un shader program
 
 les shaders et les programs sont un peu à part, leur fonction de création ne crée qu'un seul objet à la fois :
 \code

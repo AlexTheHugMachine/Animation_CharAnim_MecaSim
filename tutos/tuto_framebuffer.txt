@@ -74,7 +74,7 @@ pour "décoder" la configuration de fbo, le plus simple est de partir de la sort
 sera écrite dans l'attachment d'indice 0 passé à glDrawBuffers(). et la texture stockant la valeur est celle sélectionnée par glFramebufferTexture( ) 
 sur l'attachment correspondant.
 
-## dessiner dans un framebuffer 
+# dessiner dans un framebuffer 
 
 il suffit de sélectionner le framebuffer sur GL_DRAW_FRAMEBUFFER avec glBindFramebuffer( ) avant de dessiner quelquechose :
 \code
@@ -133,7 +133,7 @@ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 glClear( ) et glDraw( ) utilisent _implicitement_ les dimensions fournies par glViewport( ), donc il faut configurer viewport avant clear et draw...
 
 
-## dessiner dans la fenetre ? (framebuffer par défaut)
+# dessiner dans la fenetre ? (framebuffer par défaut)
 
 il suffit de sélectionner le framebuffer 0 avant de dessiner :
 \code
@@ -149,7 +149,7 @@ glDrawArrays(GL_TRIANGLES, ... );
 \endcode
 
 
-## récupérer l'identifiant d'une sortie du fragment shader 
+# récupérer l'identifiant d'une sortie du fragment shader 
 
 c'est glGetFragDataLocation( ) qui renvoie l'identifiant du varying déclaré par le fragment shader :
 \code
@@ -232,7 +232,8 @@ glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 \endcode
 
 
-### attention ###
+## attention
+
 Autre subtilité, si une texture est active sur une unité de texture et attachée en même temps au framebuffer actif, glDraw()
 génèrera une erreur : le pipeline ne peut pas lire et écrire la même texture en même temps. il faut donc bien penser à nettoyer les unités de 
 texture pour eviter ce problème...

@@ -72,8 +72,8 @@ bool laptop_mode( );
 //! fonction interne de gestion d'evenements.
 int events( Window window );
 
-//! renvoie le chemin(path) vers le fichier filename après l'avoir chercher par rapport à l'executable ou au répertoire père de l'executable
-const char* smart_path(const char* filename);
+//! renvoie le chemin(path) vers le fichier 'filename' apres l'avoir cherche dans un repertoire standard...
+const char *smart_path( const char* filename );
 
 ///@}
 #endif

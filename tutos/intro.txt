@@ -1,7 +1,7 @@
 
 /*! \addtogroup intro3d introduction api 3d, openGL et pipeline graphique
 
-## introduction : une api 3d ? c'est quoi ?
+# introduction : une api 3d ? c'est quoi ?
 
 facile, c'est un ensemble de fonctions permettant de paramétrer un pipeline graphique pour dessiner des objets...
 

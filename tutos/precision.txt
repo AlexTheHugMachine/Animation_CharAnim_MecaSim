@@ -1,0 +1,203 @@
+
+/*! \addtogroup precision précision numérique et lancer de rayons
+
+Le lancer de rayon fonctionne plutot bien :
+
+<IMG SRC="ray_spheres.png" width="90%"> 
+
+mais dès que l'on calcule des ombres, on tombe sur un probleme assez pénible :
+
+<IMG SRC="epsilon_shadows.png" width="90%"> 
+
+les images sont pleines de défauts... __pourquoi ?__
+
+les `float` utilisés pour les calculs ne sont que des approximations, plus ou moins précises des nombres réels, et le point d'intersection exact
+peut se trouver n'importe ou dans une région autour de la valeur des `float` qui le représente :
+
+<IMG SRC="epsilon_intersection.png" width="45%"> 
+
+et lorsque l'on teste la visibilité de la source de lumière, on utilise ce point d'intersection comme origine du rayon de test. Selon la position de 
+ce point, le résultat sera correct (s'il est au-dessus de l'objet intersecté par le rayon), ou pas (lorsqu'il est sous la surface). Une solution 
+classique décale l'origine du rayon de test pour l'éloigner de la surface de l'objet :
+
+<IMG SRC="ray_shadows.png" width="45%"> 
+
+mais il faut choisir de quelle distance éloigner l'origine du rayon de test... une solution simple utilise une constante, 1/1000 par exemple :
+\code
+    Point p= { ... }; // intersection du rayon 
+    Vector n= { ... }; // normale au point d'intersection
+    
+    // decale l'origine du rayon vers la source de lumiere
+    const float epsilon= float(1.0 / 1000.0);
+    Point origine= p + epsilon * n;
+\endcode
+
+mais cette valeur, ne fontionnera pas avec toutes les scenes... __pourquoi ?__
+
+<table style="width:90%">
+<tr> 
+	<td> <IMG SRC="epsilon4-256.png" width="100%"> 
+	<td> <IMG SRC="carnival-epsilon0-64.png" width="100%"> 
+</table>
+
+parce que la précision des `float` est __relative__, pas _absolue_... plus un `float` est grand, moins il est précis, et la taille de la boite / la distance 
+nécessaire pour décaler l'origine du rayon de test doit augmenter. La cornell box est inclut dans un cube de taille 10, alors que le manege est dans 
+un cube de taille `> 10000`... et il faut un décalage très différent dans ces 2 cas... C'est meme pire, pour le manege ou le grand huit en arriere 
+plan, il faut aussi des valeurs différentes...
+
+pour vous convaincre, executez ce petit code qui affiche le premier float qui ne peut pas représenter exactement `valeur + 1/1000` :
+\code
+float epsilon= 1.0 / 1000.0;
+for(int i= 0; i < 1000000; i++)
+{
+    if(float(i) + epsilon == float(i))
+    {
+        printf("%.15f + %.15f = %.15f\n", float(i), epsilon, float(i) + epsilon);
+        break;
+    }
+}
+\endcode
+
+et les valeurs plus grandes que 32000 ne permettent pas de représenter exactement 32000 + 1/1000... 
+
+les `float` 32bits représentent les réels en utilisant un entier 24bits et un exposant sur 8bits, ils ne peuvent donc représenter exactement 
+que \f$ 2^{32} \f$ réels... chaque `float` représente donc un intervalle de réels, qui grandit avec la valeur du `float`. on peut connaitre la taille de cet
+intervalle en utilisant `std::numeric_limits<float>::epsilon()`, qui représente l'intervalle pour la valeur 1. pour les autres valeurs, il suffit de 
+calculer \f$ valeur * (1 + epsilon) \f$, pour obtenir le prochain `float` représentable :
+
+voila la taille des intervalles pour les valeurs < 100000 :
+\code
+for(int i= 0; i < 100000; i+= 100)
+{
+    float f= float(i);
+    float fpmax= f * (1 + std::numeric_limits<float>::epsilon());
+    printf("%f %f\n", f, fpmax - f);
+}
+\endcode
+
+<IMG SRC="epsilon_plot.png" width="40%"> 
+
+pour vous convaincre que ces valeurs ont vraiment un sens, vérifiez que si l'on ajoute une valeur inférieure à `epsilon` le résultat de l'addition est faux...
+par exemple :
+\code
+{
+    float x= 1;
+    x= x + std::numeric_limits<float>::epsilon();
+    assert(x > 1); // le resultat doit etre representable exactement
+}
+{
+    float x= 1;
+    x= x + std::numeric_limits<float>::epsilon() / 2;
+    assert(x == 1); // le resultat n'est pas representable. on ajoute une valeur trop petite...
+}
+\endcode
+
+ou pour des valeurs > 1 :
+\code
+{
+    float x= 100000;
+    x= x * (1 + std::numeric_limits<float>::epsilon());
+    assert(x > 100000);
+}
+{
+    float x= 100000;
+    x= x * (1 + std::numeric_limits<float>::epsilon() / 2);
+    assert(x == 100000);
+}
+\endcode
+
+
+# et alors ?
+
+comment utiliser la taille de l'intervalle / la precision d'un `float` pour décaler l'origine du rayon de test ?
+
+première étape : estimer la precision du point d'intersection, le plus simple est de garder l'intervalle de la plus grande valeur des coordonnées 
+x, y, z du point :
+\code
+float epsilon_point( const Point& p )
+{
+    // plus grande erreur
+    float pmax= std::max(std::abs(p.x), std::max(std::abs(p.y), std::abs(p.z)));
+    
+    // evalue l'epsilon relatif du point d'intersection
+    float pe= pmax * std::numeric_limits<float>::epsilon();
+    return pe;
+}
+\endcode
+
+et il ne reste plus qu'à décaler l'origine du rayon, le long de la normale de la surface :
+\code
+    Point p= { ... }; // intersection du rayon 
+    Vector pn= { ... }; // normale au point d'intersection
+    
+    Point origine= p + epsilon_point(p) * pn;
+\endcode
+
+et voila le resultat :
+
+<table style="width:90%">
+<tr> 
+	<td> <IMG SRC="epsilon0-256.png" width="100%"> 
+	<td> <IMG SRC="epsilon1-256.png" width="100%"> 
+</table>
+
+à gauche, sans déclage, à droite, avec... ce n'est pas suffisant pour régler le problème, __pourquoi ?__
+
+tout simplement, parce que le point d'intersection est le résultat d'un calcul et que toutes les valeurs utilisées sont aussi arrondies par les `float`, et 
+l'erreur réelle du point d'intersection est plus importante, elle dépend aussi des erreurs associées à toutes les valeurs utilisées et aux opérations 
+utilisées. au minimum, le point d'intersection est calculé par \f$ p = o + t \vec{d} \f$ mais \f$ o, t\f$ et \f$ \vec{d} \f$ sont aussi représentés par des
+`float`...
+
+il est possible de calculer assez précisement comment se propagent toutes ces erreurs, mais une solution très simple consiste à augmenter l'erreur 
+estimée par une constante, voila quelques exemples :
+
+<table style="width:90%">
+<tr> 
+	<td> <IMG SRC="epsilon1-256.png" width="100%"> 
+	<td> <IMG SRC="epsilon2-256.png" width="100%"> 
+<tr> 
+	<td> p + 1 * epsilon_point(p) * pn
+	<td> p + 2 * epsilon_point(p) * pn
+<tr> 
+	<td> <IMG SRC="epsilon4-256.png" width="100%"> 
+	<td> <IMG SRC="epsilon10-256.png" width="100%"> 
+<tr> 
+	<td> p + 4 * epsilon_point(p) * pn
+	<td> p + 10 * epsilon_point(p) * pn
+</table>
+
+et cette solution `p + 10 * epsilon_point(p) * pn` marche correctement sur des scènes très différentes :
+
+<table style="width:90%">
+<tr> 
+    <td> <IMG SRC="carnival-epsilon10-1024.png" width="100%"> 
+    <td> <IMG SRC="quixel-epsilon10-1024.png" width="100%"> 
+</table>
+
+## et si l'extrémité du rayon est aussi sur un objet ?
+
+il faut decaler l'origine (le point p) et l'extrémité (le point q) du rayon de test :
+\code
+Point p= { ... };
+Vector pn= { ... };
+
+Point q= { ... }:
+Vector qn= { ... };
+
+Point origine= p + 10 * epsilon_point(p) * pn;
+Point extremite= q + 10 * epsilon_point(q) * qn;
+Ray test(origine, extremite);
+if(Hit hit= intersect(ray ... )) 
+    ... ;
+\endcode
+
+# c'est quand meme moche ? non ? 
+ 
+un peu oui, on a simplement remplacé une constante absolue 1/1000 par une constante relative \f$ 10*\epsilon(x) \f$ ... qui a tout de meme l'avantage 
+d'etre simple à estimer et raisonnablement robuste. 
+
+[PBRT](http://www.pbr-book.org/3ed-2018/) explique en détail comment estimer les erreurs lors des calculs et comment modifier le lancer de rayon 
+en fonction : [Managing rounding errors](http://www.pbr-book.org/3ed-2018/Shapes/Managing_Rounding_Error.html)
+
+
+*/

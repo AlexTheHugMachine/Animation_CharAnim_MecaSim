@@ -66,7 +66,7 @@ public:
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Transform) * m_multi_model.size(), &m_multi_model.front(), GL_DYNAMIC_DRAW);   
         
         // creation des vertex buffer, uniquement les positions
-        m_vao= m_objet.create_buffers(/* texcoords */ false, /* normals */ false, /* colors */ false);
+        m_vao= m_objet.create_buffers(/* texcoord */ false, /* normal */ false, /* color */ false, /* material */ false);
         
         // shader programs
         m_program_direct= read_program("tutos/M2/indirect_direct.glsl");        // affichage classique N draws

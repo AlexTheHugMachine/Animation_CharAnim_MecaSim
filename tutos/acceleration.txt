@@ -61,6 +61,8 @@ on peut illustrer les différentes étapes de l'algorithme, en utilisant un cube
 
 <IMG SRC="englobant_repartition.png" width="30%"> 
 
+# Répartition
+
 Il y a encore quelques détails à régler avant d'écrire la solution complète : si on découpe un englobant en 2 parties, il peut très bien arriver qu'un triangle 
 touche les 2 parties, il faudra donc inclure le triangle dans les 2 ensembles de triangles testés par la suite de l'algorithme. ce qui veut dire allouer de la 
 mémoire à chaque appel récursif pour représenter l'ensemble `{ t }`... et ça va être très long. 
@@ -173,9 +175,11 @@ struct BBox
     Point pmin, pmax;	// points extremes de l'englobant
     
     BBox( const Point& p ) : pmin(p), pmax(p) {}
+    BBox( const BBox& b ) : pmin(b.pmin), pmax(b.pmax) {}
     
     // ajouter un point dans l'englobant
     BBox& insert( const Point& p ) { pmin= min(pmin, p); pmax= max(pmax, p); return *this; }
+    BBox& insert( const BBox& b ) { pmin= min(pmin, b.pmin); pmax= max(pmax, b.pmax); return *this; }
     
     // position du centre de l'englobant sur un axe
     float centroid( const int axis ) const { return (pmin(axis) + pmax(axis)) / 2; }
@@ -226,15 +230,9 @@ void divide( const BBox& bounds,
     
     // construit les englobants des triangles de la partie 1 / a gauche
     // les triangles se trouvent dans [tbegin .. m)
-    BBox left(triangles[tbegin].p);                                         // englobant du premier triangle
-    left.insert(triangles[tbegin].p + triangles[tbegin].e1);                // on insere les 3 sommets...
-    left.insert(triangles[tbegin].p + triangles[tbegin].e2);
-    for(int i= tbegin+1; i < m; i++)                                        // insere les sommets des autres triangles
-    {
-        left.insert(triangles[i].p);
-        left.insert(triangles[i].p + triangles[i].e1);
-        left.insert(triangles[i].p + triangles[i].e2);
-    }
+    BBox left= triangles[tbegin].bounds();                              // englobant du premier triangle
+    for(int i= tbegin+1; i < m; i++)                                    // insere les sommets des autres triangles
+        left.insert(triangles[i].bounds());
     
     // place les rayons qui touchent l'englobant au debut du tableau
     RayHit *prleft= std::partition(rays.data() + rbegin, rays.data() + rend, ray_less1(left));
@@ -246,15 +244,9 @@ void divide( const BBox& bounds,
     
     // on recommence pour la partie 2 / a droite
     // les triangles se trouvent dans [m .. tend)
-    BBox right(triangles[m].p);
-    right.insert(triangles[m].p + triangles[m].e1);
-    right.insert(triangles[m].p + triangles[m].e2);
+    BBox right= triangles[m].bounds();
     for(int i= m+1; i < tend; i++)
-    {
-        right.insert(triangles[i].p);
-        right.insert(triangles[i].p + triangles[i].e1);
-        right.insert(triangles[i].p + triangles[i].e2);
-    }
+        right.insert(triangles[i].bounds());
     
     // place les rayons qui touchent l'englobant au debut du tableau
     RayHit *prright= std::partition(rays.data() + rbegin, rays.data() + rend, ray_less1(right));
@@ -294,9 +286,7 @@ struct triangle_less1
     bool operator() ( const Triangle& triangle ) const
     {
         // re-construit l'englobant du triangle
-        BBox bounds(triangle.p);
-        bounds.insert(triangle.p + triangle.e1);
-        bounds.insert(triangle.p + triangle.e2);
+        BBox bounds= triangle.bounds();
         // renvoie vrai si le triangle est dans la partie gauche / avant le plan qui coupe l'englobant au milieu
         return bounds.centroid(axis) < cut;
     }
@@ -495,35 +485,29 @@ protected:
         
         // construire le fils gauche
         // les triangles se trouvent dans [begin .. m)
-        BBox bounds_left(triangles[begin].p);                                  // englobant du premier triangle
-        bounds_left.insert(triangles[begin].p + triangles[begin].e1);          // on insere les 3 sommets...
-        bounds_left.insert(triangles[begin].p + triangles[begin].e2);
-        for(int i= begin+1; i < m; i++)                                        // insere les sommets des autres triangles
-        {
-            bounds_left.insert(triangles[i].p);
-            bounds_left.insert(triangles[i].p + triangles[i].e1);
-            bounds_left.insert(triangles[i].p + triangles[i].e2);
-        }
-        int left= build(bounds_left, begin, m);
+        BBox bounds_left= triangle_bounds(begin, m); 	// englobant des triangles
+        int left= build(bounds_left, begin, m);		    // construit le fils gauche	
         
         // on recommence pour le fils droit
         // les triangles se trouvent dans [m .. end)
-        BBox bounds_right(triangles[m].p);
-        bounds_right.insert(triangles[m].p + triangles[m].e1);
-        bounds_right.insert(triangles[m].p + triangles[m].e2);
-        for(int i= m+1; i < end; i++)
-        {
-            bounds_right.insert(triangles[i].p);
-            bounds_right.insert(triangles[i].p + triangles[i].e1);
-            bounds_right.insert(triangles[i].p + triangles[i].e2);
-        }
-        int right= build(bounds_right, m, end);
+        BBox bounds_right= triangle_bounds(m, end); 	// englobant des triangles
+        int right= build(bounds_right, m, end);		    // construit le fils droit
         
         // inserer un noeud interne et renvoyer son indice
         int index= nodes.size();
         nodes.push_back(make_node(bounds, left, right));
         return index;
     }
+    
+    BBox triangle_bounds( const int begin, const int end )
+    {
+        BBox bbox= triangles[begin].bounds();
+        for(int i= begin +1; i < end; i++)
+            bbox.insert(triangles[i].bounds());
+        
+        return bbox;
+    }
+    
 };
 \endcode
 
@@ -582,35 +566,40 @@ protected:
 
 ### et alors ca marche ??
 
-pour la cornell box, 32 triangles :
+<IMG SRC="cornell_bvh.png" width="25%"> 
+
+pour la cornell box, 32 triangles : 
     - `direct()` 90ms
     - `divide()` 80ms
     - bvh construction < 1ms, construction + intersection 85ms
-<IMG SRC="cornell_bvh.png" width="25%"> 
 
-pour un objet plus gros, par exemple `data/bigguy.obj`, 3000 triangles :
+<IMG SRC="bigguy_bvh.png" width="25%"> 
+
+pour un objet plus gros, par exemple `data/bigguy.obj`, 3000 triangles : 
     - `direct()` 12400ms
     - `divide()` 170ms
     - bvh construction < 1ms, construction + intersection 150ms
-<IMG SRC="bigguy_bvh.png" width="25%"> 
 
-plus gros : sibenik : 75000 triangles
+<IMG SRC="sibenik_bvh.png" width="25%"> 
+
+plus gros, sibenik : 75000 triangles
     - `direct()` abandon...
     - `divide()` 710ms
     - bvh construction 19ms, construction + intersection 910ms
-<IMG SRC="sibenik_bvh.png" width="25%"> 
     
+<IMG SRC="sponza_bvh.png" width="25%"> 
+ 
 sponza version crytek : 250000 triangles
     - `direct()` pas la peine...
     - `divide()` 2470ms
     - bvh construction 80ms, construction + intersection 4000ms
-<IMG SRC="sponza_bvh.png" width="25%"> 
 
+<IMG SRC="history_bvh.png" width="25%"> 
+ 
 musee : 1500000 triangles
     - `direct()` pas la peine...
     - `divide()` 2800ms
     - bvh construction 480ms, construction + intersection 4000ms
-<IMG SRC="history_bvh.png" width="25%"> 
 
 bien sur, on peut maintenant paralleliser l'intersection des rayons (avec openMP, par exemple) :
 \code
@@ -627,7 +616,7 @@ sur 6 coeurs / 12 threads : le temps de construction du bvh ne change pas, par c
 c'est mieux, la construction du bvh et son parcours / intersection parallelisé sont toujours plus rapides que `divide()` et le bvh sera plus simple à utiliser 
 pour calculer une image. 
 
-\todo
+\bug
 Mais les résultats sont quand meme assez bizarres, les 2 algorithmes sont sensés faire 
 la même chose...\n
 En regardant de plus près, les 2 méthodes ne calculent pas le meme nombre d'intersections rayons / triangles. Par exemple, sur sibenik :

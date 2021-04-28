@@ -104,8 +104,23 @@ public:
         // 
         m_program= read_program("tutos/pipeline_compute.glsl");
         program_print_errors(m_program);
+        
+        // compute shader
         m_compute_program= read_program("tutos/vertex_compute.glsl");
         program_print_errors(m_compute_program);
+        
+        // recupere le nombre de threads de chaque groupe du compute shader
+        GLint threads[3]= { };
+        glGetProgramiv(m_compute_program, GL_COMPUTE_WORK_GROUP_SIZE, threads);
+        printf("threads / group x %d, y %d, z %d\n", threads[0], threads[1], threads[2]);
+        m_compute_threads= threads[0];
+        
+        // nombre de groupes de threads a executer pour transformer les sommets du mesh
+        m_compute_groups= m_mesh.vertex_count() / m_compute_threads;
+        if(m_mesh.vertex_count() % m_compute_threads)
+            m_compute_groups= m_compute_groups +1;
+        
+        printf("groups %d= %d threads\n", m_compute_groups, m_compute_groups*m_compute_threads);
         
         //
         Point pmin, pmax;
@@ -167,13 +182,10 @@ public:
         
         program_uniform(m_compute_program, "mvpMatrix", mvp);
         
-        // calcule le nombre de groupes de threads
-        int n= m_mesh.vertex_count() / 256;
-        if(m_mesh.vertex_count() % 256)
-            n= n+1;
-        glDispatchCompute(n, 1, 1);
+        // go !!
+        glDispatchCompute(m_compute_groups, 1, 1);
         
-        // etape 2 : synchronisation
+        // etape 2 : synchronisation, attendre les resultats du compute shader
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         
         // etape 3 : utilise les sommets transformes (par le compute shader) pour afficher le mesh.
@@ -198,6 +210,8 @@ protected:
     GLuint m_transformed_buffer;
     GLuint m_program;
     GLuint m_compute_program;
+    int m_compute_threads;
+    int m_compute_groups;
 };
 
 

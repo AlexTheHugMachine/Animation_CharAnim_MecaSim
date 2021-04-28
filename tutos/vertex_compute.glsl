@@ -20,9 +20,12 @@ uniform mat4 mvpMatrix;
 layout(local_size_x= 256) in;
 void main( )
 {
-    // chaque thread transforme un sommet.
-    if(gl_LocalInvocationIndex < data.length())
-        transformed[gl_GlobalInvocationID.x]= mvpMatrix * vec4(data[gl_GlobalInvocationID.x], 1);
+    // recupere l'indice du thread
+    const uint ID= gl_GlobalInvocationID.x;
+    
+    // chaque thread transforme le sommet d'indice ID...
+    if(ID < data.length())
+        transformed[ID]= mvpMatrix * vec4(data[ID], 1);
 }
 #endif
 

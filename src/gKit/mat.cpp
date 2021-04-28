@@ -234,6 +234,14 @@ Transform Rotation( const Vector& u, const Vector& v )
     float s= length(w); // sin theta
     float c= dot(a, b); // cos theta
     
+    // si u et v sont colineaires, pas d'axe de rotation, renvoyer +1 ou -1
+    if(s < float(0.00001))
+        //! \todo ajuster epsilon, ou trouver une autre formulation non degeneree...
+        return Scale(std::copysign(c, 1));
+    
+    // normalise l'axe de rotation
+    w= w / s;
+    
     // meme matrice de rotation qu'au dessus , cf Rotation(axis, angle), l'axe est le vecteur w, s et c sont le sinus et le cosinus de l'angle
     return Transform(
         w.x * w.x + (1 - w.x * w.x ) * c,

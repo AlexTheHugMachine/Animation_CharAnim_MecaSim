@@ -19,7 +19,7 @@ namespace glsl
     template < typename T >
     struct alignas(4) gscalar
     { 
-        T x;
+        alignas(4) T x;
         
         gscalar( ) : x(T()) {}
         gscalar( const T& v ) : x(v) {}
@@ -39,8 +39,11 @@ namespace glsl
         alignas(4) T x, y;
         
         gvec2( ) {}
+        gvec2( const gvec2<T>& v ) : x(v.x), y(v.y) {}
         gvec2( const ::vec2& v ) : x(v.x), y(v.y) {}
+        gvec2& operator= ( const gvec2<T>& v ) { x= v.x; y= v.y; return *this; }
         gvec2& operator= ( const ::vec2& v ) { x= v.x; y= v.y; return *this; }
+        operator ::vec2 ( ) { return ::vec2(float(x), float(y)); }
     };
     
     typedef gvec2<float> vec2;
@@ -55,12 +58,15 @@ namespace glsl
         alignas(4) T x, y, z;
         
         gvec3( ) {}
+        gvec3( const gvec3<T>& v ) : x(v.x), y(v.y), z(v.z) {}
         gvec3( const ::vec3& v ) : x(v.x), y(v.y), z(v.z) {}
         gvec3( const Point& v ) : x(v.x), y(v.y), z(v.z) {}
         gvec3( const Vector& v ) : x(v.x), y(v.y), z(v.z) {}
+        gvec3& operator= ( const gvec3<T>& v ) { x= v.x; y= v.y; z= v.z; return *this; }
         gvec3& operator= ( const ::vec3& v ) { x= v.x; y= v.y; z= v.z; return *this; }
         gvec3& operator= ( const Point& v ) { x= v.x; y= v.y; z= v.z; return *this; }
         gvec3& operator= ( const Vector& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+        operator ::vec3 ( ) { return ::vec3(float(x), float(y), float(y)); }
     };
     
     typedef gvec3<float> vec3;
@@ -75,8 +81,12 @@ namespace glsl
         alignas(4) T x, y, z, w;
         
         gvec4( ) {}
+        gvec4( const gvec4<T>& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
         gvec4( const ::vec4& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
+        gvec4& operator= ( const gvec4<T>& v ) { x(v.x), y(v.y), z(v.z), w(v.w) ; return *this; }
+        gvec4& operator= ( const ::vec4& v ) { x(v.x), y(v.y), z(v.z), w(v.w) ; return *this; }
         gvec4& operator= ( const Color& c ) { x= c.r; y= c.g; z= c.b; w= c.a; return *this; }
+        operator ::vec4 ( ) { return ::vec4(float(x), float(y), float(y), float(w)); }
     };
     
     typedef gvec4<float> vec4;
@@ -109,8 +119,11 @@ namespace glsl
             alignas(4) T x, y;
             
             gvec2( ) {}
+            gvec2( const gvec2<T>& v ) : x(v.x), y(v.y) {}
             gvec2( const ::vec2& v ) : x(v.x), y(v.y) {}
+            gvec2& operator= ( const gvec2<T>& v ) { x= v.x; y= v.y; return *this; }
             gvec2& operator= ( const ::vec2& v ) { x= v.x; y= v.y; return *this; }
+            operator ::vec2 ( ) { return ::vec2(float(x), float(y)); }
         };
         
         typedef gvec2<float> vec2;
@@ -124,12 +137,15 @@ namespace glsl
             alignas(4) T x, y, z;
             
             gvec3( ) {}
+            gvec3( const gvec3<T>& v ) : x(v.x), y(v.y), z(v.z) {}
             gvec3( const ::vec3& v ) : x(v.x), y(v.y), z(v.z) {}
             gvec3( const Point& v ) : x(v.x), y(v.y), z(v.z) {}
             gvec3( const Vector& v ) : x(v.x), y(v.y), z(v.z) {}
+            gvec3& operator= ( const gvec3<T>& v ) { x= v.x; y= v.y; z= v.z; return *this; }
             gvec3& operator= ( const ::vec3& v ) { x= v.x; y= v.y; z= v.z; return *this; }
             gvec3& operator= ( const Point& v ) { x= v.x; y= v.y; z= v.z; return *this; }
             gvec3& operator= ( const Vector& v ) { x= v.x; y= v.y; z= v.z; return *this; }
+            operator ::vec3 ( ) { return ::vec3(float(x), float(y), float(y)); }
         };
         
         typedef gvec3<float> vec3;
@@ -143,8 +159,12 @@ namespace glsl
             alignas(4) T x, y, z, w;
             
             gvec4( ) {}
+            gvec4( const gvec4<T>& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
             gvec4( const ::vec4& v ) : x(v.x), y(v.y), z(v.z), w(v.w) {}
+            gvec4& operator= ( const gvec4<T>& v ) { x(v.x), y(v.y), z(v.z), w(v.w) ; return *this; }
+            gvec4& operator= ( const ::vec4& v ) { x(v.x), y(v.y), z(v.z), w(v.w) ; return *this; }
             gvec4& operator= ( const Color& c ) { x= c.r; y= c.g; z= c.b; w= c.a; return *this; }
+            operator ::vec4 ( ) { return ::vec4(float(x), float(y), float(y), float(w)); }
         };
         
         typedef gvec4<float> vec4;
@@ -237,9 +257,7 @@ int print_uniform( const GLuint program )
             
             printf("    '%s %s': offset %d", glsl_string(glsl_type), vname, offset);
             if(array_size > 1)
-                printf(", array size %d", array_size);
-            
-            printf(", stride %d", array_stride);
+                printf(", array size %d, stride %d", array_size, array_stride);
             
             // organisation des matrices
             if(glsl_type == GL_FLOAT_MAT4 || glsl_type == GL_FLOAT_MAT3)
@@ -275,18 +293,18 @@ int init( )
         glsl::vec4 c;
         glsl::array::vec2 d[3];
 
-        //~ vec3 a;
+        //~ vec2 a;     // align 4
         //~ float pad0;
-        //~ vec3 b;
         //~ float pad1;
-        //~ vec3 c;
+        //~ vec3 b;     // align 16
         //~ float pad2;
-        //~ struct { float v; float pad0; float pad1; float pad2; } d[3];
+        //~ vec4 c;     // align 16
+        //~ struct { vec2 v; float pad0; float pad1; } d[3];    // d[i].v align 16
         
-        //~ vec3 a;
+        //~ vec2 a;
         //~ vec3 b;
-        //~ vec3 c;
-        //~ float d[3];
+        //~ vec4 c;
+        //~ vec2 d[3];
     };
     
     printf("a %ld\n",   offsetof(buffer, a));
@@ -309,6 +327,14 @@ int init( )
     printf("d[1] %ld\n", offsetof(buffer, d[1]));
     printf("d[2] %ld\n", offsetof(buffer, d[2]));
     
+    buffer B;
+    B.a= vec2(1, 2);
+    B.d[0]= vec2(3, 4);
+    B.d[1]= B.d[0];
+    
+    //~ vec2 d0= B.d[0];
+    vec2 d0= B.d[1];
+    printf("%f %f\n", d0.x, d0.y);
     return 0;
 }
 

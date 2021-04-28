@@ -62,7 +62,11 @@ public:
         // decrire un repere / grille 
         m_repere= make_grid(20);
         
-        m_objet= read_mesh("data/cube.obj");
+        // charge l'element
+        m_cube= read_mesh("data/cube.obj");
+        
+        // objet dynamique, commence par un element
+        m_objet= m_cube;
         
         // si l'objet est "gros", il faut regler la camera pour l'observer entierement :
         // recuperer les points extremes de l'objet (son englobant)
@@ -93,19 +97,26 @@ public:
     int render( )
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // dessine l'objet, place au centre du monde, pour le point de vue de la camera 
+        
+    // dessine l'objet, place au centre du monde, pour le point de vue de la camera 
         draw(m_objet, Identity(), camera());
+        
+    // dessine le meme objet, a un autre endroit. il faut modifier la matrice model, qui sert a ca : placer un objet dans le monde, ailleurs qu'a l'origine.
+        // par exemple, a la verticale au dessus du premier cube :
+        // la transformation est une translation le long du vecteur Y= (0, 1, 0), si on veut placer le cube plus haut, il suffit d'utiliser une valeur > 1
+        Transform t= Translation(0, 2, 0);
+        draw(m_objet, t, camera());
         
         // dessine aussi le repere, pour le meme point de vue
         draw(m_repere, Identity(), camera());
-
+        
         // continuer...
         return 1;
     }
 
 protected:
     Mesh m_objet;
+    Mesh m_cube;
     Mesh m_repere;
 };
 

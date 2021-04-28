@@ -26,7 +26,7 @@ public:
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
         m_camera.lookat(pmin, pmax);
-
+        
         // etape 1 : creer le shader program
         m_program= read_program("tutos/tuto9_color.glsl");
         program_print_errors(m_program);
@@ -95,7 +95,7 @@ public:
         // go !
         // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
         // tuto9_color.glsl n'utilise que position. les autres de servent a rien.
-        m_objet.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false);
+        m_objet.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false, /* use material index*/ false);
         
         return 1;
     }

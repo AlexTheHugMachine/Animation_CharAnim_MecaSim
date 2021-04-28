@@ -11,14 +11,15 @@
 #include "program.h"
 #include "uniforms.h"
 
-#include "app_time.h"        // classe Application a deriver
+#include "app.h"
+#include "widgets.h"
 
 
-class MeshViewer: public AppTime
+class MeshViewer: public App
 {
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    MeshViewer( const char *file ) : AppTime(1024, 640), m_filename(file) {}
+    MeshViewer( const char *file ) : App(1024, 640), m_filename(file) {}
     
     int init( )
     {
@@ -34,18 +35,15 @@ public:
         
         // recalcule les normales des sommets, si necessaire
         if(data.normals.size() == 0)
-        {
             normals(data);
-            
-            printf("normals : %d positions, %d texcoords, %d normals, %d triangles\n", 
-                (int) data.positions.size(), (int) data.texcoords.size(), (int) data.normals.size(), (int) data.material_indices.size());
-        }
         
         // construit les buffers
         m_mesh= buffers(data);
         
         // conserve le nombre de sommets et d'indices
         m_vertex_count= m_mesh.positions.size();
+        m_texcoord_count= m_mesh.texcoords.size();
+        m_normal_count= m_mesh.normals.size();
         m_index_count= m_mesh.indices.size();
         
         // construit les buffers openGL
@@ -66,12 +64,15 @@ public:
         glEnableVertexAttribArray(0);
         
         // transfere les texcoords des sommets
-        offset= offset + size;
-        size= m_mesh.texcoord_buffer_size();
-        glBufferSubData(GL_ARRAY_BUFFER, offset, size, m_mesh.texcoord_buffer());
-        // et configure l'attribut 1, vec2 texcoord
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, /* stride */ 0, (const GLvoid *) offset);
-        glEnableVertexAttribArray(1);
+        if(m_mesh.texcoord_buffer_size())
+        {
+            offset= offset + size;
+            size= m_mesh.texcoord_buffer_size();
+            glBufferSubData(GL_ARRAY_BUFFER, offset, size, m_mesh.texcoord_buffer());
+            // et configure l'attribut 1, vec2 texcoord
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, /* stride */ 0, (const GLvoid *) offset);
+            glEnableVertexAttribArray(1);
+        }
         
         // transfere les normales des sommets
         offset= offset + size;
@@ -92,21 +93,27 @@ public:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     
         // charge les textures des matieres
-        read_textures(m_mesh.materials);
-        
-        // configure le filtrage des textures de l'unite 0
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8.0f);
+        if(m_mesh.texcoord_buffer_size())
+        {
+            read_textures(m_mesh.materials);
+            
+            // configure le filtrage des textures de l'unite 0
+            //~ glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8.0f);
 
-        // configure le filtrage des textures, mode repeat
-        glGenSamplers(1, &m_sampler);
-        glSamplerParameteri(m_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glSamplerParameteri(m_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glSamplerParameteri(m_sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glSamplerParameteri(m_sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            // configure le filtrage des textures, mode repeat
+            glGenSamplers(1, &m_sampler);
+            glSamplerParameteri(m_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glSamplerParameteri(m_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glSamplerParameteri(m_sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glSamplerParameteri(m_sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        }
         
         // creer le shader program
-        m_program= read_program("tutos/mesh_viewer.glsl");
+        m_program= read_program( smart_path("tutos/mesh_viewer.glsl") );
         program_print_errors(m_program);
+        
+        // initialise les widgets
+        m_widgets= create_widgets();
         
         // etat openGL par defaut
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
@@ -126,6 +133,9 @@ public:
         glDeleteBuffers(1, &m_index_buffer);
         glDeleteVertexArrays(1, &m_vao);
         release_program(m_program);
+        
+        release_widgets(m_widgets);
+        
         return 0;
     }
     
@@ -186,7 +196,7 @@ public:
         
         // . parametres "supplementaires" :
         //   . couleur des pixels, cf la declaration 'uniform vec4 color;' dans le fragment shader
-        program_uniform(m_program, "diffuse_color", vec4(1, 1, 0, 1));
+        program_uniform(m_program, "diffuse_color", vec4(1, 1, 1, 1));
         
         static bool flat= false;
         if(key_state('f'))
@@ -194,45 +204,93 @@ public:
             clear_key_state('f');
             flat= !flat;
         }
+
+        static int show= 0;
+        static int show_lights= 0;
+        static int show_material= 0;
+        
+        if(key_state(SDLK_RIGHT) || key_state(SDLK_UP))
+        {
+            clear_key_state(SDLK_RIGHT);
+            clear_key_state(SDLK_UP);
+            show_material= (show_material +1) %  m_mesh.material_groups.size();
+        }
+        if(key_state(SDLK_LEFT) || key_state(SDLK_DOWN))
+        {
+            clear_key_state(SDLK_LEFT);
+            clear_key_state(SDLK_DOWN);
+            show_material= (show_material +m_mesh.material_groups.size() -1) %  m_mesh.material_groups.size();
+        }
         
         // go !
         glBindVertexArray(m_vao);
         for(int i= 0; i < (int) m_mesh.material_groups.size(); i++)
         {
-            //~ program_uniform(m_program, "color", Color((i % 100) / 99.f, 1 - (i % 10) / 9.f, (i % 4) / 3.f));
+            int material_id= m_mesh.material_groups[i].material;
+            const MaterialData& material= m_mesh.materials[material_id];
+            
+            program_uniform(m_program, "flat_shading", float(flat));
+            
+            if(show)
+                program_uniform(m_program, "diffuse_color", Color((material_id % 100) / 99.f, 1 - (material_id % 10) / 9.f, (material_id % 4) / 3.f));
+            else
+                program_uniform(m_program, "diffuse_color", material.diffuse);
 
-            const MaterialData& material= m_mesh.materials[m_mesh.material_groups[i].material];
+            if(show && material_id == show_material)
+                program_uniform(m_program, "diffuse_color", Color(1, 0, 0));
             
-            // parametre le shader program avec la description de la matiere
+            if(show_lights && material.emission.power() > 0)
+                program_uniform(m_program, "diffuse_color", Color(.8f, .4f, 0));
             
-        #if 0
-            // sans utiliser de texture, recupere la couleur de la matiere et la couleur moyenne de la texture
-            program_uniform(m_program, "diffuse_color", material.diffuse * material.diffuse_texture_color);
+            program_use_texture(m_program, "diffuse_texture", 0, material.diffuse_texture, m_sampler);
             
-        #else
-            // OU : couleur de base * texture
-            program_uniform(m_program, "diffuse_color", material.diffuse);
-            
-            // utilise une texture 
-            // . selectionne l'unite de texture 0
-            glActiveTexture(GL_TEXTURE0);
-            // . selectionne la texture 
-            glBindTexture(GL_TEXTURE_2D, material.diffuse_texture);
-            // . parametre le shader avec le numero de l'unite sur laquelle est selectionee la texture
-            GLint location= glGetUniformLocation(m_program, "diffuse_texture");
-            glUniform1i(location, 0);
-            
-            // . parametres de filtrage
-            glBindSampler(0, m_sampler);
-            
-            // ou 
-            // #include "uniforms.h"
-            // program_use_texture(m_program, "diffuse_texture", 0, material.diffuse_texture, m_sampler);
-        #endif
-        
             glDrawElements(GL_TRIANGLES, m_mesh.material_groups[i].count, 
                 GL_UNSIGNED_INT, m_mesh.index_buffer_offset(m_mesh.material_groups[i].first));
         }
+        
+        // affiche les infos
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        
+        begin(m_widgets);
+            label(m_widgets, "mesh '%s', %d vertices %s %s", m_filename, m_vertex_count, 
+                m_texcoord_count ? "texcoords" : "", m_normal_count ? "normals" : "");
+            
+            begin_line(m_widgets);
+            label(m_widgets, "%d materials", int(m_mesh.materials.size()));
+            
+            begin_line(m_widgets);
+            button(m_widgets, "show materials", show);
+            button(m_widgets, "show lights", show_lights);
+        
+            if(show)
+            {
+                const MaterialData& material= m_mesh.materials[show_material];
+                
+                begin_line(m_widgets);
+                label(m_widgets, "material%02d", show_material);
+                if(material.specular.max() == 0)
+                    label(m_widgets, "diffuse material");
+                else if(material.ns > 1)
+                    label(m_widgets, "glossy material");
+                else
+                    label(m_widgets, "undef material ??");
+                
+                begin_line(m_widgets);
+                label(m_widgets, "  Kd %.2f %.2f %.2f", material.diffuse.r, material.diffuse.g, material.diffuse.b);
+                begin_line(m_widgets);
+                label(m_widgets, "  Ks %.2f %.2f %.2f", material.specular.r, material.specular.g, material.specular.b);
+                begin_line(m_widgets);
+                label(m_widgets, "  Ns %.2f", material.ns);
+                
+                begin_line(m_widgets);
+                label(m_widgets, "  Kd texture %s", material.diffuse_filename.c_str());
+                begin_line(m_widgets);
+                label(m_widgets, "  Ns texture %s", material.ns_filename.c_str());
+                
+            }
+            
+        end(m_widgets);
+        draw(m_widgets, window_width(), window_height());
         
         return 1;
     }
@@ -243,6 +301,8 @@ protected:
     GLuint m_vertex_buffer;
     GLuint m_index_buffer;
     int m_vertex_count;
+    int m_texcoord_count;
+    int m_normal_count;
     int m_index_count;
 
     Transform m_model;
@@ -251,6 +311,8 @@ protected:
     GLuint m_sampler;
     GLuint m_program;
 
+    Widgets m_widgets;
+    
     const char *m_filename;
 };
 

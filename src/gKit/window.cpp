@@ -19,8 +19,6 @@
 #include <string>
 #include <iostream>
 
-#include <SDL2/SDL_power.h>
-
 #include "glcore.h"
 #include "window.h"
 
@@ -284,9 +282,11 @@ void release_window( Window window )
 
 #ifndef NO_GLEW
 #ifndef GK_RELEASE
+
+
 //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
 static
-void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
+void DEBUGCALLBACK debug_print( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length,
     const char *message, const void *userParam )
 {
     static std::set<std::string> log;
@@ -362,7 +362,7 @@ Context create_context( Window window, const int major, const int minor )
         // desactive les messages du compilateur de shaders
         glDebugMessageControlARB(GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
 
-//        glDebugMessageCallbackARB(debug, NULL);
+        glDebugMessageCallbackARB(debug_print, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
     }
 #endif
@@ -400,25 +400,44 @@ bool exists( const char *filename )
 
 
 static std::string smartpath;
+static std::string path;
 
 const char *smart_path( const char *filename )
 {
     if(exists(filename))
         return filename;
 
-    char *base= SDL_GetBasePath();
-    smartpath= base;
-    SDL_free(base);
+    if(path.empty())
+    {
+        // recupere la variable d'environnement, si elle existe
+        const char *envbase= std::getenv("GKIT_BASE_PATH");
+        if(envbase != nullptr)
+        {
+            path= std::string(envbase);
+            if(!path.empty() && path[path.size() -1] != '/')
+            {
+                path.append("/");       // force un /, si necessaire
+                printf("[base path] %s\n", path.c_str());
+            }
+        }
+    }
+    
+    if(path.empty())
+    {
+        char *base= SDL_GetBasePath();
+        printf("[base path] %s\n", base);
+        path= base;
+        SDL_free(base);
+    }
+    
+    smartpath= path + filename;
+    if(exists(smartpath.c_str()))
+        return smartpath.c_str();
 
-    std::string tmp;
-    tmp= smartpath + filename;
-    if(exists(tmp.c_str()))
-        smartpath= tmp;
-
-    tmp= smartpath + "../" + filename;
-    if(exists(tmp.c_str()))
-        smartpath= tmp;
-    else
-        smartpath= filename;
-    return smartpath.c_str();
+    smartpath= path + "../" + filename;
+    if(exists(smartpath.c_str()))
+        return smartpath.c_str();
+    
+    return filename; // echec, fichier pas trouve, renvoie quand meme le fichier original. 
+    // (permet au moins d'afficher l'erreur fichier non trouve dans l'application)
 }

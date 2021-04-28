@@ -1,0 +1,438 @@
+
+
+/*! \addtogroup transformations premiers objets, affichage et transformations
+
+# premiers objets 
+
+C'est la classe Mesh qui permet de décrire / représenter la géométrie des objets que l'on veut afficher. openGL ne sait dessiner que des points, segments et des triangles. La première 
+étape consiste à initialiser un objet Mesh en fonction du type de primitives que l'on va utiliser pour décrire l'objet :
+\code
+#include "mesh.h"
+
+Mesh objet(GL_TRIANGLES);	// ou GL_POINTS, ou GL_LINES
+\endcode
+
+Ensuite, il ne reste plus qu'à décrire les sommets des primitives : un triangle est composé de 3 sommets, un segment par 2, et un point par, ... 1 seul sommet. Pour ajouter un sommet 
+dans un objet Mesh, on utilise Mesh::vertex( ) :
+\code
+#include "mesh.h"
+
+Mesh objet( GL_TRIANGLES );	// cet objet est décrit par des triangles
+
+// position des 3 sommets d'un triangle
+objet.vertex( /* x */ 0 , /* y */ 0 , /* z */ 0 );
+objet.vertex( 1, 0, 0 );
+objet.vertex( 0, 1, 0 );
+\endcode
+
+D'autres informations peuvent être utilisées pour décrire chaque sommet d'un objet : sa positon, bien sur, mais aussi une couleur, une normale, et des coordonnées de texture : cf 
+Mesh::vertex(), Mesh::color(), Mesh::normal(), Mesh::texcoord(). par exemple pour décrire un triangle rouge, on peut écrire :
+\code
+#include "mesh.h"
+#include "color.h"
+
+Mesh objet( GL_TRIANGLES );
+
+// couleur et position de chaque sommet du triangle
+objet.color( Red() );
+objet.vertex( 0, 0, 0 );
+
+objet.color( Red() );
+objet.vertex( 1, 0, 0 );
+
+objet.color( Red() );
+objet.vertex( 0, 1, 0 );
+\endcode
+
+__attention :__ il y a une convention à respecter, on peut décrire les informations d'un sommet dans n'importe quel ordre, mais il faut finir par Mesh::vertex(). cette convention permet 
+aussi d'éviter de répéter les informations communes à plusieurs sommets. dans l'exemple précédent, tous les sommets sont rouges, et on peut aussi écrire :
+\code
+#include "mesh.h"
+#include "color.h"
+
+Mesh objet( GL_TRIANGLES );
+
+// couleur et position de chaque sommet du triangle
+objet.color( Red() );
+
+objet.vertex( 0, 0, 0 );
+objet.vertex( 1, 0, 0 );
+objet.vertex( 0, 1, 0 );
+\endcode
+
+autre exemple, dessiner les axes d'un repère, ce qui sera bien utile pour les parties suivantes :
+\code
+Mesh grid= Mesh(GL_LINES);
+
+// axes XYZ
+grid.color( Red() );
+grid.vertex( Point(0, .1, 0) );
+grid.vertex( Point(1, .1, 0) );
+
+grid.color( Green() );
+grid.vertex( Point(0, .1, 0) );
+grid.vertex( Point(0, 1, 0) );
+
+grid.color( Blue() );
+grid.vertex( Point(0, .1, 0) );
+grid.vertex( Point(0, .1, 1) );
+\endcode
+
+_remarque :_ Mesh::vertex(), et les autres sont surchargées avec les types de base : Point, Vector, Color, mais aussi avec les vecteurs vec2, vec3, vec4, en plus des versions acceptant
+les différentes composantes : x, y, z, w ou r, g, b, a.
+
+on peut également completer cet objet utilitaire avec une grille, pour materialiser le "sol" de la scène et ses dimensions :
+\code
+// genere une grille de n*n cases
+Mesh grid= Mesh(GL_LINES);
+
+// grille
+grid.color( White() );
+
+// ne trace que les lignes dans le plan XZ, à l'horizontale, centrées à l'origine
+for(int x= 0; x < n; x++)
+{
+	float px= float(x) - float(n)/2 + .5f;
+	grid.vertex( Point(px, 0, - float(n)/2 + .5f) ); 
+	grid.vertex( Point(px, 0, float(n)/2 - .5f) );
+}
+
+for(int z= 0; z < n; z++)
+{
+	float pz= float(z) - float(n)/2 + .5f;
+	grid.vertex( Point(- float(n)/2 + .5f, 0, pz) ); 
+	grid.vertex( Point(float(n)/2 - .5f, 0, pz) ); 
+}
+\endcode
+
+
+# maillage indexé
+
+Dans certains cas, il est plus simple de décrire l'objet comme un ensemble de sommets indexés par les triangles. Un triangle est donc un triplet d'indices de sommets, au lieu d'être 
+représenté par un triplet de sommets.
+
+exemple :
+\code
+Mesh objet= Mesh(GL_TRIANGLES);
+
+// stocke 3 sommets
+// et conserve leurs indices
+unsigned int a= objet.vertex( 0, 0, 0 );
+unsigned int b= objet.vertex( 1, 0, 0 );
+unsigned int c= objet.vertex( 0, 1, 0 );
+
+// ajoute un triangle : indice des 3 sommets
+objet.triangle(a, b, c);
+\endcode
+
+et accessoirement, décrire les objets de cette manière permet à la carte graphique de les afficher un peu plus vite (c'est surtout visible pour les "gros" objets composés 
+de >1M de triangles)
+
+# dessiner un objet / camera
+
+pour observer une scène / un objet, il faut également une camera, un point de vue. La classe Orbiter est un type particulier de camera, différente des cameras classiques 
+: elle ne fait que tourner / orbiter autour d'un centre à une certaine distance. ce qui est très pratique pour observer quelques objets, mais complètement différent des cameras 
+1ère et 3ième personne. 
+
+Le plus simple pour commencer est d'utiliser la variante de la classe Application qui gère automatiquement une camera :
+\code
+#include "mesh.h"
+#include "draw.h"
+#include "app_camera.h"
+
+class Ex1 : public AppCamera
+{
+	Ex1( ) : AppCamera(1024, 640) {}
+	
+	int init( )
+	{
+		m_objet= Mesh(GL_TRIANGLES);
+		{ ... }
+	}
+	
+	int render( )
+	{
+		glClear(Gl_COLOR_BUFFER_BIT);
+		
+		draw(m_objet, Identity(), camera());
+	}
+	
+	int quit( ) { ... }
+	
+	Mesh m_objet;
+};
+\endcode
+
+c'est AppCamera::camera() qui renvoie la camera gérée par l'application.
+
+pour dessiner un objet, le plus simple est d'utiliser la fonction draw( ) qui prend en paramètre l'objet à dessiner, l'orbiter / la camera et une matrice / transformation qui permet de placer 
+l'objet dans le monde et de l'observer :
+\code
+draw(m_objet, Identity(), camera());
+\endcode
+La transform Identity() place tout simplement l'objet au centre du monde... les coordonnées des sommets de l'objet ne sont pas modifiées / transformées.
+
+La camera initialisée par défaut observe le centre de la scène et une région assez petite autour. mais on peut décrire la région que la camera doit observer. Il y a 2 manières de décrire cette région 
+observée par la camera, cf Orbiter::lookat() : 
+	- soit avec une sphère, paramètres centre et rayon :
+	\code
+	camera().lookat( /* centre */ Point(0,0,0), /* rayon */ 10 );
+	\endcode
+	- soit avec les points extrémes d'un cube englobant :
+	\code
+	camera().lookat( /* point min */ Point(0,0,0), /* point max */ Point(10, 10, 10) );
+	\endcode
+
+# charger un objet 
+
+il est aussi possible de charger un fichier `.obj / wavefront` pour initialiser un objet Mesh :
+\code
+#include "mesh.h"
+#include "wavefront.h"
+
+Mesh objet= read_mesh( /* filename */ "..." );
+\endcode
+
+et de récupérer les dimensions de l'objet / la région occuppée par l'objet pour régler la camera, cf Mesh::bounds() :
+\code
+#include "mesh.h"
+#include "wavefront.h"
+
+Mesh objet= read_mesh( /* filename */ "..." );
+
+Point pmin, pmax;
+objet.bounds(pmin, pmax);
+// pmin et pmax contiennent les points extremes de l'englobant de l'objet.
+
+// regler la region de la scene observee par la camera
+camera().lookat(pmin, pmax);
+\endcode
+
+
+# placer un objet dans le monde
+
+pour placer un objet dans le monde, il suffit de modifier / transformer les coordonnées de ses sommets, c'est la matrice `model` qui représente ce changement de repère et c'est un paramètre
+de draw() :
+
+\code
+#include "mesh.h"
+#include "wavefront.h"
+#include "draw.h"
+#include "app_camera.h"
+
+class Ex1 : public AppCamera
+{
+	Ex1( ) : AppCamera(1024, 640) {}
+	
+	int init( )
+	{
+		// charger un objet
+		m_objet= read_mesh( /* filename */ "data/cube.obj" );
+		
+		// recuperer les dimensions de l'objet
+		Point pmin, pmax;
+		m_objet.bounds(pmin, pmax);
+		
+		// regler la camera pour observer l'objet
+		camera().lookat(pmin, pmax);
+	}
+	
+	int render( )
+	{
+		glClear(Gl_COLOR_BUFFER_BIT);
+		
+		draw(m_objet, Identity(), camera());
+	}
+	
+	int quit( ) { ... }
+	
+	Mesh m_objet;
+};
+\endcode
+
+<IMG SRC="transformations_partie1_cube1.png" width="100%">
+
+pour placer le cube ailleurs dans le monde, il suffit de modifier la transformation `model`, par exemple avec une translation vers le haut, le long de l'axe Y (0,1,0) :
+\code
+	Transform model= Translation(0, 2, 0);
+	
+	draw(m_objet, model, camera());
+\endcode
+
+<IMG SRC="transformations_partie1_cube2.png" width="100%">
+
+# orienter un objet dans le monde
+
+pour orienter / faire tourner un objet, on peut utiliser une rotation, autour de l'axe X, par exemple :
+\code
+Transform model= RotationX(45); // en degres
+
+draw(m_objet, model, camera());
+\endcode
+
+le résultat est sans surprise. mais comment placer et orienter un objet dans le monde ?
+
+# transformations : placer et orienter un objet dans le monde
+
+la réponse utilise la composition de transformations, le produit des matrices qui les représentent... et le produit de matrices n'est pas commutatif, \f$ A∗B \f$ n'est 
+pas la même valeur que \f$ B∗A \f$...
+\code
+exemple :
+Transform t= Translation(0, 2, 0);
+Transform r= RotationX(45); // en degres
+
+// solution 1 : tourner le cube puis le deplacer
+Transform model= t * r;
+draw(m_objet, model, camera());
+
+// + le cube a l'origine
+draw(m_objet, Identity(), camera());
+\endcode
+
+<IMG SRC="transformations_partie2_cube1.png" width="100%">
+
+et l'autre solution :
+\code
+Transform t= Translation(0, 2, 0);
+Transform r= RotationX(45); // en degres
+
+// solution 2 : deplacer puis tourner le cube
+Transform model= r * t;
+draw(m_objet, model, camera());
+
+// + le cube a l'origine
+draw(m_objet, Identity(), camera());
+\endcode
+
+<IMG SRC="transformations_partie2_cube2.png" width="100%">
+
+## pourquoi ?
+il faut se rappeler ce qui arrive aux points qui sont transformés par ces matrices. par exemple si \f$ q \f$ est la transformation de \f$ p \f$ par une matrice \f$ m \f$.
+on peut écrire : 
+
+\f$ q=m∗p \f$
+
+le point est à droite de la matrice. Si \f$ m \f$ est le produit de 2 matrices \f$ m=a∗b \f$ :
+
+\f$ q=a∗b∗p\f$
+
+le produit s'évalue de la droite vers la gauche :
+
+\f$q=a∗(b∗p) \f$
+
+donc \f$ p \f$ est d'abord multiplié par \f$ b \f$, et le résultat est ensuite multiplié par \f$ a \f$.
+
+résultat avec les rotations et les translations : soit 1/ on tourne l'objet, sur place, puis 2/ on le pousse,
+
+\f$ q=t∗r∗p \f$, cf solution 1
+
+soit, 1/ on déplace l'objet, et 2/ il tourne ensuite sur lui meme :
+
+\f$ q=r∗t∗p \f$, cf solution 2
+
+
+# placer un objet par rapport à un autre
+
+c'est la meme chose, il suffit de composer la transformation du 2ieme avec celle du premier et de calculer le produit des matrices pour dessiner le 2ieme objet par rapport a la transformation du premier.
+\code
+Transform m1= Translation(1, 0, 0);                  // place l'objet 1
+Transform m2= Translation(0, 2, 0) * RotationX(45);  // place et oriente l'objet 2
+
+// dessine l'objet 1
+draw(m_objet, m1, camera());
+
+// dessine l'objet 2 par rapport a l'objet 1
+// quelle est la bonne composition ?
+    // solution 1
+    draw(m_objet, m1 * m2, camera());
+    
+    // solution 2
+    draw(m_objet, m2 * m1, camera());
+\endcode
+
+
+# contrôler le déplacement d'un objet au clavier
+
+on peut connaitre l'état des touches / flêches directionnelles du clavier avec `key_state( SDL_KeyCode )`. Les codes des fleches sont :
+	- SDLK_UP,
+	- SDLK_DOWN,
+	- SDLK_LEFT,
+	- SDLK_RIGHT
+
+les codes des autres touches du clavier sont dans la doc de [SDL2, colonne KeyCode](http://wiki.libsdl.org/SDL_Keycode?highlight=%28%5CbCategoryEnum%5Cb%29%7C%28CategoryKeyboard%29)
+
+par exemple :
+\code
+if(key_state(SDLK_UP))
+    // avancer
+if(key_state(SDLK_DOWN))
+    // reculer
+\endcode
+
+comment representer un deplacement en avant / en arriere ? tout simplement par une translation le long du vecteur Z (0,0,1)
+\code
+Transform t;
+if(key_state(SDLK_UP))
+    // avancer
+    t= Translation(0, 0, 1);
+if(key_state(SDLK_DOWN))
+    // reculer
+    t= Translation(0, 0, -1))
+\endcode
+
+il ne reste plus qu'à dessiner l'objet à sa nouvelle position... sauf qu'il faut aussi se rappeler sa position actuelle...
+
+la solution est encore d'utiliser une composition de transformations :
+\code
+Transform position= Identity();
+
+render():
+    Transform t;
+    if(key_state(SDLK_UP))
+        // avancer
+        t= Translation(0, 0, 1);
+    if(key_state(SDLK_DOWN))
+        // reculer
+        t= Translation(0, 0, -1))
+    
+    position= position * t;
+    
+    // dessiner l'objet a sa nouvelle position
+    draw(objet, position, camera());
+\endcode
+
+le déplacement est composé avec l'ancienne position, pour obtenir la nouvelle position. et ca marche aussi avec des rotations (autour de l'axe Y, par exemple) :
+\code
+Transform position= Identity();
+
+render():
+// modifie la position de l'objet en fonction des fleches de direction
+    Transform m;
+    if(key_state(SDLK_UP))
+        m= Translation(0, 0, 0.25);     // en avant
+    if(key_state(SDLK_DOWN))
+        m= Translation(0, 0, -0.25);    // en arriere
+    
+    if(key_state(SDLK_LEFT))
+        m= RotationY(4);                // tourne vers la droite
+    if(key_state(SDLK_RIGHT))
+        m= RotationY(-4);               // tourne vers la gauche
+    
+    // composition
+    position= position * m;
+    
+    // dessiner l'objet a sa nouvelle position
+    draw(objet, position, camera());
+\endcode
+
+code complet dans tuto_transformations.cpp
+
+par contre, il faut ajuster la taille du deplacement : normalement `render()` est appellée 60 fois par secondes, et la valeur du déplacement devient une vitesse, 
+en 1 seconde l'objet de déplace 60 fois...
+
+## question bonus :
+
+si, pour une raison quelconque, `render()` n'est appellée que 20 ou 30 fois par seconde, la vitesse de déplacement de l'objet dans le monde va changer...
+comment s'assurer que la vitesse de déplacement est constante quelquesoit le nombre de fois ou `render()` est appellé, même en cas de variations ?
+
+*/

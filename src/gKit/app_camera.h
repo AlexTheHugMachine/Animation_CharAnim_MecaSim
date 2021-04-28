@@ -6,14 +6,12 @@
 #include "orbiter.h"
 
 
-//! \addtogroup application utilitaires pour creer une application, avec un orbiter manipulable a la souris
+//! \addtogroup application 
 
 //! \file
-/*! squelette d'application: creation d'une fenetre, d'un contexte openGL et gestion des evenements.
+/*! squelette d'application: creation d'une fenetre, d'un contexte openGL et gestion des evenements + une camera / orbiter 
+    
     tuto7.cpp et tuto8.cpp presentent un exemple simple d'utilisation.
-
-    la class App expose les fonctionnalites de window.h, elles sont juste presentees differemment.
-    les fonctions globales de window.h sont toujours utilisables (a part run() qui est remplace par App::run()).
 */
 
 //! classe application.
@@ -35,7 +33,9 @@ public:
     //! a deriver pour afficher les objets. renvoie 1 pour continuer, 0 pour fermer l'application.
     virtual int render( ) = 0;
     
+    //! renvoie l'orbiter gere par l'application.
     const Orbiter& camera( ) const { return m_camera; }
+    //! renvoie l'orbiter gere par l'application.
     Orbiter& camera( ) { return m_camera; }
 
 protected:

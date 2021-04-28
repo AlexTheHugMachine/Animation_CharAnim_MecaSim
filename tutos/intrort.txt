@@ -94,7 +94,7 @@ autre convention : origine et direction. direction est le vecteur entre l'origin
 _remarque :_ on connait un autre point sur le rayon, c'est le centre de projection de la camera, ou la position de la camera. Les coordonnées sont (0, 0, 0) 
 dans le repère camera :
 \f[
-origine_{scene} = ( Image \times Projection )^{-1} \times \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}\\
+origine_{scene} = ( View )^{-1} \times \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}\\
 \f]
 
 # intersection ?
@@ -157,6 +157,7 @@ les 2 propriétés en même temps :
 \f]
 
 <IMG SRC="ray_plane.png" width="25%"> 
+
 _rappel :_ \f$ p(t) = o + t\vec{d} \f$ désigne un point du rayon.
 
 il ne reste plus qu'à trouver quelle valeur de t vérifie ces conditions :
@@ -348,7 +349,6 @@ il ne reste plus qu'à écrire qu'un point doit être en même temps sur le rayo
 \f]
 
 <IMG SRC="ray_triangle.png" width="30%"> 
-
 
 on obtient un système linéaire, 3 équations et 3 inconnues (\f$ t, \beta, \gamma \f$), une solution élégante n'utilisant que des produits scalaires 
 et vectoriels est proposée dans cet article : 
@@ -559,6 +559,7 @@ if(hit)
 \endcode
 
 et voila :
+
 <IMG SRC="rt_diffuse.png" width="50%"> 
 
 il ne reste plus qu'à ajouter les ombres...

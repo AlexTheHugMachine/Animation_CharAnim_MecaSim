@@ -32,6 +32,43 @@ struct RayHit
 };
 
 
+struct BBox
+{
+    Point pmin, pmax;
+    
+    BBox( ) : pmin(), pmax() {}
+    
+    BBox( const Point& p ) : pmin(p), pmax(p) {}
+    BBox( const BBox& box ) : pmin(box.pmin), pmax(box.pmax) {}
+    
+    BBox& insert( const Point& p ) { pmin= min(pmin, p); pmax= max(pmax, p); return *this; }
+    BBox& insert( const BBox& box ) { pmin= min(pmin, box.pmin); pmax= max(pmax, box.pmax); return *this; }
+    
+    float centroid( const int axis ) const { return (pmin(axis) + pmax(axis)) / 2; }
+    
+    bool intersect( const RayHit& ray ) const
+    {
+        Vector invd= Vector(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
+        return intersect(ray, invd);
+    }
+    
+    bool intersect( const RayHit& ray, const Vector& invd ) const
+    {
+        Point rmin= pmin;
+        Point rmax= pmax;
+        if(ray.d.x < 0) std::swap(rmin.x, rmax.x);
+        if(ray.d.y < 0) std::swap(rmin.y, rmax.y);
+        if(ray.d.z < 0) std::swap(rmin.z, rmax.z);
+        Vector dmin= (rmin - ray.o) * invd;
+        Vector dmax= (rmax - ray.o) * invd;
+        
+        float tmin= std::max(dmin.z, std::max(dmin.y, std::max(dmin.x, 0.f)));
+        float tmax= std::min(dmax.z, std::min(dmax.y, std::min(dmax.x, ray.t)));
+        return (tmin <= tmax);
+    }
+};
+
+
 struct Triangle
 {
     Point p;            // sommet a du triangle
@@ -71,42 +108,14 @@ struct Triangle
         ray.u= u;
         ray.v= v;
     }
-};
-
-
-
-struct BBox
-{
-    Point pmin, pmax;
     
-    BBox( ) : pmin(), pmax() {}
-    
-    BBox( const Point& p ) : pmin(p), pmax(p) {}
-    BBox& insert( const Point& p ) { pmin= min(pmin, p); pmax= max(pmax, p); return *this; }
-    
-    float centroid( const int axis ) const { return (pmin(axis) + pmax(axis)) / 2; }
-    
-    bool intersect( const RayHit& ray ) const
+    BBox bounds( ) const 
     {
-        Vector invd= Vector(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
-        return intersect(ray, invd);
-    }
-    
-    bool intersect( const RayHit& ray, const Vector& invd ) const
-    {
-        Point rmin= pmin;
-        Point rmax= pmax;
-        if(ray.d.x < 0) std::swap(rmin.x, rmax.x);
-        if(ray.d.y < 0) std::swap(rmin.y, rmax.y);
-        if(ray.d.z < 0) std::swap(rmin.z, rmax.z);
-        Vector dmin= (rmin - ray.o) * invd;
-        Vector dmax= (rmax - ray.o) * invd;
-        
-        float tmin= std::max(dmin.z, std::max(dmin.y, std::max(dmin.x, 0.f)));
-        float tmax= std::min(dmax.z, std::min(dmax.y, std::min(dmax.x, ray.t)));
-        return (tmin <= tmax);
+        BBox box(p);
+        return box.insert(p+e1).insert(p+e2);
     }
 };
+
 
 
 void direct( 
@@ -128,9 +137,7 @@ struct triangle_less1
     bool operator() ( const Triangle& triangle ) const
     {
         // re-construit l'englobant du triangle
-        BBox bounds(triangle.p);
-        bounds.insert(triangle.p + triangle.e1);
-        bounds.insert(triangle.p + triangle.e2);
+        BBox bounds= triangle.bounds();
         return bounds.centroid(axis) < cut;
     }
 };
@@ -188,15 +195,9 @@ void divide( const BBox& bounds,
     assert(m != tend);
     
     // construit les englobants
-    BBox left(triangles[tbegin].p);
-    left.insert(triangles[tbegin].p + triangles[tbegin].e1);
-    left.insert(triangles[tbegin].p + triangles[tbegin].e2);
+    BBox left= triangles[tbegin].bounds();
     for(int i= tbegin+1; i < m; i++)
-    {
-        left.insert(triangles[i].p);
-        left.insert(triangles[i].p + triangles[i].e1);
-        left.insert(triangles[i].p + triangles[i].e2);
-    }
+        left.insert(triangles[i].bounds());
     
     // repartit les rayons
     RayHit *prleft= std::partition(rays.data() + rbegin, rays.data() + rend, ray_less1(left));
@@ -205,15 +206,9 @@ void divide( const BBox& bounds,
     divide(left, triangles, tbegin, m, rays, rbegin, rleft);
     
     // on recommence pour la droite
-    BBox right(triangles[m].p);
-    right.insert(triangles[m].p + triangles[m].e1);
-    right.insert(triangles[m].p + triangles[m].e2);
+    BBox right= triangles[m].bounds();
     for(int i= m+1; i < tend; i++)
-    {
-        right.insert(triangles[i].p);
-        right.insert(triangles[i].p + triangles[i].e1);
-        right.insert(triangles[i].p + triangles[i].e2);
-    }
+        right.insert(triangles[i].bounds());
     
     RayHit *prright= std::partition(rays.data() + rbegin, rays.data() + rend, ray_less1(right));
     int rright= std::distance(rays.data(), prright);

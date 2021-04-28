@@ -94,7 +94,7 @@ public:
         glBufferData(GL_PARAMETER_BUFFER_ARB, sizeof(int), nullptr, GL_DYNAMIC_DRAW);
         
         // creation des vertex buffer, uniquement les positions
-        m_vao= m_object.create_buffers(/* texcoords */ false, /* normals */ false, /* colors */ false);
+        m_vao= m_object.create_buffers(/* texcoord */ false, /* normal */ false, /* color */ false, /* material */ false);
         
         // shader program
         m_program_cull= read_program("tutos/M2/indirect_cull.glsl");    // tests de visibilite

@@ -14,7 +14,7 @@ par contre, l'application, la librairie et le driver feront le meme travail dans
 que le temps gpu...
 
 
-## mesure temps cpu
+# mesure temps cpu
 
 il suffit d'utiliser les fonctionnalités de [std::chrono du c++ 11](http://www.cplusplus.com/reference/chrono/) pour mesurer le temps d'exécution sur cpu. 
 Le principe est simple : 
@@ -49,7 +49,7 @@ l'utilisation est la même dans une application openGL.
 __remarque :__ `std::high_resolution_clock` est buggé sur visual studio avant la version 2015. 
 
 
-## mesure temps gpu
+# mesure temps gpu
 
 Pour mesurer le temps gpu, il faut demander à openGL de le faire et de transmettre le résultat. C'est un objet "query" qui permet de stocker 
 ces mesures et glBeginQuery() / glEndQuery() qui permettent de faire la mesure. L'utilisation est très proche de la version cpu, mais il faut 
@@ -105,7 +105,7 @@ de problème, si glGetQueryObject( ) est utilisé après avoir tout dessiné.  t
 d'une scène simple, il est de l'ordre de 16 millisecondes.
 
 
-## et alors ?
+# et alors ?
 
 tuto_time.cpp affiche un objet "normalement" et compare ensuite les temps de rendu cpu/gpu pour 2 manières différentes d'afficher 25 objets 
 (identiques) disposés sur une grille 5x5 :
@@ -122,5 +122,7 @@ bilan :
 que peut on en déduire ? premièrement que faire 25 appels à glDrawArrays() (cf mode 1) est très couteux pour le cpu, plus que pour le gpu !! 
 selon les performances de la machine, ce sera soit le cpu soit le gpu qui limitera le nombre d'objets que l'on peut dessiner. et que le gpu peut 
 faire l'equivalent de manière plus efficace (mode 2 plus performant que mode 1, pour le cpu bien sur, mais egalement pour le gpu).
+
+la classe AppTime utilise ces mesures pour afficher automatiquement le temps cpu et le temps gpu.
 
 */

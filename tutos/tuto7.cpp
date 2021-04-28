@@ -23,9 +23,9 @@ public:
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
         m_camera.lookat(pmin, pmax);
-
+        
         m_texture= read_texture(0, "data/debug2x2red.png");
-
+        
         // etat openGL par defaut
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
         
@@ -60,6 +60,7 @@ public:
         else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
             m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
         
+        // affiche l'objet pour le point de vue de la camera et avec une texture
         draw(m_objet, m_camera, m_texture);
         
         return 1;

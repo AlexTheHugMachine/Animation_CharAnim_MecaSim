@@ -1,14 +1,13 @@
 /*! \addtogroup installation
 
-
-## obtenir les sources :
+# obtenir les sources :
 
 créer un répertoire de travail, puis :
 
     git clone https://forge.univ-lyon1.fr/Alexandre.Meyer/gkit2light.git
 
 
-## installer les dépendances :
+# installer les dépendances :
 
 gKit2 utilise 3 librairies : sdl2 et sdl2_image, et glew, il faut les installer avant de pouvoir compiler les exemples.
 
@@ -22,7 +21,7 @@ c'est l'outil premake qui permet de créer les projets, et les makefiles, cf sec
 
 ## linux
 
-installez les paquets, si nécessaire (pas la peine au nautibus) : libsdl2-dev, libsdl2-image-dev, libglew-dev et premake4
+installez les paquets, si nécessaire (pas la peine au nautibus) : `libsdl2-dev, libsdl2-image-dev, libglew-dev` et `premake4`
 
 par exemple, pour ubuntu et ses variantes :
 
@@ -30,7 +29,6 @@ par exemple, pour ubuntu et ses variantes :
 
 
 ## windows
-
 les librairies sont disponibles :
     - [glew](http://glew.sourceforge.net/)
     - [sdl2](https://www.libsdl.org/download-2.0.php), section development libraries
@@ -56,7 +54,7 @@ si cette version du sdk n'est pas installée, __pas de panique__ : ouvrez la sol
 vous pouvez maintenant compiler un projet.
 
 
-### installation manuelle
+## installation manuelle
 le plus simple est de créer un sous répertoire, `extern` par exemple, et d'y copier les fichiers `.h`, `.dll` et `.lib`. vous devez obtenir une structure :
 
 \code
