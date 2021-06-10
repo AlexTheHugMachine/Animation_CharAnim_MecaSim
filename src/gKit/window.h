@@ -22,7 +22,7 @@ void release_window( Window w );
 typedef SDL_GLContext Context;
 
 //! cree et configure un contexte opengl.
-Context create_context( Window window, const int major= 3, const int minor= 2 );
+Context create_context( Window window, const int major= 3, const int minor= 2, const int samples= 1 );
 //! detruit le contexte openGL.
 void release_context( Context context );
 
@@ -30,6 +30,8 @@ void release_context( Context context );
 int window_width( );
 //! renvoie la hauteur de la fenetre de l'application.
 int window_height( );
+//! renvoie le nombre de samples MSAA.
+int window_msaa( );
 
 //! renvoie l'etat d'une touche du clavier. cf la doc SDL2 pour les codes.
 int key_state( const SDL_Keycode key );

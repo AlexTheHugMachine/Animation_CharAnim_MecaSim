@@ -37,6 +37,13 @@ int window_height( )
     return height;
 }
 
+int window_msaa( )
+{
+    int n= 0;
+    SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &n);
+    return n;
+}
+
 static std::vector<unsigned char> key_states;
 int key_state( const SDL_Keycode key )
 {
@@ -158,43 +165,45 @@ int events( Window window )
     event_count= 0;
 
     // proportions de la fenetre
-    SDL_GetWindowSize(window, &width, &height);
-    aspect= float(width) / float(height);
+    //~ SDL_GetWindowSize(window, &width, &height);
+    //~ aspect= float(width) / float(height);
 
     // gestion des evenements
+    bool resize_event= false;
     SDL_Event event;
     while(SDL_PollEvent(&event))
     {
         event_count++;
-
+        
         switch(event.type)
         {
             case SDL_WINDOWEVENT:
                 // redimensionner la fenetre...
                 if(event.window.event == SDL_WINDOWEVENT_RESIZED)
                 {
+                    resize_event= true;
                     // conserve les proportions de la fenetre
-                    //~ width= event.window.data1;
-                    //~ height= event.window.data2;
-                    width= std::floor(event.window.data2 * aspect);
+                    width= event.window.data1;
                     height= event.window.data2;
-                    SDL_SetWindowSize(window, width, height);
-
+                    //~ width= std::floor(event.window.data2 * aspect);
+                    //~ height= event.window.data2;
+                    //~ SDL_SetWindowSize(window, width, height);
+                    
                     // ... et le viewport opengl
                     glViewport(0, 0, width, height);
                 }
                 break;
-
+            
             case SDL_DROPFILE:
                 last_drop.assign(event.drop.file);
                 SDL_free(event.drop.file);
                 break;
-
+            
             case SDL_TEXTINPUT:
                 // conserver le dernier caractere
                 last_text= event.text;
                 break;
-
+            
             case SDL_KEYDOWN:
                 // modifier l'etat du clavier
                 if((size_t) event.key.keysym.scancode < key_states.size())
@@ -202,12 +211,12 @@ int events( Window window )
                     key_states[event.key.keysym.scancode]= 1;
                     last_key= event.key;    // conserver le dernier evenement
                 }
-
+                
                 // fermer l'application
                 if(event.key.keysym.sym == SDLK_ESCAPE)
                     stop= 1;
                 break;
-
+            
             case SDL_KEYUP:
                 // modifier l'etat du clavier
                 if((size_t) event.key.keysym.scancode < key_states.size())
@@ -216,22 +225,35 @@ int events( Window window )
                     last_key= event.key;    // conserver le dernier evenement
                 }
                 break;
-
+            
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
                 last_button= event.button;
                 break;
-
+            
             case SDL_MOUSEWHEEL:
                 last_wheel= event.wheel;
                 break;
-
+            
             case SDL_QUIT:
                 stop= 1;            // fermer l'application
                 break;
         }
     }
 
+    if(resize_event)
+    {
+        int w= std::floor(height * aspect);
+        int h= height;
+        SDL_SetWindowSize(window, w, h);
+        glViewport(0, 0, w, h);
+        
+        //~ printf("[resize] %dx%d aspect %f -> %dx%d aspect %f\n", width, height, aspect, w, h, float(w) / float(h));
+        
+        width= w;
+        height= h;
+    }
+    
     return 1 - stop;
 }
 
@@ -269,7 +291,8 @@ Window create_window( const int w, const int h )
 
     // conserve les dimensions de la fenetre
     SDL_GetWindowSize(window, &width, &height);
-
+    aspect= float(width) / float(height);
+    
     return window;
 }
 
@@ -305,7 +328,7 @@ void DEBUGCALLBACK debug_print( GLenum source, GLenum type, unsigned int id, GLe
 #endif
 
 //! cree et configure un contexte opengl
-Context create_context( Window window, const int major, const int minor )
+Context create_context( Window window, const int major, const int minor, const int samples )
 {
     if(window == NULL)
         return NULL;
@@ -318,9 +341,15 @@ Context create_context( Window window, const int major, const int minor )
 #endif
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+    if(samples > 1)
+    {
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples);
+    }
+    
     Context context= SDL_GL_CreateContext(window);
     if(context == NULL)
     {
@@ -338,6 +367,14 @@ Context create_context( Window window, const int major, const int minor )
     else
         printf("adaptive vsync ON\n");
 
+    //
+    if(samples > 1)
+    {
+        int n= 0;
+        SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &n);
+        printf("MSAA %d samples\n", n);
+    }
+    
 #ifndef NO_GLEW
     // initialise les extensions opengl
     glewExperimental= 1;
@@ -397,7 +434,6 @@ bool exists( const char *filename )
     return (info.st_mode & _S_IFREG);
 #endif
 }
-
 
 static std::string smartpath;
 static std::string path;

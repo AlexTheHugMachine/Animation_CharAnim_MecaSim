@@ -8,11 +8,11 @@
 #include "glcore.h"
 
 
-App::App( const int width, const int height, const int major, const int minor )
+App::App( const int width, const int height, const int major, const int minor, const int samples )
     : m_window(nullptr), m_context(nullptr)
 {
     m_window= create_window(width, height);
-    m_context= create_context(m_window, major, minor);
+    m_context= create_context(m_window, major, minor, samples);
 }
 
 App::~App( )
