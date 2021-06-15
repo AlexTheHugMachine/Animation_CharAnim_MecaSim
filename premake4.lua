@@ -135,6 +135,8 @@ tutos = {
     "tuto7",
     "tuto7_camera",
     "tuto_transformations",
+    "tuto_transformations_camera",
+    "tuto_transformations_lookat",
 
     "tuto8",
     "tuto9",
