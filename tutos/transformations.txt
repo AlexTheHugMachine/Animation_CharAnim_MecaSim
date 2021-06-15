@@ -154,7 +154,7 @@ class Ex1 : public AppCamera
 	{
 		glClear(Gl_COLOR_BUFFER_BIT);
 		
-		draw(m_objet, Identity(), camera());
+		draw(m_objet, /* model */ Identity(), camera());
 	}
 	
 	int quit( ) { ... }
@@ -241,7 +241,8 @@ class Ex1 : public AppCamera
 	{
 		glClear(Gl_COLOR_BUFFER_BIT);
 		
-		draw(m_objet, Identity(), camera());
+		Transform model= Identity();
+		draw(m_objet, model, camera());
 	}
 	
 	int quit( ) { ... }
@@ -434,5 +435,194 @@ en 1 seconde l'objet de déplace 60 fois...
 
 si, pour une raison quelconque, `render()` n'est appellée que 20 ou 30 fois par seconde, la vitesse de déplacement de l'objet dans le monde va changer...
 comment s'assurer que la vitesse de déplacement est constante quelquesoit le nombre de fois ou `render()` est appellé, même en cas de variations ?
+
+
+# transformations : camera 
+
+Qu'est ce qu'une camera ? Pour un pipeline graphique, ce sont 2 matrices : la matrice `view` et la matrice `projection`. `view` permet de transformer les coordonnées
+des points du repère de la scène vers le repère de la camera (elle represente la position et l'orientation de la camera dans le repère de la scène) et `projection`, 
+comme son nom l'indique, représente la transformation projective de la camera (on 'projette' les points 3d vers une image 2d...). 
+
+Jusqu'à présent, on a utilisé un raccourci pour afficher les objets avec `draw(objet, model, camera)`, mais la classe Orbiter renvoie les matrices view et projection 
+calculées en fonction des dimensions de la scène et de l'orientation de l'orbiter, et on peut utiliser uniquement ces matrices pour dessiner : 
+\code
+Mesh objet= { ... };
+Transform model= Identity();
+Transform view= camera().view();
+Transform projection= camera().projection();
+
+draw(objet, model, view, projection);
+// meme resultat que draw(objet, model, camera());
+\endcode
+
+## placer et orienter une camera dans la scène
+
+Quelle est la valeur de la matrice view ? ou comment construire cette matrice ? Cette matrice représente un changement de repère : le passage du repère du monde au
+repère camera. Jusqu'à présent, pour placer et orienter un objet dans la scène on a composé plusieurs rotations et translations, peut on faire la meme chose pour placer et
+orienter une camera ? 
+
+oui, bien sur !! mais il faut se rendre compte que la matrice view est l'inverse de la matrice qui permet de placer et d'orienter un objet quelque part... 
+
+_rappel :_ la matrice model, que l'on utilise pour placer et orienter un objet dans la scène, représente le passage d'un repere arbitraire vers le repère de la scène, la matrice 
+view represente le contraire : le passage du repere de la scène vers un autre repère arbitraire. Donc, si on connait la matrice view, on connait l'inverse de la matrice qui 
+permet de placer et d'orienter la camera dans la scène. Si on connait une matrice model, elle correspond à l'inverse de la matrice view d'une camera...
+
+Pour vous aider à visualiser cette relation, on va afficher les axes du repere et une petite pyramide qui represente la region de la scène que pourrait observer une camera 
+placée au meme endroit que l'objet : 
+
+\code
+
+Mesh make_grid_camera( )
+{
+    Mesh camera= Mesh(GL_LINES);
+    
+	// pyramide de vision de la camera
+    camera.color(Yellow());
+    camera.vertex(0,0,0);
+    camera.vertex(-0.5, -0.5, -1);
+    camera.vertex(0,0,0);
+    camera.vertex(-0.5, 0.5, -1);
+    camera.vertex(0,0,0);
+    camera.vertex(0.5, 0.5, -1);
+    camera.vertex(0,0,0);
+    camera.vertex(0.5, -0.5, -1);
+    
+    camera.vertex(-0.5, -0.5, -1);
+    camera.vertex(-0.5, 0.5, -1);
+
+    camera.vertex(-0.5, 0.5, -1);
+    camera.vertex(0.5, 0.5, -1);
+
+    camera.vertex(0.5, 0.5, -1);
+    camera.vertex(0.5, -0.5, -1);
+    
+    camera.vertex(0.5, -0.5, -1);
+    camera.vertex(-0.5, -0.5, -1);
+    
+    // axes XYZ
+	{ ... }
+	
+    return camera;
+}
+\endcode
+
+il suffit de modifer le code précedent pour afficher ce 'repere' à la place du petit cube qui tourne... 
+\endcode
+
+<IMG SRC="transformations_view1.png" width="100%">
+
+<IMG SRC="transformations_view2.png" width="100%">
+
+Il ne reste plus qu'à placer et orienter correctement la camera pour observer le cube au centre de la scene. Par exemple, en reculant (cf translation) et re-orientant (cf rotation) la camera :
+
+\code
+	Transform r= RotationX(10) * RotationY(180);
+	Transform t= Translation(0, 0, 4);
+	Transform m= r * t;
+	
+	draw(objet, /* model */ position, view, projection);     // cube au centre de la scene
+	draw(objet, /* model */ position * m, view, projection); // camera en arriere du cube
+\endcode
+
+_remarque :_ pourquoi le RotationY(180) ??  on veut que la camera regarde devant le cube, pas derriere, il faut la 'retourner'...
+
+<IMG SRC="transformations_view3.png" width="100%">
+
+Maintenant que la camera est bien positionnée derrière le cube, il ne reste plus qu'à l'utiliser pour dessiner la scène : 
+\code
+	Transform r= RotationX(10) * RotationY(180);
+	Transform t= Translation(0, 0, 4);
+	Transform m= r * t;
+	
+	Transform v= position * m;	// place la camera par rapport au cube
+	Transform view= Inverse(v);	// matrice view de la camera
+	...
+\endcode
+
+Il reste une dernière étape : la matrice projection, il suffit d'utiliser Perspective() définie dans mat.h (comme les autres transformations) : 
+\code
+// mat.h
+//! renvoie la matrice representant une transformation projection perspective.
+Transform Perspective( const float fov, const float aspect, const float znear, const float zfar );
+\endcode
+
+Les parametres `fov` et `aspect` controlent le zoom (la 'focale' de la camera) et le rapport largeur / hauteur de l'image, ce qui permet de faire des images en mode portrait ou paysage, 
+et surtout de s'adapter aux dimensions de la fenetre dans laquelle on dessine. Les valeurs classiques sont 45 (pour `fov`) et `float(window_width()) / float(window_height())`.
+
+Les paramètres `znear` et `zfar` controlent la région de la scène qui sera affichée, les objets plus proches que `znear` ou plus loin que `zfar` ne seront pas dessinés. Ce sont des distances
+exprimées dans le repère camera. Notre scène est un carre de 20x20, `zfar` doit etre assez grand pour dessiner toute la scène, au moins 40, par exemple (distance entre 2 coins opposés).
+`znear` doit etre assez petit, mais il y a une limite inférieure (ie la projection divise les coordonnées x et y des points par z, si z est très proche de zero, la division dégénère...).
+
+\code
+	Transform r= RotationX(10) * RotationY(180);
+	Transform t= Translation(0, 0, 4);
+	Transform m= r * t;
+	
+	Transform v= position * m;	// place la camera par rapport au cube
+	Transform view= Inverse(v);	// matrice view de la camera
+	Transform projection(45, float(window_width()) / float(window_height()), 0.1, 40);
+	
+	draw(objet, position, view, projection);
+\endcode
+
+<IMG SRC="transformations_view4.png" width="100%">
+
+Et voila !! et comme la position de la camera est relative à la position du cube, lorsque l'on deplace le cube, la camera suit le cube est restant derrière !
+
+le code complet est disponible, cf tuto_transformation_camera.cpp
+
+
+## et avec Lookat() ??
+
+c'est la même chose, la fonction `Lookat()` définie dans mat.h construit la matrice view directement avec 3 informations : 
+\code
+// mat.h
+//! renvoie la matrice representant le placement et l'orientation d'une camera pour observer le point to.
+Transform Lookat( const Point& from, const Point& to, const Vector& up );
+\endcode
+
+La camera est placée en `from`, est orientée pour observer `to` et le dernier paramètre, `up` indique la verticale dans le repère de la scène. Cette fonction construit les 3 axes du 
+repère camera : l'axe Z est la direction entre from et to (_devant_), un produit vectoriel entre Z et up permet de construire X (_à droite_) et il ne reste plus qu'à calculer 
+l'axe Y (_en haut_) avec un dernier produit vectoriel.
+
+On peut placer une camera très simplement directement dans le repère de la scène : par exemple 
+\code
+Transform view= Lookat( Point(0, 1, -4), Point(0,0,0), Vector(0,1,0) );
+\endcode
+
+Par contre, si l'on souhaite attacher cette camera derrière le cube, comme dans l'exemple précédant, il faut réfléchir un peu plus... 
+
+_pourquoi ?_  il faut composer la position de la camera et la position du cube pour obtenir la transformation complète.
+
+bien sur on peut écrire un truc moche qui fonctionne, `Lookat()` donne l'inverse de la matrice qui permet de positionner la camera...
+\code
+	Transform m= Inverse( Lookat( Point(0, 1, -4), Point(0,0,0), Vector(0,1,0)) );
+	// puis memes calculs que dans le code precedant
+	Transform v= position * m;	// place la camera par rapport au cube
+	Transform view= Inverse(v);	// matrice view de la camera
+	Transform projection(45, float(window_width()) / float(window_height()), 0.1, 40);
+	
+	draw(objet, position, view, projection);
+\endcode
+
+mais inverser une matrice n'est pas gratuit, en se rappelant que l'inverse du produit des matrices A et B s'ecrit aussi :
+
+\f$ (A \times B)^{-1} = B^{-1} \times A^{-1}\f$
+
+on peut simplifier tout ca et ne calculer qu'une seule inversion : 
+\code
+//	Transform m= { ... };							// place la camera
+//	Transform v= position * m;	                    // place la camera par rapport au cube
+//	Transform view= Inverse(v);	                    // matrice view de la camera
+//	Transform view= Inverse(m) * Inverse(position);	// meme resultat
+//               et Inverse(m) est le resultat de Lookat()...
+
+	Transform mInv= Lookat( Point(0, 1, -4), Point(0,0,0), Vector(0,1,0));
+	Transform view= mInv * Inverse(position);
+	Transform projection(45, float(window_width()) / float(window_height()), 0.1, 40);
+	
+	draw(objet, position, view, projection);
+\endcode
+
 
 */
