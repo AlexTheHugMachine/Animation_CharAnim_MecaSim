@@ -569,7 +569,7 @@ exprimées dans le repère camera. Notre scène est un carre de 20x20, `zfar` do
 
 Et voila !! et comme la position de la camera est relative à la position du cube, lorsque l'on deplace le cube, la camera suit le cube est restant derrière !
 
-le code complet est disponible, cf tuto_transformation_camera.cpp
+le code complet est disponible, cf tuto_transformations_camera.cpp
 
 
 ## et avec Lookat() ??
@@ -624,5 +624,6 @@ on peut simplifier tout ca et ne calculer qu'une seule inversion :
 	draw(objet, position, view, projection);
 \endcode
 
+le code complet est disponible, cf tuto_transformations_lookat.cpp
 
 */
