@@ -162,35 +162,23 @@ int last_event_count( ) { return event_count; }
 
 int events( Window window )
 {
-    event_count= 0;
-
-    // proportions de la fenetre
-    //~ SDL_GetWindowSize(window, &width, &height);
-    //~ aspect= float(width) / float(height);
-
-    // gestion des evenements
     bool resize_event= false;
+    
+    // gestion des evenements
     SDL_Event event;
     while(SDL_PollEvent(&event))
     {
-        event_count++;
-        
         switch(event.type)
         {
             case SDL_WINDOWEVENT:
                 // redimensionner la fenetre...
                 if(event.window.event == SDL_WINDOWEVENT_RESIZED)
                 {
+                    // traite l'evenement apres la boucle... 
                     resize_event= true;
                     // conserve les proportions de la fenetre
                     width= event.window.data1;
                     height= event.window.data2;
-                    //~ width= std::floor(event.window.data2 * aspect);
-                    //~ height= event.window.data2;
-                    //~ SDL_SetWindowSize(window, width, height);
-                    
-                    // ... et le viewport opengl
-                    glViewport(0, 0, width, height);
                 }
                 break;
             
@@ -259,26 +247,45 @@ int events( Window window )
 
 
 //! creation d'une fenetre pour l'application.
-Window create_window( const int w, const int h )
+Window create_window( const int w, const int h, const int major, const int minor, const int samples )
 {
     // init sdl
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         printf("[error] SDL_Init() failed:\n%s\n", SDL_GetError());
-        return NULL;
+        return nullptr;
     }
 
     // enregistre le destructeur de sdl
     atexit(SDL_Quit);
 
+    // configuration openGL
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
+#ifndef GK_RELEASE
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    
+    if(samples > 1)
+    {
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples);
+    }
+    
+    SDL_GL_SetSwapInterval(-1);
+    
     // creer la fenetre
     Window window= SDL_CreateWindow("gKit",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    if(window == NULL)
+    if(window == nullptr)
     {
         printf("[error] SDL_CreateWindow() failed.\n");
-        return NULL;
+        return nullptr;
     }
 
     // recupere l'etat du clavier
@@ -286,7 +293,7 @@ Window create_window( const int w, const int h )
     const unsigned char *state= SDL_GetKeyboardState(&keys);
     key_states.assign(state, state + keys);
 
-    SDL_SetWindowDisplayMode(window, NULL);
+    SDL_SetWindowDisplayMode(window, nullptr);
     SDL_StartTextInput();
 
     // conserve les dimensions de la fenetre
@@ -305,7 +312,6 @@ void release_window( Window window )
 
 #ifndef NO_GLEW
 #ifndef GK_RELEASE
-
 
 //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
 static
@@ -328,37 +334,18 @@ void DEBUGCALLBACK debug_print( GLenum source, GLenum type, unsigned int id, GLe
 #endif
 
 //! cree et configure un contexte opengl
-Context create_context( Window window, const int major, const int minor, const int samples )
+Context create_context( Window window )
 {
-    if(window == NULL)
-        return NULL;
-
-    // configure la creation du contexte opengl core profile, debug profile
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
-#ifndef GK_RELEASE
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-#endif
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-    if(samples > 1)
-    {
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples);
-    }
+    if(window == nullptr)
+        return nullptr;
     
     Context context= SDL_GL_CreateContext(window);
-    if(context == NULL)
+    if(context == nullptr)
     {
         printf("[error] creating openGL context.\n");
-        return NULL;
+        return nullptr;
     }
 
-    //
-    SDL_GL_SetSwapInterval(-1);
     if(SDL_GL_GetSwapInterval() != -1)
     {
         printf("vsync ON\n");
@@ -366,13 +353,12 @@ Context create_context( Window window, const int major, const int minor, const i
     }
     else
         printf("adaptive vsync ON\n");
-
-    //
-    if(samples > 1)
+    
     {
         int n= 0;
         SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &n);
-        printf("MSAA %d samples\n", n);
+        if(n > 1)
+            printf("MSAA %d samples\n", n);
     }
     
 #ifndef NO_GLEW
@@ -383,7 +369,7 @@ Context create_context( Window window, const int major, const int minor, const i
     {
         printf("[error] loading extensions\n%s\n", glewGetErrorString(err));
         SDL_GL_DeleteContext(context);
-        return NULL;
+        return nullptr;
     }
 
     // purge les erreurs opengl generees par glew !

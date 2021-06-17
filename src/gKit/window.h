@@ -15,14 +15,14 @@
 typedef SDL_Window *Window;
 
 //! creation d'une fenetre pour l'application.
-Window create_window( const int width, const int height );
+Window create_window( const int width, const int height, const int major= 3, const int minor= 2, const int samples= 1 );
 //! destruction de la fenetre.
 void release_window( Window w );
 
 typedef SDL_GLContext Context;
 
 //! cree et configure un contexte opengl.
-Context create_context( Window window, const int major= 3, const int minor= 2, const int samples= 1 );
+Context create_context( Window window );
 //! detruit le contexte openGL.
 void release_context( Context context );
 
