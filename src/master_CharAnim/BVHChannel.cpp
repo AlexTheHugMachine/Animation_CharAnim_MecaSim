@@ -46,7 +46,7 @@ void BVHChannel::setAxis(AXIS axis)
 //-----------------------------------------------------------------------------
 int BVHChannel::getNumData(void) const
 {
-	return m_data.size();
+	return int(m_data.size());
 }
 //-----------------------------------------------------------------------------
 float BVHChannel::getData(int i) const
@@ -160,7 +160,7 @@ void BVHChannel::regenerateDataFromMultiResolution(const std::vector<float>& coe
     vector<float> av;
     av.push_back( m_multiRav );
     unsigned int j;
-    int i;
+    size_t i;
     for(i=m_multiR.size()-1; i>=0 ; --i)
     {
         vector<float>& dat(m_multiR[i]);
