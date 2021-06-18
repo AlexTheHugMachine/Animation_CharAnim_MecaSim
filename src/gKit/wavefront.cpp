@@ -34,6 +34,18 @@ std::string pathname( const std::string& filename )
 #endif
 }
 
+static 
+std::string normalize_filename( const std::string& filename )
+{
+    std::string path= filename;
+#ifndef WIN32
+    std::replace(path.begin(), path.end(), '\\', '/');   // linux, macos : remplace les \ par /.
+#else
+    std::replace(path.begin(), path.end(), '/', '\\');   // windows : remplace les / par \.
+#endif
+
+    return path;
+}
 
 Mesh read_mesh( const char *filename )
 {
@@ -307,10 +319,10 @@ Materials read_materials( const char *filename )
         else if(line[0] == 'm')
         {
             if(sscanf(line, "map_Kd %[^\r\n]", tmp) == 1)
-                material->diffuse_texture= materials.insert_texture( std::string(pathname(filename) + tmp).c_str() );
+                material->diffuse_texture= materials.insert_texture( normalize_filename(pathname(filename) + tmp).c_str() );
                 
             else if(sscanf(line, "map_Ks %[^\r\n]", tmp) == 1)
-                material->ns_texture= materials.insert_texture( std::string(pathname(filename) + tmp).c_str() );
+                material->ns_texture= materials.insert_texture( normalize_filename(pathname(filename) + tmp).c_str() );
         }
         
     }

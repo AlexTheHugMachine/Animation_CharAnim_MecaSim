@@ -1,9 +1,17 @@
 
+#include <algorithm>
+
 #include "color.h"
+
 
 float Color::power( ) const
 {
-    return (r+g+b) / 3.f;
+    return (r+g+b) / 3;
+}
+
+float Color::max( ) const
+{
+    return std::max(r, std::max(g, std::max(b, float(0))));
 }
 
 Color Black( )

@@ -222,7 +222,7 @@ public:
     //! renvoie les indices des matieres des triangles.
     const std::vector<unsigned int>& material_indices( ) const;
     
-    //! definit la matiere du prochain triangle. id est l'indice d'une matiere ajoutee par mesh_material() ou mesh_materials( ). ne fonctionne que pour les primitives GL_TRIANGLES, indexees ou pas.
+    //! definit la matiere du prochain triangle. id est l'indice d'une matiere ajoutee dans materials(), cf la classe Materials. ne fonctionne que pour les primitives GL_TRIANGLES, indexees ou pas.
     Mesh& material( const unsigned int id );
     //@}
     
