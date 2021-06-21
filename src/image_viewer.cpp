@@ -324,14 +324,12 @@ struct ImageViewer : public App
             
         begin_line(m_widgets);
         {
-            int x= xmouse;
-            int y= window_height() - ymouse -1;
-            if(x >= 0 && x < m_images[m_index].width()
-            && y >= 0 && y < m_images[m_index].height())
-            {
-                Color pixel= m_images[m_index](x, y);
-                label(m_widgets, "pixel %d %d: %f %f %f", x, y, pixel.r, pixel.g, pixel.b);
-            }
+            int px= xmouse;
+            int py= window_height() - ymouse -1;
+            float x= px / float(window_width()) * m_images[m_index].width();
+            float y= py / float(window_height()) * m_images[m_index].height();
+            Color pixel= m_images[m_index](x, y);
+            label(m_widgets, "pixel %d %d: %f %f %f", int(x), int(y), pixel.r, pixel.g, pixel.b);
         }
         end(m_widgets);
         
@@ -363,6 +361,7 @@ struct ImageViewer : public App
             // change aussi le titre de la fenetre
             title(m_index);
         }
+        
         return 1;
     }
     
