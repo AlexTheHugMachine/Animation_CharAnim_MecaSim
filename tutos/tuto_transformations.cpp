@@ -11,6 +11,7 @@
 
 
 // utilitaire. creation d'une grille / repere.
+// n= 0 ne dessine que les axes du repere.
 Mesh make_grid( const int n= 10 )
 {
     Mesh grid= Mesh(GL_LINES);
@@ -20,35 +21,78 @@ Mesh make_grid( const int n= 10 )
     for(int x= 0; x < n; x++)
     {
         float px= float(x) - float(n)/2 + .5f;
-        grid.vertex(Point(px, 0, - float(n)/2 + .5f)); 
-        grid.vertex(Point(px, 0, float(n)/2 - .5f));
+        grid.vertex(px, 0, - float(n)/2 + .5f); 
+        grid.vertex(px, 0, float(n)/2 - .5f);
     }
 
     for(int z= 0; z < n; z++)
     {
         float pz= float(z) - float(n)/2 + .5f;
-        grid.vertex(Point(- float(n)/2 + .5f, 0, pz)); 
-        grid.vertex(Point(float(n)/2 - .5f, 0, pz)); 
+        grid.vertex(- float(n)/2 + .5f, 0, pz); 
+        grid.vertex(float(n)/2 - .5f, 0, pz); 
     }
     
     // axes XYZ
     grid.color(Red());
-    grid.vertex(Point(0, .1, 0));
-    grid.vertex(Point(1, .1, 0));
+    grid.vertex(0, .1, 0);
+    grid.vertex(1, .1, 0);
     
     grid.color(Green());
-    grid.vertex(Point(0, .1, 0));
-    grid.vertex(Point(0, 1, 0));
+    grid.vertex(0, .1, 0);
+    grid.vertex(0, 1, 0);
     
     grid.color(Blue());
-    grid.vertex(Point(0, .1, 0));
-    grid.vertex(Point(0, .1, 1));
+    grid.vertex(0, .1, 0);
+    grid.vertex(0, .1, 1);
     
     glLineWidth(2);
     
     return grid;
 }
 
+Mesh make_camera( )
+{
+    Mesh camera= Mesh(GL_LINES);
+    
+    camera.color(Yellow());
+    camera.vertex(0,0,0);
+    camera.vertex(-0.5, -0.5, -1);
+    camera.vertex(0,0,0);
+    camera.vertex(-0.5, 0.5, -1);
+    camera.vertex(0,0,0);
+    camera.vertex(0.5, 0.5, -1);
+    camera.vertex(0,0,0);
+    camera.vertex(0.5, -0.5, -1);
+    
+    camera.vertex(-0.5, -0.5, -1);
+    camera.vertex(-0.5, 0.5, -1);
+
+    camera.vertex(-0.5, 0.5, -1);
+    camera.vertex(0.5, 0.5, -1);
+
+    camera.vertex(0.5, 0.5, -1);
+    camera.vertex(0.5, -0.5, -1);
+    
+    camera.vertex(0.5, -0.5, -1);
+    camera.vertex(-0.5, -0.5, -1);
+    
+    // axes XYZ
+    camera.color(Red());
+    camera.vertex(Point(0, 0, 0));
+    camera.vertex(Point(1, 0, 0));
+    
+    camera.color(Green());
+    camera.vertex(Point(0, 0, 0));
+    camera.vertex(Point(0, 1, 0));
+    
+    camera.color(Blue());
+    camera.vertex(Point(0, 0, 0));
+    camera.vertex(Point(0, 0, 1));
+    
+    glLineWidth(2);
+    
+    return camera;
+}
 
 class TP : public AppCamera
 {
@@ -61,13 +105,15 @@ public:
     {
         // decrire un repere / grille 
         m_repere= make_grid(20);
-        m_local= make_grid(4);
+        m_local= make_grid(2);
+        m_proxy= make_camera();
         
         // charge l'element
         m_objet= read_mesh("data/cube.obj");
         
         // position initiale de l'objet
-        m_position= Translation(0, 0.5, 0);
+        //~ m_position= Translation(0, 0.5, 0);
+        m_position= Identity(); //Translation(0, 0.5, 0);
         
         // si l'objet est "gros", il faut regler la camera pour l'observer entierement :
         // recuperer les points extremes de l'objet (son englobant)
@@ -92,6 +138,7 @@ public:
         m_objet.release();
         m_repere.release();
         m_local.release();
+        m_proxy.release();
         return 0;
     }
     
@@ -111,34 +158,65 @@ public:
         if(key_state(SDLK_RIGHT))
             m_position= m_position * RotationY(-4);     // tourne vers la gauche
         
-        draw(m_objet, /* model */ m_position, camera());
       
     // dessine le meme objet a un autre endroit. il faut modifier la matrice model, qui sert a ca : placer un objet dans le monde, ailleurs qu'a l'origine.
         // par exemple, a la verticale au dessus du premier cube :
         // la transformation est une translation le long du vecteur Y= (0, 1, 0), si on veut placer le cube plus haut, il suffit d'utiliser une valeur > 1
         Transform t= Translation(0, 2, 0);
         
-        // et si on veut le faire tourner en fonction du temps ?
         float time= global_time();
-        Transform r= RotationX(time / float(20));
-        
+        Transform r= Rotation(Vector(0,0,1), time / float(20));
         // et pour placer et orienter, les 2 a la fois ? on compose les 2 transformations, et il suffit de multiplier les 2 matrices
         // mais attention : l'ordre de la multiplication des matrices change le resultat...
         //~ // solution 1 : tourner le cube puis le deplacer
         //~ Transform m= t * r;
         
         // solution 2 : deplacer puis tourner le cube
-        Transform m= r * t;
+        
+        Transform R= Rotation(Vector(0,0,1), Vector(1,1,1));
+        Transform m= R * r * t;
+        
+        // transformations de la camera de l'application
+        Transform view= camera().view();
+        Transform projection= camera().projection();
+
+    #if 1
+        if(key_state('c'))
+        {
+            view= Inverse(m_position * m);
+            //~ view= Inverse(m) * Inverse(m_position);
+            //~ view= Lookat(Point(0,1,-4), Point(0,0,1), Vector(0,1,0)) * Inverse(m_position);
+            projection= Perspective(60, float(window_width()) / float(window_height()), float(0.1), float(40));
+            
+            //~ m= Inverse(view);
+        }
+    #endif
+    
+        draw(m_objet, /* model */ m_position, view, projection);
         
     // dessine le 2ieme objet par rapport au premier objet... 
     // compose leurs 2 transformations, les coordonnees du 2ieme objet sont connues dans le repere local du premier objet
-        draw(m_objet, /* model */ m_position * m, camera());
+        //~ if(key_state('c'))
+            //~ draw(m_proxy, /* model */ m_position * m, view, projection);
+        //~ else
+            draw(m_objet, /* model */ m_position * m, view, projection);
+            draw(m_local, /* model */ m_position * m, view, projection);
+            
+        //~ draw(m_proxy, /* model */ m, view, projection);
         
-        // dessine aussi le repere local, pour le meme point de vue
-        draw(m_local, m_position, camera());
+        //~ // dessine aussi le repere local, pour le meme point de vue
+        draw(m_local, m_position, view, projection);
         
         // dessine le repere global, pour le meme point de vue
-        draw(m_repere, Identity(), camera());
+        draw(m_repere, Identity(), view, projection);
+        
+        
+        if(key_state('s'))
+        {
+            clear_key_state('s');
+            static int id= 1;
+            screenshot("camera", id++);
+        }
         
         // continuer...
         return 1;
@@ -148,6 +226,7 @@ protected:
     Mesh m_objet;
     Mesh m_repere;
     Mesh m_local;
+    Mesh m_proxy;
     Transform m_position;
 };
 
