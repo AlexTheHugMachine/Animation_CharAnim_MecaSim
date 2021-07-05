@@ -15,11 +15,11 @@
 #include "app.h"        // classe Application a deriver
 
 
-class Framebuffer : public App
+class TPFramebuffer : public App
 {
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    Framebuffer( ) : App(1024, 640) {}
+    TPFramebuffer( ) : App(1024, 640) {}
     
     int init( )
     {
@@ -283,7 +283,7 @@ protected:
 
 int main( int argc, char **argv )
 {
-    Framebuffer tp;
+    TPFramebuffer tp;
     tp.run();
     
     return 0;
