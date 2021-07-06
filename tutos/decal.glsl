@@ -1,4 +1,6 @@
 
+//! \file decal.glsl
+
 #version 330
 
 #ifdef VERTEX_SHADER
@@ -40,19 +42,28 @@ void main( )
     float cos_theta= max(0, dot(n, l));
     vec3 color= vec3(0.8) * cos_theta;
     
-    //~ vec2 texcoord= decal_position.xy / decal_position.w;
-    //~ color= color * texture(decal, texcoord).rgb;
+    //~ vec3 texcoord= decal_position.xyz / decal_position.w;
+    //~ vec3 decal_color= texture(decal, texcoord.xy).rgb;
     //~ if(texcoord.x < 0 || texcoord.x > 1)
         //~ color.g= 1;
     //~ if(texcoord.y < 0 || texcoord.y > 1)
         //~ color.r= 1;
+    //~ if(texcoord.z < 0 || texcoord.z > 1)
+        //~ color.b= 1;
 		
-    float decal_z= decal_position.z / decal_position.w;
-	if(decal_z < 0 || decal_z > 1)
-		color.r= 1;
-	else
-		color= color * textureProj(decal, decal_position).rgb;
+    //~ if((texcoord.x < 0 || texcoord.x > 1)
+    //~ || (texcoord.y < 0 || texcoord.y > 1)
+    //~ || (texcoord.z < 0 || texcoord.z > 1))
+        //~ decal_color= vec3(1);
+		
+    //~ float decal_z= decal_position.z / decal_position.w;
+	//~ if(decal_z < 0 || decal_z > 1)
+		//~ color.r= 1;
+	//~ else
+		//~ color= color * textureProj(decal, decal_position).rgb;
+
+	vec3 decal_color= textureProj(decal, decal_position).rgb;
     
-    fragment_color= vec4(color, 1);
+    fragment_color= vec4(color * decal_color, 1);
 }
 #endif

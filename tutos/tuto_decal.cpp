@@ -127,6 +127,51 @@ Mesh make_frustum( )
     return camera;
 }
 
+Mesh make_camera( )
+{
+    Mesh camera= Mesh(GL_LINES);
+    
+    camera.color(Yellow());
+    camera.vertex(0,0,0);
+    camera.vertex(-0.5, -0.5, -1);
+    camera.vertex(0,0,0);
+    camera.vertex(-0.5, 0.5, -1);
+    camera.vertex(0,0,0);
+    camera.vertex(0.5, 0.5, -1);
+    camera.vertex(0,0,0);
+    camera.vertex(0.5, -0.5, -1);
+    
+    camera.vertex(-0.5, -0.5, -1);
+    camera.vertex(-0.5, 0.5, -1);
+
+    camera.vertex(-0.5, 0.5, -1);
+    camera.vertex(0.5, 0.5, -1);
+
+    camera.vertex(0.5, 0.5, -1);
+    camera.vertex(0.5, -0.5, -1);
+    
+    camera.vertex(0.5, -0.5, -1);
+    camera.vertex(-0.5, -0.5, -1);
+    
+    // axes XYZ
+    camera.color(Red());
+    camera.vertex(Point(0, 0, 0));
+    camera.vertex(Point(1, 0, 0));
+    
+    camera.color(Green());
+    camera.vertex(Point(0, 0, 0));
+    camera.vertex(Point(0, 1, 0));
+    
+    camera.color(Blue());
+    camera.vertex(Point(0, 0, 0));
+    camera.vertex(Point(0, 0, 1));
+    
+    glLineWidth(2);
+    
+    return camera;
+}
+
+
 class TP : public AppCamera
 {
 public:
@@ -139,16 +184,26 @@ public:
         // decrire un repere / grille 
         m_repere= make_grid(20);
         m_local= make_grid(2);
-        //~ m_ground= make_ground(20);
-        m_ground= read_mesh("ground.obj");
+        m_ground= make_ground(20);
+        //~ m_ground= read_mesh("ground.obj");  // pas dans le depot...
         m_proxy= make_xyz();
+        //~ m_proxy= make_camera();
         m_frustum= make_frustum();
         
         // charge l'element
         m_objet= read_mesh("data/robot.obj");
         
         m_texture= read_texture(0, "data/grid.png");
-        //~ m_texture= read_texture(0, "decal_shadow.png");
+        //~ m_texture= read_texture(0, "orange_splash.png");    // pas dans le depot
+        //~ m_texture= read_texture(0, "decal_shadow.png"); // pas dans le depot
+        
+        // gestion des bordures : 
+        // solution 1 : utiliser les parametres openGL pour renvoyer du blanc en dehors de la texture, 
+        // soit c'est le shader qui fait le boulot...
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float border[]= { 1, 1, 1, 1 };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
         
         m_program= read_program("tutos/decal.glsl");
         program_print_errors(m_program);
@@ -224,7 +279,7 @@ public:
         Transform view= camera().view();
         Transform projection= camera().projection();
         
-        if(key_state('c'))
+        if(key_state('d'))
         {
             // change de point de vue
             view= decal_view;
@@ -242,6 +297,7 @@ public:
         draw(m_proxy, /* model */ m_position * m, view, projection);
         
         // dessine aussi le frustum 
+        if(key_state('f'))
         {
             // passage repere projection vers global : inverse de projection*view
             Transform decal_m= Inverse(decal_projection * decal_view);
@@ -279,10 +335,8 @@ public:
             program_use_texture(m_program, "texture", 0, m_texture);
             
             m_ground.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ true, /* use color */ false, /* use material index*/ false);
-            
-            //~ // pas la bonne transformation pour le robot..
-            //~ m_objet.draw(m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ true, /* use color */ false, /* use material index*/ false);
         }
+        
         
         // screenshot
         if(key_state('s'))
