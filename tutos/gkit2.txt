@@ -24,6 +24,7 @@ mais il y a aussi pas mal de tutos / exemple de code :
     - \ref intro3d,
     - \ref tuto_application,
     - \ref transformations,
+	- \ref decals,
     - tuto2.cpp utilisation de mesh pour décrire les sommets d'un ou plusieurs triangles et les dessiner,
     - tuto3.cpp transformations, rotation d'un triangle dans l'image,
     - tuto4.cpp utiliser une camera pour observer un objet,
