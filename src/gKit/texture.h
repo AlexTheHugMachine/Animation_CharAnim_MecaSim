@@ -62,9 +62,14 @@ exemple d'utilisation : cf shader_kit.cpp
     
     if(video) capture("shader_kit");
 \endcode
-
- */
+*/
 int capture( const char *prefix );
+
+//! creation de textures filtrables / mipmaps
+GLuint make_texture( const int unit, const int width, const int height, const GLenum texel_type, const GLenum data_format= GL_RGBA, const GLenum data_type= GL_UNSIGNED_BYTE );
+
+//! creation de textures non filtrables / 1 mipmap
+GLuint make_flat_texture( const int unit, const int width, const int height, const GLenum texel_type, const GLenum data_format= GL_RGBA, const GLenum data_type= GL_UNSIGNED_BYTE );
 
 ///@}
 #endif
