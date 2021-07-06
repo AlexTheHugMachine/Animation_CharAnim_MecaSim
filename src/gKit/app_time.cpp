@@ -56,7 +56,7 @@ int AppTime::postrender( )
     
     // affiche le temps dans le terminal 
     //~ printf("cpu  %02dms %03dus    ", cpu_time / 1000, cpu_time % 1000);
-    //~ printf("gpu  %02dms %03dus\n", int(gpu_time / 1000000), int((gpu_time / 1000) % 1000));
+    printf("gpu  %02dms %03dus\n", int(gpu_time / 1000000), int((gpu_time / 1000) % 1000));
     
     draw(m_console, window_width(), window_height());
     
