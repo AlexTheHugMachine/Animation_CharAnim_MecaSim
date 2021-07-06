@@ -137,6 +137,9 @@ tutos = {
     "tuto_transformations",
     "tuto_transformations_camera",
     "tuto_transformations_lookat",
+    "tuto_decal",
+    "tuto_shadows",
+    "tuto_deferred_decal",
 
     "tuto8",
     "tuto9",
