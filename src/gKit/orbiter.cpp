@@ -62,7 +62,7 @@ Transform Orbiter::projection( ) const
     float d= distance(m_center, Point(m_position.x, m_position.y, m_size));     // meme resultat plus rapide a calculer
     
     // regle near et far en fonction du centre et du rayon englobant l'objet 
-    return Perspective(m_fov, float(m_width) / float(m_height), std::max(0.1f, d - m_radius), std::max(1.f, d + m_radius));
+    return Perspective(m_fov, m_width / m_height, std::max(float(0.1), d - m_radius), std::max(float(1), d + m_radius));
 }
 
 Transform Orbiter::viewport( ) const
@@ -118,6 +118,9 @@ int Orbiter::read_orbiter( const char *filename )
         errors= true;
     if(fscanf(in, "s %f %f\n", &m_size, &m_radius) != 2)
         errors= true;
+        
+    if(fscanf(in, "f %f %f %f\n", &m_fov, &m_width, &m_height) != 3)
+        errors= true;
     
     fclose(in);
     if(errors)
@@ -141,6 +144,7 @@ int Orbiter::write_orbiter( const char *filename )
     fprintf(out, "p %f %f\n", m_position.x, m_position.y);
     fprintf(out, "r %f %f\n", m_rotation.x, m_rotation.y);
     fprintf(out, "s %f %f\n", m_size, m_radius);
+    fprintf(out, "f %f %f %f\n", m_fov, m_width, m_height);
     
     fclose(out);
     return 0;
