@@ -139,8 +139,8 @@ public:
         // decrire un repere / grille 
         m_repere= make_grid(20);
         m_local= make_grid(2);
-        //~ m_ground= make_ground(20);
-        m_ground= read_mesh("ground.obj");
+        m_ground= make_ground(20);
+        //~ m_ground= read_mesh("ground.obj");
         m_proxy= make_xyz();
         m_frustum= make_frustum();
         

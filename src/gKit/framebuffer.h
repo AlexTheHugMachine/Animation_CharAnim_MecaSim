@@ -4,6 +4,9 @@
 #ifndef _FRAMEBUFFER_H
 #define _FRAMEBUFFER_H
 
+#include <vector>
+#include <array>
+
 #include "texture.h"
 
 
@@ -94,7 +97,7 @@ protected:
     std::vector<GLenum> m_draw_buffers;
     std::vector<GLuint> m_color_textures;
     
-    std::vector<unsigned[4]> m_clear_colors;
+    std::vector< std::array<unsigned,4> > m_clear_colors;
     std::vector<int> m_color_units;
     float m_clear_depth;
     int m_depth_unit;

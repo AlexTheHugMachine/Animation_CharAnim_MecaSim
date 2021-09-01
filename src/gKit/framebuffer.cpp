@@ -19,7 +19,7 @@ GLuint Framebuffer::create( const int width, const int height )
     m_color_textures= std::vector<GLuint>(8, 0);
     m_depth_texture= 0;
     
-    m_clear_colors= std::vector<unsigned[4]>(8);
+    m_clear_colors= std::vector< std::array<unsigned, 4> >(8);
     m_clear_depth= 1;
     
     m_color_units= std::vector<int>(8, -1);
@@ -159,7 +159,7 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
         {
             glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_color_textures[0], /* mipmap */ 0);
             m_draw_buffers[0]= GL_COLOR_ATTACHMENT0;
-            glDrawBuffers(8, m_draw_buffers.data());
+            //~ glDrawBuffers(8, m_draw_buffers.data());
         }
     }
     
@@ -260,7 +260,7 @@ void Framebuffer::clear_color( const Color& value )
         printf("[error] uninitialized framebuffer...\n");
     
     float values[4]= { value.r, value.g, value.b, value.a };
-    memcpy(m_clear_colors[0], values, sizeof(values));
+    memcpy(&m_clear_colors[0], values, sizeof(values));
 }
 
 void Framebuffer::clear_position( const Point& value )
@@ -269,7 +269,7 @@ void Framebuffer::clear_position( const Point& value )
         printf("[error] uninitialized framebuffer...\n");
     
     float values[4]= { value.x, value.y, value.z, 0 };
-    memcpy(m_clear_colors[1], values, sizeof(values));
+    memcpy(&m_clear_colors[1], values, sizeof(values));
 }
 
 void Framebuffer::clear_texcoord( const vec2& value )
@@ -278,7 +278,7 @@ void Framebuffer::clear_texcoord( const vec2& value )
         printf("[error] uninitialized framebuffer...\n");
     
     float values[4]= { value.x, value.y, 0, 0 };
-    memcpy(m_clear_colors[2], values, sizeof(values));
+    memcpy(&m_clear_colors[2], values, sizeof(values));
 }
 
 void Framebuffer::clear_normal( const Vector& value )
@@ -287,7 +287,7 @@ void Framebuffer::clear_normal( const Vector& value )
         printf("[error] uninitialized framebuffer...\n");
     
     float values[4]= { value.x, value.y, value.z, 0 };
-    memcpy(m_clear_colors[3], values, sizeof(values));
+    memcpy(&m_clear_colors[3], values, sizeof(values));
 }
 
 void Framebuffer::clear_material( const unsigned value )
@@ -296,7 +296,7 @@ void Framebuffer::clear_material( const unsigned value )
         printf("[error] uninitialized framebuffer...\n");
     
     unsigned values[4]= { value, 0, 0, 0 };
-    memcpy(m_clear_colors[4], values, sizeof(values));
+    memcpy(&m_clear_colors[4], values, sizeof(values));
 }
 
 
