@@ -215,6 +215,7 @@ public:
     //@{
     //! renvoie la description des matieres.
     const Materials& materials( ) const;
+    //! renvoie la description des matieres.
     Materials& materials( );
     //! remplace la description des matieres.
     void materials( const Materials& materials );

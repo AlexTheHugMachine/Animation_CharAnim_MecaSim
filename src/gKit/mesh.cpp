@@ -635,7 +635,7 @@ void Mesh::draw( const int first, const int n, const GLuint program, const bool 
             GLint glsl_size;
             GLenum glsl_type;
             glGetActiveAttrib(program, index, sizeof(name), nullptr, &glsl_size, &glsl_type, name);
-
+            
             GLint location= glGetAttribLocation(program, name);
             if(location == 0)       // attribut position necessaire a l'execution du shader
             {
@@ -677,7 +677,7 @@ void Mesh::draw( const int first, const int n, const GLuint program, const bool 
     #endif
     
     if(m_indices.size() > 0)
-        glDrawElements(m_primitives, n, GL_UNSIGNED_INT, (void *) (unsigned long int) (first * sizeof(unsigned int)));
+        glDrawElements(m_primitives, n, GL_UNSIGNED_INT, (void *) (first * sizeof(unsigned)));
     else
         glDrawArrays(m_primitives, first, n);
 }

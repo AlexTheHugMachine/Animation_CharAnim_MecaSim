@@ -53,20 +53,9 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
     if(m_fbo == 0)
         create(m_width, m_height);
     
-    // desactive les textures, si necessaire
-    // le pipeline ne peut pas lire et modifier les textures en meme temps.
-    for(int i= 0; i < 8; i++)
-        if(m_color_units[i] != -1)
-        {
-            glActiveTexture(GL_TEXTURE0 + m_color_units[i]);
-            glBindTexture(GL_TEXTURE_2D, 0);
-        }
-    
-    if(m_depth_unit != -1)
-    {
-        glActiveTexture(GL_TEXTURE0 + m_depth_unit);
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
+    // desactive les textures associees au framebuffer, si necessaire (ie l'application ne l'a pas fait... mais non ca n'arrive jamais)
+    // todo ou generer une erreur ?
+    unbind_textures();
     
     // selectionne le framebuffer
     assert(m_fbo > 0);
@@ -90,11 +79,13 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
             sprintf(label, "program( %u )", program); 
         #endif
         
+    #if 0
         // verifie que le program est selectionne
-        //~ GLuint current;
-        //~ glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *) &current);
-        //~ if(current != program)
-            //~ printf("[oops] %s: not active... undefined draw !!\n", label); 
+        GLuint current;
+        glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *) &current);
+        if(current != program)
+            printf("[oops] %s: not active... undefined draw !!\n", label); 
+    #endif
         
         // lister les sorties du fragment shader
         GLint outputs= 0;
@@ -103,10 +94,9 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
         char name[1024];
         for(int i= 0; i < outputs; i++)
         {
-            GLenum props[]= { GL_LOCATION };
             int location= -1;
+            GLenum props[]= { GL_LOCATION };
             glGetProgramResourceiv(program, GL_PROGRAM_OUTPUT, i, 1, props, 1, nullptr, &location);
-            
             glGetProgramResourceName(program, GL_PROGRAM_OUTPUT, i, sizeof(name), nullptr, name);
             
             if(location == 0)   // sortie color
@@ -152,6 +142,8 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
         glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 0, /* mipmap */ 0);
     }
     
+    //
+    bool draw_buffers= false;
     if(color)
     {
         if(m_color_textures[0] == 0)
@@ -162,14 +154,14 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
         {
             glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_color_textures[0], /* mipmap */ 0);
             m_draw_buffers[0]= GL_COLOR_ATTACHMENT0;
-            glDrawBuffers(8, m_draw_buffers.data());
+            draw_buffers= true;
         }
     }
     else
     {
         glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 0, /* mipmap */ 0);
         m_draw_buffers[0]= GL_NONE;
-        glDrawBuffers(8, m_draw_buffers.data());
+        draw_buffers= true;
     }
     
     if(position)
@@ -182,14 +174,14 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
         {
             glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, m_color_textures[1], /* mipmap */ 0);
             m_draw_buffers[1]= GL_COLOR_ATTACHMENT1;
-            glDrawBuffers(8, m_draw_buffers.data());
+            draw_buffers= true;
         }
     }
     else
     {
         glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 0, /* mipmap */ 0);
         m_draw_buffers[1]= GL_NONE;
-        glDrawBuffers(8, m_draw_buffers.data());
+        draw_buffers= true;
     }
     
     if(texcoord)
@@ -202,14 +194,14 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
         {
             glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, m_color_textures[2], /* mipmap */ 0);        
             m_draw_buffers[2]= GL_COLOR_ATTACHMENT2;
-            glDrawBuffers(8, m_draw_buffers.data());
+            draw_buffers= true;
         }
     }
     else
     {
         glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, /* mipmap */ 0);
         m_draw_buffers[2]= GL_NONE;
-        glDrawBuffers(8, m_draw_buffers.data());
+        draw_buffers= true;
     }
     
     if(normal)
@@ -222,14 +214,14 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
         {
             glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, m_color_textures[3], /* mipmap */ 0);
             m_draw_buffers[3]= GL_COLOR_ATTACHMENT3;
-            glDrawBuffers(8, m_draw_buffers.data());
+            draw_buffers= true;
         }
     }
     else
     {
         glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, 0, /* mipmap */ 0);
         m_draw_buffers[3]= GL_NONE;
-        glDrawBuffers(8, m_draw_buffers.data());
+        draw_buffers= true;
     }
     
     if(material_id)
@@ -242,16 +234,20 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
         {
             glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, m_color_textures[4], /* mipmap */ 0);
             m_draw_buffers[4]= GL_COLOR_ATTACHMENT4;
-            glDrawBuffers(8, m_draw_buffers.data());
+            draw_buffers= true;
         }
     }
     else
     {
         glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, 0, /* mipmap */ 0);
         m_draw_buffers[4]= GL_NONE;
-        glDrawBuffers(8, m_draw_buffers.data());
+        draw_buffers= true;
     }
     
+    if(draw_buffers)
+        glDrawBuffers(8, m_draw_buffers.data());
+    
+    // verifie la configuration du framebuffer
     if(!status())
         return;
     
@@ -273,11 +269,37 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
         glClearBufferuiv(GL_COLOR, 4, (const GLuint *) &m_clear_colors[4]);
 }
 
+
 void Framebuffer::unbind( const int width, const int height )
 {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glViewport(0, 0, width, height);
 }
+
+
+void Framebuffer::unbind_textures( )
+{
+    // desactive les textures associees au framebuffer, si necessaire
+    // le pipeline ne peut pas lire et modifier les textures en meme temps.
+    for(int i= 0; i < 8; i++)
+        if(m_color_units[i] != -1)
+        {
+            glActiveTexture(GL_TEXTURE0 + m_color_units[i]);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            
+            m_color_units[i]= -1;
+        }
+    
+    if(m_depth_unit != -1)
+    {
+        glActiveTexture(GL_TEXTURE0 + m_depth_unit);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        
+        m_depth_unit= -1;
+    }
+}
+
+
 
 void Framebuffer::clear_depth( const float value )
 {
