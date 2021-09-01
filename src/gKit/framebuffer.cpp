@@ -139,7 +139,6 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
 #endif
     
     // configuration du framebuffer, et creation des textures, si necessaire
-    // \todo desactiver les draw buffers non utilises ?
     if(depth)
     {
         if(m_depth_texture == 0)
@@ -147,6 +146,10 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
         
         assert(m_depth_texture > 0);
         glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_depth_texture, /* mipmap */ 0);
+    }
+    else
+    {
+        glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 0, /* mipmap */ 0);
     }
     
     if(color)
@@ -159,8 +162,14 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
         {
             glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_color_textures[0], /* mipmap */ 0);
             m_draw_buffers[0]= GL_COLOR_ATTACHMENT0;
-            //~ glDrawBuffers(8, m_draw_buffers.data());
+            glDrawBuffers(8, m_draw_buffers.data());
         }
+    }
+    else
+    {
+        glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 0, /* mipmap */ 0);
+        m_draw_buffers[0]= GL_NONE;
+        glDrawBuffers(8, m_draw_buffers.data());
     }
     
     if(position)
@@ -176,6 +185,12 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
             glDrawBuffers(8, m_draw_buffers.data());
         }
     }
+    else
+    {
+        glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 0, /* mipmap */ 0);
+        m_draw_buffers[1]= GL_NONE;
+        glDrawBuffers(8, m_draw_buffers.data());
+    }
     
     if(texcoord)
     {
@@ -189,6 +204,12 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
             m_draw_buffers[2]= GL_COLOR_ATTACHMENT2;
             glDrawBuffers(8, m_draw_buffers.data());
         }
+    }
+    else
+    {
+        glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, /* mipmap */ 0);
+        m_draw_buffers[2]= GL_NONE;
+        glDrawBuffers(8, m_draw_buffers.data());
     }
     
     if(normal)
@@ -204,6 +225,12 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
             glDrawBuffers(8, m_draw_buffers.data());
         }
     }
+    else
+    {
+        glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, 0, /* mipmap */ 0);
+        m_draw_buffers[3]= GL_NONE;
+        glDrawBuffers(8, m_draw_buffers.data());
+    }
     
     if(material_id)
     {
@@ -217,6 +244,12 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
             m_draw_buffers[4]= GL_COLOR_ATTACHMENT4;
             glDrawBuffers(8, m_draw_buffers.data());
         }
+    }
+    else
+    {
+        glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, 0, /* mipmap */ 0);
+        m_draw_buffers[4]= GL_NONE;
+        glDrawBuffers(8, m_draw_buffers.data());
     }
     
     if(!status())
