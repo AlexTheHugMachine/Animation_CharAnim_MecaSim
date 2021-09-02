@@ -90,7 +90,7 @@ public:
     //! plaque une texture a la surface de l'objet.
     DrawParam& texture( const GLuint t ) { m_use_texture= true; m_texture= t; return *this; }
 
-    //! texture semi transparente, si l'alpha du texel est plus petit que alpha_min, le pixel est transparent. desactive aussi les calculs d'eclairage.
+    //! texture semi transparente, si l'alpha du texel est plus petit que alpha_min, le pixel est transparent. desactive aussi les calculs d'eclairage. utiliser alpha(0) pour desactiver le test.
     DrawParam& alpha( const float a=0.f ) { m_use_alpha_test= (a>0.f); m_alpha_min= a; return *this; }
 
     //! Use light: on/off
@@ -151,6 +151,7 @@ public:
     //! renvoie un shader program compile.
     PipelineProgram *find( const char *filename, const char *definitions= "" )
     {
+        // todo peut etre remplacer par une unordered_map ? mais il y a peu de shaders utilise normalement...
         for(auto program : m_programs)
         {
             if(program->filename == filename && program->definitions == definitions)

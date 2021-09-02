@@ -139,8 +139,8 @@ public:
         // decrire un repere / grille 
         m_repere= make_grid(20);
         m_local= make_grid(2);
-        //~ m_ground= make_ground(20);
-        m_ground= read_mesh("ground.obj");
+        m_ground= make_ground(20);
+        //~ m_ground= read_mesh("ground.obj");
         m_proxy= make_xyz();
         m_frustum= make_frustum();
         
@@ -258,9 +258,9 @@ public:
         else
         {
         // etape 1: dessine l'objet dans le framebuffer, vu du dessus... utilise les transformations du decal
-            glUseProgram(m_decal_program);
+            m_framebuffer.bind(m_decal_program, /* store_color */ true, /* store_depth */ true, /* store_position */ false, /* store_texcoord */ false, /* store_normal */ false, /* store_material */ false);
             {
-                m_framebuffer.bind(m_decal_program, /* store_color */ true, /* store_depth */ true, /* store_position */ false, /* store_texcoord */ false, /* store_normal */ false, /* store_material */ false);
+                glUseProgram(m_decal_program);
                 
                 Transform model= m_position;    // position de l'objet
                 Transform mv= decal_view * model;
@@ -269,12 +269,12 @@ public:
                 program_uniform(m_decal_program, "mvpMatrix", mvp);
                 
                 m_objet.draw(m_decal_program,  /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false, /* use material index*/ false);
-                
-            // etape 2: retour a la normale, dessine les autres objets dans la fenetre
-                m_framebuffer.unbind(window_width(), window_height());
             }
             
-        // etape 3: affichage du sol avec le decal / la texture projective
+        // etape 2: retour a la normale, dessine les autres objets dans la fenetre
+            m_framebuffer.unbind(window_width(), window_height());
+            
+        // etape 3: affichage du sol avec le decal / la texture projective dessinee par l'etape 1
             glUseProgram(m_shadow_program);
             {
                 // transformations standards
@@ -291,14 +291,22 @@ public:
                 Transform decal= decal_viewport * decal_projection * decal_view;
                 
                 program_uniform(m_shadow_program, "decalMatrix", decal);
-                m_framebuffer.use_color_texture(m_shadow_program, "decal", 0);    // utilise la texture du framebuffer comme decal
                 
+                // utilise la texture de l'etape 1 comme decal...
+                m_framebuffer.use_color_texture(m_shadow_program, "decal", 0);
+                
+                // dessiner l'objet avec le decal...
                 m_ground.draw(m_shadow_program, /* use position */ true, /* use texcoord */ false, /* use normal */ true, /* use color */ false, /* use material index*/ false);
             }
+            
+        // etape 4 : nettoyage
+            m_framebuffer.unbind_textures();
         }
         
-        // copie le decal 
+        
+        // copie la texture de l'etape 1 / le decal en bas a gauche de la fenetre
         m_framebuffer.blit_color(0, 0, 256, 256);
+        
         
         // screenshot
         if(key_state('s'))
