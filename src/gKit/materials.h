@@ -9,31 +9,34 @@
 #include "color.h"
 
 
-//! representation d'une matiere.
+/*! representation d'une matiere d'un groupe de triangles d'un Mesh.
+parametres des matieres Blinn-Phong, cf \ref matiere pour les explications et \ref brdf pour le code...
+*/
 struct Material
 {
-    Color diffuse;              //!< couleur diffuse
-    Color specular;             //!< couleur du reflet
-    Color emission;             //!< pour une source de lumiere
-    float ns;                   //!< exposant pour les reflets blinn-phong
-    int diffuse_texture;        //! < indice de la texture, ou -1
-    int ns_texture;             //!< indice de la texture, ou -1
+    Color diffuse;              //!< couleur diffuse / de base.
+    Color specular;             //!< couleur du reflet.
+    Color emission;             //!< pour une source de lumiere.
+    float ns;                   //!< concentration des reflets, exposant pour les reflets blinn-phong.
+    int diffuse_texture;        //!< indice de la texture de la couleur de base, ou -1.
+    int ns_texture;             //!< indice de la texture de reflet, ou -1.
     
     Material( ) : diffuse(), specular(Black()), emission(), ns(0), diffuse_texture(-1), ns_texture(-1) {}
     Material( const Color& color ) : diffuse(color), specular(Black()), emission(), ns(0), diffuse_texture(-1), ns_texture(-1) {}
 };
 
 
-//! ensemble de matieres.
+//! ensemble de matieres d'un Mesh. 
 struct Materials
 {
-    std::vector<std::string> names;
-    std::vector<Material> materials;
-    std::vector<std::string> texture_filenames;
-    int default_material_id;
+    std::vector<std::string> names;     //!< noms des matieres.
+    std::vector<Material> materials;    //!< matieres.
+    std::vector<std::string> texture_filenames; //!< noms des textures à charger.
+    int default_material_id;    //<! inidice de la matiere par defaut dans materials.
     
     Materials( ) : names(), materials(), texture_filenames(), default_material_id(-1) {}
     
+    //! ajoute une matiere.
     int insert( const Material& material, const char *name )
     {
         int id= find(name);
@@ -47,6 +50,7 @@ struct Materials
         return id;
     }
     
+    //! ajoute une texture / nom du fichier.
     int insert_texture( const char *filename )
     {
         int id= find_texture(filename);
@@ -58,6 +62,7 @@ struct Materials
         return id;
     }
     
+    //! recherche une matiere avec son nom. renvoie son indice dans materials, ou -1.
     int find( const char *name )
     {
         if(name == nullptr || name[0] == 0)
@@ -71,14 +76,20 @@ struct Materials
         return -1;
     }
     
+    //! nombre de matieres.
     int count( ) const { return int(materials.size()); }
     
+    //! renvoie le nom de fichier de la ieme texture.
     const char *name( const int id ) const { assert(id != -1); assert(id < int(materials.size())); return names[id].c_str(); }
+    //! renvoie le nom de fichier de la ieme texture.
     const char *name( const int id ) { assert(id != -1); assert(id < int(materials.size())); return names[id].c_str(); }
     
+    //! renvoie la ieme matiere.
     const Material& material( const int id ) const { assert(id != -1); assert(id < int(materials.size())); return materials[id]; }
+    //! renvoie la ieme matiere.
     Material& material( const int id ) { assert(id != -1); assert(id < int(materials.size())); return materials[id]; }
     
+    //! renvoie la matiere 'name', si elle exsite.
     const Material& material( const char *name )
     {
         int id= find(name);
@@ -86,6 +97,7 @@ struct Materials
         return materials[id];
     }
     
+    //! renvoie une matiere par defaut.
     const Material& default_material( )
     {
         if(default_material_id == -1)
@@ -94,6 +106,7 @@ struct Materials
         return material(default_material_id);
     }
     
+    //! indice de la matiere par defaut dans le tableau materials.
     int default_material_index( )
     {
         if(default_material_id == -1)
@@ -102,9 +115,12 @@ struct Materials
         return default_material_id;
     }
     
+    //! renvoie le nombre de noms de fichiers de textures.
     int filename_count( ) const { return int(texture_filenames.size()); }
+    //! renvoie le nombre de noms de fichiers de textures.
     const char *filename( const int id ) const { return texture_filenames[id].c_str(); }
     
+    //! renvoie l'indice d'une texture, si elle existe.
     int find_texture( const char *filename )
     {
         if(filename == nullptr || filename[0] == 0)

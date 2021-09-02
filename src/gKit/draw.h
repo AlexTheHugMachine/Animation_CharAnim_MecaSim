@@ -28,6 +28,23 @@ void draw( Mesh& m, Orbiter& camera, const GLuint texture );
 //! dessine l'objet avec une transformation model. les transformations vue et projection sont celles de la camera. applique une texture a la surface de l'objet. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
 void draw( Mesh& m, const Transform& model, Orbiter& camera, const GLuint texture );
 
+//! \name dessine des triangles d'un objet associés à une matière. cf gestion des matieres, Mesh::groups() et les classes Materials et Material.
+//@{
+//! dessine un groupe de triangles de l'objet associe a une matiere / couleur. 
+void draw( const TriangleGroup& group, Mesh& mesh, Orbiter& camera );
+//! dessine un groupe de triangles de l'objet associe a une matiere / couleur.
+void draw( const TriangleGroup& group, Mesh& mesh, const Transform& model, Orbiter& camera );
+//! dessine un groupe de triangles de l'objet associe a une matiere / couleur.
+void draw( const TriangleGroup& group, Mesh& mesh, const Transform& model, const Transform& view, const Transform& projection );
+
+//! dessine un groupe de triangles de l'objet associe a une matiere / couleur et une texture. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
+void draw( const TriangleGroup& group, Mesh& mesh, Orbiter& camera, const GLuint texture );
+//! dessine un groupe de triangles de l'objet associe a une matiere / couleur et une texture. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
+void draw( const TriangleGroup& group, Mesh& mesh, const Transform& model, Orbiter& camera, const GLuint texture );
+//! dessine un groupe de triangles de l'objet associe a une matiere / couleur et une texture. ne fonctionne que si les coordonnees de textures sont fournies avec tous les sommets de l'objet.
+void draw( const TriangleGroup& group, Mesh& mesh, const Transform& model, const Transform& view, const Transform& projection, const GLuint texture );
+//@}
+    
 /*! representation des options / parametres d'un draw.
     permet de donner tous les parametres d'un draw de maniere flexible.
 
