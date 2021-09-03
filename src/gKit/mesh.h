@@ -180,6 +180,21 @@ public:
     
     //! demarre un nouveau strip. a utiliser avec un objet composes de GL_TRIANGLE_STRIP, doit aussi fonctionner avec GL_TRIANGLE_FAN, GL_LINE_STRIP, GL_LINE_LOOP, etc.
     Mesh& restart_strip( );
+    
+    /*! insere un indice de sommet. 
+    \code
+    Mesh m(GL_TRIANGLES);
+    unsigned int a= m.vertex( Point(ax, ay, az) );
+    unsigned int b= m.vertex( Point(bx, by, bz) );
+    unsigned int c= m.vertex( Point(cx, cy, cz) );
+    
+    // insere le triangle abc
+    m.index(a);
+    m.index(b);
+    m.index(c);
+    \endcode
+    */
+    Mesh& index( const int a );
     //@}
     
     //! \name modification des attributs des sommets.

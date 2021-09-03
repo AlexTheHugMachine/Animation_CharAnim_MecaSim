@@ -63,6 +63,7 @@ unsigned int Mesh::vertex( const vec3& position )
     m_positions.push_back(position);
 
     // copie les autres attributs du sommet, uniquement s'ils sont definis
+    // \todo utiliser des attributs temporaires, plus robuste en cas d'erreur de construction...
     if(m_texcoords.size() > 0 && m_texcoords.size() != m_positions.size())
         m_texcoords.push_back(m_texcoords.back());
     if(m_normals.size() > 0 && m_normals.size() != m_positions.size())
@@ -71,10 +72,10 @@ unsigned int Mesh::vertex( const vec3& position )
         m_colors.push_back(m_colors.back());
 
     // copie la matiere courante, uniquement si elle est definie
-    if(m_triangle_materials.size() > 0 && (size_t) triangle_count() > m_triangle_materials.size())
+    if(m_triangle_materials.size() > 0 && size_t(triangle_count()) > m_triangle_materials.size())
         m_triangle_materials.push_back(m_triangle_materials.back());
     
-    unsigned int index= (unsigned int) m_positions.size() -1;
+    unsigned int index= m_positions.size() -1;
     // construction de l'index buffer pour les strip
     switch(m_primitives)
     {
@@ -156,16 +157,16 @@ Mesh& Mesh::triangle_last( const int a, const int b, const int c )
     assert(b < 0);
     assert(c < 0);
     m_update_buffers= true;
-    m_indices.push_back((int) m_positions.size() + a);
-    m_indices.push_back((int) m_positions.size() + b);
-    m_indices.push_back((int) m_positions.size() + c);
+    m_indices.push_back(int(m_positions.size()) + a);
+    m_indices.push_back(int(m_positions.size()) + b);
+    m_indices.push_back(int(m_positions.size()) + c);
     return *this;
 }
 
 Mesh& Mesh::restart_strip( )
 {
     m_update_buffers= true;
-    m_indices.push_back(~0u);   // ~0u plus grand entier non signe representable
+    m_indices.push_back(~0u);   // ~0u plus grand entier non signe representable, ou UINT_MAX...
 #if 1
     glPrimitiveRestartIndex(~0u);
     glEnable(GL_PRIMITIVE_RESTART);
@@ -174,6 +175,23 @@ Mesh& Mesh::restart_strip( )
 #endif
     return *this;
 }
+
+Mesh& Mesh::index( const int a )
+{
+    if(a < 0)
+        m_indices.push_back(int(m_positions.size()) + a);
+    else if(a < int(m_positions.size()))
+        m_indices.push_back(a);
+    else
+    {
+        printf("[error] Mesh::index(): invalid index...\n");
+        return *this;   // erreur
+    }
+    
+    m_update_buffers= true;
+    return *this;
+}
+
 
 Materials& Mesh::materials( )
 {
