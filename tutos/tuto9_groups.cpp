@@ -1,5 +1,5 @@
 
-//! \file tuto9_materials.cpp utilisation d'un shader 'utilisateur' pour afficher un objet Mesh et ses matieres.
+//! \file tuto9_groups.cpp afficher un objet Mesh et ses matieres, dessine les groupe de triangles, un par un.
 
 #include "mat.h"
 #include "mesh.h"
@@ -74,13 +74,10 @@ public:
     #if 1
         // option 1 : avec les utilitaires draw()
         {
-            DrawParam pipeline;
-            pipeline.model(model).camera(camera());
-            
+            // dessine chaque groupe de triangle, avec sa matiere
             for(int i= 0; i < int(m_groups.size()); i++)
-            {
-                pipeline.draw(m_groups[i], m_objet);
-            }
+                //~ draw(m_groups[i], m_objet, model, camera());
+                draw(m_groups[i], m_objet, model, view, projection);
         }
     #else
         // option 2 : dessiner m_objet avec le shader program
