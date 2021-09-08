@@ -5,7 +5,6 @@
 #ifdef VERTEX_SHADER
 layout(location= 0) in vec3 position;
 layout(location= 2) in vec3 normal;
-layout(location= 4) in uint material;
 
 uniform mat4 mvpMatrix;
 uniform mat4 mvMatrix;
@@ -35,10 +34,10 @@ uniform vec4 material_color;
 
 void main( )
 {
-    vec3 l= normalize(-vertex_position);        // la camera est la source de lumiere.
-    vec3 n= normalize(vertex_normal);
-    float cos_theta= max(0, dot(n, l));
-    fragment_color= material_color * cos_theta;
+    vec3 l= normalize(-vertex_position);        // l, direction vers la lumiere // la camera est la source de lumiere. (0,0,0) dans le repere camera
+    vec3 n= normalize(vertex_normal);			// n, normale au point p
+    float cos_theta= max(0, dot(n, l));			// cos theta, angle entre la normale et la direction vers la lumiere
+    fragment_color= material_color * cos_theta;	// modele de lambert
 }
 
 #endif
