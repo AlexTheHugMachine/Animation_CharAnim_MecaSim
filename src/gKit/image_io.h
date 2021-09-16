@@ -33,7 +33,7 @@ struct ImageData
     ImageData( ) : pixels(), width(0), height(0), channels(0), size(0) {}
     ImageData( const int w, const int h, const int c, const int s= 1 ) : pixels(w*h*c*s, 0), width(w), height(h), channels(c), size(s) {}
     
-    size_t offset( const int x, const int y ) const { return y * width * channels * size + x * channels * size; }
+    size_t offset( const int x, const int y, const int c= 0 ) const { return (y * width +x ) * channels * size + c * size; }
     const void *data( ) const { return pixels.data(); }
     void *data( ) { return pixels.data(); }
     
