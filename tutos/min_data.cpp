@@ -23,12 +23,12 @@ GLuint tmp_buffer= 0;
 std::vector<int> input;
 
 
-const int logNmax= 24;
+const int logNmax= 26;
 
 int init( )
 {
     srand(time(nullptr));
-        
+    
     int o= rand() % 10000;
     for(int i= 0; i < (1<<logNmax); i++)
         input.push_back( o + rand() % 10000);
@@ -41,7 +41,7 @@ int init( )
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, tmp_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * input.size(), input.data(), GL_STREAM_READ);
 
-//~ #define ATOMIC
+#define ATOMIC
     
 #ifndef ATOMIC
     // version reduction globale
@@ -67,12 +67,12 @@ int quit( )
 int main( int argc, char **argv )
 {
     // etape 1 : creer la fenetre
-    Window window= create_window(1024, 640);
+    Window window= create_window(1024, 640,  4,3);       // openGL version 4.3
     if(window == NULL)
         return 1;
 
     // etape 2 : creer un contexte opengl pour pouvoir dessiner
-    Context context= create_context(window, 4,3);       // openGL version 4.3
+    Context context= create_context(window);
     if(context == NULL)
         return 1;
 
@@ -112,6 +112,8 @@ int main( int argc, char **argv )
     FILE *out= fopen("min_data.txt", "wt");
 #else
     FILE *out= fopen("min_atomic.txt", "wt");
+    //~ FILE *out= fopen("min_atomic_shared.txt", "wt");
+    //~ FILE *out= fopen("min_copy.txt", "wt");
 #endif
     
     // pour N= 2, 4, 8, ... 2^n
@@ -130,25 +132,30 @@ int main( int argc, char **argv )
         // 1ere etape
         program_uniform(program, "N", (unsigned int) N);
         program_uniform(program, "n", (unsigned int) 0);
-        glDispatchCompute((N+1024) / 1024, 1, 1);
+        glDispatchCompute((N+1023) / 1024, 1, 1);
         
         // etapes suivantes
         program_uniform(program, "N", (unsigned int) 0);
         for(int n= N/2; n > 1; n= n/2)
         {
             program_uniform(program, "n", (unsigned int) n);
-
+            
             // attendre que les resultats temporaires sont dispos
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
             
-            glDispatchCompute((n+1024) / 1024, 1, 1);
+            //~ for(int i=0 ; i < 100; i++)
+            glDispatchCompute((n+1023) / 1024, 1, 1);
         }
         
     #else
         // version avec synchronisation "atomique"
         program_uniform(program, "N", (unsigned int) N);
         // un seul dispatch
-        glDispatchCompute((N+1024) / 1024, 1, 1);
+        for(int i=0 ; i < 100; i++)
+        {
+            glDispatchCompute((N+1023) / 1024, 1, 1);
+            //~ glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+        }
     #endif
         
         // recupere les resultats tmp
@@ -162,7 +169,8 @@ int main( int argc, char **argv )
         glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int) * tmp.size(), tmp.data());
         
         printf("gpu min %d:", tmp[1]);
-        printf(" %02dms %03dus\n", (int) (gpu_time / 1000000), (int) ((gpu_time / 1000) % 1000));
+        //~ printf(" %02dms %03dus\n", (int) (gpu_time / 1000000), (int) ((gpu_time / 1000) % 1000));
+        printf(" %03dus\n", (int) (gpu_time / 1000));
         
         {
             // verification
@@ -180,7 +188,7 @@ int main( int argc, char **argv )
             printf(" %02dms %03dus\n", (int) (cpu_time / 1000000), (int) ((cpu_time / 1000) % 1000));
             
             // ecrire les temps d'execution dans le fichier
-            fprintf(out, "%d %f %f\n", N, gpu_time / 1000000.f, cpu_time / 1000000.f);
+            fprintf(out, "%d %f %f\n", N, gpu_time / 1000.f, cpu_time / 1000.f);
             
             printf("\n");
         }
