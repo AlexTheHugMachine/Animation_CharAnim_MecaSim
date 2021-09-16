@@ -322,7 +322,10 @@ Materials read_materials( const char *filename )
                 material->diffuse_texture= materials.insert_texture( normalize_filename(pathname(filename) + tmp).c_str() );
                 
             else if(sscanf(line, "map_Ks %[^\r\n]", tmp) == 1)
-                material->ns_texture= materials.insert_texture( normalize_filename(pathname(filename) + tmp).c_str() );
+                material->specular_texture= materials.insert_texture( normalize_filename(pathname(filename) + tmp).c_str() );
+                
+            else if(sscanf(line, "map_Ke %[^\r\n]", tmp) == 1)
+                material->emission_texture= materials.insert_texture( normalize_filename(pathname(filename) + tmp).c_str() );
         }
         
     }

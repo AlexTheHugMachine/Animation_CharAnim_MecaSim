@@ -19,6 +19,8 @@ struct Material
     Color emission;             //!< pour une source de lumiere.
     float ns;                   //!< concentration des reflets, exposant pour les reflets blinn-phong.
     int diffuse_texture;        //!< indice de la texture de la couleur de base, ou -1.
+    int specular_texture;        //!< indice de la texture, ou -1.
+    int emission_texture;        //!< indice de la texture, ou -1.
     int ns_texture;             //!< indice de la texture de reflet, ou -1.
     
     Material( ) : diffuse(), specular(Black()), emission(), ns(0), diffuse_texture(-1), ns_texture(-1) {}
