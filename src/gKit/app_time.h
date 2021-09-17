@@ -17,7 +17,7 @@ class AppTime : public App
 {
 public:
     //! constructeur, dimensions de la fenetre et version d'openGL.
-    AppTime( const int width, const int height, const int major= 3, const int minor= 3 );
+    AppTime( const int width, const int height, const int major= 3, const int minor= 3, const int samples= 0 );
     virtual ~AppTime( );
 
     //! a deriver pour creer les objets openGL.

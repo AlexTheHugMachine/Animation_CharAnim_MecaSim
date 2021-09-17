@@ -44,15 +44,17 @@ int App::run( )
             break;
         
         // presenter le resultat
+        SDL_GL_SwapWindow(m_window);
+        
         // force openGL a finir d'executer toutes les commandes, 
         // cf https://www.khronos.org/opengl/wiki/Swap_Interval#GPU_vs_CPU_synchronization
         // devrait limiter la consommation sur portable
         glFinish();
-        
-        SDL_GL_SwapWindow(m_window);
     }
     
     if(quit() < 0)
         return -1;
+    
+    // tout c'est bien passe...
     return 0;
 }

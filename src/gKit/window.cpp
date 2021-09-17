@@ -148,7 +148,7 @@ int run( Window window, int (*draw)() )
         // dessiner
         if(draw() < 1)
             stop= 1;    // fermer l'application si draw() renvoie 0 ou -1...
-
+        
         // presenter le resultat
         SDL_GL_SwapWindow(window);
     }
@@ -276,8 +276,6 @@ Window create_window( const int w, const int h, const int major, const int minor
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples);
     }
     
-    SDL_GL_SetSwapInterval(-1);
-    
     // creer la fenetre
     Window window= SDL_CreateWindow("gKit",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h,
@@ -345,7 +343,10 @@ Context create_context( Window window )
         printf("[error] creating openGL context.\n");
         return nullptr;
     }
-
+    
+    if(SDL_GL_SetSwapInterval(-1) != 0)
+        printf("[warning] can't set vsync\n%s\n", SDL_GetError());
+    
     if(SDL_GL_GetSwapInterval() != -1)
     {
         printf("vsync ON\n");

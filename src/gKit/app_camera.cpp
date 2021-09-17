@@ -1,7 +1,8 @@
 
 #include "app_camera.h"
 
-AppCamera::AppCamera( const int width, const int height, const int major, const int minor, const int samples ) : App(width, height, major, minor, samples), m_camera() 
+AppCamera::AppCamera( const int width, const int height, const int major, const int minor, const int samples ) 
+    : App(width, height, major, minor, samples), m_camera() 
 {
     // projection par defaut, adaptee a la fenetre
     m_camera.projection(window_width(), window_height(), 45);
