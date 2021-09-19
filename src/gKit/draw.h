@@ -175,7 +175,7 @@ public:
     }
     
 protected:
-    //! destructeur prive. le singleton ne sera detruit qu'a la fin de l'application... doit etre detruit tant que le contexte openGL existe.
+    //! constructeur prive. 
     PipelineCache( ) : m_programs() {}
     
     std::vector<PipelineProgram *> m_programs;

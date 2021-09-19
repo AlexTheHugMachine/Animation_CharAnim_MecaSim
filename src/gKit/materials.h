@@ -23,18 +23,20 @@ struct Material
     int emission_texture;        //!< indice de la texture, ou -1.
     int ns_texture;             //!< indice de la texture de reflet, ou -1.
     
-    Material( ) : diffuse(), specular(Black()), emission(), ns(0), diffuse_texture(-1), ns_texture(-1) {}
-    Material( const Color& color ) : diffuse(color), specular(Black()), emission(), ns(0), diffuse_texture(-1), ns_texture(-1) {}
+    //! constructeur par defaut. noir.
+    Material( ) : diffuse(), specular(), emission(), ns(0), diffuse_texture(-1), specular_texture(-1), emission_texture(-1), ns_texture(-1) {}
+    //! matiere diffuse.
+    Material( const Color& color ) : diffuse(color), specular(), emission(), ns(0), diffuse_texture(-1), specular_texture(-1), emission_texture(-1), ns_texture(-1) {}
 };
 
 
-//! ensemble de matieres d'un Mesh. 
+//! ensemble de matieres d'un Mesh. + ensemble de textures referencees par les descriptions de matieres. 
 struct Materials
 {
     std::vector<std::string> names;     //!< noms des matieres.
-    std::vector<Material> materials;    //!< matieres.
-    std::vector<std::string> texture_filenames; //!< noms des textures à charger.
-    int default_material_id;    //<! inidice de la matiere par defaut dans materials.
+    std::vector<Material> materials;    //!< description des matieres.
+    std::vector<std::string> texture_filenames; //!< noms des textures a charger.
+    int default_material_id;    //!< indice de la matiere par defaut dans materials.
     
     Materials( ) : names(), materials(), texture_filenames(), default_material_id(-1) {}
     
@@ -81,9 +83,9 @@ struct Materials
     //! nombre de matieres.
     int count( ) const { return int(materials.size()); }
     
-    //! renvoie le nom de fichier de la ieme texture.
+    //! renvoie le nom de la ieme matiere.
     const char *name( const int id ) const { assert(id != -1); assert(id < int(materials.size())); return names[id].c_str(); }
-    //! renvoie le nom de fichier de la ieme texture.
+    //! renvoie le nom de la ieme matiere.
     const char *name( const int id ) { assert(id != -1); assert(id < int(materials.size())); return names[id].c_str(); }
     
     //! renvoie la ieme matiere.
@@ -91,21 +93,27 @@ struct Materials
     //! renvoie la ieme matiere.
     Material& material( const int id ) { assert(id != -1); assert(id < int(materials.size())); return materials[id]; }
     
-    //! renvoie la matiere 'name', si elle exsite.
+    //! renvoie la ieme matiere.
+    const Material& operator() ( const int id ) const { return material(id); }
+    //! renvoie la ieme matiere.
+    Material& operator() ( const int id ) { return material(id); }
+    
+    //! renvoie la matiere 'name', si elle existe. ou la matiere par defaut.
     const Material& material( const char *name )
     {
         int id= find(name);
-        assert(id != -1);
-        return materials[id];
+        if(id != -1)
+            // renvoie la matiere
+            return materials[id];
+        else
+            // ou renvoie la matiere par defaut...
+            return default_material();
     }
     
     //! renvoie une matiere par defaut.
     const Material& default_material( )
     {
-        if(default_material_id == -1)
-            default_material_id= insert(Material(Color(0.8)), "default");
-        
-        return material(default_material_id);
+        return material(default_material_index());
     }
     
     //! indice de la matiere par defaut dans le tableau materials.
