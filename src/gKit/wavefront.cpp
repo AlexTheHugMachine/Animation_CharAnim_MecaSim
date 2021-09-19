@@ -125,6 +125,7 @@ Mesh read_mesh( const char *filename )
                 idt.push_back(0); 
                 idn.push_back(0);         // 0: invalid index
                 
+                // analyse les attributs du sommet : p/t/n ou p//n ou p/t ou p...
                 next= 0;
                 if(sscanf(line, " %d/%d/%d %n", &idp.back(), &idt.back(), &idn.back(), &next) == 3) 
                     continue;
@@ -147,6 +148,7 @@ Mesh read_mesh( const char *filename )
             
             data.material(material_id);
             
+            // triangule la face
             for(int v= 2; v +1 < (int) idp.size(); v++)
             {
                 int idv[3]= { 0, v -1, v };
@@ -158,6 +160,8 @@ Mesh read_mesh( const char *filename )
                     int n= (idn[k] < 0) ? (int) normals.size()   + idn[k] : idn[k] -1;
                     
                     if(p < 0) break; // error
+                    
+                    // attribut du ieme sommet
                     if(t >= 0) data.texcoord(texcoords[t]);
                     if(n >= 0) data.normal(normals[n]);
                     data.vertex(positions[p]);
@@ -169,7 +173,7 @@ Mesh read_mesh( const char *filename )
         {
            if(sscanf(line, "mtllib %[^\r\n]", tmp) == 1)
            {
-               Materials materials= read_materials( std::string(pathname(filename) + tmp).c_str() );
+               Materials materials= read_materials( normalize_filename(pathname(filename) + tmp).c_str() );
                // enregistre les matieres dans le mesh
                data.materials(materials);
            }
