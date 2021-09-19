@@ -440,6 +440,68 @@ void Mesh::bounds( Point& pmin, Point& pmax ) const
     }
 }
 
+
+
+
+
+//! buffer unique de copie / mise a jour des vertex buffers statiques. singleton. tous les meshs utilisent le meme buffer de copie...
+class UpdateBuffer
+{
+public:
+    //! transfere les donnees dans un buffer statique.
+    void copy( GLenum target, const size_t offset, const size_t length, const void *data )
+    {
+        if(m_buffer == 0)
+            glGenBuffers(1, &m_buffer);
+        
+        assert(m_buffer);
+        glBindBuffer(GL_COPY_READ_BUFFER, m_buffer);
+        if(length > m_size)
+        {
+            m_size= (length / (16*1024*1024) + 1) * (16*1024*1024); // alloue par bloc de 16Mo 
+            assert(m_size >= length);
+            
+            // alloue un buffer intermediaire dynamique...
+            glBufferData(GL_COPY_READ_BUFFER, m_size, nullptr, GL_DYNAMIC_DRAW);
+            printf("[UpdateBuffer] allocate %dMo staging buffer...\n", int(m_size / 1024 / 1024));
+        }
+        
+        // place les donnees dans le buffer intermediaire
+        glBufferSubData(GL_COPY_READ_BUFFER, 0, length, data);
+        // copie les donnees dans le vertex buffer statique
+        glCopyBufferSubData(GL_COPY_READ_BUFFER, target, 0, offset, length);
+    }
+    
+    //! detruit le buffer.
+    ~UpdateBuffer( ) 
+    { 
+        release(); 
+    }
+    
+    //! detruit le buffer.
+    void release( )
+    {
+        glDeleteBuffers(1, &m_buffer);
+        m_buffer= 0;
+        m_size= 0;
+    }
+    
+    //! acces au singleton.
+    static UpdateBuffer& manager( )
+    {
+        static UpdateBuffer buffer;
+        return buffer;
+    }
+    
+protected:
+    //! constructeur prive. singleton.
+    UpdateBuffer( ) : m_buffer(0), m_size(0) {}
+    
+    GLuint m_buffer;
+    size_t m_size;
+};
+
+
 GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index )
 {
     if(m_positions.size() == 0)
@@ -459,7 +521,8 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
     if(m_vao)
         // c'est deja fait...
         return m_vao;
-    
+   
+    // configuration du format de sommet
     glGenVertexArrays(1, &m_vao);
     glBindVertexArray(m_vao);
     
@@ -474,7 +537,7 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
     if(use_material_index && has_material_index())
         m_vertex_buffer_size+= m_positions.size() * sizeof(unsigned char);
     
-    // allouer le buffer
+    // alloue le buffer
     glGenBuffers(1, &m_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
     glBufferData(GL_ARRAY_BUFFER, m_vertex_buffer_size, nullptr, GL_STATIC_DRAW);
@@ -488,6 +551,7 @@ GLuint Mesh::create_buffers( const bool use_texcoord, const bool use_normal, con
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer_size, index_buffer(), GL_STATIC_DRAW);
     }
 
+    // transfere les donnees dans les buffers
     update_buffers(use_texcoord,  use_normal, use_color, use_material_index);
     
     return m_vao;
@@ -499,6 +563,9 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
     assert(m_buffer > 0);
     if(!m_update_buffers)
         return 0;
+
+    // alloue un buffer de copie, necessaire pour transferer plus de 256Mo... cf tuto_stream.cpp / transfert de donnees gpu
+    UpdateBuffer& update= UpdateBuffer::manager();
     
     glBindVertexArray(m_vao);
     glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
@@ -517,16 +584,15 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
     if(size != m_vertex_buffer_size)
     {
         m_vertex_buffer_size= size;
-        glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
-        // utilise un buffer dynamique, si le mesh a change
-        
-        //~ printf("[warning] resize buffer %d: %dK\n", m_buffer, int(size/1024));
+        glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_STATIC_DRAW);
     }
     
     // transferer les attributs et configurer le format de sommet (vao)
     size_t offset= 0;
     size= vertex_buffer_size();
-    glBufferSubData(GL_ARRAY_BUFFER, offset, size, vertex_buffer());
+    //~ glBufferSubData(GL_ARRAY_BUFFER, offset, size, vertex_buffer());        // copie les donnees dans le vertex buffer
+    update.copy(GL_ARRAY_BUFFER, offset, size, vertex_buffer());                // copie les donnees dans le vertex buffer
+    
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const void *) offset);
     glEnableVertexAttribArray(0);
     
@@ -534,7 +600,9 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
     {
         offset= offset + size;
         size= texcoord_buffer_size();
-        glBufferSubData(GL_ARRAY_BUFFER, offset, size, texcoord_buffer());
+        //~ glBufferSubData(GL_ARRAY_BUFFER, offset, size, texcoord_buffer());  // copie les donnees dans le vertex buffer
+        update.copy(GL_ARRAY_BUFFER, offset, size, texcoord_buffer());          // copie les donnees dans le vertex buffer
+        
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const void *) offset);
         glEnableVertexAttribArray(1);
     }
@@ -543,7 +611,9 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
     {
         offset= offset + size;
         size= normal_buffer_size();
-        glBufferSubData(GL_ARRAY_BUFFER, offset, size, normal_buffer());
+        //~ glBufferSubData(GL_ARRAY_BUFFER, offset, size, normal_buffer());    // copie les donnees dans le vertex buffer
+        update.copy(GL_ARRAY_BUFFER, offset, size, normal_buffer());            // copie les donnees dans le vertex buffer
+        
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (const void *) offset);
         glEnableVertexAttribArray(2);
     }
@@ -552,7 +622,9 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
     {
         offset= offset + size;
         size= color_buffer_size();
-        glBufferSubData(GL_ARRAY_BUFFER, offset, size, color_buffer());
+        //~ glBufferSubData(GL_ARRAY_BUFFER, offset, size, color_buffer());     // copie les donnees dans le vertex buffer
+        update.copy(GL_ARRAY_BUFFER, offset, size, color_buffer());             // copie les donnees dans le vertex buffer
+        
         glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 0, (const void *) offset);
         glEnableVertexAttribArray(3);
     }
@@ -574,7 +646,9 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
             buffer[3*i+2]= index;
         }
         
-        glBufferSubData(GL_ARRAY_BUFFER, offset, size, buffer.data());
+        //~ glBufferSubData(GL_ARRAY_BUFFER, offset, size, buffer.data());      // copie les donnees dans le vertex buffer
+        update.copy(GL_ARRAY_BUFFER, offset, size, buffer.data());              // copie les donnees dans le vertex buffer
+        
         glVertexAttribIPointer(4, 1, GL_UNSIGNED_BYTE, 0, (const void *) offset);
         glEnableVertexAttribArray(4);
     }
@@ -585,11 +659,9 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
     {
         m_index_buffer_size= index_buffer_size();
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_buffer_size(), index_buffer(), GL_DYNAMIC_DRAW);
-        // utilise un buffer dynamique, si le mesh a change
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_buffer_size(), index_buffer(), GL_STATIC_DRAW);
     }
     
-    //~ printf("upload vertex buffer %d size %ldB, index buffer %d size %ldB\n", m_buffer, m_vertex_buffer_size, m_index_buffer, m_index_buffer_size);
     m_update_buffers= false;
     return 1;
 }
@@ -610,15 +682,14 @@ void Mesh::draw( const int first, const int n, const GLuint program, const bool 
         return;
     }
     
+    // transfere toutes les donnees disponibles (et correctement definies)
+    // le meme mesh peut etre dessine avec plusieurs shaders utilisant des attributs differents... 
     if(m_vao == 0)
         create_buffers(has_texcoord(), has_normal(), has_color(), has_material_index());
     assert(m_vao != 0);
     
     if(m_update_buffers)
         update_buffers(has_texcoord(), has_normal(), has_color(), has_material_index());
-    
-    // transfere toutes les donnees disponibles (et correctement definies)
-    // le meme mesh peut etre dessine avec plusieurs shaders utilisant des attributs differents... 
     
     glBindVertexArray(m_vao);
     
