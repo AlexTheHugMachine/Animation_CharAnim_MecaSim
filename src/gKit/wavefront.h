@@ -14,6 +14,9 @@
 //! charge un fichier wavefront .obj et renvoie un mesh compose de triangles non indexes. utiliser glDrawArrays pour l'afficher. a detruire avec Mesh::release( ).
 Mesh read_mesh( const char *filename );
 
+//! charge un fichier wavefront .obj et renvoie un mesh compose de triangles indexes. utiliser glDrawElements pour l'afficher. a detruire avec Mesh::release( ).
+Mesh read_indexed_mesh( const char *filename );
+
 //! enregistre un mesh dans un fichier .obj.
 int write_mesh( const Mesh& mesh, const char *filename );
 
