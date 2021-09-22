@@ -310,13 +310,7 @@ public:
     bool has_texcoord( ) const { return m_texcoords.size() == m_positions.size(); }
     bool has_normal( ) const { return m_normals.size() == m_positions.size(); }
     bool has_color( ) const { return m_colors.size() == m_positions.size(); }
-    bool has_material_index( ) const 
-    { 
-        // solution simple, pas compatible avec un mesh indexe.
-        if(m_indices.size())
-            return false;
-        return m_triangle_materials.size() == m_positions.size() / 3; 
-    }
+    bool has_material_index( ) const { return int(m_triangle_materials.size()) == triangle_count(); }
     //@}
     
     //! renvoie le type de primitives.

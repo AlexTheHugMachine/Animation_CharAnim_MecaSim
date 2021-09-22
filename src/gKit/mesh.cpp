@@ -638,12 +638,37 @@ int Mesh::update_buffers( const bool use_texcoord, const bool use_normal, const 
         
         // prepare un indice de matiere par sommet / 3 indices par triangle
         std::vector<unsigned char> buffer(m_positions.size());
-        for(int i= 0; i < int(m_triangle_materials.size()); i++)
+        if(m_indices.size())
         {
-            int index= m_triangle_materials[i];
-            buffer[3*i]= index;
-            buffer[3*i+1]= index;
-            buffer[3*i+2]= index;
+            //!! ne fonctionne que parce que read_indexed_mesh() duplique les sommets partages par 2 matieres !!
+            //!! ca ne fonctionnera probablement pas avec les mesh indexes construits par l'application... mais c'est long de detecter le probleme...
+            for(int triangle_id= 0; triangle_id < int(m_triangle_materials.size()); triangle_id++)
+            {
+                int material_id= m_triangle_materials[triangle_id];
+                assert(triangle_id*3+2 < int(m_indices.size()));
+                unsigned a= m_indices[triangle_id*3];
+                unsigned b= m_indices[triangle_id*3 +1];
+                unsigned c= m_indices[triangle_id*3 +2];
+                
+                buffer[a]= material_id;
+                buffer[b]= material_id;
+                buffer[c]= material_id;
+            }
+        }
+        else
+        {
+            for(int triangle_id= 0; triangle_id < int(m_triangle_materials.size()); triangle_id++)
+            {
+                int material_id= m_triangle_materials[triangle_id];
+                assert(triangle_id*3+2 < int(m_positions.size()));
+                unsigned a= triangle_id*3;
+                unsigned b= triangle_id*3 +1;
+                unsigned c= triangle_id*3 +2;
+                
+                buffer[a]= material_id;
+                buffer[b]= material_id;
+                buffer[c]= material_id;
+            }
         }
         
         //~ glBufferSubData(GL_ARRAY_BUFFER, offset, size, buffer.data());      // copie les donnees dans le vertex buffer

@@ -226,13 +226,13 @@ Mesh read_indexed_mesh( const char *filename )
     FILE *in= fopen(filename, "rb");
     if(in == NULL)
     {
-        printf("[error] loading mesh '%s'...\n", filename);
+        printf("[error] loading indexed mesh '%s'...\n", filename);
         return Mesh::error();
     }
     
     Mesh data(GL_TRIANGLES);
     
-    printf("loading mesh '%s'...\n", filename);
+    printf("loading indexed mesh '%s'...\n", filename);
     
     std::vector<vec3> positions;
     std::vector<vec2> texcoords;
@@ -374,9 +374,9 @@ Mesh read_indexed_mesh( const char *filename )
     fclose(in);
     
     if(error)
-        printf("[error] loading mesh '%s'...\n%s\n\n", filename, line_buffer);
+        printf("[error] loading indexed mesh '%s'...\n%s\n\n", filename, line_buffer);
     else
-        printf("mesh '%s': %d indices, %d positions %d texcoords %d normals\n", filename, 
+        printf("  %d indices, %d positions %d texcoords %d normals\n", 
             int(data.indices().size()), int(data.positions().size()), int(data.texcoords().size()), int(data.normals().size()));
     
     return data;
@@ -428,7 +428,8 @@ int write_mesh( const Mesh& mesh, const char *filename )
         if(material_id != int(materials[i/3]))
         {
             material_id= int(materials[i/3]);
-            fprintf(out, "usemtl %s\n", mesh.materials().name(material_id));
+            if(material_id != -1)
+                fprintf(out, "usemtl %s\n", mesh.materials().name(material_id));
         }
         
         fprintf(out, "f");
