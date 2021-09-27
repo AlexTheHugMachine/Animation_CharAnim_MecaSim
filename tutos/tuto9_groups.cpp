@@ -103,7 +103,7 @@ public:
             // afficher chaque groupe
             for(unsigned i= 0; i < m_groups.size(); i++)
             {
-                const Material& material= m_objet.materials().material(m_groups[i].material_index);
+                const Material& material= m_objet.materials().material(m_groups[i].index);
                 
                 // . parametres "supplementaires" :
                 //   . couleur diffuse de la matiere du groupe de triangle

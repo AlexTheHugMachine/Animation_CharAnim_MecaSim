@@ -184,8 +184,8 @@ void DrawParam::draw( const TriangleGroup& group, Mesh& mesh )
     GLuint program= create_program(mesh.primitives(), use_texcoord, use_normal, use_color, m_use_light, m_use_alpha_test);
     
     glUseProgram(program);
-    if(group.material_index != -1 && group.material_index < mesh.materials().count())
-        program_uniform(program, "mesh_color", mesh.materials().material(group.material_index).diffuse);
+    if(group.index != -1 && group.index < mesh.materials().count())
+        program_uniform(program, "mesh_color", mesh.materials().material(group.index).diffuse);
     else
         program_uniform(program, "mesh_color", mesh.materials().default_material().diffuse);
     

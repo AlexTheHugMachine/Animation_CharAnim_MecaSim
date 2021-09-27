@@ -233,23 +233,29 @@ const Material &Mesh::triangle_material( const unsigned int id ) const
 
 struct triangle_sort
 {
-    const std::vector<unsigned int>& materials;
+    const std::vector<unsigned int>& properties;
     
-    triangle_sort( const Mesh& mesh ) : materials(mesh.material_indices()) {}
+    triangle_sort( const std::vector<unsigned int>& _properties ) : properties(_properties) {}
     
     bool operator() ( const int& a, const int& b ) const
     {
-        return materials[a] < materials[b];
+        return properties[a] < properties[b];
     }
 };
 
+
 std::vector<TriangleGroup> Mesh::groups( )
+{
+    return groups(m_triangle_materials);
+}
+
+std::vector<TriangleGroup> Mesh::groups( const std::vector<unsigned int>& triangle_properties )
 {
     if(m_primitives != GL_TRIANGLES)
         return {};
     
-    // pas de matieres... renvoyer un seul groupe
-    if(m_triangle_materials.size() == 0)
+    // pas le bon nombre d'infos, renvoyer un seul groupe
+    if(int(triangle_properties.size()) != triangle_count())
     {
         if(m_indices.size())
             return { {0, 0, int(m_indices.size())} };
@@ -257,42 +263,42 @@ std::vector<TriangleGroup> Mesh::groups( )
             return { {0, 0, int(m_positions.size())} };
     }
     
-    // trie les triangles par matiere
+    // trie les triangles
     std::vector<int> remap(triangle_count());
-    for(int i= 0; i < int(remap.size()); i++)
+    for(unsigned i= 0; i < remap.size(); i++)
         remap[i]= i;
     
-    std::stable_sort(remap.begin(), remap.end(), triangle_sort(*this));
+    std::stable_sort(remap.begin(), remap.end(), triangle_sort(triangle_properties));
     
     // re-organise les triangles, et construit les groupes
     std::vector<TriangleGroup> groups;
     if(m_indices.size())
     {
         int first= 0;
-        int material_id= m_triangle_materials[remap[0]];
+        int property_id= triangle_properties[remap[0]];
         
         // re-organise l'index buffer...
         std::vector<unsigned int> indices;
         std::vector<unsigned int> material_indices;
-        for(int i= 0; i < int(remap.size()); i++)
+        for(unsigned i= 0; i < remap.size(); i++)
         {
-            int id= m_triangle_materials[remap[i]];
-            if(id != material_id)
+            int id= triangle_properties[remap[i]];
+            if(id != property_id)
             {
-                groups.push_back( {material_id, first, 3*i - first} );
+                groups.push_back( {property_id, first, int(3*i) - first} );
                 first= 3*i;
-                material_id= id;
+                property_id= id;
             }
             
             indices.push_back(m_indices[3*remap[i]]);
             indices.push_back(m_indices[3*remap[i]+1]);
             indices.push_back(m_indices[3*remap[i]+2]);
             
-            material_indices.push_back(id);
+            material_indices.push_back(m_triangle_materials[remap[i]]);
         }
         
         // dernier groupe
-        groups.push_back( {material_id, first, int(3 * remap.size()) - first} );
+        groups.push_back( {property_id, first, int(3 * remap.size()) - first} );
         
         std::swap(m_indices, indices);
         std::swap(m_triangle_materials, material_indices);
@@ -300,7 +306,7 @@ std::vector<TriangleGroup> Mesh::groups( )
     else
     {
         int first= 0;
-        int material_id= m_triangle_materials[remap[0]];
+        int property_id= triangle_properties[remap[0]];
         
         // re-organise les attributs !!
         std::vector<vec3> positions;
@@ -308,14 +314,14 @@ std::vector<TriangleGroup> Mesh::groups( )
         std::vector<vec3> normals;
         std::vector<vec4> colors;
         std::vector<unsigned int> material_indices;
-        for(int i= 0; i < int(remap.size()); i++)
+        for(unsigned i= 0; i < remap.size(); i++)
         {
-            int id= m_triangle_materials[remap[i]];
-            if(id != material_id)
+            int id= triangle_properties[remap[i]];
+            if(id != property_id)
             {
-                groups.push_back( {material_id, first, 3*i - first} );
+                groups.push_back( {property_id, first, int(3*i) - first} );
                 first= 3*i;
-                material_id= id;
+                property_id= id;
             }
             
             positions.push_back(m_positions[3*remap[i]]);
@@ -340,11 +346,11 @@ std::vector<TriangleGroup> Mesh::groups( )
                 colors.push_back(m_colors[3*remap[i]+2]);
             }
             
-            material_indices.push_back(id);
+            material_indices.push_back(m_triangle_materials[remap[i]]);
         }
         
         // dernier groupe
-        groups.push_back( {material_id, first, int(3 * remap.size()) - first} );
+        groups.push_back( {property_id, first, int(3 * remap.size()) - first} );
         
         std::swap(m_positions, positions);
         std::swap(m_texcoords, texcoords);
@@ -432,7 +438,7 @@ void Mesh::bounds( Point& pmin, Point& pmax ) const
     pmin= Point(m_positions[0]);
     pmax= pmin;
 
-    for(unsigned int i= 1; i < (unsigned int) m_positions.size(); i++)
+    for(unsigned i= 1; i < m_positions.size(); i++)
     {
         vec3 p= m_positions[i];
         pmin= Point( std::min(pmin.x, p.x), std::min(pmin.y, p.y), std::min(pmin.z, p.z) );

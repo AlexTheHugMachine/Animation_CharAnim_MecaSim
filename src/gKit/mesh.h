@@ -96,9 +96,9 @@ struct TriangleData
 //! representation d'un ensemble de triangles de meme matiere.
 struct TriangleGroup
 {
-    int material_index; //!< indice de la matiere du groupe de triangles
-    int first;          //!< premier triangle du groupe
-    int n;              //!< nombre de triangles du groupe
+    int index;  //!< indice de la "propriete"du groupe de triangles, par defaut : indice de la matiere
+    int first;  //!< premier triangle du groupe
+    int n;      //!< nombre de triangles du groupe
 };
 
 
@@ -254,8 +254,10 @@ public:
     //! renvoie la matiere d'un triangle.
     const Material &triangle_material( const unsigned int id ) const;
     
-    //! renvoie les groupes de triangles de meme matiere. permet d'afficher l'objet matiere par matiere.
+    //! renvoie les groupes de triangles de meme matiere. re-organise les triangles. permet d'afficher l'objet matiere par matiere.
     std::vector<TriangleGroup> groups( );
+    //! renvoie les groupes de triangles de meme 'propriete'. re-organise les triangles.
+    std::vector<TriangleGroup> groups( const std::vector<unsigned int>& triangle_properties );
     //@}
     
     //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet (boite englobante alignee sur les axes, aabb).
