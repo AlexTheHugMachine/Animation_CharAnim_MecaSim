@@ -81,6 +81,11 @@ unsigned int d= m.vertex(Point(...));
 // decrit 2 triangles avec les indices des 4 sommets
 m.triangle(a, b, c);
 m.triangle(a, c, d);
+
+// ou decrit un triangle indexe sommet par sommet (indice par indice)
+m.index(a);
+m.index(b);
+m.index(c);
 \endcode
 */
 
