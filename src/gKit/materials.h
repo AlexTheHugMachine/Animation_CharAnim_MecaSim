@@ -30,7 +30,17 @@ struct Material
 };
 
 
-//! ensemble de matieres d'un Mesh. + ensemble de textures referencees par les descriptions de matieres. 
+/*! ensemble de matieres d'un Mesh. + ensemble de textures referencees par les descriptions de matieres. 
+
+    `names[id]` est le nom de la matiere `materials[id]`, utiliser name() et material() pour recuperer la description d'une matiere d'indice `id`.
+
+    les textures sont indexees separemment. chaque matiere reference une ou plusieurs textures, par exemple diffuse_texture et specular_texture. 
+    ces indices correspondent aux noms de fichiers (uniques) des images à charger : filename() renvoie le nom du fichier.
+    filename( material.diffuse_texture ) renvoie le nom de l'image à charger qui correspond à la texture diffuse de la matiere.
+    
+    pourquoi cette indexation supplementaire ? pour eviter de charger plusieurs fois une image / creer plusieurs fois une texture. 
+    il est aussi tres simple de creer un tableau avec les textures openGL indexe de la meme maniere.
+*/
 struct Materials
 {
     std::vector<std::string> names;     //!< noms des matieres.
