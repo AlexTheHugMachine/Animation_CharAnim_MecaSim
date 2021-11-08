@@ -66,10 +66,19 @@ struct Histogram : public App
             for(int x= 0; x < m_image.width; x++)
             {
                 size_t offset= m_image.offset(x, y);
+            #if 0
+                float r= float(m_image.pixels[offset]) / 255;
+                float g= float(m_image.pixels[offset+1]) / 255;
+                float b= float(m_image.pixels[offset+2]) / 255;
+                float grey= (r+g+b) / 3;
+                int bin= int(15 * grey);
+            #else
+                // nettement plus rapide ...
                 int r= m_image.pixels[offset];
                 int g= m_image.pixels[offset+1];
                 int b= m_image.pixels[offset+2];
-                int bin= 15 * (r+g+b) / (255*3);
+                int bin= 15 * (r+g+b) / (255*3);                
+            #endif
                 histogram[bin]++;
             }
             
@@ -119,7 +128,7 @@ struct Histogram : public App
         glBeginQuery(GL_TIME_ELAPSED, m_time_query);
         {
             // go !!
-            for(int i= 0; i < 100; i++)
+            //~ for(int i= 0; i < 100; i++)     // eventuellement recommencer plein de fois pour stabiliser les frequences du gpu...
             glDispatchCompute(nx, ny, 1);
             
             // attendre le resultat
@@ -139,7 +148,7 @@ struct Histogram : public App
         GLint64 gpu_time= 0;
         glGetQueryObjecti64v(m_time_query, GL_QUERY_RESULT, &gpu_time);
         gpu_time/= 100;
-        printf("gpu  %02dms %03dus\n\n", int(gpu_time / 1000000), int((gpu_time / 1000) % 1000));    
+        printf("gpu  %dus\n\n", int(gpu_time / 1000));
         
         return 0;       // une seule fois
         //~ return 1;   // recommencer jusqu'a la fermeture de la fenetre...
