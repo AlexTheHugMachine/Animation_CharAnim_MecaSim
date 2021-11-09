@@ -47,7 +47,7 @@ struct Histogram : public App
         // cree le buffer pour stocker l'histogramme
         glGenBuffers(1, &m_histogram);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_histogram);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_READ);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) * 16, nullptr, GL_STATIC_COPY);
         
         m_program= read_program("tutos/M2/histogram2.glsl");
         program_print_errors(m_program);
@@ -128,7 +128,22 @@ struct Histogram : public App
         
         // relire le buffer resultat
         int histogram[16];
-        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int) * 16, histogram);
+        {
+            // creer un buffer temporaire pour le transfert depuis le buffer resultat
+            GLuint buffer= 0;
+            glGenBuffers(1, &buffer);
+            glBindBuffer(GL_COPY_WRITE_BUFFER, buffer);
+            glBufferData(GL_COPY_WRITE_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_READ);
+            
+            // copie les resultats
+            glCopyBufferSubData(GL_SHADER_STORAGE_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(int) * 16);
+            
+            // recupere les resultats depuis le buffer intermediaire
+            glGetBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(int) * 16, histogram);
+            
+            // detruit le buffer intermediaire
+            glDeleteBuffers(1, &buffer);
+        }
         
         for(int i= 0; i < 16; i++)
             printf("bin %d: %d pixels, %d%%\n", i, histogram[i], 100*histogram[i] / (m_image.width * m_image.height));
