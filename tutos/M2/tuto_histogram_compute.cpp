@@ -122,7 +122,7 @@ struct Histogram : public App
 
         int nx= m_image.width / m_threads[0] / 4;
         int ny= m_image.height / m_threads[1] / 4;
-        // on suppose que les dimensions de l'image sont multiples de 8...
+        // on suppose que les dimensions de l'image sont multiples de 4...
         // sinon calculer correctement le nombre de groupes pour x et y. 
         
         glBeginQuery(GL_TIME_ELAPSED, m_time_query);
@@ -138,22 +138,26 @@ struct Histogram : public App
         
         // relire le buffer resultat
         int histogram[16];
+    #if 1
         {
             // creer un buffer temporaire pour le transfert depuis le buffer resultat
             GLuint buffer= 0;
             glGenBuffers(1, &buffer);
-            glBindBuffer(GL_COPY_WRITE_BUFFER, buffer);
-            glBufferData(GL_COPY_WRITE_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_READ);
+            glBindBuffer(GL_COPY_READ_BUFFER, buffer);
+            glBufferData(GL_COPY_READ_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_READ);
             
             // copie les resultats
-            glCopyBufferSubData(GL_SHADER_STORAGE_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(int) * 16);
+            glCopyBufferSubData(GL_SHADER_STORAGE_BUFFER, GL_COPY_READ_BUFFER, 0, 0, sizeof(int) * 16);
             
             // recupere les resultats depuis le buffer intermediaire
-            glGetBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(int) * 16, histogram);
+            glGetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(int) * 16, histogram);
             
             // detruit le buffer intermediaire
             glDeleteBuffers(1, &buffer);
         }
+    #else
+        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int) * 16, histogram);
+    #endif
         
         for(int i= 0; i < 16; i++)
             printf("bin %d: %d pixels, %d%%\n", i, histogram[i], 100*histogram[i] / (m_image.width * m_image.height));
@@ -162,8 +166,8 @@ struct Histogram : public App
         // attendre le resultat de la requete
         GLint64 gpu_time= 0;
         glGetQueryObjecti64v(m_time_query, GL_QUERY_RESULT, &gpu_time);
-        gpu_time/= 100;
-        printf("gpu  %dus\n\n", int(gpu_time / 1000));
+        //~ gpu_time/= 100;
+        printf("gpu  %02dms %03dus\n\n", int(gpu_time / 1000000), int((gpu_time / 1000) % 1000));    
         
         return 0;       // une seule fois
         //~ return 1;   // recommencer jusqu'a la fermeture de la fenetre...

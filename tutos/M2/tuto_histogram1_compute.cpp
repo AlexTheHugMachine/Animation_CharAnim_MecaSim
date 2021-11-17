@@ -132,14 +132,14 @@ struct Histogram : public App
             // creer un buffer temporaire pour le transfert depuis le buffer resultat
             GLuint buffer= 0;
             glGenBuffers(1, &buffer);
-            glBindBuffer(GL_COPY_WRITE_BUFFER, buffer);
-            glBufferData(GL_COPY_WRITE_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_READ);
+            glBindBuffer(GL_COPY_READ_BUFFER, buffer);
+            glBufferData(GL_COPY_READ_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_READ);
             
             // copie les resultats
-            glCopyBufferSubData(GL_SHADER_STORAGE_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(int) * 16);
+            glCopyBufferSubData(GL_SHADER_STORAGE_BUFFER, GL_COPY_READ_BUFFER, 0, 0, sizeof(int) * 16);
             
             // recupere les resultats depuis le buffer intermediaire
-            glGetBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(int) * 16, histogram);
+            glGetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(int) * 16, histogram);
             
             // detruit le buffer intermediaire
             glDeleteBuffers(1, &buffer);
