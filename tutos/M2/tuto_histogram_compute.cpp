@@ -122,7 +122,7 @@ struct Histogram : public App
 
         int nx= m_image.width / m_threads[0] / 4;
         int ny= m_image.height / m_threads[1] / 4;
-        // on suppose que les dimensions de l'image sont multiples de 4...
+        // on suppose que les dimensions de l'image sont multiples de 8*4...
         // sinon calculer correctement le nombre de groupes pour x et y. 
         
         glBeginQuery(GL_TIME_ELAPSED, m_time_query);

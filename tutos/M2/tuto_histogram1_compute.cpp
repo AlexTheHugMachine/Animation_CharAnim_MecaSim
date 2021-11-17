@@ -119,6 +119,7 @@ struct Histogram : public App
         glBeginQuery(GL_TIME_ELAPSED, m_time_query);
         {
             // go !!
+            //~ for(int i= 0; i < 100; i++)     // eventuellement recommencer plein de fois pour stabiliser les frequences du gpu...
             glDispatchCompute(nx, ny, 1);
             
             // attendre le resultat
@@ -153,6 +154,7 @@ struct Histogram : public App
         // attendre le resultat de la requete
         GLint64 gpu_time= 0;
         glGetQueryObjecti64v(m_time_query, GL_QUERY_RESULT, &gpu_time);
+        //~ gpu_time/= 100;
         printf("gpu  %02dms %03dus\n\n", int(gpu_time / 1000000), int((gpu_time / 1000) % 1000));    
         
         return 0;       // une seule fois
