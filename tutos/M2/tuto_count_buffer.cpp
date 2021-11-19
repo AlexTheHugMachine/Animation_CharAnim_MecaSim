@@ -1,4 +1,6 @@
 
+//! \file tuto_count_buffer.cpp filtrer des donnees / compacter des resultats, manipulation de compteurs atomiques partages.
+
 #include <vector>
 
 #include "app.h"

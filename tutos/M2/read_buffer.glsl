@@ -1,4 +1,6 @@
 
+//! \file read_buffer.glsl relire un buffer privee
+
 #version 430
 
 #ifdef COMPUTE_SHADER

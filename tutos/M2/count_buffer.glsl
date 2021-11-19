@@ -1,4 +1,6 @@
 
+//! \file count_buffer.glsl filtrer des donnees / compacter des resultats, manipulation de compteurs atomiques partages.
+
 #version 430
 
 #ifdef COMPUTE_SHADER
