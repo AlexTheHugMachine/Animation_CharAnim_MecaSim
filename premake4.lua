@@ -219,7 +219,9 @@ tutosM2 = {
     "tuto_raytrace_compute",
     "tuto_histogram1_compute",
     "tuto_histogram2_compute",
-    "tuto_histogram_compute"
+    "tuto_histogram_compute",
+    "tuto_read_buffer",
+    "tuto_count_buffer"
 }
 
 for i, name in ipairs(tutosM2) do
