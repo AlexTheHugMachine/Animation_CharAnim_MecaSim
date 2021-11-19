@@ -119,6 +119,7 @@ struct Histogram : public App
         glBeginQuery(GL_TIME_ELAPSED, m_time_query);
         {
             // go !!
+            //~ for(int i= 0; i < 100; i++)     // eventuellement recommencer plein de fois pour stabiliser les frequences du gpu...
             glDispatchCompute(nx, ny, 1);
             
             // attendre le resultat
@@ -132,14 +133,14 @@ struct Histogram : public App
             // creer un buffer temporaire pour le transfert depuis le buffer resultat
             GLuint buffer= 0;
             glGenBuffers(1, &buffer);
-            glBindBuffer(GL_COPY_WRITE_BUFFER, buffer);
-            glBufferData(GL_COPY_WRITE_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_READ);
+            glBindBuffer(GL_COPY_READ_BUFFER, buffer);
+            glBufferData(GL_COPY_READ_BUFFER, sizeof(int) * 16, nullptr, GL_DYNAMIC_READ);
             
             // copie les resultats
-            glCopyBufferSubData(GL_SHADER_STORAGE_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(int) * 16);
+            glCopyBufferSubData(GL_SHADER_STORAGE_BUFFER, GL_COPY_READ_BUFFER, 0, 0, sizeof(int) * 16);
             
             // recupere les resultats depuis le buffer intermediaire
-            glGetBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(int) * 16, histogram);
+            glGetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(int) * 16, histogram);
             
             // detruit le buffer intermediaire
             glDeleteBuffers(1, &buffer);
@@ -153,6 +154,7 @@ struct Histogram : public App
         // attendre le resultat de la requete
         GLint64 gpu_time= 0;
         glGetQueryObjecti64v(m_time_query, GL_QUERY_RESULT, &gpu_time);
+        //~ gpu_time/= 100;
         printf("gpu  %02dms %03dus\n\n", int(gpu_time / 1000000), int((gpu_time / 1000) % 1000));    
         
         return 0;       // une seule fois
