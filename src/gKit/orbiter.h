@@ -26,6 +26,10 @@ public:
     
     //! fixe la projection reglee pour une image d'aspect width / height, et une demi ouverture de fov degres.
     Transform projection( const int width, const int height, const float fov );
+    //! renvoie le plan proche de la projection. distance min des points dans le frustum de la camera (valeur dans le repere camera).
+    float znear( ) const;
+    //! revnvoie le plan loin de la projection. distance max des points dans le frustum de la camera (valeur dans le repere camera).
+    float zfar( ) const;
     
     //! change le point de vue / la direction d'observation.
     void rotation( const float x, const float y );

@@ -33,8 +33,8 @@ void Orbiter::translation( const float x, const float y )
 void Orbiter::move( const float z )
 {
     m_size= m_size - m_size * 0.01f * z;
-    if(m_size < 0.01f)
-        m_size= 0.01f;
+    if(m_size < 0.001f)
+        m_size= 0.001f;
 }
 
 Transform Orbiter::view( ) const
@@ -53,16 +53,33 @@ Transform Orbiter::projection( const int width, const int height, const float fo
     return projection();
 }
 
+float Orbiter::znear( ) const
+{
+    // calcule la distance entre le centre de l'objet et la camera
+    float d= distance(m_center, Point(m_position.x, m_position.y, m_size));
+    return std::max(float(0.1), d - m_radius);
+    //~ return 0.1;
+}
+
+float Orbiter::zfar( ) const
+{
+    // calcule la distance entre le centre de l'objet et la camera
+    float d= distance(m_center, Point(m_position.x, m_position.y, m_size));
+    return std::max(float(1), d + m_radius);
+    //~ return m_radius;
+}
+
+
 Transform Orbiter::projection( ) const
 {
     // calcule la distance entre le centre de l'objet et la camera
     //~ Transform t= view();
     //~ Point c= t(m_center);
     //~ float d= -c.z;
-    float d= distance(m_center, Point(m_position.x, m_position.y, m_size));     // meme resultat plus rapide a calculer
+    //~ float d= distance(m_center, Point(m_position.x, m_position.y, m_size));     // meme resultat plus rapide a calculer
     
     // regle near et far en fonction du centre et du rayon englobant l'objet 
-    return Perspective(m_fov, m_width / m_height, std::max(float(0.1), d - m_radius), std::max(float(1), d + m_radius));
+    return Perspective(m_fov, m_width / m_height, znear(), zfar());
 }
 
 Transform Orbiter::viewport( ) const
