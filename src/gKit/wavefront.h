@@ -23,5 +23,8 @@ int write_mesh( const Mesh& mesh, const char *filename );
 //! charge une description de matieres, utilise par read_mesh.
 Materials read_materials( const char *filename );
 
+//! enregistre une description de matieres.
+int write_materials( const Materials& materials, const char *filename, const char *path= "" );
+
 ///@}
 #endif

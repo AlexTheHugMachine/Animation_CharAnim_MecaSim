@@ -452,6 +452,14 @@ int write_mesh( const Mesh& mesh, const char *filename )
 }
 
 
+std::string texture_filename( const std::string& filename, const std::string& path )
+{
+    if(filename[0] == '.' || filename[0] == '/')
+        return normalize_filename(filename);
+    else
+        return normalize_filename(path + filename);
+}
+
 Materials read_materials( const char *filename )
 {
     Materials materials;
@@ -519,13 +527,13 @@ Materials read_materials( const char *filename )
         else if(line[0] == 'm')
         {
             if(sscanf(line, "map_Kd %[^\r\n]", tmp) == 1)
-                material->diffuse_texture= materials.insert_texture( normalize_filename(pathname(filename) + tmp).c_str() );
+                material->diffuse_texture= materials.insert_texture( texture_filename(tmp, pathname(filename)).c_str() );
                 
             else if(sscanf(line, "map_Ks %[^\r\n]", tmp) == 1)
-                material->specular_texture= materials.insert_texture( normalize_filename(pathname(filename) + tmp).c_str() );
+                material->specular_texture= materials.insert_texture( texture_filename(tmp, pathname(filename)).c_str() );
                 
             else if(sscanf(line, "map_Ke %[^\r\n]", tmp) == 1)
-                material->emission_texture= materials.insert_texture( normalize_filename(pathname(filename) + tmp).c_str() );
+                material->emission_texture= materials.insert_texture( texture_filename(tmp, pathname(filename)).c_str() );
         }
         
     }
@@ -536,3 +544,61 @@ Materials read_materials( const char *filename )
     
     return materials;
 }
+
+
+const char *relative_filename( const char *filename, const char *path )
+{
+    unsigned i= 0;
+    while(filename[i] && path[i] && filename[i] == path[i]) 
+        i++;
+    
+    if(path[i] == 0)
+        return filename + i;
+    else
+        return filename;
+}
+
+
+int write_materials( const Materials& materials, const char *filename, const char *path )
+{
+    FILE *out= fopen(filename, "wt");
+    if(out == NULL)
+        return -1;
+    
+    printf("writing materials '%s'...\n", filename);
+    
+    for(int i= 0; i < materials.count(); i++)
+    {
+        const Material& m= materials.material(i);
+        
+        fprintf(out, "newmtl %s\n", materials.name(i));
+        
+        fprintf(out, "  Kd %f %f %f\n", m.diffuse.r, m.diffuse.g, m.diffuse.b);
+        if(m.diffuse_texture != -1)
+            fprintf(out, "  map_Kd %s\n", relative_filename(materials.filename(m.diffuse_texture), path));
+        
+        fprintf(out, "  Ks %f %f %f\n", m.specular.r, m.specular.g, m.specular.b);
+        if(m.specular_texture != -1)
+            fprintf(out, "  map_Ks %s\n", relative_filename(materials.filename(m.specular_texture), path));
+        
+        if(m.specular.power() > 0)
+        {
+            fprintf(out, "  Ns %f\n", m.ns);
+            if(m.ns_texture != -1)
+                fprintf(out, "  map_Ns %s\n", relative_filename(materials.filename(m.ns_texture), path));
+        }
+        
+        if(m.emission.power() > 0)
+        {
+            fprintf(out, "  Ke %f %f %f\n", m.emission.r, m.emission.g, m.emission.b);
+            if(m.emission_texture != -1)
+                fprintf(out, "  map_Ke %s\n", relative_filename(materials.filename(m.emission_texture), path));
+        }
+        
+        fprintf(out, "\n");
+    }
+    
+    fclose(out);
+    return 0;
+}
+
