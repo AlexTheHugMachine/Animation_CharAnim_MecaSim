@@ -28,7 +28,7 @@ int is_exponent( const char c )
 
 const char* skip_whitespace( const char* ptr )
 {
-    while (ptr && is_whitespace(*ptr))
+    while (is_whitespace(*ptr))
         ptr++;
 
     return ptr;
@@ -209,8 +209,8 @@ Mesh read_mesh_fast( const char *filename )
     std::vector<int> idt;
     std::vector<int> idn;
     
-    char tmp[1024];
-    char line_buffer[1024];
+    char tmp[1024*64];
+    char line_buffer[1024*64];
     bool error= true;
     for(;;)
     {
@@ -392,8 +392,8 @@ Mesh read_indexed_mesh_fast( const char *filename )
     
     std::map<vertex, int> remap;
     
-    char tmp[1024];
-    char line_buffer[1024];
+    char tmp[1024*64];
+    char line_buffer[1024*64];
     bool error= true;
     for(;;)
     {
