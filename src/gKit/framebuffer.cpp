@@ -87,7 +87,9 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
             printf("[oops] %s: not active... undefined draw !!\n", label); 
     #endif
         
+    #ifndef GK_MACOS
         // lister les sorties du fragment shader
+        // fonctionnalite openGL 4.3, n'existe pas sur mac...
         GLint outputs= 0;
         glGetProgramInterfaceiv(program, GL_PROGRAM_OUTPUT, GL_ACTIVE_RESOURCES, &outputs);
         
@@ -125,6 +127,7 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
                     printf("[oops] material output '%s' in %s not stored...\n", name, label);
             }
         }
+    #endif
     }
 #endif
     
