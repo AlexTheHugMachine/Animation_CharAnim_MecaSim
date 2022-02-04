@@ -165,7 +165,7 @@ public:
         
         float time= global_time();
         static Transform r;
-        if(!key_state(' '))
+        if(!key_state('f'))
             // rotation en fonction du temps...
             r= RotationX(time / float(20));
         else
@@ -182,7 +182,7 @@ public:
         Transform view= camera().view();
         Transform projection= camera().projection();
         
-        if(key_state('c'))
+        if(key_state(' '))
         {
             view= Inverse(m_position * m);
             projection= Perspective(60, float(window_width()) / float(window_height()), float(0.1), float(40));
