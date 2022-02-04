@@ -498,7 +498,7 @@ Mesh read_indexed_mesh_fast( const char *filename )
                     if(p < 0) break; // error
                     
                     // recherche / insere le sommet 
-                    auto found= remap.insert( std::make_pair(vertex(material_id, p, t, n), remap.size()) );
+                    auto found= remap.insert( std::make_pair(vertex(material_id, p, t, n), int(remap.size())) );
                     if(found.second)
                     {
                         // pas trouve, copie les nouveaux attributs
