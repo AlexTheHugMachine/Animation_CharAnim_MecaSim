@@ -1,5 +1,6 @@
 
 #include <cstdio>
+#include <cassert>
 
 #include <set>
 
@@ -92,6 +93,7 @@ void program_uniform( const GLuint program, const char *uniform, const unsigned 
 
 void program_uniform( const GLuint program, const char *uniform, const std::vector<unsigned>& v )
 {
+    assert(v.size());
     glUniform1uiv( location(program, uniform, v.size()), v.size(), v.data() );
 }
 
@@ -102,6 +104,7 @@ void program_uniform( const GLuint program, const char *uniform, const int v )
 
 void program_uniform( const GLuint program, const char *uniform, const std::vector<int>& v )
 {
+    assert(v.size());
     glUniform1iv( location(program, uniform, v.size()), v.size(), v.data() );
 }
 
@@ -112,6 +115,7 @@ void program_uniform( const GLuint program, const char *uniform, const float v )
 
 void program_uniform( const GLuint program, const char *uniform, const std::vector<float>& v )
 {
+    assert(v.size());
     glUniform1fv( location(program, uniform, v.size()), v.size(), v.data() );
 }
 
@@ -122,6 +126,7 @@ void program_uniform( const GLuint program, const char *uniform, const vec2& v )
 
 void program_uniform( const GLuint program, const char *uniform, const std::vector<vec2>& v )
 {
+    assert(v.size());
     glUniform2fv( location(program, uniform, v.size()), v.size(), &v[0].x );
 }
 
@@ -132,6 +137,7 @@ void program_uniform( const GLuint program, const char *uniform, const vec3& v )
 
 void program_uniform( const GLuint program, const char *uniform, const std::vector<vec3>& v )
 {
+    assert(v.size());
     glUniform3fv( location(program, uniform, v.size()), v.size(), &v[0].x );
 }
 
@@ -142,6 +148,7 @@ void program_uniform( const GLuint program, const char *uniform, const Point& a 
 
 void program_uniform( const GLuint program, const char *uniform, const std::vector<Point>& a )
 {
+    assert(a.size());
     glUniform3fv( location(program, uniform, a.size()), a.size(), &a[0].x );
 }
 
@@ -152,6 +159,7 @@ void program_uniform( const GLuint program, const char *uniform, const Vector& v
 
 void program_uniform( const GLuint program, const char *uniform, const std::vector<Vector>& v )
 {
+    assert(v.size());
     glUniform3fv( location(program, uniform, v.size()), v.size(), &v[0].x );
 }
 
@@ -162,6 +170,7 @@ void program_uniform( const GLuint program, const char *uniform, const vec4& v )
 
 void program_uniform( const GLuint program, const char *uniform, const std::vector<vec4>& v )
 {
+    assert(v.size());
     glUniform4fv( location(program, uniform, v.size()), v.size(), &v[0].x );
 }
 
@@ -172,6 +181,7 @@ void program_uniform( const GLuint program, const char *uniform, const Color& c 
 
 void program_uniform( const GLuint program, const char *uniform, const std::vector<Color>& c )
 {
+    assert(c.size());
     glUniform4fv( location(program, uniform, c.size()), c.size(), &c[0].r );
 }
 
