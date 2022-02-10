@@ -37,6 +37,24 @@ Transform::Transform( const Vector& x, const Vector& y, const Vector& z, const V
 	m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
 }
 
+Transform& Transform::column_major( const float t[16] )
+{
+    m[0][0]= t[0]; m[0][1]= t[4+0]; m[0][2]= t[8+0]; m[0][3]= t[12+0];
+    m[1][0]= t[1]; m[1][1]= t[4+1]; m[1][2]= t[8+1]; m[1][3]= t[12+1];
+    m[2][0]= t[2]; m[2][1]= t[4+2]; m[2][2]= t[8+2]; m[2][3]= t[12+2];
+    m[3][0]= t[3]; m[3][1]= t[4+3]; m[3][2]= t[8+3]; m[3][3]= t[12+3];
+    return *this;
+}
+
+Transform& Transform::row_major( const float t[16] )
+{
+    m[0][0]= t[0];    m[0][1]= t[1];    m[0][2]= t[2];    m[0][3]= t[3];
+    m[1][0]= t[4+0];  m[1][1]= t[4+1];  m[1][2]= t[4+2];  m[1][3]= t[4+3];
+    m[2][0]= t[8+0];  m[1][1]= t[8+1];  m[1][2]= t[8+2];  m[1][3]= t[8+3];
+    m[3][0]= t[12+0]; m[1][1]= t[12+1]; m[1][2]= t[12+2]; m[1][3]= t[12+3];
+    return *this;
+}
+
 Vector Transform::operator[]( int c ) const
 {
 	assert(c >= 0 && c <= 3);
