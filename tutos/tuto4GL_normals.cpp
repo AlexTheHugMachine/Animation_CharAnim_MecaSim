@@ -188,7 +188,7 @@ int draw( )
 
     GLuint location;
     location= glGetUniformLocation(program, "mvpMatrix");
-    glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
+    glUniformMatrix4fv(location, 1, GL_TRUE, mvp.data());
 
     // les normales ne subissent pas tout a fait la meme transformation que les sommets
     program_uniform(program, "mvMatrix", mv.normal());

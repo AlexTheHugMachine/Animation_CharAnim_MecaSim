@@ -55,7 +55,7 @@ struct Transform
     Transform normal( ) const;  
     
     //! renvoie l'adresse de la premiere valeur de la matrice.
-    const float *buffer( ) const { return &m[0][0]; }
+    const float *data( ) const { return &m[0][0]; }
     
     float m[4][4];
 };

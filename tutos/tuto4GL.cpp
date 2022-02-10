@@ -162,7 +162,7 @@ int draw( )
 
     GLuint location;
     location= glGetUniformLocation(program, "mvpMatrix");
-    glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
+    glUniformMatrix4fv(location, 1, GL_TRUE, mvp.data());
 
 /*  plus direct :
     #include "uniforms.h"
