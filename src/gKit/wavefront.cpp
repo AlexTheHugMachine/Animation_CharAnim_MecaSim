@@ -6,47 +6,9 @@
 #include <map>
 #include <algorithm>
 
+#include "files.h"
 #include "wavefront.h"
 
-/*! renvoie le chemin d'acces a un fichier. le chemin est toujours termine par /
-    pathname("path\to\file") == "path/to/"
-    pathname("path\to/file") == "path/to/"
-    pathname("path/to/file") == "path/to/"
-    pathname("file") == "./"
- */
-static
-std::string pathname( const std::string& filename )
-{
-    std::string path= filename;
-#ifndef WIN32
-    std::replace(path.begin(), path.end(), '\\', '/');   // linux, macos : remplace les \ par /.
-    size_t slash = path.find_last_of( '/' );
-    if(slash != std::string::npos)
-        return path.substr(0, slash +1); // inclus le slash
-    else
-        return "./";
-#else
-    std::replace(path.begin(), path.end(), '/', '\\');   // windows : remplace les / par \.
-    size_t slash = path.find_last_of( '\\' );
-    if(slash != std::string::npos)
-        return path.substr(0, slash +1); // inclus le slash
-    else
-        return ".\\";
-#endif
-}
-
-static 
-std::string normalize_filename( const std::string& filename )
-{
-    std::string path= filename;
-#ifndef WIN32
-    std::replace(path.begin(), path.end(), '\\', '/');   // linux, macos : remplace les \ par /.
-#else
-    std::replace(path.begin(), path.end(), '/', '\\');   // windows : remplace les / par \.
-#endif
-
-    return path;
-}
 
 Mesh read_mesh( const char *filename )
 {
@@ -452,6 +414,7 @@ int write_mesh( const Mesh& mesh, const char *filename )
 }
 
 
+//
 std::string texture_filename( const std::string& filename, const std::string& path )
 {
     if(filename[0] == '.' || filename[0] == '/')
@@ -459,6 +422,7 @@ std::string texture_filename( const std::string& filename, const std::string& pa
     else
         return normalize_filename(path + filename);
 }
+
 
 Materials read_materials( const char *filename )
 {
@@ -543,19 +507,6 @@ Materials read_materials( const char *filename )
         printf("[error] parsing line :\n%s\n", line_buffer);
     
     return materials;
-}
-
-
-const char *relative_filename( const char *filename, const char *path )
-{
-    unsigned i= 0;
-    while(filename[i] && path[i] && filename[i] == path[i]) 
-        i++;
-    
-    if(path[i] == 0)
-        return filename + i;
-    else
-        return filename;
 }
 
 

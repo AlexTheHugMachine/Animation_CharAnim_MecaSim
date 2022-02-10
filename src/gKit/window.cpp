@@ -1,13 +1,6 @@
 
 //! \file window.cpp
 
-#ifndef _MSC_VER
-    #include <sys/stat.h>
-#else
-    #include <sys/types.h>
-    #include <sys/stat.h>
-#endif
-
 #include <cassert>
 #include <cstdio>
 #include <cstdio>
@@ -21,7 +14,7 @@
 
 #include "glcore.h"
 #include "window.h"
-
+#include "files.h"
 
 
 static float aspect= 1;
@@ -259,6 +252,8 @@ Window create_window( const int w, const int h, const int major, const int minor
     // enregistre le destructeur de sdl
     atexit(SDL_Quit);
 
+    printf("creating window(%d, %d) openGL %d.%d, %d MSAA samples...\n", w, h, major, minor, samples);
+    
     // configuration openGL
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
@@ -345,7 +340,7 @@ Context create_context( Window window )
     }
     
     if(SDL_GL_SetSwapInterval(-1) != 0)
-        printf("[warning] can't set vsync\n%s\n", SDL_GetError());
+        printf("[warning] can't set adaptive vsync...\n");
     
     if(SDL_GL_GetSwapInterval() != -1)
     {
@@ -400,27 +395,6 @@ void release_context( Context context )
     SDL_GL_DeleteContext(context);
 }
 
-
-//! verifie l'existance d'un fichier.
-bool exists( const char *filename )
-{
-#ifndef _MSC_VER
-    struct stat info;
-    if(stat(filename, &info) < 0)
-        return false;
-
-    // verifie aussi que c'est bien un fichier standard
-    return S_ISREG(info.st_mode);
-
-#else
-    struct _stat64 info;
-    if(_stat64(filename, &info) < 0)
-        return false;
-
-    // verifie aussi que c'est bien un fichier standard
-    return (info.st_mode & _S_IFREG);
-#endif
-}
 
 static std::string smartpath;
 static std::string path;

@@ -4,17 +4,11 @@
 #include <cstdio>
 #include <cstring>
 
-#ifndef _MSC_VER
-    #include <sys/stat.h>
-#else
-    #include <sys/types.h>
-    #include <sys/stat.h>
-#endif
-
 #include <chrono>
 
 #include "glcore.h"
 #include "window.h"
+#include "files.h"
 
 #include "program.h"
 #include "uniforms.h"
@@ -29,34 +23,6 @@
 
 #include "text.h"
 #include "widgets.h"
-
-
-// utilitaire
-// renvoie la date de la derniere modification d'un fichier
-long int timestamp( const char *filename )
-{
-#ifndef _MSC_VER
-    struct stat info;
-    if(stat(filename, &info) < 0)
-        return 0;
-
-    // verifie aussi que c'est bien un fichier standard
-    if(S_ISREG(info.st_mode))
-        return info.st_mtime;
-
-#else
-    struct _stat64 info;
-    if(_stat64(filename, &info) < 0)
-        return 0;
-
-    // verifie aussi que c'est bien un fichier standard
-    if(info.st_mode & _S_IFREG)
-        return info.st_mtime;
-#endif
-
-    return 0;
-}
-
 
 
 
@@ -84,7 +50,7 @@ Orbiter camera;
 Widgets widgets;
 
 // application
-long int last_load= 0;
+size_t last_load= 0;
 void reload_program( )
 {
     if(program == 0)

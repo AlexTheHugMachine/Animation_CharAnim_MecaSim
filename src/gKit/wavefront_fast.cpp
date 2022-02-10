@@ -6,6 +6,7 @@
 #include <map>
 #include <algorithm>
 
+#include "files.h"
 #include "wavefront.h"
 #include "wavefront_fast.h"
 
@@ -146,46 +147,6 @@ const char* parse_float(const char* ptr, float* val)
     return ptr;
 }
 
-
-/*! renvoie le chemin d'acces a un fichier. le chemin est toujours termine par /
-    pathname("path\to\file") == "path/to/"
-    pathname("path\to/file") == "path/to/"
-    pathname("path/to/file") == "path/to/"
-    pathname("file") == "./"
- */
-static
-std::string pathname( const std::string& filename )
-{
-    std::string path= filename;
-#ifndef WIN32
-    std::replace(path.begin(), path.end(), '\\', '/');   // linux, macos : remplace les \ par /.
-    size_t slash = path.find_last_of( '/' );
-    if(slash != std::string::npos)
-        return path.substr(0, slash +1); // inclus le slash
-    else
-        return "./";
-#else
-    std::replace(path.begin(), path.end(), '/', '\\');   // windows : remplace les / par \.
-    size_t slash = path.find_last_of( '\\' );
-    if(slash != std::string::npos)
-        return path.substr(0, slash +1); // inclus le slash
-    else
-        return ".\\";
-#endif
-}
-
-static 
-std::string normalize_filename( const std::string& filename )
-{
-    std::string path= filename;
-#ifndef WIN32
-    std::replace(path.begin(), path.end(), '\\', '/');   // linux, macos : remplace les \ par /.
-#else
-    std::replace(path.begin(), path.end(), '/', '\\');   // windows : remplace les / par \.
-#endif
-
-    return path;
-}
 
 Mesh read_mesh_fast( const char *filename )
 {
