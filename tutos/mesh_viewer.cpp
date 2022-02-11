@@ -268,7 +268,7 @@ public:
                 
                 begin_line(m_widgets);
                 label(m_widgets, "material%02d", show_material);
-                if(material.specular.max() == 0)
+                if(material.specular.power() == 0)
                     label(m_widgets, "diffuse material");
                 else if(material.ns > 1)
                     label(m_widgets, "glossy material");
