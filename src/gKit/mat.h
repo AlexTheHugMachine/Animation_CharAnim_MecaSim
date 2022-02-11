@@ -29,13 +29,20 @@ struct Transform
     //! constructeur a partir de 4 Vector colonnes, met (0, 0, 0, 1) dans la 4e ligne 
     Transform( const Vector& x, const Vector& y, const Vector& z, const Vector& w );
     
-    //! initialise la matrice a partir de 16 floats organises colonne par colonne.
-    Transform& column_major( const float m[16] );
-    //! initialise la matrice a partir de 16 floats organises ligne par ligne.
-    Transform& row_major( const float m[16] );
+    //! initialise une colonne de la matrice a partir de 4 floats.
+    Transform& column( const int id, const float t0, const float t1, const float t2, const float t3 );
+    
+    //! initialise une ligne de la matrice.
+    Transform& row( const int id, const float t0, const float t1, const float t2, const float t3 );
+    
+    //! initialise la matrice avec 16 floats organises par colonne.
+    Transform& column_major( const float matrix[16] );
+    
+    //! initialise la matrice avec 16 floats organises par ligne.
+    Transform& row_major( const float matrix[16] );
     
     //! renvoie le Vector colonne c de la matrice
-    Vector operator[](int c) const;
+    Vector operator[] ( const int c ) const;
 
     //! renvoie le point transforme.
     Point operator() ( const Point& p ) const;

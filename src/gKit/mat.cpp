@@ -29,6 +29,38 @@ Transform::Transform (
     m[3][0]= t30; m[3][1]= t31; m[3][2]= t32; m[3][3]= t33;
 }
 
+Transform& Transform::column( const int id, const float t0, const float t1, const float t2, const float t3 )
+{
+    m[0][id]= t0;
+    m[1][id]= t1;
+    m[2][id]= t2;
+    m[3][id]= t3;
+    return *this;
+}
+
+Transform& Transform::row( const int id, const float t0, const float t1, const float t2, const float t3 )
+{
+    m[id][0]= t0;
+    m[id][1]= t1;
+    m[id][2]= t2;
+    m[id][3]= t3;
+    return *this;
+}
+
+Transform& Transform::column_major( const float matrix[16] ) 
+{
+    for(int i= 0; i < 4; i++)
+        column(i, matrix[4*i], matrix[4*i+1], matrix[4*i+2], matrix[4*i+3]);
+    return *this;
+}
+
+Transform& Transform::row_major( const float matrix[16] )
+{
+    for(int i= 0; i < 4; i++)
+        row(i, matrix[4*i], matrix[4*i+1], matrix[4*i+2], matrix[4*i+3]);
+    return *this;
+}
+
 Transform::Transform( const Vector& x, const Vector& y, const Vector& z, const Vector& w )
 {
 	m[0][0] = x.x;	m[0][1] = y.x;	m[0][2] = z.x;	m[0][3] = w.x;
@@ -37,25 +69,7 @@ Transform::Transform( const Vector& x, const Vector& y, const Vector& z, const V
 	m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
 }
 
-Transform& Transform::column_major( const float t[16] )
-{
-    m[0][0]= t[0]; m[0][1]= t[4+0]; m[0][2]= t[8+0]; m[0][3]= t[12+0];
-    m[1][0]= t[1]; m[1][1]= t[4+1]; m[1][2]= t[8+1]; m[1][3]= t[12+1];
-    m[2][0]= t[2]; m[2][1]= t[4+2]; m[2][2]= t[8+2]; m[2][3]= t[12+2];
-    m[3][0]= t[3]; m[3][1]= t[4+3]; m[3][2]= t[8+3]; m[3][3]= t[12+3];
-    return *this;
-}
-
-Transform& Transform::row_major( const float t[16] )
-{
-    m[0][0]= t[0];    m[0][1]= t[1];    m[0][2]= t[2];    m[0][3]= t[3];
-    m[1][0]= t[4+0];  m[1][1]= t[4+1];  m[1][2]= t[4+2];  m[1][3]= t[4+3];
-    m[2][0]= t[8+0];  m[1][1]= t[8+1];  m[1][2]= t[8+2];  m[1][3]= t[8+3];
-    m[3][0]= t[12+0]; m[1][1]= t[12+1]; m[1][2]= t[12+2]; m[1][3]= t[12+3];
-    return *this;
-}
-
-Vector Transform::operator[]( int c ) const
+Vector Transform::operator[] ( const int c ) const
 {
 	assert(c >= 0 && c <= 3);
 	return Vector(m[0][c], m[1][c], m[2][c]);
