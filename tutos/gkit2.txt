@@ -24,14 +24,8 @@ mais il y a aussi pas mal de tutos / exemple de code :
     - \ref intro3d,
     - \ref tuto_application,
     - \ref transformations,
-	- \ref decals,
-    - tuto2.cpp utilisation de mesh pour décrire les sommets d'un ou plusieurs triangles et les dessiner,
-    - tuto3.cpp transformations, rotation d'un triangle dans l'image,
-    - tuto4.cpp utiliser une camera pour observer un objet,
-    - tuto5.cpp charger un fichier .obj, utiliser une camera pour l'observer et controler la camera à la souris,
-    - tuto6.cpp idem tuto5, charge une texture et la plaque sur l'objet dessiné.
-    
-    - tuto7.cpp, idem tuto6 mais utilise la classe App pour construire l'application,
+    - \ref decals,
+    - tuto7.cpp, utilise la classe App pour construire l'application,
     - tuto7_camera.cpp, idem tuto7 mais utilise la classe AppCamera, qui définit une camera par défaut,
     - tuto8.cpp, exemple d'utilisation de App::update() pour modifier la transformation de l'objet en fonction du temps,
     
