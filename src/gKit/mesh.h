@@ -353,7 +353,7 @@ public:
     //! dessine une partie de l'objet avec un shader program.
     void draw( const int first, const int n, const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     
-private:    
+private:
     //! modifie les buffers openGL, si necessaire.
     int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     
