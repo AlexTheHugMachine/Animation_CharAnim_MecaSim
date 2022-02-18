@@ -25,6 +25,7 @@ std::string normalize_filename( const std::string& filename );
     relative_pathname("textures/base.png", "textures") == "base.png"
     relative_pathname("base.png", "textures") == "base.png"
 */
-const char *relative_filename( const std::string& filename, const std::string& path );
+//~ const char *relative_filename( const std::string& filename, const std::string& path );
+std::string relative_filename( const std::string& filename, const std::string& path );
 
 #endif

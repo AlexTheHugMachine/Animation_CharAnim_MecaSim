@@ -526,24 +526,24 @@ int write_materials( const Materials& materials, const char *filename, const cha
         
         fprintf(out, "  Kd %f %f %f\n", m.diffuse.r, m.diffuse.g, m.diffuse.b);
         if(m.diffuse_texture != -1)
-            fprintf(out, "  map_Kd %s\n", relative_filename(materials.filename(m.diffuse_texture), path));
+            fprintf(out, "  map_Kd %s\n", relative_filename(materials.filename(m.diffuse_texture), path).c_str());
         
         fprintf(out, "  Ks %f %f %f\n", m.specular.r, m.specular.g, m.specular.b);
         if(m.specular_texture != -1)
-            fprintf(out, "  map_Ks %s\n", relative_filename(materials.filename(m.specular_texture), path));
+            fprintf(out, "  map_Ks %s\n", relative_filename(materials.filename(m.specular_texture), path).c_str());
         
         if(m.specular.power() > 0)
         {
             fprintf(out, "  Ns %f\n", m.ns);
             if(m.ns_texture != -1)
-                fprintf(out, "  map_Ns %s\n", relative_filename(materials.filename(m.ns_texture), path));
+                fprintf(out, "  map_Ns %s\n", relative_filename(materials.filename(m.ns_texture), path).c_str());
         }
         
         if(m.emission.power() > 0)
         {
             fprintf(out, "  Ke %f %f %f\n", m.emission.r, m.emission.g, m.emission.b);
             if(m.emission_texture != -1)
-                fprintf(out, "  map_Ke %s\n", relative_filename(materials.filename(m.emission_texture), path));
+                fprintf(out, "  map_Ke %s\n", relative_filename(materials.filename(m.emission_texture), path).c_str());
         }
         
         fprintf(out, "\n");

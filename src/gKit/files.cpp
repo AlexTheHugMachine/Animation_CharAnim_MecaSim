@@ -103,14 +103,17 @@ std::string normalize_filename( const std::string& filename )
     relative_pathname("textures/base.png", "textures") == "base.png"
     relative_pathname("base.png", "textures") == "base.png"
 */
-const char *relative_filename( const std::string& filename, const std::string& path )
+//~ const char *relative_filename( const std::string& filename, const std::string& path )
+std::string relative_filename( const std::string& filename, const std::string& path )
 {
     unsigned i= 0;
     while(filename[i] && path[i] && filename[i] == path[i]) 
         i++;
     
     if(path[i] == 0)
-        return &filename[i];
+        //~ return &filename[i];
+        return filename.substr(i);
     else
-        return filename.data();
+        //~ return filename.data();
+        return filename;
 }
