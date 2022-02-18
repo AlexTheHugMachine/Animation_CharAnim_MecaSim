@@ -381,13 +381,15 @@ int write_mesh( const Mesh& mesh, const char *filename )
     
     int material_id= -1;
     const std::vector<unsigned>& materials= mesh.material_indices();
+    bool has_materials= (materials.size() > 0);
     
     const std::vector<unsigned>& indices= mesh.indices();
     bool has_indices= (indices.size() > 0);
+    
     unsigned n= has_indices ? indices.size() : positions.size();
     for(unsigned i= 0; i +2 < n; i+= 3)
     {
-        if(material_id != int(materials[i/3]))
+        if(has_materials && material_id != int(materials[i/3]))
         {
             material_id= int(materials[i/3]);
             if(material_id != -1)
