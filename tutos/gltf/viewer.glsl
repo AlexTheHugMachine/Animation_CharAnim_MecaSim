@@ -36,10 +36,14 @@ in vec2 vertex_texcoord;
 uniform vec4 material_color;
 uniform float material_metallic;
 uniform float material_roughness;
+uniform vec4 material_emission;
+
 uniform sampler2D material_color_texture;
 uniform sampler2D material_metallic_roughness_texture;
 uniform sampler2D material_occlusion_texture;
 uniform sampler2D material_normal_texture;
+uniform sampler2D material_emission_texture;
+
 
 // gltf spec 
 const float PI= 3.141592;
@@ -74,13 +78,13 @@ void main( )
 // normal map
 	vec3 M= 2 * texture(material_normal_texture, vertex_texcoord).xyz - vec3(1);
 
+	//~ float flip_deriv= -1;
+	float flip_deriv= 1;
 	vec2 dM;
 	{
 		float scale= 1.0 / 128.0;
 		vec3 v= abs(M);
 		float z= max(v.z, scale * max(v.x, v.y));
-		//~ float flip_deriv= -1;
-		float flip_deriv= 1;
 		dM= vec2(-v.x, -flip_deriv * v.y) / z;
 	}
 	
@@ -140,12 +144,17 @@ void main( )
 	
 // AO
 	float ao= texture(material_occlusion_texture, vertex_texcoord).r;
+	ao= pow(ao, 2.2);
 	
+// emission
+	vec3 Le= material_emission.rgb *  texture(material_emission_texture, vertex_texcoord).rgb;
+	Le= pow(Le, vec3(2.2));
+
 // brdf
 	vec3 fr= fr_diffuse + fr_specular;
 
 // evaluation
-    fragment_color= vec4(ao * fr * NdotL, 1);
+    fragment_color= vec4((Le + ao * fr) * NdotL, 1);
     //~ fragment_color= vec4(vec3(NdotL), 1);
     //~ fragment_color= vec4(abs(N), 1);
 }

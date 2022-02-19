@@ -78,12 +78,12 @@ namespace gltf
     struct Material
     {
         Color color;
-        //~ Color emission;
+        Color emission;
         float metallic;
         float roughness;
         int color_texture;
         int metallic_roughness_texture;
-        //~ int emission_texture;
+        int emission_texture;
         int occlusion_texture;
         int normal_texture;
     };
@@ -178,7 +178,8 @@ public:
         //~ const char *filename= "tutos/gltf/NormalTangent/NormalTangentTest.gltf";
         //~ const char *filename= "tutos/gltf/BoxAnimated/BoxAnimated.gltf";
         //~ const char *filename= "tutos/gltf/WaterBottle/WaterBottle.gltf";
-        const char *filename= "tutos/gltf/DamagedHelmet/DamagedHelmet.gltf";
+        //~ const char *filename= "tutos/gltf/DamagedHelmet/DamagedHelmet.gltf";
+        const char *filename= "tutos/gltf/Drone/scene.gltf";
         //~ const char *filename= "tutos/gltf/FlightHelmet/FlightHelmet.gltf";
         //~ const char *filename= "tutos/gltf/openGLNormal/normal.gltf";
         //~ const char *filename= "tutos/gltf/skinning.gltf";
@@ -241,29 +242,52 @@ public:
             
             // load images
             printf("loading images %ld...\n", data->images_count);
-            std::string path= pathname(filename);
-            for(unsigned i= 0; i < data->images_count; i++)
             {
-                //~ printf("%u: uri '%s', buffer_view %p\n", i, data->images[i].uri, data->images[i].buffer_view);
+                m_textures.resize(data->images_count);
+                std::vector<ImageData> images(data->images_count);
                 
-                if(data->images[i].uri)
+            #pragma omp parallel for
+                for(unsigned i= 0; i < data->images_count; i++)
                 {
-                    printf("[%u] ", i);
-                    std::string filename= path + std::string(data->images[i].uri);
-                    ImageData image= read_image_data(filename.c_str());
-                    //~ m_images.push_back(image); // pas la peine de garder les images...
+                    //~ printf("%u: uri '%s', buffer_view %p\n", i, data->images[i].uri, data->images[i].buffer_view);
                     
-                    // argh !! gltf inverse la convention uv, l'origine est en haut a gauche, au lieu de en bas a gauche pour openGL...
-                    ImageData flip= flipY(image);
-                    m_textures.push_back(make_texture(0, flip));
+                    // charger les images en parallele
+                    if(data->images[i].uri)
+                    {
+                        std::string filename= pathname(filename) + std::string(data->images[i].uri);
+                        ImageData image= read_image_data(filename.c_str());
+                        
+                        // argh !! gltf inverse la convention uv, l'origine est en haut a gauche, au lieu de en bas a gauche pour openGL...
+                        images[i]= flipY(image);
+                    }
+                }
+                
+                // creer les textures sur le thread principal / opengl
+                for(unsigned i= 0; i < images.size(); i++)
+                {
+                    m_textures[i]= make_texture(0, images[i]);
                     
                     // repetition par defaut
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
                     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, float(4));
                 }
-                else
-                    m_textures.push_back(0);    // todo default white texture...
+                    
+                // texture par defaut, valeur constante 1
+                {
+                    Image white(16, 16, White());
+                    m_white_texture= make_texture(0, white, GL_RGBA);
+                }
+                // texture par defaut, valeur constante (0, 0, 1), cf normal maps
+                {
+                    Image blue(16, 16, Blue());
+                    m_blue_texture= make_texture(0, blue, GL_RGBA);
+                }
+                // texture par defaut, valeur constante 0
+                {
+                    Image black(16, 16, Black());
+                    m_black_texture= make_texture(0, black, GL_RGBA);
+                }
             }
             
             // materials
@@ -278,8 +302,10 @@ public:
                 m.metallic_roughness_texture= -1;
                 m.occlusion_texture= -1;
                 m.normal_texture= -1;
+                m.emission= Black();
+                m.emission_texture= -1;
                 
-                printf("%u: '%s'\n", i, material->name);
+                printf("[%u] '%s'\n", i, material->name);
                 if(material->has_pbr_metallic_roughness)
                 {
                     printf("  pbr metallic roughness\n");
@@ -312,26 +338,21 @@ public:
                     printf("  occlusion texture %d\n", int(std::distance(data->images, material->occlusion_texture.texture->image)));
                     m.occlusion_texture= int(std::distance(data->images, material->occlusion_texture.texture->image));
                 }
+                
+                printf("  emissive color %f %f %f\n", material->emissive_factor[0], material->emissive_factor[1], material->emissive_factor[2]);
+                m.emission= Color(material->emissive_factor[0], material->emissive_factor[1], material->emissive_factor[2]);
                 if(material->emissive_texture.texture && material->emissive_texture.texture->image)
-                    printf("  emissive texture %d\n", int(std::distance(data->images, material->emissive_texture.texture->image)));
+                {
+                    printf("    texture %d\n", int(std::distance(data->images, material->emissive_texture.texture->image)));
+                    m.emission_texture= int(std::distance(data->images, material->emissive_texture.texture->image));
+                }
                 
                 if(material->has_pbr_specular_glossiness)
                     printf("  pbr  specular glossiness\n");
                     
                 m_materials.push_back(m);
             }
-            
-            // texture par defaut, valeur constante 1
-            {
-                Image white(16, 16, White());
-                m_white_texture= make_texture(0, white, GL_RGBA);
-            }
-            // texture par defaut, valeur constante (0, 0, 1), cf normal maps
-            {
-                Image blue(16, 16, Blue());
-                m_blue_texture= make_texture(0, blue, GL_RGBA);
-            }
-            
+
             // ressources openGL
             for(unsigned i= 0; i < data->buffers_count; i++)
             {
@@ -520,7 +541,10 @@ public:
             default: type= -1;
         }
         
-        assert(type != -1);
+        if(type == -1)
+            return c;
+            
+        //~ assert(type != -1);
         c.transform_id= type;
         c.target_id= std::distance(data->nodes, channel->target_node);
         
@@ -771,7 +795,7 @@ public:
         
         if(p.material_id != -1)
         {
-            assert(p.material_id < m_materials.size());
+            assert(p.material_id < int(m_materials.size()));
             gltf::Material *material= &m_materials[p.material_id];
             
             if(has_normal == false)
@@ -829,7 +853,6 @@ public:
         n.transform.column_major(matrix);   // gltf organise les 16 floats par colonne...
 
         // transformations animees...
-        //~ n.has_trs= node->has_translation || node->has_rotation || node->has_scale;
         n.has_trs= !node->has_matrix;   // transformations TRS par defaut, si pas de matrice...
         n.has_animation= false;
         
@@ -878,6 +901,9 @@ public:
     
     void play_channel( gltf::Channel& channel, const float app_time )
     {
+        if(channel.time.empty())
+            return;
+        
         assert(channel.time.size() > 0);
         float time= std::fmod(app_time, channel.time.back());
         
@@ -1173,7 +1199,7 @@ public:
         // animations, interpoler les parametres des transformations des noeuds
         if(rotate)
         {
-            play_animation(0, global_time() / 12000);
+            play_animation(0, global_time() / 1000);
             //~ for(unsigned i= 0; i < m_animations.size(); i++)
                 //~ play_animation(i, global_time() / 24000);
             
@@ -1255,6 +1281,11 @@ public:
                     else
                         program_use_texture(program, "material_normal_texture", 3, m_white_texture);    // argh (0, 0, 1) par defaut...
                         
+                    program_uniform(program, "material_emission", material.emission);
+                    if(material.emission_texture != -1)
+                        program_use_texture(program, "material_emission_texture", 4, m_textures[material.emission_texture]);
+                    else
+                        program_use_texture(program, "material_emission_texture", 4, m_black_texture);    // argh (0, 0, 0) par defaut...
                 }
                 
                 if(primitives.type != GL_NONE)
@@ -1293,6 +1324,7 @@ protected:
     //~ std::vector<ImageData> m_images;
     std::vector<GLuint> m_textures;
     GLuint m_white_texture;
+    GLuint m_black_texture;
     GLuint m_blue_texture;
     std::vector<gltf::Material> m_materials;
 };
