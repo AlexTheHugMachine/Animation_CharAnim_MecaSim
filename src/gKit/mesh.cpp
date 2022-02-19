@@ -37,22 +37,31 @@ Mesh& Mesh::default_color( const Color& color )
 
 Mesh& Mesh::color( const vec4& color )
 {
+    if(m_colors.size() <= m_positions.size())
+        m_colors.push_back(color);
+    else
+        m_colors.back()= color;
     m_update_buffers= true;
-    m_colors.push_back(color);
     return *this;
 }
 
 Mesh& Mesh::normal( const vec3& normal )
 {
+    if(m_normals.size() <= m_positions.size())
+        m_normals.push_back(normal);
+    else
+        m_normals.back()= normal;
     m_update_buffers= true;
-    m_normals.push_back(normal);
     return *this;
 }
 
 Mesh& Mesh::texcoord( const vec2& uv )
 {
+    if(m_texcoords.size() <= m_positions.size())
+        m_texcoords.push_back(uv);
+    else
+        m_texcoords.back()= uv;
     m_update_buffers= true;
-    m_texcoords.push_back(uv);
     return *this;
 }
 
@@ -63,7 +72,6 @@ unsigned int Mesh::vertex( const vec3& position )
     m_positions.push_back(position);
 
     // copie les autres attributs du sommet, uniquement s'ils sont definis
-    // \todo utiliser des attributs temporaires, plus robuste en cas d'erreur de construction...
     if(m_texcoords.size() > 0 && m_texcoords.size() != m_positions.size())
         m_texcoords.push_back(m_texcoords.back());
     if(m_normals.size() > 0 && m_normals.size() != m_positions.size())
@@ -72,7 +80,7 @@ unsigned int Mesh::vertex( const vec3& position )
         m_colors.push_back(m_colors.back());
 
     // copie la matiere courante, uniquement si elle est definie
-    if(m_triangle_materials.size() > 0 && size_t(triangle_count()) > m_triangle_materials.size())
+    if(m_triangle_materials.size() > 0 && int(m_triangle_materials.size()) < triangle_count())
         m_triangle_materials.push_back(m_triangle_materials.back());
     
     unsigned int index= m_positions.size() -1;
@@ -148,6 +156,12 @@ Mesh& Mesh::triangle( const unsigned int a, const unsigned int b, const unsigned
     m_indices.push_back(a);
     m_indices.push_back(b);
     m_indices.push_back(c);
+    
+    // copie la matiere courante, uniquement si elle est definie
+    if(m_triangle_materials.size() > 0 && int(m_triangle_materials.size()) < triangle_count())
+        m_triangle_materials.push_back(m_triangle_materials.back());
+    
+    m_update_buffers= true;
     return *this;
 }
 
@@ -160,6 +174,12 @@ Mesh& Mesh::triangle_last( const int a, const int b, const int c )
     m_indices.push_back(int(m_positions.size()) + a);
     m_indices.push_back(int(m_positions.size()) + b);
     m_indices.push_back(int(m_positions.size()) + c);
+    
+    // copie la matiere courante, uniquement si elle est definie
+    if(m_triangle_materials.size() > 0 && int(m_triangle_materials.size()) < triangle_count())
+        m_triangle_materials.push_back(m_triangle_materials.back());
+    
+    m_update_buffers= true;
     return *this;
 }
 
@@ -188,6 +208,10 @@ Mesh& Mesh::index( const int a )
         return *this;   // erreur
     }
     
+    // copie la matiere courante, uniquement si elle est definie
+    if(m_triangle_materials.size() > 0 && int(m_triangle_materials.size()) < triangle_count())
+        m_triangle_materials.push_back(m_triangle_materials.back());
+    
     m_update_buffers= true;
     return *this;
 }
@@ -210,7 +234,11 @@ void Mesh::materials( const Materials& materials )
 
 Mesh& Mesh::material( const unsigned int id )
 {
-    m_triangle_materials.push_back(id);
+    if(int(m_triangle_materials.size()) <= triangle_count())
+        m_triangle_materials.push_back(id);
+    else
+        m_triangle_materials.back()= id;
+    m_update_buffers= true;
     return *this;
 }
 
@@ -230,18 +258,6 @@ const Material &Mesh::triangle_material( const unsigned int id ) const
     assert((size_t) id < m_triangle_materials.size());
     return m_materials.material(m_triangle_materials[id]);
 }
-
-struct triangle_sort
-{
-    const std::vector<unsigned int>& properties;
-    
-    triangle_sort( const std::vector<unsigned int>& _properties ) : properties(_properties) {}
-    
-    bool operator() ( const int& a, const int& b ) const
-    {
-        return properties[a] < properties[b];
-    }
-};
 
 
 std::vector<TriangleGroup> Mesh::groups( )
@@ -267,6 +283,18 @@ std::vector<TriangleGroup> Mesh::groups( const std::vector<unsigned int>& triang
     std::vector<int> remap(triangle_count());
     for(unsigned i= 0; i < remap.size(); i++)
         remap[i]= i;
+
+    struct triangle_sort
+    {
+        const std::vector<unsigned int>& properties;
+        
+        triangle_sort( const std::vector<unsigned int>& _properties ) : properties(_properties) {}
+        
+        bool operator() ( const int& a, const int& b ) const
+        {
+            return properties[a] < properties[b];
+        }
+    };
     
     std::stable_sort(remap.begin(), remap.end(), triangle_sort(triangle_properties));
     
