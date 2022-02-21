@@ -27,12 +27,12 @@ Mesh read_gltf_mesh( const char *filename )
     //~ printf("validating glTF mesh... done\n");
     
     printf("meshs %ld\n", data->meshes_count);
-    printf("materials %ld\n", data->materials_count);
+    //~ printf("materials %ld\n", data->materials_count);
     //~ printf("accessors %ld\n", data->accessors_count);
     //~ printf("buffer views %ld\n", data->buffer_views_count);
     //~ printf("buffers %ld\n", data->buffers_count);
     //~ printf("cameras %ld\n", data->cameras_count);
-    //~ printf("lights %ld\n", data->lights_count);
+    printf("lights %ld\n", data->lights_count);
     printf("nodes %ld\n", data->nodes_count);
     printf("scenes %ld\n", data->scenes_count);
     //~ printf("animations %ld\n", data->animations_count);
@@ -136,7 +136,76 @@ Mesh read_gltf_mesh( const char *filename )
     #endif
     }
     
-    // parcourir les noeuds de la scene
+    if(data->cameras_count > 0)
+    {
+        printf("cameras %ld...\n", data->cameras_count);
+        
+        // recupere la premiere camera...
+        cgltf_camera *camera= &data->cameras[0];
+        printf("[%u] '%s'\n", 0, camera->name);
+        if(camera->type == cgltf_camera_type_perspective)
+        {
+            cgltf_camera_perspective *perspective= &camera->data.perspective;
+            if(perspective->has_aspect_ratio)
+                printf("  aspect ratio %f\n", perspective->aspect_ratio);
+            printf("  yfov %f\n", perspective->yfov);
+            printf("  znear %f", perspective->znear);
+            if(perspective->has_zfar)
+                printf(", zfar %f", perspective->zfar);
+            printf("\n");
+        }
+    }
+    
+    // retrouve la transformation associee a la camera 0
+    for(unsigned i= 0; i < data->nodes_count; i++)
+    {
+        cgltf_node *node= &data->nodes[i];
+        if(node->camera != nullptr)
+        {
+            if(node->camera == data->cameras)
+            {
+                float model_matrix[16];
+                cgltf_node_transform_world(node, model_matrix); // transformation globale
+                
+                Transform model;
+                model.column_major(model_matrix);       // gltf organise les 16 floats par colonne...
+                
+                // view= inverse(model)
+                Transform view= Inverse(model);
+                printf("camera[0] attached to node[%u]...\n", i);
+            }
+        }
+    }
+    
+    printf("lights %ld...\n", data->lights_count);
+    for(unsigned i= 0; i < data->lights_count; i++)
+    {
+        cgltf_light *light= &data->lights[i];
+        
+        printf("[%u] '%s'\n", i, light->name);
+        printf("  emission %f %f %f\n", light->color[0], light->color[1], light->color[2]);
+        printf("  intensity %f\n", light->intensity);
+    }
+    
+    // retrouve la transformation associee aux sources
+    for(unsigned i= 0; i < data->nodes_count; i++)
+    {
+        cgltf_node *node= &data->nodes[i];
+        if(node->light != nullptr)
+        {
+            float model_matrix[16];
+            cgltf_node_transform_world(node, model_matrix); // transformation globale
+            
+            Transform model;
+            model.column_major(model_matrix);       // gltf organise les 16 floats par colonne...
+            
+            int light_id= int(std::distance(data->lights, node->light));
+            printf("light[%u] attached to node[%u]...\n", light_id, i);
+        }
+    }
+    
+    
+    // parcourir les noeuds de la scene et transformer les meshs associes aux noeuds...
     std::vector<float> buffer;
     for(unsigned node_id= 0; node_id < data->nodes_count; node_id++)
     {
@@ -175,6 +244,7 @@ Mesh read_gltf_mesh( const char *filename )
                 for(unsigned i= 0; i < primitives->indices->count; i++)
                     indices.push_back(offset + cgltf_accessor_read_index(primitives->indices, i));
                 
+                // un indice de matiere par triplet d'indices / par triangle
                 for(unsigned i= 0; i+2 < primitives->indices->count; i+= 3)
                     material_indices.push_back(material_id);
             }

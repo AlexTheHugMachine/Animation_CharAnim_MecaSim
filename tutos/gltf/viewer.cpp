@@ -173,7 +173,8 @@ public:
         //~ const char *filename= "tutos/gltf/FlightHelmet/FlightHelmet.gltf";
         //~ const char *filename= "tutos/gltf/openGLNormal/normal.gltf";
         //~ const char *filename= "tutos/gltf/skinning.gltf";
-        const char *filename= "/home/jciehl/scenes/bistro_import/exterior.gltf";
+        const char *filename= "tutos/gltf/cube_scene.gltf";
+        //~ const char *filename= "/home/jciehl/scenes/bistro_import/exterior.gltf";
         //~ const char *filename= "/home/jciehl/scenes/bistro-gltf/pack.gltf";
         //~ const char *filename= "/home/jciehl/scenes/quaternius/robot.gltf";
         //~ const char *filename= "/home/jciehl/Downloads/sintel/sintel.gltf";
