@@ -58,10 +58,12 @@ Mesh read_gltf_mesh( const char *filename )
     Materials materials;
     
     // load images
-#if 0
+#if 1
     printf("loading images %ld...\n", data->images_count);
     for(unsigned i= 0; i < data->images_count; i++)
     {
+        printf("[%u] %s\n", i, data->images[i].uri);
+        
         if(data->images[i].uri)
             materials.insert_texture(data->images[i].uri);
         
@@ -80,7 +82,7 @@ Mesh read_gltf_mesh( const char *filename )
     {
         cgltf_material *material= &data->materials[i];
         
-        printf("%u: '%s'\n", i, material->name);
+        printf("[%u] %s\n", i, material->name);
         materials.insert( Material(Color(0.8)), material->name );
         
     #if 0
@@ -134,85 +136,81 @@ Mesh read_gltf_mesh( const char *filename )
     #endif
     }
     
-    //~ printf("mesh materials %d\n", materials.count());
-    assert(data->materials_count <= materials.count());
-    
     // parcourir les noeuds de la scene
     std::vector<float> buffer;
     for(unsigned node_id= 0; node_id < data->nodes_count; node_id++)
     {
-        cgltf_node *n= &data->nodes[node_id];
-        if(n->mesh== nullptr)
+        cgltf_node *node= &data->nodes[node_id];
+        if(node->mesh== nullptr)
             // pas de mesh associe
             continue;
         
         // transformation vers la scene
         float model_matrix[16];
-        cgltf_node_transform_world(n, model_matrix);   // transformation globale
+        cgltf_node_transform_world(node, model_matrix); // transformation globale
         
         Transform model;
-        model.column_major(model_matrix);   // gltf organise les 16 floats par colonne...
-        // transformation pour les normales
-        Transform normal= model.normal();
+        model.column_major(model_matrix);       // gltf organise les 16 floats par colonne...
+        Transform normal= model.normal();       // transformation pour les normales
         
-        cgltf_mesh *m= n->mesh;
-        for(unsigned primitive_id= 0; primitive_id < m->primitives_count; primitive_id++)
+        cgltf_mesh *mesh= node->mesh;
+        for(unsigned primitive_id= 0; primitive_id < mesh->primitives_count; primitive_id++)
         {
-            cgltf_primitive *p= &m->primitives[primitive_id];
-            assert(p->type == cgltf_primitive_type_triangles);
+            cgltf_primitive *primitives= &mesh->primitives[primitive_id];
+            assert(primitives->type == cgltf_primitive_type_triangles);
             
             // matiere associee au groupe de triangles
             int material_id= -1;
-            if(p->material)
+            if(primitives->material)
             {
-                material_id= int(std::distance(data->materials, p->material));
+                material_id= int(std::distance(data->materials, primitives->material));
                 assert(material_id < materials.count());
-                assert(materials.find(p->material->name) != -1);
+                assert(materials.find(primitives->material->name) != -1);
             }
             
             // indices
-            if(p->indices)
+            if(primitives->indices)
             {
                 unsigned offset= positions.size();
-                for(unsigned i= 0; i < p->indices->count; i++)
-                    indices.push_back(offset + cgltf_accessor_read_index(p->indices, i));
+                for(unsigned i= 0; i < primitives->indices->count; i++)
+                    indices.push_back(offset + cgltf_accessor_read_index(primitives->indices, i));
                 
-                for(unsigned i= 0; i+2 < p->indices->count; i+= 3)
+                for(unsigned i= 0; i+2 < primitives->indices->count; i+= 3)
                     material_indices.push_back(material_id);
             }
             
             // attributs
-            for(unsigned attribute_id= 0; attribute_id < p->attributes_count; attribute_id++)
+            for(unsigned attribute_id= 0; attribute_id < primitives->attributes_count; attribute_id++)
             {
-                cgltf_attribute *a= &p->attributes[attribute_id];
-                if(a->type == cgltf_attribute_type_position)
+                cgltf_attribute *attribute= &primitives->attributes[attribute_id];
+                if(attribute->type == cgltf_attribute_type_position)
                 {
-                    assert(a->data->type == cgltf_type_vec3);
+                    assert(attribute->data->type == cgltf_type_vec3);
                     
-                    buffer.resize(cgltf_accessor_unpack_floats(a->data, nullptr, 0));
-                    cgltf_accessor_unpack_floats(a->data, buffer.data(), buffer.size());
+                    buffer.resize(cgltf_accessor_unpack_floats(attribute->data, nullptr, 0));
+                    cgltf_accessor_unpack_floats(attribute->data, buffer.data(), buffer.size());
                     
                     // transforme les positions des sommets
                     for(unsigned i= 0; i+2 < buffer.size(); i+= 3)
                         positions.push_back( model(Point(buffer[i], buffer[i+1], buffer[i+2])) );
                 }
-                if(a->type == cgltf_attribute_type_normal)
+                if(attribute->type == cgltf_attribute_type_normal)
                 {
-                    assert(a->data->type == cgltf_type_vec3);
+                    assert(attribute->data->type == cgltf_type_vec3);
                     
-                    buffer.resize(cgltf_accessor_unpack_floats(a->data, nullptr, 0));
-                    cgltf_accessor_unpack_floats(a->data, buffer.data(), buffer.size());
+                    buffer.resize(cgltf_accessor_unpack_floats(attribute->data, nullptr, 0));
+                    cgltf_accessor_unpack_floats(attribute->data, buffer.data(), buffer.size());
                     
                     // transforme les normales des sommets
                     for(unsigned i= 0; i+2 < buffer.size(); i+= 3)
                         normals.push_back( normal(Vector(buffer[i], buffer[i+1], buffer[i+2])) );
                 }
-                if(a->type == cgltf_attribute_type_texcoord)
+                if(attribute->type == cgltf_attribute_type_texcoord)
                 {
-                    assert(a->data->type == cgltf_type_vec2);
+                    assert(attribute->data->type == cgltf_type_vec2);
                     
-                    buffer.resize(cgltf_accessor_unpack_floats(a->data, nullptr, 0));
-                    cgltf_accessor_unpack_floats(a->data, buffer.data(), buffer.size());
+                    buffer.resize(cgltf_accessor_unpack_floats(attribute->data, nullptr, 0));
+                    cgltf_accessor_unpack_floats(attribute->data, buffer.data(), buffer.size());
                     
                     for(unsigned i= 0; i+1 < buffer.size(); i+= 2)
                         texcoords.push_back( vec2(buffer[i], buffer[i+1]) );
@@ -223,24 +221,26 @@ Mesh read_gltf_mesh( const char *filename )
     
     cgltf_free(data);
     
-    // recosntruit le mesh...
+    // reconstruit le mesh...
     Mesh mesh(GL_TRIANGLES);
     
-    bool has_texcords= (texcoords.size() == positions.size());
+    // 1. les sommets et les attributs, si necessaire...
+    bool has_texcoords= (texcoords.size() == positions.size());
     bool has_normals= (normals.size() == positions.size());
     for(unsigned i= 0; i < positions.size(); i++)
     {
-        if(has_texcords) mesh.texcoord(texcoords[i]);
+        if(has_texcoords) mesh.texcoord(texcoords[i]);
         if(has_normals) mesh.normal(normals[i]);
         mesh.vertex(positions[i]);
     }
     
+    // 2. les triangles et leurs matieres, si necessaire...
     mesh.materials(materials);
+    bool has_materials= (materials.count() > 0);
     for(unsigned i= 0; i +2 < indices.size(); i+=3)
     {
-        assert(material_indices[i] != -1);
+        if(has_materials) mesh.material(material_indices[i / 3]);
         
-        mesh.material(material_indices[i]);
         mesh.index(indices[i]);
         mesh.index(indices[i+1]);
         mesh.index(indices[i+2]);
@@ -248,3 +248,4 @@ Mesh read_gltf_mesh( const char *filename )
     
     return mesh;
 }
+

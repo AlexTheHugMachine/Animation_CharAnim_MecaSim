@@ -4,6 +4,8 @@
 #define CGLTF_IMPLEMENTATION
 #include "cgltf.h"
 
+#include "gltf_mesh.h"
+#include "wavefront.h"
 #include "program.h"
 #include "uniforms.h"
 
@@ -157,20 +159,8 @@ public:
     // creation des objets de l'application
     int init( )
     {
-        // decrire un repere / grille 
-        //~ m_repere= make_grid(100);
-        m_repere= make_grid(25);
-        
-        m_program= read_program("tutos/gltf/viewer.glsl");
-        program_print_errors(m_program);
-        m_skinning_program= read_program("tutos/gltf/viewer_skinning.glsl");
-        program_print_errors(m_skinning_program);
         
         // charge un fichier glTF 2
-        //~ const char *filename= "tutos/glTF/robot.gltf";
-        //~ const char *filename= "tutos/glTF/triangle.gltf";
-        //~ const char *filename= "tutos/glTF/rotation.gltf";
-        //~ const char *filename= "tutos/glTF/Fox.gltf";
         //~ const char *filename= "box.gltf";
         //~ const char *filename= "tutos/gltf/Robot.gltf";
         //~ const char *filename= "tutos/gltf/Fox/Fox.gltf";
@@ -179,15 +169,31 @@ public:
         //~ const char *filename= "tutos/gltf/BoxAnimated/BoxAnimated.gltf";
         //~ const char *filename= "tutos/gltf/WaterBottle/WaterBottle.gltf";
         //~ const char *filename= "tutos/gltf/DamagedHelmet/DamagedHelmet.gltf";
-        const char *filename= "tutos/gltf/Drone/scene.gltf";
+        //~ const char *filename= "tutos/gltf/Drone/scene.gltf";
         //~ const char *filename= "tutos/gltf/FlightHelmet/FlightHelmet.gltf";
         //~ const char *filename= "tutos/gltf/openGLNormal/normal.gltf";
         //~ const char *filename= "tutos/gltf/skinning.gltf";
-        //~ const char *filename= "/home/jciehl/scenes/bistro-gltf/exterior.gltf";
+        const char *filename= "/home/jciehl/scenes/bistro_import/exterior.gltf";
         //~ const char *filename= "/home/jciehl/scenes/bistro-gltf/pack.gltf";
         //~ const char *filename= "/home/jciehl/scenes/quaternius/robot.gltf";
         //~ const char *filename= "/home/jciehl/Downloads/sintel/sintel.gltf";
         //~ const char *filename= "/home/jciehl/Downloads/drone-city/drone-city.gltf";
+
+        {
+            Mesh mesh= read_gltf_mesh(filename);
+            write_mesh(mesh, "export.obj");
+            exit(0);
+        }
+        
+        
+        // decrire un repere / grille 
+        //~ m_repere= make_grid(100);
+        m_repere= make_grid(25);
+        
+        m_program= read_program("tutos/gltf/viewer.glsl");
+        program_print_errors(m_program);
+        m_skinning_program= read_program("tutos/gltf/viewer_skinning.glsl");
+        program_print_errors(m_skinning_program);
         {
             printf("loading glTF mesh '%s'...\n", filename);
             
@@ -254,8 +260,8 @@ public:
                     // charger les images en parallele
                     if(data->images[i].uri)
                     {
-                        std::string filename= pathname(filename) + std::string(data->images[i].uri);
-                        ImageData image= read_image_data(filename.c_str());
+                        std::string texture_filename= pathname(filename) + std::string(data->images[i].uri);
+                        ImageData image= read_image_data(texture_filename.c_str());
                         
                         // argh !! gltf inverse la convention uv, l'origine est en haut a gauche, au lieu de en bas a gauche pour openGL...
                         images[i]= flipY(image);
@@ -741,7 +747,7 @@ public:
                 //~ printf("      %s:%d, name '%s'\n", type, attribute->index, attribute->name);
                 //~ print_accessor(data, attribute->data);
                 
-                //~ assert(attribute->data->type == cgltf_type_vec3);
+                //~ assert(attribute->data->type == cgltf_type_vec4);   // x,y,z + sign
                 //~ assert(attribute->data->component_type == cgltf_component_type_r_32f);
                 
                 //~ has_tangent= true;
@@ -1224,11 +1230,8 @@ public:
                 for(unsigned s= 0; s < skin.nodes.size(); s++)
                     matrices[s]= m_nodes[skin.nodes[s]].model * skin.matrices[s];
                 
-                GLint location= glGetUniformLocation(m_skinning_program, "matrices");
-                if(location != -1)
-                    program_uniform(m_skinning_program, "matrices", matrices);
-                
-                program= m_skinning_program;
+                assert(program == m_skinning_program);
+                program_uniform(program, "matrices", matrices);
             }
             
             Transform m= node.model;

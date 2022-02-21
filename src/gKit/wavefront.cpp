@@ -278,7 +278,7 @@ Mesh read_indexed_mesh( const char *filename )
             }
             
             // force une matiere par defaut, si necessaire
-            if(material_id == -1)
+            if(material_id == -1 && data.materials().count() > 0)
             {
                 material_id= data.materials().default_material_index();
                 printf("usemtl default\n");
