@@ -2,6 +2,8 @@
 #ifndef _GLTF_MESH_H
 #define _GLTF_MESH_H
 
+#include <vector>
+
 #include "vec.h"
 #include "color.h"
 #include "mesh.h"
@@ -10,6 +12,7 @@
 
 //! charge un fichier .gltf et construit un mesh statique, sans animation.
 Mesh read_gltf_mesh( const char *filename );
+
 
 struct GLTFCamera
 {
@@ -25,6 +28,7 @@ struct GLTFCamera
 //! charge un fichier .gltf renvoie les cameras.
 std::vector<GLTFCamera> read_gltf_camera( const char *filename );
 
+
 struct GLTFLight
 {
     Point position;
@@ -34,6 +38,7 @@ struct GLTFLight
 
 //! charge un fichier .gltf et renvoie les sources de lumiere ponctuelles.
 std::vector<GLTFLight> read_gltf_lights( const char *filename );
+
 
 struct GLTFMaterial
 {
@@ -45,7 +50,7 @@ struct GLTFMaterial
     int color_texture;              //<! indice de la texture ou -1.
     int metallic_roughness_texture; //<! indice de la texture ou -1.
     int emission_texture;           //<! indice de la texture ou -1.
-    int occlusion_texture;          //<! indice de la texture ou -1.
+    int occlusion_texture;          //<! indice de la texture ou -1.    // probablement pas necessaire, cf canal rouge de metallic_roughness_texture
     int normal_texture;             //<! indice de la texture ou -1.
 };
 
@@ -54,11 +59,6 @@ std::vector<GLTFMaterial> read_gltf_materials( const char *filename );
 
 //! charge un fichier .gltf et charge les images referencees par les matieres.
 std::vector<ImageData> read_gltf_images( const char *filename );
-
-#if 0   // pas vraiment necessaire...
-//! charge un fichier .gltf et cree les textures referencees par les matieres.
-std::vector<GLuint> read_gltf_textures( const char *filename );
-#endif
 
 #endif
 

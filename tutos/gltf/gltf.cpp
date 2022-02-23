@@ -1,4 +1,5 @@
 
+#include "files.h"
 #include "texture.h"
 
 #include "cgltf.h"
@@ -23,29 +24,13 @@ Mesh read_gltf_mesh( const char *filename )
         printf("[error] invalid glTF mesh '%s'...\n", filename);
         return Mesh::error();
     }
-    //~ printf("validating glTF mesh... done\n");
     
-    printf("meshs %ld\n", data->meshes_count);
-    //~ printf("materials %ld\n", data->materials_count);
-    //~ printf("accessors %ld\n", data->accessors_count);
-    //~ printf("buffer views %ld\n", data->buffer_views_count);
-    //~ printf("buffers %ld\n", data->buffers_count);
-    //~ printf("cameras %ld\n", data->cameras_count);
-    printf("lights %ld\n", data->lights_count);
-    printf("nodes %ld\n", data->nodes_count);
-    //~ printf("scenes %ld\n", data->scenes_count);
-    //~ printf("animations %ld\n", data->animations_count);
-    //~ printf("skins %ld\n", data->skins_count);
-    
-    // load buffers
-    //~ printf("loading buffers...\n");
     code= cgltf_load_buffers(&options, data, filename);
     if(code != cgltf_result_success)
     {
         printf("[error] loading glTF buffers...\n");
         return Mesh::error();
     }
-    //~ printf("loading buffers... done\n");
     
     // 
     std::vector<unsigned> indices;
@@ -56,85 +41,53 @@ Mesh read_gltf_mesh( const char *filename )
     
     Materials materials;
     
-    // load images
-#if 1
-    printf("loading images %ld...\n", data->images_count);
+    // textures
     for(unsigned i= 0; i < data->images_count; i++)
-    {
-        printf("[%u] %s\n", i, data->images[i].uri);
-        
         if(data->images[i].uri)
             materials.insert_texture(data->images[i].uri);
-        
-        else
-        {
-            char tmp[1024];
-            sprintf(tmp, "image%u", i);
-            materials.insert_texture(tmp);
-        }
-    }
-#endif
     
     // materials
-    printf("materials %ld...\n", data->materials_count);
     for(unsigned i= 0; i < data->materials_count; i++)
     {
         cgltf_material *material= &data->materials[i];
+        //~ printf("materials[%u]: '%s'\n", i, material->name);
         
-        printf("[%u] %s\n", i, material->name);
-        materials.insert( Material(Color(0.8)), material->name );
-        
-        // todo conversion vers blinn-phong...
-        
-    #if 0
-        gltf::Material m;
-        m.color= Color(0.8, 0.8, 0.8, 1);
-        m.color_texture= -1;
-        m.metallic_roughness_texture= -1;
-        m.occlusion_texture= -1;
-        m.normal_texture= -1;
-        
-        printf("%u: '%s'\n", i, material->name);
+        Material m(Color(0.8));
         if(material->has_pbr_metallic_roughness)
         {
-            printf("  pbr metallic roughness\n");
             cgltf_pbr_metallic_roughness *pbr= &material->pbr_metallic_roughness;
-            printf("    base color %f %f %f %f\n", pbr->base_color_factor[0], pbr->base_color_factor[1], pbr->base_color_factor[2], pbr->base_color_factor[3]);
-            printf("      texture %d\n", pbr->base_color_texture.texture ? int(std::distance(data->images, pbr->base_color_texture.texture->image)) : -1);
-            printf("    metallic %f, roughness %f\n", pbr->metallic_factor, pbr->roughness_factor);
-            printf("      texture %d\n", pbr->metallic_roughness_texture.texture ? int(std::distance(data->images, pbr->metallic_roughness_texture.texture->image)) : -1);
+            //~ printf("  pbr metallic roughness\n");
+            //~ printf("    base color %f %f %f %f\n", pbr->base_color_factor[0], pbr->base_color_factor[1], pbr->base_color_factor[2], pbr->base_color_factor[3]);
+            //~ printf("      texture %d\n", pbr->base_color_texture.texture ? int(std::distance(data->images, pbr->base_color_texture.texture->image)) : -1);
+            //~ printf("    metallic %f, roughness %f\n", pbr->metallic_factor, pbr->roughness_factor);
+            //~ printf("      texture %d\n", pbr->metallic_roughness_texture.texture ? int(std::distance(data->images, pbr->metallic_roughness_texture.texture->image)) : -1);
             
-            m.color= Color(pbr->base_color_factor[0], pbr->base_color_factor[1], pbr->base_color_factor[2], pbr->base_color_factor[3]);
+            Color color= Color(pbr->base_color_factor[0], pbr->base_color_factor[1], pbr->base_color_factor[2], pbr->base_color_factor[3]);
+            float metallic= pbr->metallic_factor;
+            float roughness= pbr->roughness_factor;
+            
+            // conversion diffuse / specular
+            // metaux { diffuse= black, specular= color }
+            // non - metaux { diffuse= color, specular= 0.04 }
+            m.diffuse= color * (1 - metallic) + metallic * Black();
+            m.specular= Color(0.04) * (1 - metallic) + color * metallic;
+            // conversion roughness vers exposant Blinn-Phong
+            m.ns= 2 / (roughness * roughness) - 2;
+            
+            if(m.ns == 0)
+                m= Material(m.specular);
+            // les valeurs sont habituellement dans les textures metallic_roughness... utiliser une matiere diffuse + texture...
+            
+            //~ printf("  diffuse %f %f %f, specular %f %f %f, ns %f\n", 
+                //~ m.diffuse.r, m.diffuse.g, m.diffuse.b,
+                //~ m.specular.r, m.specular.g, m.specular.b,
+                //~ m.ns);
+            
             if(pbr->base_color_texture.texture && pbr->base_color_texture.texture->image)
-                m.color_texture= int(std::distance(data->images, pbr->base_color_texture.texture->image));
-            
-            m.metallic= pbr->metallic_factor;
-            m.roughness= pbr->roughness_factor;
-            if(pbr->metallic_roughness_texture.texture && pbr->metallic_roughness_texture.texture->image)
-                m.metallic_roughness_texture= int(std::distance(data->images, pbr->metallic_roughness_texture.texture->image));
+                m.diffuse_texture= materials.find_texture(pbr->base_color_texture.texture->image->uri);
         }
-        if(material->has_clearcoat)
-            printf("  clearcoat\n");
-        if(material->has_sheen)
-            printf("  sheen\n");
-        if(material->normal_texture.texture && material->normal_texture.texture->image)
-        {
-            printf("  normal texture %d\n", int(std::distance(data->images, material->normal_texture.texture->image)));
-            m.normal_texture= int(std::distance(data->images, material->normal_texture.texture->image));
-        }
-        if(material->occlusion_texture.texture && material->occlusion_texture.texture->image)
-        {
-            printf("  occlusion texture %d\n", int(std::distance(data->images, material->occlusion_texture.texture->image)));
-            m.occlusion_texture= int(std::distance(data->images, material->occlusion_texture.texture->image));
-        }
-        if(material->emissive_texture.texture && material->emissive_texture.texture->image)
-            printf("  emissive texture %d\n", int(std::distance(data->images, material->emissive_texture.texture->image)));
         
-        if(material->has_pbr_specular_glossiness)
-            printf("  pbr  specular glossiness\n");
-            
-        m_materials.push_back(m);
-    #endif
+        materials.insert(m, material->name);
     }
     
     
@@ -165,9 +118,9 @@ Mesh read_gltf_mesh( const char *filename )
             int material_id= -1;
             if(primitives->material)
             {
-                material_id= int(std::distance(data->materials, primitives->material));
                 assert(material_id < materials.count());
                 assert(materials.find(primitives->material->name) != -1);
+                material_id= materials.find(primitives->material->name);
             }
             
             // indices
@@ -274,14 +227,14 @@ std::vector<GLTFCamera> read_gltf_camera( const char *filename )
     
     if(data->cameras_count == 0)
     {
-        printf("[error] no camera...\n");
+        printf("[warning] no camera...\n");
         return {};
     }
     
     cgltf_camera *camera= &data->cameras[0];
     if(camera->type != cgltf_camera_type_perspective)
     {
-        printf("[error] no perspective camera...\n");
+        printf("[warning] no perspective camera...\n");
         return {};
     }
     
@@ -346,7 +299,7 @@ std::vector<GLTFLight> read_gltf_lights( const char *filename )
     
     if(data->lights_count == 0)
     {
-        printf("[error] no lights...\n");
+        printf("[warning] no lights...\n");
         return {};
     }
     
@@ -357,7 +310,7 @@ std::vector<GLTFLight> read_gltf_lights( const char *filename )
         cgltf_node *node= &data->nodes[i];
         if(node->light != nullptr)
         {
-            int light_id= int(std::distance(data->lights, node->light));
+            //~ int light_id= int(std::distance(data->lights, node->light));
             //~ printf("light[%u] attached to node[%u]...\n", light_id, i);
             
             // position de la source
@@ -404,7 +357,7 @@ std::vector<GLTFMaterial> read_gltf_materials( const char *filename )
     
     if(data->materials_count ==0)
     {
-        printf("[error] no materials...\n");
+        printf("[warning] no materials...\n");
         return {};
     }
     
@@ -413,27 +366,26 @@ std::vector<GLTFMaterial> read_gltf_materials( const char *filename )
     for(unsigned i= 0; i < data->materials_count; i++)
     {
         cgltf_material *material= &data->materials[i];
+        //~ printf("materials[%u] '%s'\n", i, material->name);
         
-        printf("[%u] %s\n", i, material->name);
-        //~ materials.insert( Material(Color(0.8)), material->name );
-        
-    #if 0
-        gltf::Material m;
+        GLTFMaterial m;
         m.color= Color(0.8, 0.8, 0.8, 1);
+        m.metallic= 0;
+        m.roughness= 1;
         m.color_texture= -1;
         m.metallic_roughness_texture= -1;
         m.occlusion_texture= -1;
         m.normal_texture= -1;
+        m.emission_texture= -1;
         
-        printf("%u: '%s'\n", i, material->name);
         if(material->has_pbr_metallic_roughness)
         {
-            printf("  pbr metallic roughness\n");
             cgltf_pbr_metallic_roughness *pbr= &material->pbr_metallic_roughness;
-            printf("    base color %f %f %f %f\n", pbr->base_color_factor[0], pbr->base_color_factor[1], pbr->base_color_factor[2], pbr->base_color_factor[3]);
-            printf("      texture %d\n", pbr->base_color_texture.texture ? int(std::distance(data->images, pbr->base_color_texture.texture->image)) : -1);
-            printf("    metallic %f, roughness %f\n", pbr->metallic_factor, pbr->roughness_factor);
-            printf("      texture %d\n", pbr->metallic_roughness_texture.texture ? int(std::distance(data->images, pbr->metallic_roughness_texture.texture->image)) : -1);
+            //~ printf("  pbr metallic roughness\n");
+            //~ printf("    base color %f %f %f %f\n", pbr->base_color_factor[0], pbr->base_color_factor[1], pbr->base_color_factor[2], pbr->base_color_factor[3]);
+            //~ printf("      texture %d\n", pbr->base_color_texture.texture ? int(std::distance(data->images, pbr->base_color_texture.texture->image)) : -1);
+            //~ printf("    metallic %f, roughness %f\n", pbr->metallic_factor, pbr->roughness_factor);
+            //~ printf("      texture %d\n", pbr->metallic_roughness_texture.texture ? int(std::distance(data->images, pbr->metallic_roughness_texture.texture->image)) : -1);
             
             m.color= Color(pbr->base_color_factor[0], pbr->base_color_factor[1], pbr->base_color_factor[2], pbr->base_color_factor[3]);
             if(pbr->base_color_texture.texture && pbr->base_color_texture.texture->image)
@@ -444,28 +396,26 @@ std::vector<GLTFMaterial> read_gltf_materials( const char *filename )
             if(pbr->metallic_roughness_texture.texture && pbr->metallic_roughness_texture.texture->image)
                 m.metallic_roughness_texture= int(std::distance(data->images, pbr->metallic_roughness_texture.texture->image));
         }
-        if(material->has_clearcoat)
-            printf("  clearcoat\n");
-        if(material->has_sheen)
-            printf("  sheen\n");
+        //~ if(material->has_clearcoat)
+            //~ printf("  clearcoat\n");
+        //~ if(material->has_sheen)
+            //~ printf("  sheen\n");
+        
         if(material->normal_texture.texture && material->normal_texture.texture->image)
         {
-            printf("  normal texture %d\n", int(std::distance(data->images, material->normal_texture.texture->image)));
+            //~ printf("  normal texture %d\n", int(std::distance(data->images, material->normal_texture.texture->image)));
             m.normal_texture= int(std::distance(data->images, material->normal_texture.texture->image));
         }
-        if(material->occlusion_texture.texture && material->occlusion_texture.texture->image)
-        {
-            printf("  occlusion texture %d\n", int(std::distance(data->images, material->occlusion_texture.texture->image)));
-            m.occlusion_texture= int(std::distance(data->images, material->occlusion_texture.texture->image));
-        }
-        if(material->emissive_texture.texture && material->emissive_texture.texture->image)
-            printf("  emissive texture %d\n", int(std::distance(data->images, material->emissive_texture.texture->image)));
         
-        if(material->has_pbr_specular_glossiness)
-            printf("  pbr  specular glossiness\n");
-            
-        m_materials.push_back(m);
-    #endif
+        //~ printf("  emissive color %f %f %f\n", material->emissive_factor[0], material->emissive_factor[1], material->emissive_factor[2]);
+        m.emission= Color(material->emissive_factor[0], material->emissive_factor[1], material->emissive_factor[2]);
+        if(material->emissive_texture.texture && material->emissive_texture.texture->image)
+        {
+            //~ printf("    texture %d\n", int(std::distance(data->images, material->emissive_texture.texture->image)));
+            m.emission_texture= int(std::distance(data->images, material->emissive_texture.texture->image));
+        }
+        
+        materials.push_back(m);
     }
     
     cgltf_free(data);
@@ -494,7 +444,7 @@ std::vector<ImageData> read_gltf_images( const char *filename )
     
     if(data->images_count == 0)
     {
-        printf("[error] no images...\n");
+        printf("[warning] no images...\n");
         return {};
     }
     
@@ -503,34 +453,14 @@ std::vector<ImageData> read_gltf_images( const char *filename )
 #pragma omp parallel for
     for(unsigned i= 0; i < data->images_count; i++)
     {
-        printf("[%u] %s\n", i, data->images[i].uri);
-        
+        //~ printf("[%u] %s\n", i, data->images[i].uri);
         if(data->images[i].uri)
-            images[i]= read_image_data(data->images[i].uri);
+        {
+            std::string image_filename= pathname(filename) + std::string(data->images[i].uri);
+            images[i]= read_image_data(image_filename.c_str());
+        }
     }
     
     cgltf_free(data);
     return images;
 }
-
-#if 0
-std::vector<GLuint> read_gltf_textures( const char *filename )
-{
-    std::vector<ImageData> images= read_gltf_images(filename);
-    
-    if(images.size() == 0)
-    {
-        printf("[error] no textures...\n");
-        return {};
-    }
-    
-    std::vector<GLuint> textures(images.size());
-    for(unsigned i= 0; i < images.size(); i++)
-    {
-        if(images[i].data())
-            textures[i]= make_texture(0, images[i]);
-    }
-    
-    return textures;
-}
-#endif

@@ -1,10 +1,9 @@
 
 //! \file viewer.cpp glTF viewer...
 
-#define CGLTF_IMPLEMENTATION
 #include "cgltf.h"
 
-#include "gltf_mesh.h"
+#include "gltf.h"
 #include "wavefront.h"
 #include "program.h"
 #include "uniforms.h"
@@ -170,21 +169,31 @@ public:
         //~ const char *filename= "tutos/gltf/WaterBottle/WaterBottle.gltf";
         //~ const char *filename= "tutos/gltf/DamagedHelmet/DamagedHelmet.gltf";
         //~ const char *filename= "tutos/gltf/Drone/scene.gltf";
-        //~ const char *filename= "tutos/gltf/FlightHelmet/FlightHelmet.gltf";
+        const char *filename= "tutos/gltf/FlightHelmet/FlightHelmet.gltf";
         //~ const char *filename= "tutos/gltf/openGLNormal/normal.gltf";
         //~ const char *filename= "tutos/gltf/skinning.gltf";
-        const char *filename= "tutos/gltf/cube_scene.gltf";
+        //~ const char *filename= "tutos/gltf/cube_scene.gltf";
         //~ const char *filename= "/home/jciehl/scenes/bistro_import/exterior.gltf";
         //~ const char *filename= "/home/jciehl/scenes/bistro-gltf/pack.gltf";
         //~ const char *filename= "/home/jciehl/scenes/quaternius/robot.gltf";
         //~ const char *filename= "/home/jciehl/Downloads/sintel/sintel.gltf";
         //~ const char *filename= "/home/jciehl/Downloads/drone-city/drone-city.gltf";
 
+    #if 0
         {
             Mesh mesh= read_gltf_mesh(filename);
             write_mesh(mesh, "export.obj");
+            //~ write_materials(mesh.materials(), "export.mtl", pathname(filename).c_str());
+            write_materials(mesh.materials(), "export.mtl");
+            
+            auto c= read_gltf_camera(filename);
+            auto l= read_gltf_lights(filename);
+            auto m= read_gltf_materials(filename);
+            auto i= read_gltf_images(filename);
+            //~ auto t= read_gltf_textures(filename);
             exit(0);
         }
+    #endif
         
         
         // decrire un repere / grille 
@@ -248,7 +257,7 @@ public:
             printf("loading buffers... done\n");
             
             // load images
-            printf("loading images %ld...\n", data->images_count);
+            printf("images %ld...\n", data->images_count);
             {
                 m_textures.resize(data->images_count);
                 std::vector<ImageData> images(data->images_count);
@@ -267,6 +276,11 @@ public:
                         // argh !! gltf inverse la convention uv, l'origine est en haut a gauche, au lieu de en bas a gauche pour openGL...
                         images[i]= flipY(image);
                     }
+                    
+                    /* \todo si l'image est stockee dans un buffer, utiliser SDL_RWFromConstMem + IMG_LoadPNG_RW / IMG_LoadJPG_RW
+                        cf https://wiki.libsdl.org/SDL_RWFromConstMem
+                        + https://www.libsdl.org/projects/SDL_image/docs/SDL_image.html#SEC24
+                     */
                 }
                 
                 // creer les textures sur le thread principal / opengl
@@ -1274,7 +1288,8 @@ public:
                         program_use_texture(program, "material_metallic_roughness_texture", 1, m_textures[material.metallic_roughness_texture]);
                     else
                         program_use_texture(program, "material_metallic_roughness_texture", 1, m_white_texture);
-                        
+                    
+                    // \todo occlusion est packee dans la meme texture que metallic_roughness, pas la peine d'utiliser une unite de plus...
                     if(material.occlusion_texture != -1)
                         program_use_texture(program, "material_occlusion_texture", 2, m_textures[material.occlusion_texture]);
                     else
