@@ -18,8 +18,9 @@
 
 
 //~ #include "app_camera.h"        // classe Application a deriver
-#include "app_time.h"        // classe Application a deriver
-
+//~ #include "app_time.h"        // classe Application a deriver
+#include "app.h"        // classe Application a deriver
+#include "widgets.h"    // interface minimaliste
 
 // utilitaire. creation d'une grille / repere.
 Mesh make_grid( const int n= 10 )
@@ -142,17 +143,18 @@ namespace gltf
 }
 
 
-class TP : public AppTime
+class TP : public App
 {
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    TP( ) : AppTime(1024, 640, 3, 3, 4) 
-    //~ TP( ) : AppTime(1024, 640, 3, 3, 0) 
+    TP( ) : App(1024, 640, 3, 3, 4) 
     {
-        SDL_GL_SetSwapInterval(1);
+        //~ SDL_GL_SetSwapInterval(1);
         glEnable(GL_FRAMEBUFFER_SRGB);
         //~ glEnable(GL_SAMPLE_SHADING);
         //~ glMinSampleShading(0);
+        
+        m_widgets= create_widgets();
     }
     
     // creation des objets de l'application
@@ -169,13 +171,13 @@ public:
         //~ const char *filename= "tutos/gltf/WaterBottle/WaterBottle.gltf";
         //~ const char *filename= "tutos/gltf/DamagedHelmet/DamagedHelmet.gltf";
         //~ const char *filename= "tutos/gltf/Drone/scene.gltf";
-        const char *filename= "tutos/gltf/FlightHelmet/FlightHelmet.gltf";
+        //~ const char *filename= "tutos/gltf/FlightHelmet/FlightHelmet.gltf";
         //~ const char *filename= "tutos/gltf/openGLNormal/normal.gltf";
         //~ const char *filename= "tutos/gltf/skinning.gltf";
         //~ const char *filename= "tutos/gltf/cube_scene.gltf";
         //~ const char *filename= "/home/jciehl/scenes/bistro_import/exterior.gltf";
         //~ const char *filename= "/home/jciehl/scenes/bistro-gltf/pack.gltf";
-        //~ const char *filename= "/home/jciehl/scenes/quaternius/robot.gltf";
+        const char *filename= "/home/jciehl/scenes/quaternius/robot.gltf";
         //~ const char *filename= "/home/jciehl/Downloads/sintel/sintel.gltf";
         //~ const char *filename= "/home/jciehl/Downloads/drone-city/drone-city.gltf";
 
@@ -1108,12 +1110,13 @@ public:
             node.model= m;
         }
         
-        // todo, oui c'est bourrin... utiliser un "cache" de transformations deja caclulees...
+        // \todo, oui c'est bourrin... utiliser un "cache" de transformations deja caclulees...
     }
     
     // destruction des objets de l'application
     int quit( )
     {
+        release_widgets(m_widgets);
         m_repere.release();
         return 0;
     }
@@ -1220,9 +1223,23 @@ public:
         // animations, interpoler les parametres des transformations des noeuds
         if(rotate)
         {
-            play_animation(0, global_time() / 1000);
-            //~ for(unsigned i= 0; i < m_animations.size(); i++)
-                //~ play_animation(i, global_time() / 24000);
+            static int animation_id= 0;
+            
+            // selectionner une animation, si necessaire...
+            if(m_animations.size() > 1)
+            {
+                begin(m_widgets);
+                    for(unsigned i= 0; i < m_animations.size(); i++)
+                    {
+                        begin_line(m_widgets);
+                        select(m_widgets, m_animations[i].name.c_str(), i, animation_id);
+                    }
+                end(m_widgets);
+                
+                draw(m_widgets, window_width(), window_height());
+            }
+            
+            play_animation(animation_id, global_time() / 1000);
             
             update_transforms();
         }
@@ -1289,7 +1306,7 @@ public:
                     else
                         program_use_texture(program, "material_metallic_roughness_texture", 1, m_white_texture);
                     
-                    // \todo occlusion est packee dans la meme texture que metallic_roughness, pas la peine d'utiliser une unite de plus...
+                    // \todo occlusion est packee dans la meme texture que metallic_roughness (canal rouge), pas la peine d'utiliser une unite de texture en plus...
                     if(material.occlusion_texture != -1)
                         program_use_texture(program, "material_occlusion_texture", 2, m_textures[material.occlusion_texture]);
                     else
@@ -1346,6 +1363,8 @@ protected:
     GLuint m_black_texture;
     GLuint m_blue_texture;
     std::vector<gltf::Material> m_materials;
+    
+    Widgets m_widgets;
 };
 
 

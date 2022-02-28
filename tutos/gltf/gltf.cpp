@@ -91,8 +91,8 @@ Mesh read_gltf_mesh( const char *filename )
     }
     
     
-    // parcourir les noeuds de la scene et transformer les meshs associes aux noeuds...
     std::vector<float> buffer;
+    // parcourir les noeuds de la scene et transformer les meshs associes aux noeuds...
     for(unsigned node_id= 0; node_id < data->nodes_count; node_id++)
     {
         cgltf_node *node= &data->nodes[node_id];
@@ -109,6 +109,7 @@ Mesh read_gltf_mesh( const char *filename )
         Transform normal= model.normal();       // transformation pour les normales
         
         cgltf_mesh *mesh= node->mesh;
+        // parcourir les groupes de triangles du mesh...
         for(unsigned primitive_id= 0; primitive_id < mesh->primitives_count; primitive_id++)
         {
             cgltf_primitive *primitives= &mesh->primitives[primitive_id];
@@ -139,6 +140,7 @@ Mesh read_gltf_mesh( const char *filename )
             for(unsigned attribute_id= 0; attribute_id < primitives->attributes_count; attribute_id++)
             {
                 cgltf_attribute *attribute= &primitives->attributes[attribute_id];
+                
                 if(attribute->type == cgltf_attribute_type_position)
                 {
                     assert(attribute->data->type == cgltf_type_vec3);
@@ -150,6 +152,7 @@ Mesh read_gltf_mesh( const char *filename )
                     for(unsigned i= 0; i+2 < buffer.size(); i+= 3)
                         positions.push_back( model(Point(buffer[i], buffer[i+1], buffer[i+2])) );
                 }
+                
                 if(attribute->type == cgltf_attribute_type_normal)
                 {
                     assert(attribute->data->type == cgltf_type_vec3);
@@ -161,6 +164,7 @@ Mesh read_gltf_mesh( const char *filename )
                     for(unsigned i= 0; i+2 < buffer.size(); i+= 3)
                         normals.push_back( normal(Vector(buffer[i], buffer[i+1], buffer[i+2])) );
                 }
+                
                 if(attribute->type == cgltf_attribute_type_texcoord)
                 {
                     assert(attribute->data->type == cgltf_type_vec2);
@@ -303,8 +307,8 @@ std::vector<GLTFLight> read_gltf_lights( const char *filename )
         return {};
     }
     
-    // retrouve les transformations associees aux sources
     std::vector<GLTFLight> lights;
+    // retrouve les transformations associees aux sources
     for(unsigned i= 0; i < data->nodes_count; i++)
     {
         cgltf_node *node= &data->nodes[i];
