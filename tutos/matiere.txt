@@ -24,6 +24,8 @@ Pour créer une image, un minimum réaliste, il faut simuler les différentes é
 de la lumière sur (la surface d') un objet. Ce rebond est décrit par le modèle de la matière de l'objet qui s'appelle _brdf_ (abbrégé français de _fonction de reflexion 
 bidirectionnelle_, brdf c'est bien...). 
 
+<IMG SRC="test.png" width="40%"> 
+
 De manière générale, un modèle permet d'écrire que la lumière réfléchie dans une direction \f$ \vec{o} \f$ après le rebond est juste le produit de la lumière incidente
 \f$ L_i( \vec{l} ) \f$ et de la _brdf_, notée \f$ f_r() \f$ :
 \f[
@@ -111,6 +113,12 @@ Une approximation est couramment utilisée, cf [Schlick 94](http://citeseerx.ist
 	F_0                 & = & \left( \frac{\eta - 1}{\eta +1} \right)^2
 \f} 
 
+
+Ces coefficients sont mesurés pour pas mal de matières : quelques exemples sur [wikipedia](https://en.wikipedia.org/wiki/List_of_refractive_indices)
+et par exemple : 
+<IMG SRC="fresnel_reflexion.png" width="60%"> 
+
+
 Cette approximation exploite une propriété des équations de Fresnel, l'indice de réfraction \f$ \eta \f$ permet de déduire le coefficient à indicence normale \f$ F_0 \f$ 
 (la lumière arrive dans la direction de la normale et \f$ \theta = 0° \f$ ) et, par construction, toutes les matières ont une réflexion de 1 à incidence rasante 
 (la lumière arrive dans le plan tangent et \f$ \theta = 90° \f$).
@@ -118,14 +126,15 @@ Cette approximation exploite une propriété des équations de Fresnel, l'indice
 Connaissant la direction miroir de \f$ \vec{l} \f$ par rapport à la normale de la surface on peut écrire la réflexion :
 \f[
 	L_r( \vec{m} ) = F(\vec{n}, \vec{l}) L_i( \vec{l} )
-\f]
-et 
+\f] 
 
-<IMG SRC="fresnel.png" width="20%"> 
-
+on peut calculer la direction miroir : c'est la direction symétrique de \f$\vec{l}\f$ par rapport à \f$\vec{n}\f$ :
 \f[
 	\vec{m} = 2 (\vec{n} \cdot \vec{l}) \vec{n} - \vec{l}
 \f]
+
+
+<IMG SRC="fresnel.png" width="20%"> 
 
 Par contre, pour formuler cette réflexion qui n'existe que pour la direction \f$ \vec{m} \f$, avec la fonction \f$ f_r() \f$, il faut prendre quelques précautions, pour 
 s'assurer de renvoyer 0 pour les directions \f$ \vec{o} \f$ différentes de  \f$ \vec{m} \f$ :
@@ -140,8 +149,20 @@ coefficients de Fresnel : ceux qui sont réels et ceux qui sont complexes (avec 
 dans la couleur du reflet : le reflet d'un métal est coloré (et permet d'identifier le métal), alors que les autres matières ont un reflet de couleur neutre (ils réflechissent la 
 couleur de la source).
 
-Ces coefficients sont mesurés pour pas mal de matières : quelques exemples sur [wikipedia](https://en.wikipedia.org/wiki/List_of_refractive_indices)
+# réflexion diffuse, réflexion spéculaire ? pourquoi ?
 
+Les équations de Fresnel permettent de prédire le comportement de la lumière lorsqu'elle "rebondit" sur une matière, mais selon la matière (conducteur / métal, ou pas), 
+il se passe des "choses" différentes. La lumière rebondi à la surface de l'objet, et selon cas, elle se diffuse aussi dans la matière, "sous" la surface. Et globablement les métaux
+n'ont qu'une réflexion de surface, alors que les autres matières diffusent aussi la lumière sous la surface...
+
+<IMG SRC="fresnel_diffusion.png" width="60%"> 
+
+Et les deux termes _spéculaire_ et _diffus_ désignent ces comportements différents : spéculaire correspond à la réflexion en surface alors que diffus correspond à la propagation
+de la lumière dans la matière, sous la surface.
+
+_pour les curieux :_ les figures précédentes sont tirées de 
+["Background: Physics and Math of Shading"] (ttps://blog.selfshadow.com/publications/s2012-shading-course/hoffman/s2012_pbs_physics_math_notes.pdf)  N. Hoffman, 2012 
+qui reprend en details plusieurs phénomènes. 
 
 # en pratique
 
