@@ -471,7 +471,6 @@ Pour vous aider à visualiser cette relation, on va afficher les axes du repere 
 placée au meme endroit que l'objet : 
 
 \code
-
 Mesh make_grid_camera( )
 {
     Mesh camera= Mesh(GL_LINES);
@@ -507,9 +506,8 @@ Mesh make_grid_camera( )
 \endcode
 
 il suffit de modifer le code précedent pour afficher ce 'repere' à la place du petit cube qui tourne... 
-\endcode
 
-<IMG SRC="transformations_view1.png" width="100%">
+# <IMG SRC="transformations_view1.png" width="100%">
 
 <IMG SRC="transformations_view2.png" width="100%">
 

@@ -211,7 +211,7 @@ Et plus \f$ \vec{h} \f$ est loin de la normale en p, plus l'observateur est loin
 
 <IMG SRC="testh.png" width="40%"> 
 
-Ne reste plus qu'une question, comment controler la taille,  la concentration du reflet ?
+Ne reste plus qu'une question : comment controler la taille,  la concentration du reflet ?
 Il fallait une fonction rapide à calculer (en 1976 les machines n'etaient pas tout à fait les mêmes...) et qui décroit plus ou moins vite vers 0 en fonction d'un paramètre... 
 
 et c'est \f$ \cos^\alpha \theta_h \f$ qui à gagné. mais pas tout à fait :
