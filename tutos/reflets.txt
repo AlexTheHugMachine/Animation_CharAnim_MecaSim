@@ -1,4 +1,5 @@
-*! \addtogroup reflets lumière et reflets
+
+/*! \addtogroup reflets lumière et reflets
 
 Comment reproduire le type de reflet que l'on peut observer dans cette [expérience](http://resources.mpi-inf.mpg.de/lighttransport/) ?
 <table style="width:100%">
@@ -42,8 +43,8 @@ _réponse :_
 \f[ 
     \vec{h}= \frac{\vec{o} + \vec{l}}{|| \vec{o} + \vec{l} ||}
 \f]
-le bisecteur des 2 vecteurs \f$ \vec{l} \f$ et  \f$ \vec{o} \f$ . La direction \f$ \vec{o} \f$ devient symétrique de \f$ \vec{l} \f$ par rapport à \f$ \vec{h} \f$. Si la normale de la surface est orientée comme 
-\f$ \vec{h} \f$, \f$ \vec{l} \f$ est la direction miroir de \f$ \vec{o} \f$.
+le bisecteur des 2 vecteurs \f$ \vec{l} \f$ et  \f$ \vec{o} \f$ . La direction \f$ \vec{o} \f$ devient symétrique de \f$ \vec{l} \f$ par rapport à \f$ \vec{h} \f$. Si la normale de la surface 
+est orientée comme \f$ \vec{h} \f$, \f$ \vec{l} \f$ est la direction miroir de \f$ \vec{o} \f$.
 Et plus \f$ \vec{h} \f$ est loin de la normale en p, plus l'observateur est loin du reflet miroir de  \f$ \vec{l} \f$. 
 
 <IMG SRC="testh.png" width="40%"> 
@@ -126,10 +127,13 @@ problèmes.
 _remarque :_ les détails complets sont dans ["Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs"](http://jcgt.org/published/0003/02/03/) Heitz 2014
 
 Le premier changement est la fonction qui décrit la concentration du reflet, au lieu d'une puissance de cosinus, c'est une fonction issue de travaux en physique qui est couramment 
-utilisée, en grande partie parce qu'elle permet de mieux reproduire les reflets des metaux : 
+utilisée, en grande partie parce qu'elle permet de mieux reproduire les reflets des metaux. C'est le paramètre \f$ \alpha \f$ qui permet de controler la rugosité de la surface et la 
+concentration du reflet : 0 pour une surface parfaitement lisse, et 1 pour une surface matte, "parfaitement" rugueuse :
 \f[
     D( \vec{h} ) = \frac{\chi^+(\vec{h} \cdot \vec{n})}{\pi \alpha^2 \cos^4 \theta_m \left( 1 + \frac{\tan^2 \theta_h}{\alpha^2} \right)^2 }, \textrm{ cf Heitz 2014, eq 71}\\
 \f]
+
+Cette version de \f$ D \f$ s'appelle GGX dans la communauté image et TR pour les physiciens (d'après les travaux de Trowbridge - Reitz)
 
 L'autre intéret de cette fonction est que l'on peut la normaliser et obtenir un modèle qui conserve l'énergie :
 
@@ -141,6 +145,8 @@ L'autre intéret de cette fonction est que l'on peut la normaliser et obtenir un
     \chi^+(x)                           & = & 0 \textrm{ si } x < 0\\
                                         & = & 1 \textrm{ sinon }
 \f}
+
+Cette manière de normaliser \f$ D \f$ vient des travaux de Smith et ce modèle de micro surface / micro facettes est appelé Smith GXX.
 
 Ces formulations ne sont pas très intuitives, mais la fonction  \f$ D \f$ représente les normales d'une hemisphère déformée et projettées sur la surface... voici quelques exemples tirées de 
 ["Sampling the GGX Distribution of Visible Normals"](https://jcgt.org/published/0007/04/01/) , Heitz 2018 :
@@ -175,38 +181,88 @@ pas trop mal...
 
 # et alors ? c'est quoi le modèle de matière ?
 
-On vient de voir rapidement comment décrire le comportement de la lumière dans 3 cas particuliers : parfaitement diffus, parfaitement spéculaire (reflet par un miroir lisse) et "reflets" intermédiaires 
-sur une surface rugueuse, mais il reste une question, comment représenter une vraie matière ??
+On vient de voir rapidement comment décrire le comportement de la lumière dans 3 cas particuliers : parfaitement diffus, parfaitement spéculaire (reflet par un miroir lisse) et "reflets" 
+intermédiaires sur une surface rugueuse, mais il reste une question, comment représenter une vraie matière ??
 
 La solution se trouve dans les travaux de Burley en 2012 et 2015 qui a analysé des mesures de vraies matières et proposé une manière intuitive de les décrire, cf 
 - ["Physically Based Shading at Disney"](https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf) Burley 2012,
 - ["Extending the Disney BRDF to a BSDF with Integrated Subsurface Scattering"](https://blog.selfshadow.com/publications/s2015-shading-course/burley/s2015_pbs_disney_bsdf_notes.pdf) Burley 2015.
 
-Le premier constat est sans surprise : d'un cote, il y a les métaux avec un reflet décrit par un modèle à micro facettes et les coefficients de Fresnel, et de l'autre, le reste... décrit par un terme diffus 
-éventuellement pondéré par les coefficients de Fresnel. Ce qui correspond bien aux comportements prédits par les équations de Fresnel (cf indice de réfraction réel ou complexe / imaginaire et 
-les reflexions diffuses ou spéculaires).
+Le premier constat est sans surprise : d'un cote, il y a les métaux avec un reflet décrit par un modèle à micro facettes et les coefficients de Fresnel, et de l'autre, le reste... 
+les non métaux (les diélectriques). Ils sont décrits par deux termes : une reflexion diffuse pondérée par les coefficients de transmission de Fresnel ainsi qu'une réflexion spéculaire 
+(éventuellement avec des microfacettes). Ce qui correspond bien aux comportements prédits par les équations de Fresnel (cf indice de réfraction réel ou complexe / imaginaire et les reflexions 
+diffuses ou spéculaires).
 
-Une matière est donc décrite par 3 paramètres : _métal_, _couleur_ et _rugosité_. Un autre travail important réalisé par Burley est d'avoir remplacé les grandeurs physiques par des valeurs plus simples à manipuler 
-comprises entre 0 et 1... Par exemple, l'indice de réfraction n'apparait pas directement, il est "remplacé" par une couleur qui est utilisée comme \f$ F_0 \f$ pour évaluer les coefficients de Fresnel. Voici quelques exemples : 
+\f{eqnarray*}{ 
+    \textrm{(diélectrique) } f_d(\vec{o}, \vec{l}) & = & (1 - F) \cdot \frac{\textrm{base color}}{\pi} + F \cdot \frac{ D \, G }{4 |\vec{n} \cdot \vec{o}| |\vec{n} \cdot \vec{l}|} \\
+    \textrm{(métal) } f_m(\vec{o}, \vec{l}) & = & (1 - F) \cdot 0 + F \cdot \frac{ D \, G }{4 |\vec{n} \cdot \vec{o}| |\vec{n} \cdot \vec{l}|}
+\f}
+
+Les indices de réfraction sont bien sur différent dans les deux cas. Pour la rugosité de la micro surface, on peut utiliser la même valeur, ou pas...
+
+Burley propose de représenter une matière par 3 paramètres : _métal_, _couleur_ et _rugosité_. Un autre travail important réalisé par Burley est d'avoir remplacé les grandeurs physiques par 
+des valeurs plus simples à manipuler comprises entre 0 et 1... Par exemple, l'indice de réfraction n'apparait pas directement, il est "remplacé" par une couleur qui est utilisée comme 
+\f$ F_0 \f$ pour évaluer les coefficients de Fresnel. Voici quelques exemples : 
 
 <IMG SRC="F0.png" width="80%">
 
-La brdf se présente comme l'interpolation entre 2 termes : diffus et spéculaire en fonction de la valeur de _métal_. Lorsque _métal_ vaut 1, le poids du terme diffus est à 0.
-La _couleur_ est utilisée soit par le terme diffus, soit comme valeur de \f$ F_0 \f$ pour évaluer les coefficients de Fresnel du modèle à micro facettes.
+La brdf se présente comme l'interpolation entre 2 termes : réflexion dielectrique et réflexion métallique en fonction de la valeur de _métal_. Lorsque _métal_ vaut 1, le poids 
+du terme dielectrique est à 0, et inversement. La _couleur_ est utilisée soit par le terme diffus de la réflexion dielectrique, soit comme valeur de \f$ F_0 \f$ pour évaluer les coefficients de 
+Fresnel du modèle métallique. 
 
 _metal_ est normalement un terme binaire, 0 ou 1 : soit la matière est un métal, soit pas... Dans la nature, il n'existe pas d'intermédiaire, mais pour des raisons pratiques, on se retrouve 
-souvent avec des valeurs qui varient entre 0 et 1, il faut donc ajuster les parametres pour éviter les surprises, ie on ne veut pas utiliser _couleur_ à la fois comme F_0 et comme couleur diffuse. 
+souvent avec des valeurs qui varient entre 0 et 1, il faut donc ajuster les parametres pour éviter les surprises, ie on ne veut pas utiliser _couleur_ à la fois comme \f$ F_0 \f$ et comme couleur diffuse. 
 
 Une solution courante est détaillée dans les annexes de [glTF 2](https://www.khronos.org/registry/glTF/specs/2.0/glTF-2.0.html#metal-brdf-and-dielectric-brdf).
 La couleur du terme diffus est interpolée entre _couleur_ et noir en fonction de _metal_ (rappel : les métaux n'ont pas de diffusion, uniquement une réflexion spéculaire de surface), 
-et le terme spéculaire / les coefficients de Fresnel sont interpolés entre 0.04 (valeur moyenne pour F_0 pour les non métaux, cf Table 1 au-dessus) et _couleur_ en fonction de _metal_.
+et le terme spéculaire / les coefficients de Fresnel sont interpolés entre 0.04 (valeur moyenne pour\f$ F_0 \f$ pour les non métaux, cf Table 1 au-dessus) et _couleur_ en fonction de _metal_.
+Et les deux micro surfaces utilisent la même _rugosité_. Burley propose aussi d'utiliser le carré de la rugosité comme paramètre des micro surfaces.
 
 \f{eqnarray*}{ 
-	f_r(\vec{o}, \vec{l}) & = & (1 - \textrm{metal}) \cdot \textrm{diffuse} + \textrm{metal} \cdot \textrm{specular}\\
-    \textrm{diffuse} & = & (1 - \textrm{metal}) \cdot \frac{\textrm{base color}}{\pi} + \textrm{metal} \cdot \textrm{black}\\
-    \textrm{specular} & = &  \frac{F(\vec{o}, \vec{h}, F_0) \, D(\vec{h})}{\cos \theta} \left( \frac{G_2(\vec{o}, \vec{l}, \vec{h}) }{4 |\vec{n} \cdot \vec{o}|} \right)\\
+    f_r(\vec{o}, \vec{l}) & = & (1 - \textrm{metal}) \cdot f_d(\vec{o}, \vec{l}) + \textrm{metal} \cdot f_m(\vec{o}, \vec{l})\\
     F_0 & = & (1 - \textrm{metal}) \cdot 0.04 + \textrm{metal} \cdot \textrm{base color}\\
+    \alpha & = & \textrm{rugosité}^2
 \f}
 
+La suite, comment écrire les shaders qui évaluent tout ca, et comment simplifier les expressions sont dans : \ref brdf
 
+# et c'est bon, on a tout là ?
+
+ben non, pour le moment on peut décrire des surfaces opaques simples, toutes propres, mais il est souvent nécessaire d'ajouter des éraflures, une couche de vernis, de rouille, de poussière, etc...
+et pour certaines matières, on voudrait représenter une distribution de normales moins continue, pour représenter des paillettes ou une structure...
+
+*/
+
+
+/*
+(toute) petite histoire des modèles de matières utilisés en synthèse.
+
+physique :
+- Lambert 1760 : matière diffuse opaque,
+- Fresnel 1823 : réflexion et réfraction par une surface lisse, opaque ou transparente,
+- Torrance - Sparrow 1967 : réflexion par une surface rugueuse : les microfacettes.
+
+utilisation dans la communauté image :
+- modèle diffus de Lambert ??
+- Phong 1975 : reflet symétrique, 
+- Blinn - Phong 1976 : reflet "réaliste", inspiré des microfacettes de Torrance - Sparrow 1967,
+- [Cook - Torrance 1981](https://graphics.pixar.com/library/ReflectanceModel/index.html) : modèle à microfacettes dérivé de Torrance - Sparrow 1967, surface rugueuse opaque,
+- [Walter 2007](https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf) : reformulation du modèle de Cook - Torrance, utilisation de la distribution GGX et de sa normalisation exacte, surface rugueuse opaque ou transparente,
+- [Burley 2012](https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf) : comparaison mesures / modèles, reparamétrisation "intuitive" des paramètres, séparation des métaux des autres matières, modèle Disney,
+- [Heitz 2014](http://jcgt.org/published/0003/02/03/) : normalisation, conservation de l'énergie et validation des modèles à microfacettes, [slides](http://jcgt.org/published/0003/02/03/presentation.pdf)
+- [Burley 2015](https://blog.selfshadow.com/publications/s2015-shading-course/burley/s2015_pbs_disney_bsdf_notes.pdf) : simplification, intégration des validations de Heitz 2014, diffusion 
+
+Le terme PBR vient des travaux de Walter et Burley, l'industrie a enfin compris les avantages de faire les choses correctement...
+*/
+
+/*
+# et à part du plastique ? on peut faire autre chose ?
+
+Pour faire mieux, il faut intégrer les coefficients de réflexion et/ou réfraction de Fresnel dans le modèle et aussi mieux choisir la fonction qui reproduit la forme du reflet. 
+
+cf Figure 9 de [Burley 2012](https://blog.selfshadow.com/publications/s2012-shading-course/burley/s2012_pbs_disney_brdf_notes_v3.pdf) :
+
+<IMG SRC="figure9_burley2012.png" width="80%">
+
+Les métaux, notamment, ont une forme de reflet que les fonctions classiques (cf Blinn - Phong) reproduisent assez mal. 
 */
