@@ -229,8 +229,8 @@ Les paramètres du modèle sont la rugosité \f$ \alpha \f$ ainsi que l'indice d
 les termes :
 \code
 // parametres
-vec3 F0;
-float alpha;
+uniform vec3 F0;
+uniform float alpha;
 
 	// directions
 	vec3 o= normalize(camera - p);
