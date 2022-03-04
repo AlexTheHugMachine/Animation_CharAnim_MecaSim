@@ -35,6 +35,7 @@ mais il y a aussi pas mal de tutos / exemple de code :
     - \ref tuto_mesh_buffer, complète le tuto9 avec la création des buffers et du vertex array object, pour dessiner un objet Mesh, directement avec openGL... 
     
     - \ref matiere, lumière, matière et brdf,
+    - \ref reflets, matière et reflets réalistes,
     - \ref brdf, écrire un shader, matière, brdf, pbr, etc.
     
     - \ref shader_kit est un utilitaire pour prototyper rapidement des shaders.
