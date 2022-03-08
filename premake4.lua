@@ -2,6 +2,9 @@ solution "gKit2light"
     configurations { "debug", "release" }
 
     platforms { "x64", "x32" }
+if _PREMAKE_VERSION >="5.0" then
+    platforms { "arm64" }
+end
     
     includedirs { ".", "src/gKit" }
     
@@ -63,20 +66,7 @@ if _PREMAKE_VERSION >="5.0" then
         defines { "WIN32", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
         defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
 
-    configuration { "windows", "vs2017" }
-        location "build"
-        debugdir "."
-        
-        system "Windows"
-        architecture "x64"
-        disablewarnings { "4244", "4305" }
-        flags { "MultiProcessorCompile", "NoMinimalRebuild" }
-        
-        includedirs { "extern/visual/include" }
-        libdirs { "extern/visual/lib" }
-        links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
-        
-    configuration { "windows", "vs2019" }
+    configuration { "windows", "vs*" }
         location "build"
         debugdir "."
         
@@ -92,11 +82,17 @@ end
     
     configuration "macosx"
         frameworks= "-F /Library/Frameworks/"
-        buildoptions { "-std=c++11" }
+        buildoptions { "-std=c++11 -Wno-deprecated-declarations" }
         defines { "GK_MACOS" }
         buildoptions { frameworks }
         linkoptions { frameworks .. " -framework OpenGL -framework SDL2 -framework SDL2_image" }
     
+    -- force les mac M1 arm a compiler en x86_64 tant que les librairies ne sont pas dispo en arm64... 
+    -- sinon installer les libs arm avec brew et tout compiler en natif
+    configuration { "macosx", "arm64" } 
+        buildoptions { "-target x86_64-apple-macos10.12" }
+        linkoptions { "-target x86_64-apple-macos10.12" }
+    -- oui c'est moche...
     
  -- description des fichiers communs
 gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h" }
