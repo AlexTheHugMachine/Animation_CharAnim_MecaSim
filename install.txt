@@ -1,18 +1,18 @@
 /*! \addtogroup installation
 
-# obtenir les sources :
+# étape 1 : obtenir les sources
 
 créer un répertoire de travail, puis :
 
     git clone https://forge.univ-lyon1.fr/Alexandre.Meyer/gkit2light.git
 
 
-# installer les dépendances :
+# étape 2 : installer les dépendances
 
 gKit2 utilise 3 librairies : sdl2 et sdl2_image, et glew, il faut les installer avant de pouvoir compiler les exemples.
 
-les étapes sont légèrement différentes d'un système à l'autre. une fois les librairies installées, il faut générer les projets pour 
-votre environnement de développement : 
+les étapes sont légèrement différentes d'un système à l'autre (et d'un compilateur à l'autre aussi..). une fois les librairies installées, il suffit de générer les projets pour 
+votre environnement de développement et compiler les exemples : 
     - visual studio ou code blocks pour windows, 
     - makefile ou code blocks pour linux, 
     - makefile ou xcode pour mac os.
@@ -21,41 +21,220 @@ c'est l'outil premake qui permet de créer les projets, et les makefiles, cf sec
 
 ## linux
 
-installez les paquets, si nécessaire (pas la peine au nautibus) : `libsdl2-dev, libsdl2-image-dev, libglew-dev` et `premake4`
-
+installez les paquets, si nécessaire (pas la peine au nautibus) : `libsdl2-dev, libsdl2-image-dev, libglew-dev` et `premake4`.
 par exemple, pour ubuntu et ses variantes :
 
-	sudo apt-get install libsdl2-dev libsdl2-image-dev libglew-dev premake4
+    sudo apt-get install libsdl2-dev libsdl2-image-dev libglew-dev premake4
 
 
 ## windows
+
+les librairies et premake4/5 sont regroupées dans une archive [disponible ici](http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/extern_mingw_visual.zip).
+    - dezipper l'archive dans le répertoire de gKit, vous devez obtenir un répertoire `gkit2light/extern`,
+    - copiez `extern/premake4.exe` et `extern/premake5.exe` dans le répertoire de gKit.
+
+## mac os
+
 les librairies sont disponibles :
+    - [sdl2](https://www.libsdl.org/download-2.0.php), section development libraries
+    - [sdl2_image](https://www.libsdl.org/projects/SDL_image/), section development libraries
+    - glew n'est pas necessaire sur mac os.
+
+    - copier le contenu des fichiers .dmg dans `/Library/Frameworks`
+    - copiez [premake 4.4](http://premake.github.io/download.html) dans le répertoire de gKit.
+
+
+# étape 3 : générer les projets
+
+_pourquoi ?_ gkit compile et fonctionne sur linux, windows, mac os, ios, android et meme WebGL. Chaque système dispose de plusieurs compilateurs et environnements de travail.
+Il n'est pas envisageable de créer et de maintenir tous ces projets manuellement. gkit utilise donc un outil : un générateur de projet, ce qui permet de décrire les projets une seule fois 
+et c'est l'outil (premake dans ce cas...) qui génère le projet pour votre environnement de travail. 
+
+__remarque :__ non gKit ne peut pas fonctioner avec WSL, comme toutes les applications qui utilisent openGL / cuda, etc. microsoft travaille dessus, mais pour l'instant ca ne fonctionne pas. 
+on est donc obligé de compiler une application native windows, avec un compilateur et ses librairies. 
+
+il faut donc apprendre à générer le projet pour votre environnement de travail, en utilisant premake.
+
+ouvrez un terminal, et naviguez jusqu'au répertoire contenant gKit :
+    - windows : cherchez `powershell` ou `windows terminal` dans le menu démarrer
+    - linux : `ctrl`-`alt`-`t`, 
+    - mac os : cherchez `terminal`
+    
+_rappel :_ commandes `ls` et `cd` pour naviguer.
+
+exécuter premake4 --help, la suite devrait être assez évidente. 
+
+- si vous voulez générer un projet pour travailler avec visual studio, il suffit de choisir la bonne version,
+    - `./premake5 vs2019`
+    - `./premake5 vs2022`
+
+la solution visual studio ainsi que les projets sont crées dans le répertoire `build/`
+
+- pour travailler avec code blocks...
+    - `./premake4 codeblocks`
+
+- pour xcode...
+    - `./premake4 xcode`
+
+- pour les makefile (linux et mac os)...
+    - `./premake4 gmake`
+    
+vous pouvez maintenant ouvrir la solution visual studio, le projet xcode, code blocks et compiler un des tutos.
+
+
+# étape 4 : compilez un exemple 
+
+compilez `tuto7_camera`, par exemple.
+
+et vérifiez que tout fonctionne.
+sous windows, il faudra probablement copier les `dll` dans `gkit2light/bin` la première fois, cf la FAQ plus bas.
+
+## utilisation des makefiles
+
+les makefile peuvent générer les versions debug (cf utiliser un debugger comme gdb ou lldb) ou les versions release, plus rapide (2 ou 3 fois, 
+interressant pour les projets avec beaucoup de calculs) :
+    - `make help`, affiche la liste des projets et les options disponibles,
+    - `make tuto7_camera`, compile la version debug de tuto7_camera,
+    - `make tuto7_camera config=release64`, compile la version release, 64bits, de tuto7_camera,
+    - `make tuto7_camera config=debug64`, compile la version debug, 64bits, de tuto7_camera,
+    - `make tuto7_camera verbose=1`, compile la version debug de tuto7_camera et affiche le détail des commandes exécutées.
+
+les exécutables sont crées dans le répertoire `gkitLight/bin`, pour les exécuter : 
+
+    bin/tuto7_camera
+
+
+# étape 5 : créer un nouveau projet
+
+pour ajouter un nouveau projet, le plus simple est de modifier premake4.lua et de tout re-générer. Il y a 2 solutions :
+    - pour un projet simple, avec 1 seul fichier .cpp 
+    - pour un projet composé de plusieurs fichiers .cpp
+
+
+## projet en 1 fichier .cpp
+
+le plus simple est d'ajouter votre fichier .cpp dans le répertoire `src` et de modifier la liste des projets dans `premake4.lua`:
+
+trouvez cette déclaration dans premake4.lua :
+
+    -- description des projets		
+    local projects = {
+        "shader_kit"
+    }
+
+et ajoutez votre fichier, sans l'extension .cpp, par exemple `tp1` :
+
+    local projects = {
+        "shader_kit",
+        "tp1"
+    }
+
+et regénérez le projet, cf premake4 gmake / vs2022 / xcode ...
+
+## projet avec plusieurs fichiers .cpp
+
+ajoutez la description de votre projet à la fin du fichier `premake4.lua`, en supposant que les sources se trouvent dans le répertoire `tp1` :
+
+\code
+    project("tp1")              // nom du projet
+        language "C++"
+        kind "ConsoleApp"       // application standard
+        targetdir "bin"         // placer l'executable dans ./bin
+        files ( gkit_files )    // compiler les .cpp du repertoire src/gKit
+        files { "tp1/*.cpp" }   // compiler les .cpp du repertoire tp1
+\endcode
+
+et regénérez le projet, cf premake gmake / vs2022 / xcode ...
+
+
+# FAQ :
+
+## erreur horrible dans src/gKit/window.cpp : 
+
+selon la version glew, le type du dernier paramètre de la fonction window.cpp/debug change, il suffit d'ajouter un `const` 
+dans la déclaration du dernier paramètre.
+
+\code
+    ligne 230 :
+    //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
+    static
+    void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char *message, 
+            void *userParam )
+\endcode
+    
+à remplacer par :
+
+\code
+    //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
+    static
+    void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char *message, 
+            const void *userParam )	//!< const 
+\endcode
+
+## erreur lors du link / édition de liens :
+
+par défaut les projets essayent de générer la version 32bits des applications, selon votre système, ce n'est pas possible ou obligatoire...
+
+configurations générées :
+    - windows codeblocks : utilisez la version 32bits, compilez avec `win32`
+    - windows visual studio : utilisez la version 64bits, compilez avec `x64`
+    - mac os : les frameworks contiennent les 2 versions.
+    - mac os ARM M1 : il y a 2 solutions, demandez à votre encadrant de tp.
+   
+## erreurs à l'exécution sous windows, `dll` manquantes :
+    - pour visual studio : copiez le contenu de `extern/visual/bin` dans`gkit2light/bin`
+    - pour codeblocks : copiez le contenu de `extern/mingw/bin` dans `gkit2light/bin`
+
+__windows SDK__ premake ne connait pas la version du windows sdk actuellement installé sur votre machine, par défaut, il génère des projets pour le sdk de windows 8.1. 
+si cette version du sdk n'est pas installée et que les exemples ne compilent pas, __pas de panique__ : ouvrez la solution générée, dans visual studio : ouvrez le solution explorer, 
+click droit sur solution et choisissez `re-cibler la solution` / `retarget solution`. vous pouvez maintenant compiler un projet...
+
+## premake4 ou premake5 ?
+
+premake4 est la seule version qui sait générer des projets codeblocks pour simplifier la vie des étudiants de l'option LIFgraphique en L2. sinon premake5 est conseillé. 
+
+## j'aime pas premake
+
+pour compiler un projet qui utilise gKit, il suffit de compiler tous les fichiers .cpp de `src/gKit` (sans oublier ceux du projet...) et de linker avec GL, GLEW, SDL2, et SDL2_image. 
+
+avec `g++`, c'est direct :
+\code{bash}
+g++ -o bin/tp1 tp1/*.cpp src/gKit/*.cpp -I src/gKit -lGL -lGLEW -lSDL2 -lSDL2_image
+bin/tp1
+\endcode
+
+il faut aussi indiquer dans quel répertoire se trouvent les fichiers `.h` / les headers, cf `-I src/gKit` dans les options de g++.
+si les librairies ne sont pas installées dans le système, il suffit de donner les répertoires avec les options `-L repertoire` et éventuellement `-Wl,-rpath repertoire`
+
+tous les environnements de travail permettent de décrire ces informations, il faut apprendre à le faire...
+
+## vcpkg et visual studio
+
+[vcpkg](https://github.com/microsoft/vcpkg) est un gestionnaire de paquets pour windows qui permet d'installer les librairies pour visual studio (mais pas les autres compilateurs...) :
+
+\code{bash}
+vcpkg install sdl2 sdl2_image glew --triplet=x64-windows
+vcpkg integrate install
+\endcode
+
+vcpkg peut installer les librairies dans un répertoire standard de visual studio (cf l'option `integrate`), ce qui permet de compiler et linker sans trop de problemes !
+
+la liste des paquets / librairies / utilitaires est disponible [https://vcpkg.info/](https://vcpkg.info/)
+
+*/
+
+/*
+
+### installation manuelle / avec les dernières versions
     - [glew](http://glew.sourceforge.net/)
     - [sdl2](https://www.libsdl.org/download-2.0.php), section development libraries
     - [sdl2_image](https://www.libsdl.org/projects/SDL_image/), section development libraries
-	
+    
 plusieurs versions de premake pour visual studio sont disponibles :
-    - pour générer des projets Visual Studio 2015 et 2017 :
+    - pour générer des projets Visual Studio :
     [premake 5](http://premake.github.io/download.html), copiez le dans le répertoire des sources de gKit
 
-### installation rapide
-les librairies et premake4/5 sont regroupées dans une archive [disponible ici](http://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M1IMAGE/extern_mingw_visual.zip).
-
-il suffit de dezipper l'archive dans le répertoire de gKit, __et ensuite de copier les dll et la version de premake__ que vous allez utiliser dans le répertoire de gKit ou `./bin` :
-    - pour utiliser codeblocks : copiez `extern/mingw/bin` 
-    - pour utiliser visual studio 2015 et 2017 : copiez `extern/visual/bin`
-
-les répertoires doivent avoir la structure détaillée ci-dessous.
-
-### SDK windows
-
-premake ne connait pas la version du windows sdk actuellement installé sur votre machine, par défaut, il génère des projets pour le sdk de windows 8.1. 
-si cette version du sdk n'est pas installée, __pas de panique__ : ouvrez la solution générée, dans visual studio : ouvrez le solution explorer, click droit sur solution et choisissez `re-cibler la solution` / `retarget solution`.
-vous pouvez maintenant compiler un projet.
-
-
-## installation manuelle
-le plus simple est de créer un sous répertoire, `extern` par exemple, et d'y copier les fichiers `.h`, `.dll` et `.lib`. vous devez obtenir une structure :
+le plus simple est de créer un sous répertoire, `extern` par exemple dans le répertoire de gKit, et d'y copier les fichiers `.h`, `.dll` et `.lib`. vous devez obtenir une structure :
 
 \code
 gKit2light/
@@ -103,143 +282,5 @@ gKit2light/
 \endcode
 
 il faudra modifier le fichier premake4.lua avec le chemin d'accès à ce répertoire, si vous n'utilisez pas cette solution. cf section premake.
-
-
-## mac os
-
-les librairies sont disponibles :
-    - [sdl2](https://www.libsdl.org/download-2.0.php), section development libraries
-    - [sdl2_image](https://www.libsdl.org/projects/SDL_image/), section development libraries
-    - glew n'est pas necessaire sur mac os.
-
-copier le contenu des fichiers .dmg dans `/Library/Frameworks`
-
-premake4 est disponible :
-    - [premake 4.4](http://premake.github.io/download.html)
-
-copiez le dans le répertoire des sources de gKit
-
-
-# premake :
-
-ouvrez un terminal, et naviguez jusqu'au répertoire contenant gKit :
-    - windows : cherchez `powershell` dans le menu démarrer
-    - linux : `ctrl`-`alt`-`t`, 
-    - mac os : cherchez `terminal`
-    
-_rappel :_ commandes `ls` et `cd` pour naviguer.
-
-éxecuter premake4 --help, la suite devrait être assez évidente. 
-
-- si vous voulez générer un projet visual studio, il suffit de choisir la bonne version,
-	- `./premake5 vs2015`
-	- `./premake5 vs2017`
-
-la solution visual studio ainsi que les projets sont crées dans le répertoire `build/`
-
-- pour code blocks...
-	- `./premake4 codeblocks`
-
-
-- pour xcode...
-	- `./premake4 xcode`
-
-
-- pour des makefile (linux et mac os)...
-	- `./premake4 gmake`
-	
-
-vous pouvez maintenant ouvrir la solution visual studio, le projet xcode, code blocks et compiler shader_kit ou un des tutos.
-
-
-
-## utilisation des makefiles
-
-les makefile peuvent générer les versions debug (cf utiliser gdb ou lldb) ou les versions release, plus rapide (2 ou 3 fois, 
-interressant pour les projets avec beaucoup de calculs) :
-    - `make help`, affiche la liste des projets et les options disponibles,
-    - `make shader_kit`, compile la version debug de shader_kit,
-    - `make shader_kit config=release64`, compile la version release, 64bits, de shader_kit,
-    - `make shader_kit config=debug64`, compile la version debug, 64bits, de shader_kit,
-    - `make shader_kit verbose=1`, compile la version debug de shader_kit et affiche le détail des commandes exécutées.
-
-
-# premake et les projets :
-
-pour ajouter un nouveau projet, le plus simple est de modifier premake4.lua et de regénérer le projet complet.
-
-il y a 2 solutions :
-    - pour un projet avec 1 seul fichier .cpp 
-    - pour un projet composé de plusieurs fichiers .cpp
-
-
-## projet en 1 fichier .cpp
-
-le plus simple est l'ajouter à la liste des projets, modifiez :
-
-    -- description des projets		
-	local projects = {
-		"shader_kit"
-	}
-
-et ajoutez le votre, sans l'extension .cpp, par exemple tp1 :
-
-	local projects = {
-		"shader_kit",
-		"tp1"
-	}
-
-et regénérez le projet, cf premake4 gmake / vs2013 / xcode ...
-
-## projet avec plusieurs fichiers .cpp
-
-ajoutez la description de votre projet :
-
-	project("tp1")
-		language "C++"
-		kind "ConsoleApp"
-		targetdir "bin"
-		files ( gkit_files )
-		files { "tp1_main.cpp", "tp1_scene.cpp", "tp1_render.cpp" }
-
-## regénérez le projet, 
-
-cf premake gmake / vs2017 / xcode ...
-
-
-# FAQ :
-
-## erreur horrible dans src/gKit/window.cpp : 
-
-selon la version glew, le type du dernier paramètre de la fonction window.cpp/debug change, il suffit d'ajouter un `const` 
-dans la déclaration du dernier paramètre.
-
-\code
-    ligne 230 :
-    //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
-    static
-    void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char *message, 
-            void *userParam )
-\endcode
-    
-à remplacer par :
-
-\code
-    //! affiche les messages d'erreur opengl. (contexte debug core profile necessaire).
-    static
-    void GLAPIENTRY debug( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char *message, 
-            const void *userParam )	//!< const 
-\endcode
-
-## erreur lors du link / édition de liens :
-
-par défaut les projets essayent de générer la version 32bits des applications, selon votre système, ce n'est pas possible ou obligatoire...
-
-configurations générées :
-    - windows codeblocks : utilisez la version 32 bits, 64 bits n'existe pas (limitation de gcc pour windows ?)
-    - windows visual studio 2015 et 2017, utilisez la version 64bits des librairies 
-    - linux codeblocks : utilisez la même version que votre système. cf panneau de configuration / details
-    - mac os : les frameworks contiennent les 2 versions.
-
 
 */
