@@ -62,10 +62,10 @@ public:
         // decrire un repere / grille 
         m_repere= make_grid(10);
         
-        // charge l'element
+        // charge un objet
         m_cube= read_mesh("data/cube.obj");
         
-        // objet dynamique, commence par un element
+        // un autre objet
         m_objet= Mesh(GL_TRIANGLES);
         {
             // ajouter des triplets de sommet == des triangles dans objet...
