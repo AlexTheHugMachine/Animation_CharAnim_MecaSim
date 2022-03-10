@@ -152,7 +152,7 @@ class Ex1 : public AppCamera
 	
 	int render( )
 	{
-		glClear(Gl_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 		
 		draw(m_objet, /* model */ Identity(), camera());
 	}
@@ -239,7 +239,7 @@ class Ex1 : public AppCamera
 	
 	int render( )
 	{
-		glClear(Gl_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 		
 		Transform model= Identity();
 		draw(m_objet, model, camera());
