@@ -46,6 +46,8 @@ bref, tout ce qu'il faut pour écrire une application interactive.
 
 les explications plus complètes sont dans la doc de Mesh.
 
+les calculs avec des points (cf la classe Point), des vecteurs (cf classe Vector) et des transformations / matrices (cf classse Transform) sont décrits dans vec.h ainsi que mat.h.
+
 # à quoi ca ressemble ?
 
 si vous préferrez partir d'un code simple et le modifier, c'est possible aussi, ouvrez `tutos/tuto7_camera.cpp` et compilez le projet correspondant `tuto7_camera`.
