@@ -9,7 +9,7 @@ créer un répertoire de travail, puis :
 
 # étape 2 : installer les dépendances
 
-gKit2 utilise 3 librairies : sdl2 et sdl2_image, et glew, il faut les installer avant de pouvoir compiler les exemples.
+gKit2 utilise 3 librairies : sdl2 et sdl2_image, et glew, il faut les installer avant de pouvoir compiler les exemples. ainsi qu'un utilitaire : premake.
 
 les étapes sont légèrement différentes d'un système à l'autre (et d'un compilateur à l'autre aussi..). une fois les librairies installées, il suffit de générer les projets pour 
 votre environnement de développement et compiler les exemples : 
@@ -17,14 +17,14 @@ votre environnement de développement et compiler les exemples :
     - makefile ou code blocks pour linux, 
     - makefile ou xcode pour mac os.
 
-c'est l'outil premake qui permet de créer les projets, et les makefiles, cf section premake.
+c'est l'outil premake qui permet de créer les projets, et les makefiles, cf [étape 4](#section_premake)
 
 ## linux
 
 installez les paquets, si nécessaire (pas la peine au nautibus) : `libsdl2-dev, libsdl2-image-dev, libglew-dev` et `premake4`.
 par exemple, pour ubuntu et ses variantes :
 
-    sudo apt-get install libsdl2-dev libsdl2-image-dev libglew-dev premake4
+    sudo apt install libsdl2-dev libsdl2-image-dev libglew-dev premake4
 
 
 ## windows
@@ -41,17 +41,17 @@ les librairies sont disponibles :
     - glew n'est pas necessaire sur mac os.
 
     - copier le contenu des fichiers .dmg dans `/Library/Frameworks`
-    - copiez [premake 4.4](http://premake.github.io/download.html) dans le répertoire de gKit.
+    - copiez [premake](https://premake.github.io/download) dans le répertoire de gKit.
 
 
 # étape 3 : générer les projets
 
-_pourquoi ?_ gkit compile et fonctionne sur linux, windows, mac os, ios, android et meme WebGL. Chaque système dispose de plusieurs compilateurs et environnements de travail.
-Il n'est pas envisageable de créer et de maintenir tous ces projets manuellement. gkit utilise donc un outil : un générateur de projet, ce qui permet de décrire les projets une seule fois 
-et c'est l'outil (premake dans ce cas...) qui génère le projet pour votre environnement de travail. 
+_pourquoi ?_ gkit compile et fonctionne sur linux, windows, mac os, ios, android et meme WebGL. Chaque système dispose de plusieurs compilateurs et environnements 
+de travail. Il n'est pas envisageable de créer et de maintenir tous ces projets manuellement. gkit utilise donc un outil : un générateur de projet, ce qui permet de décrire 
+les projets une seule fois et c'est l'outil (premake dans ce cas...) qui génère le projet pour votre environnement de travail. 
 
-__remarque :__ non gKit ne peut pas fonctioner avec WSL, comme toutes les applications qui utilisent openGL / cuda, etc. microsoft travaille dessus, mais pour l'instant ca ne fonctionne pas. 
-on est donc obligé de compiler une application native windows, avec un compilateur et ses librairies. 
+__remarque :__ non gKit ne peut pas fonctioner avec WSL sous windows, comme toutes les applications qui utilisent openGL / cuda, etc. microsoft travaille dessus, mais 
+pour l'instant ca ne fonctionne pas. on est donc obligé de compiler une application native windows, avec un compilateur et ses librairies. 
 
 il faut donc apprendre à générer le projet pour votre environnement de travail, en utilisant premake.
 
@@ -82,7 +82,7 @@ la solution visual studio ainsi que les projets sont crées dans le répertoire 
 vous pouvez maintenant ouvrir la solution visual studio, le projet xcode, code blocks et compiler un des tutos.
 
 
-# étape 4 : compilez un exemple 
+# étape 4 : compilez un exemple {#section_premake}
 
 compilez `tuto7_camera`, par exemple.
 
@@ -99,10 +99,12 @@ interressant pour les projets avec beaucoup de calculs) :
     - `make tuto7_camera config=debug64`, compile la version debug, 64bits, de tuto7_camera,
     - `make tuto7_camera verbose=1`, compile la version debug de tuto7_camera et affiche le détail des commandes exécutées.
 
-les exécutables sont crées dans le répertoire `gkitLight/bin`, pour les exécuter : 
+les exécutables sont crées dans le répertoire `gkit2light/bin`, pour les exécuter : 
 
     bin/tuto7_camera
 
+__remarque :__ gKit charge quelques fichiers au démarrage, il faut l'exécuter depuis le répertoire de base `gKit2light/`, sinon les fichiers ne seront pas correctement
+chargés.
 
 # étape 5 : créer un nouveau projet
 
@@ -181,13 +183,16 @@ configurations générées :
     - mac os : les frameworks contiennent les 2 versions.
     - mac os ARM M1 : il y a 2 solutions, demandez à votre encadrant de tp.
    
-## erreurs à l'exécution sous windows, `dll` manquantes :
-    - pour visual studio : copiez le contenu de `extern/visual/bin` dans`gkit2light/bin`
+## erreurs à l'exécution sous windows, fichiers .dll manquants :
+    - pour visual studio : copiez le contenu de `extern/visual/bin` dans `gkit2light/bin`
     - pour codeblocks : copiez le contenu de `extern/mingw/bin` dans `gkit2light/bin`
 
-__windows SDK__ premake ne connait pas la version du windows sdk actuellement installé sur votre machine, par défaut, il génère des projets pour le sdk de windows 8.1. 
-si cette version du sdk n'est pas installée et que les exemples ne compilent pas, __pas de panique__ : ouvrez la solution générée, dans visual studio : ouvrez le solution explorer, 
-click droit sur solution et choisissez `re-cibler la solution` / `retarget solution`. vous pouvez maintenant compiler un projet...
+## erreur de compilation / windows SDK 
+premake ne connait pas la version du windows sdk actuellement installé sur votre machine, par défaut, il génère des projets pour le sdk de base de windows 10. 
+si cette version du sdk n'est pas installée et que les exemples ne compilent pas, __pas de panique__ : ouvrez la solution générée, dans visual studio : 
+	- ouvrez le solution explorer, 
+	- click droit sur solution et choisissez `re-cibler la solution` / `retarget solution`. 
+vous pouvez maintenant compiler un projet...
 
 ## premake4 ou premake5 ?
 
@@ -195,7 +200,8 @@ premake4 est la seule version qui sait générer des projets codeblocks pour sim
 
 ## j'aime pas premake
 
-pour compiler un projet qui utilise gKit, il suffit de compiler tous les fichiers .cpp de `src/gKit` (sans oublier ceux du projet...) et de linker avec GL, GLEW, SDL2, et SDL2_image. 
+pour compiler un projet qui utilise gKit, il suffit de compiler tous les fichiers .cpp de `src/gKit` (sans oublier ceux du projet...) et de linker avec GL, GLEW, SDL2, et 
+SDL2_image. 
 
 avec `g++`, c'est direct :
 \code{bash}
@@ -210,7 +216,8 @@ tous les environnements de travail permettent de décrire ces informations, il f
 
 ## vcpkg et visual studio
 
-[vcpkg](https://github.com/microsoft/vcpkg) est un gestionnaire de paquets pour windows qui permet d'installer les librairies pour visual studio (mais pas les autres compilateurs...) :
+[vcpkg](https://github.com/microsoft/vcpkg) est un gestionnaire de paquets pour windows qui permet d'installer les librairies pour visual studio (mais pas les autres 
+compilateurs...) :
 
 \code{bash}
 vcpkg install sdl2 sdl2_image glew --triplet=x64-windows
@@ -234,7 +241,8 @@ plusieurs versions de premake pour visual studio sont disponibles :
     - pour générer des projets Visual Studio :
     [premake 5](http://premake.github.io/download.html), copiez le dans le répertoire des sources de gKit
 
-le plus simple est de créer un sous répertoire, `extern` par exemple dans le répertoire de gKit, et d'y copier les fichiers `.h`, `.dll` et `.lib`. vous devez obtenir une structure :
+le plus simple est de créer un sous répertoire, `extern` par exemple dans le répertoire de gKit, et d'y copier les fichiers `.h`, `.dll` et `.lib`. vous devez obtenir 
+une structure :
 
 \code
 gKit2light/
