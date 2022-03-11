@@ -71,7 +71,9 @@ _rappel :_ commandes `ls` et `cd` pour naviguer.
 
 le workspace (groupe de projets) codeblocks ainsi que les projets sont crées dans le répertoire `build/`, ouvrez `build/gKit2light.workspace`.
 
+
 ## windows + visual studio 
+
 pour générer une solution (groupe de projets) visual studio, il suffit de choisir la bonne version :
 
 \code
@@ -82,25 +84,33 @@ ou
 
 la solution visual studio ainsi que les projets sont crées dans le répertoire `build/`, ouvrez `build/gkit2light.sln`.
 
+
 ## mac os + xcode
+
 \code
 ./premake4 xcode 
 ou
 ./premake5 xcode 
 \endcode
 
+
 ## mac os + makefile
+
 \code
 ./premake4 gmake
 ou
 ./premake5 gmake
 \endcode
 
+le `Makefile` se trouve dans le répertoire de base de gKit. 
+
 ## linux + makefile
-pour générer des makefile 
+
 \code
 ./premake4 gmake
 \endcode
+
+le `Makefile` se trouve dans le répertoire de base de gKit. 
 
 
 # étape 4 : compilez un exemple {#section_premake}
@@ -108,7 +118,7 @@ pour générer des makefile
 compilez `tuto7_camera`, par exemple.
 
 et vérifiez que tout fonctionne.
-sous windows, il faudra probablement copier les `dll` dans `gkit2light/bin` la première fois, cf la FAQ plus bas.
+sous windows, il faudra probablement copier les `dll` dans `gkit2light/bin` la première fois, cf la [FAQ](#FAQ) plus bas.
 
 ## utilisation des makefiles
 
@@ -170,7 +180,7 @@ ajoutez la description de votre projet à la fin du fichier `premake4.lua`, en s
 et regénérez le projet, cf premake gmake / vs2022 / xcode ...
 
 
-# FAQ 
+# FAQ {#FAQ}
 
 ## erreur horrible dans src/gKit/window.cpp 
 
