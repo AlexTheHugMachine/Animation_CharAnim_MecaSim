@@ -63,24 +63,44 @@ ouvrez un terminal, et naviguez jusqu'au répertoire contenant gKit :
     
 _rappel :_ commandes `ls` et `cd` pour naviguer.
 
-exécuter premake4 --help, la suite devrait être assez évidente. 
+## windows + codeblocks
 
-- si vous voulez générer un projet pour travailler avec visual studio, il suffit de choisir la bonne version,
-    - `./premake5 vs2019`
-    - `./premake5 vs2022`
+\code
+./premake4.exe codeblocks
+\endcode
 
-la solution visual studio ainsi que les projets sont crées dans le répertoire `build/`
+le workspace (groupe de projets) codeblocks ainsi que les projets sont crées dans le répertoire `build/`, ouvrez `build/gKit2light.workspace`.
 
-- pour travailler avec code blocks...
-    - `./premake4 codeblocks`
+## windows + visual studio 
+pour générer une solution (groupe de projets) visual studio, il suffit de choisir la bonne version :
 
-- pour xcode...
-    - `./premake4 xcode`
+\code
+./premake5.exe vs2019
+ou
+./premake5.exe vs2022
+\endcode
 
-- pour les makefile (linux et mac os)...
-    - `./premake4 gmake`
-    
-vous pouvez maintenant ouvrir la solution visual studio, le projet xcode, code blocks et compiler un des tutos.
+la solution visual studio ainsi que les projets sont crées dans le répertoire `build/`, ouvrez `build/gkit2light.sln`.
+
+## mac os + xcode
+\code
+./premake4 xcode 
+ou
+./premake5 xcode 
+\endcode
+
+## mac os + makefile
+\code
+./premake4 gmake
+ou
+./premake5 gmake
+\endcode
+
+## linux + makefile
+pour générer des makefile 
+\code
+./premake4 gmake
+\endcode
 
 
 # étape 4 : compilez un exemple {#section_premake}
@@ -150,9 +170,9 @@ ajoutez la description de votre projet à la fin du fichier `premake4.lua`, en s
 et regénérez le projet, cf premake gmake / vs2022 / xcode ...
 
 
-# FAQ :
+# FAQ 
 
-## erreur horrible dans src/gKit/window.cpp : 
+## erreur horrible dans src/gKit/window.cpp 
 
 selon la version glew, le type du dernier paramètre de la fonction window.cpp/debug change, il suffit d'ajouter un `const` 
 dans la déclaration du dernier paramètre.
@@ -174,7 +194,7 @@ dans la déclaration du dernier paramètre.
             const void *userParam )	//!< const 
 \endcode
 
-## erreur lors du link / édition de liens :
+## erreur lors du link / édition de liens
 
 par défaut les projets essayent de générer la version 32bits des applications, selon votre système, ce n'est pas possible ou obligatoire...
 
@@ -184,7 +204,7 @@ configurations générées :
     - mac os : les frameworks contiennent les 2 versions.
     - mac os ARM M1 : il y a 2 solutions, demandez à votre encadrant de tp.
    
-## erreurs à l'exécution sous windows, fichiers .dll manquants :
+## erreurs à l'exécution sous windows, fichiers .dll manquants
     - pour visual studio : copiez le contenu de `extern/visual/bin` dans `gkit2light/bin`
     - pour codeblocks : copiez le contenu de `extern/mingw/bin` dans `gkit2light/bin`
 
@@ -197,7 +217,12 @@ vous pouvez maintenant compiler un projet...
 
 ## premake4 ou premake5 ?
 
-premake4 est la seule version qui sait générer des projets codeblocks pour simplifier la vie des étudiants de l'option LIFgraphique en L2. sinon premake5 est conseillé. 
+premake4 est la seule version qui sait générer des projets windows + codeblocks pour simplifier la vie des étudiants de l'option LIFgraphique en L2. 
+
+premake5 est la seule version capable de générer les solutions pour les dernières versions de visual studio.
+
+premake4 est disponible dans les paquets linux, c'est aussi la solution la plus directe. sinon, il suffit de charger directement premake5 et de le copier 
+dans un répertoire local présent dans le `PATH`, ou dans le répertoire de gKit.
 
 ## j'aime pas premake
 
@@ -226,6 +251,13 @@ vcpkg integrate install
 \endcode
 
 vcpkg peut installer les librairies dans un répertoire standard de visual studio (cf l'option `integrate`), ce qui permet de compiler et linker sans trop de problemes !
+
+par contre, il faudra modifier `premake4.lua` qui configure la solution avec le répertoire `extern/visual`, il suffit de supprimer les lignes : 
+\code
+	includedirs { "extern/visual/include" }
+	libdirs { "extern/visual/lib" }
+\endcode
+dans la section `configuration { "windows", "vs*" }`
 
 la liste des paquets / librairies / utilitaires est disponible [https://vcpkg.info/](https://vcpkg.info/)
 
