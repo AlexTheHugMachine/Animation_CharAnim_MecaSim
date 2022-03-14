@@ -1,3 +1,4 @@
+
 #version 330
 
 #ifdef VERTEX_SHADER
@@ -120,7 +121,7 @@ void main( )
     #endif
     
     // hachure les triangles mal orientes
-    if(gl_FrontFacing == false) // if(!gl_FrontFacing) bug sur mac ?!
+    if(gl_FrontFacing == false)
     {
         ivec2 pixel= ivec2(gl_FragCoord.xy / 4) % ivec2(2, 2);
         if((pixel.x ^ pixel.y) == 0)
