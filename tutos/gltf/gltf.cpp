@@ -66,14 +66,14 @@ Mesh read_gltf_mesh( const char *filename )
             float metallic= pbr->metallic_factor;
             float roughness= pbr->roughness_factor;
             
-            // conversion diffuse / specular
+            // conversion metallic-roughness vers diffuse-specular + Blinn-Phong
             // metaux { diffuse= black, specular= color }
             // non - metaux { diffuse= color, specular= 0.04 }
             m.diffuse= color * (1 - metallic) + metallic * Black();
             m.specular= Color(0.04) * (1 - metallic) + color * metallic;
+            
             // conversion roughness vers exposant Blinn-Phong
             m.ns= 2 / (roughness * roughness) - 2;
-            
             if(m.ns == 0)
                 m= Material(m.specular);
             // les valeurs sont habituellement dans les textures metallic_roughness... utiliser une matiere diffuse + texture...
@@ -201,10 +201,9 @@ Mesh read_gltf_mesh( const char *filename )
     {
         if(has_materials) mesh.material(material_indices[i / 3]);
         
-        mesh.index(indices[i]);
-        mesh.index(indices[i+1]);
-        mesh.index(indices[i+2]);
+        mesh.triangles(indices[i], indices[i+1], indices[i+2]);
     }
+    // \bug si les triangles ne sont pas indexes, pas de matieres dans le mesh...
     
     return mesh;
 }
