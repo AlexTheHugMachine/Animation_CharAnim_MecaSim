@@ -285,7 +285,7 @@ Window create_window( const int w, const int h, const int major, const int minor
     int keys;
     const unsigned char *state= SDL_GetKeyboardState(&keys);
     key_states.assign(state, state + keys);
-
+    
     SDL_SetWindowDisplayMode(window, nullptr);
     SDL_StartTextInput();
 

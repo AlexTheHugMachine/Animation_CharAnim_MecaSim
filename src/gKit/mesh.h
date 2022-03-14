@@ -115,11 +115,11 @@ public:
     //@{
     //! constructeur par defaut.
     Mesh( ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
-        m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_buffer(0), m_index_buffer(0), m_update_buffers(false) {}
+        m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_buffer(0), m_index_buffer(0), m_vertex_buffer_size(0), m_index_buffer_size(0), m_update_buffers(false) {}
     
     //! constructeur.
     Mesh( const GLenum primitives ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
-        m_color(White()), m_primitives(primitives), m_vao(0), m_buffer(0), m_index_buffer(0), m_update_buffers(false) {}
+        m_color(White()), m_primitives(primitives), m_vao(0), m_buffer(0), m_index_buffer(0), m_vertex_buffer_size(0), m_index_buffer_size(0), m_update_buffers(false) {}
     
     //! construit les objets openGL.
     int create( const GLenum primitives );

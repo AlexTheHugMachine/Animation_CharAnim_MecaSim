@@ -134,22 +134,60 @@ GLuint DrawParam::create_program( const GLenum primitives, const bool use_texcoo
     return program->program;
 }
 
+GLuint DrawParam::create_debug_normals_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test )
+{
+    const char *filename= smart_path("data/shaders/normals.glsl");
+    bool use_mesh_color= (primitives == GL_POINTS || primitives == GL_LINES || primitives == GL_LINE_STRIP || primitives == GL_LINE_LOOP);
+    if(use_mesh_color) 
+        // pas la peine, les normales ne sont definies pour les triangles...
+        return 0;
+    
+    PipelineProgram *program= PipelineCache::manager().find(filename);
+    return program->program;
+}
+
+GLuint DrawParam::create_debug_texcoords_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test )
+{
+    const char *filename= smart_path("data/shaders/texcoords.glsl");
+    PipelineProgram *program= PipelineCache::manager().find(filename);
+    return program->program;
+}
+
 
 void DrawParam::draw( Mesh& mesh )
 {
     bool use_texcoord= m_use_texture && m_texture > 0 && mesh.has_texcoord();
     bool use_normal= mesh.has_normal();
     bool use_color= mesh.has_color();
+
+    Transform mv= m_view * m_model;
+    Transform mvp= m_projection * mv;
     
-    // etape 1 : construit le program en fonction des attributs du mesh et des options choisies
-    GLuint program= create_program(mesh.primitives(), use_texcoord, use_normal, use_color, m_use_light, m_use_alpha_test);
+    GLuint program= 0;
+    if(m_debug_texcoords)
+    {
+        program= create_debug_texcoords_program(mesh.primitives(), use_texcoord, use_normal, use_color, m_use_light, m_use_alpha_test);
+        m_use_light= false;
+        m_use_texture= false;
+        m_use_alpha_test= false;
+        use_color= false;
+        use_normal= false;
+        use_texcoord= true;
+        
+        glUseProgram(program);
+        //~ program_use_texture(program, "diffuse_color", 0, m_debug_texture);
+        program_uniform(program, "mvpMatrix", mvp);
+        program_uniform(program, "mvMatrix", mv);
+        
+        mesh.draw(program,  /* position */ true, use_texcoord, false, false, /* material_index */ false);
+        return;
+    }
+    
+    program= create_program(mesh.primitives(), use_texcoord, use_normal, use_color, m_use_light, m_use_alpha_test);
     
     glUseProgram(program);
     if(!use_color)
         program_uniform(program, "mesh_color", mesh.default_color());
-    
-    Transform mv= m_view * m_model;
-    Transform mvp= m_projection * mv;
     
     program_uniform(program, "mvpMatrix", mvp);
     if(use_normal)
@@ -170,8 +208,35 @@ void DrawParam::draw( Mesh& mesh )
     
     if(m_use_alpha_test)
         program_uniform(program, "alpha_min", m_alpha_min);
-    
+        
     mesh.draw(program, /* position */ true, use_texcoord, use_normal, use_color, /* material_index */ false);
+    
+    // dessine les normales par dessus...
+    if(m_debug_normals)
+    {
+        program= create_debug_normals_program(mesh.primitives(), use_texcoord, use_normal, use_color, m_use_light, m_use_alpha_test);
+        m_use_light= false;
+        m_use_texture= false;
+        m_use_alpha_test= false;
+        use_color= false;
+        use_normal= true;
+        use_texcoord= false;
+        
+        static float scale= 1;
+        if(key_state('+') || key_state(SDLK_KP_PLUS))
+            scale+= 0.02f;
+        if(key_state('-') || key_state(SDLK_KP_MINUS))
+            scale-= 0.02f;
+        if(scale < 0.1f)
+            scale= 0.1f;
+        
+        glUseProgram(program);
+        program_uniform(program, "mvpMatrix", mvp);
+        program_uniform(program, "normalMatrix", mv.normal()); // transforme les normales dans le repere camera.
+        program_uniform(program, "scale", scale * m_normals_scale);
+
+        mesh.draw(program, /* position */ true, false, use_normal, false, /* material_index */ false);
+    }
 }
 
 void DrawParam::draw( const TriangleGroup& group, Mesh& mesh )

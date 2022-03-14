@@ -9,7 +9,6 @@
 
 
 //! \addtogroup objet3D
-///@{
 
 //! \file
 
@@ -71,7 +70,9 @@ public:
     DrawParam( ) : m_model(), m_view(), m_projection(),
         m_use_light(false), m_light(), m_light_color(),
         m_use_texture(false), m_texture(0),
-        m_use_alpha_test(false), m_alpha_min(0.3f)
+        m_use_alpha_test(false), m_alpha_min(0.3f),
+        m_debug_normals(false), m_normals_scale(1),
+        m_debug_texcoords(false)
     {}
 
     //! modifie la transformation model utilisee pour afficher l'objet.
@@ -87,21 +88,27 @@ public:
     DrawParam& camera( Orbiter& o, const int width, const int height, const float fov ) { m_view= o.view(); m_projection= o.projection(width, height, fov); return *this; }
     //! eclaire l'objet avec une source ponctuelle, de position p et de couleur c.
     DrawParam& light( const Point& p, const Color& c= White() ) { m_use_light= true; m_light= p; m_light_color=c; return *this; }
-    //! plaque une texture a la surface de l'objet.
+    //! plaque une texture opaque a la surface de l'objet.
     DrawParam& texture( const GLuint t ) { m_use_texture= true; m_texture= t; return *this; }
+    
+    //! utilise une texture semi transparente, si l'alpha du texel est plus petit que a, le pixel est transparent. desactive aussi les calculs d'eclairage.
+    DrawParam& alpha_texture( const float a, const GLuint t ) { m_use_alpha_test= (a > 0); m_alpha_min= a; m_use_texture= true; m_texture= t; return *this; }
 
-    //! texture semi transparente, si l'alpha du texel est plus petit que alpha_min, le pixel est transparent. desactive aussi les calculs d'eclairage. utiliser alpha(0) pour desactiver le test.
-    DrawParam& alpha( const float a=0.f ) { m_use_alpha_test= (a>0.f); m_alpha_min= a; return *this; }
-
-    //! Use light: on/off
-    DrawParam& lighting(bool use_light=true) { m_use_light=use_light;  return *this; }
-
+// a virer     
+    //! utilise une source de lumire pour eclairer l'objet, ou pas si use_light= false.
+    DrawParam& lighting( const bool use_light= true ) { m_use_light= use_light;  return *this; }
+    //! renvoie la position de la lumière.
+    const Point& light() const { return m_light; }
+// les params sont configures une fois par groupe d'options, pas a chaque draw. l'idee est de dessiner tous les objets utilisant la meme config ensemble / en suivant, les uns apres les autres.
+    
+    //! visualise les normales des sommets des triangles et les normales geometrique des triangles
+    DrawParam& debug_normals( const float s= 1 ) { m_debug_normals= true; m_normals_scale= s; return *this;}
+    //! visualise les coordonnees de textures des sommets des triangles.
+    DrawParam& debug_texcoords( ) { m_debug_texcoords= true; return *this;}
+    
     //! dessine l'objet avec l'ensemble des parametres definis.
     void draw( Mesh& mesh );
     void draw( const TriangleGroup& group, Mesh& mesh );
-    
-    //! renvoie la position de la lumière
-    const Point& light() const { return m_light; }
     
 protected:
     /*! construit un shader program configure.
@@ -112,6 +119,8 @@ protected:
     \param use_alpha_test force l'utilisation d'un test de transparence, cf utilisation d'une texture avec un canal alpha
      */
     GLuint create_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test );
+    GLuint create_debug_normals_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test );
+    GLuint create_debug_texcoords_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test );
     
     Transform m_model;
     Transform m_view;
@@ -126,6 +135,10 @@ protected:
 
     bool m_use_alpha_test;
     float m_alpha_min;
+    
+    bool m_debug_normals;
+    float m_normals_scale;
+    bool m_debug_texcoords;
 };
 
 
@@ -182,5 +195,4 @@ protected:
 };
 
 
-///@}
 #endif

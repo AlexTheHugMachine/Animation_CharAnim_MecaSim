@@ -737,7 +737,7 @@ void Mesh::draw( const int first, const int n, const GLuint program, const bool 
 {
     if(program == 0)
     {
-        printf("[oops]  no program... can't draw !!");
+        printf("[oops]  no program... can't draw !!\n");
         return;
     }
     
