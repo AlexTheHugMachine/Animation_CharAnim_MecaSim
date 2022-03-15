@@ -139,7 +139,7 @@ GLuint DrawParam::create_debug_normals_program( const GLenum primitives, const b
     const char *filename= smart_path("data/shaders/normals.glsl");
     bool use_mesh_color= (primitives == GL_POINTS || primitives == GL_LINES || primitives == GL_LINE_STRIP || primitives == GL_LINE_LOOP);
     if(use_mesh_color) 
-        // pas la peine, les normales ne sont definies pour les triangles...
+        // pas la peine, les normales ne sont definies que pour les triangles...
         return 0;
     
     PipelineProgram *program= PipelineCache::manager().find(filename);
@@ -198,7 +198,7 @@ void DrawParam::draw( Mesh& mesh )
     // utiliser une texture, elle ne sera visible que si le mesh a des texcoords...
     if(use_texcoord && m_texture > 0)
         program_use_texture(program, "diffuse_color", 0, m_texture);
-        
+    
     if(m_use_light)
     {
         program_uniform(program, "light", m_view(m_light));       // transforme la position de la source dans le repere camera, comme les normales
@@ -208,7 +208,7 @@ void DrawParam::draw( Mesh& mesh )
     
     if(m_use_alpha_test)
         program_uniform(program, "alpha_min", m_alpha_min);
-        
+    
     mesh.draw(program, /* position */ true, use_texcoord, use_normal, use_color, /* material_index */ false);
     
     // dessine les normales par dessus...
@@ -223,9 +223,9 @@ void DrawParam::draw( Mesh& mesh )
         use_texcoord= false;
         
         static float scale= 1;
-        if(key_state('+') || key_state(SDLK_KP_PLUS))
+        if(key_state('p') || key_state(SDLK_KP_PLUS))
             scale+= 0.02f;
-        if(key_state('-') || key_state(SDLK_KP_MINUS))
+        if(key_state('m') || key_state(SDLK_KP_MINUS))
             scale-= 0.02f;
         if(scale < 0.1f)
             scale= 0.1f;

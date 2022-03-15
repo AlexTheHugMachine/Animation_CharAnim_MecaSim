@@ -196,12 +196,12 @@ Mesh read_gltf_mesh( const char *filename )
     
     // 2. les triangles et leurs matieres, si necessaire...
     mesh.materials(materials);
-    bool has_materials= (materials.count() > 0);
-    for(unsigned i= 0; i +2 < indices.size(); i+=3)
+    bool has_materials= (materials.count() > 0) && (material_indices.size() *3 == indices.size());
+    for(unsigned i= 0; i+2 < indices.size(); i+= 3)
     {
         if(has_materials) mesh.material(material_indices[i / 3]);
         
-        mesh.triangles(indices[i], indices[i+1], indices[i+2]);
+        mesh.triangle(indices[i], indices[i+1], indices[i+2]);
     }
     // \bug si les triangles ne sont pas indexes, pas de matieres dans le mesh...
     
@@ -260,7 +260,7 @@ std::vector<GLTFCamera> read_gltf_camera( const char *filename )
                     //~ printf(", zfar %f", perspective->zfar);
                 //~ printf("\n");
                 
-                Transform projection= Perspective(perspective->yfov, perspective->aspect_ratio, perspective->znear, perspective->zfar);
+                Transform projection= Perspective(degrees(perspective->yfov), perspective->aspect_ratio, perspective->znear, perspective->zfar);
                 
                 float model_matrix[16];
                 cgltf_node_transform_world(node, model_matrix); // transformation globale
@@ -270,7 +270,7 @@ std::vector<GLTFCamera> read_gltf_camera( const char *filename )
                 Transform view= Inverse(model);                 // view= inverse(model)
                 
                 std::vector<GLTFCamera> cameras;
-                cameras.push_back( { perspective->yfov, perspective->aspect_ratio, perspective->znear, perspective->zfar, view, projection } );
+                cameras.push_back( { degrees(perspective->yfov), perspective->aspect_ratio, perspective->znear, perspective->zfar, view, projection } );
                 return cameras;
             }
         }

@@ -83,7 +83,7 @@ public:
     DrawParam& projection( const Transform& m ) { m_projection= m; return *this; }
 
     //! utilise les transformations view et projection definies par une camera.
-    DrawParam& camera( Orbiter& o ) { m_view= o.view(); m_projection= o.projection(window_width(), window_height(), 45); return *this; }
+    DrawParam& camera( Orbiter& o ) { m_view= o.view(); m_projection= o.projection(); return *this; }
     //! utilise les transformations view et projection definies par une camera. parametres explicites de la projection.
     DrawParam& camera( Orbiter& o, const int width, const int height, const float fov ) { m_view= o.view(); m_projection= o.projection(width, height, fov); return *this; }
     //! eclaire l'objet avec une source ponctuelle, de position p et de couleur c.
@@ -92,7 +92,7 @@ public:
     DrawParam& texture( const GLuint t ) { m_use_texture= true; m_texture= t; return *this; }
     
     //! utilise une texture semi transparente, si l'alpha du texel est plus petit que a, le pixel est transparent. desactive aussi les calculs d'eclairage.
-    DrawParam& alpha_texture( const float a, const GLuint t ) { m_use_alpha_test= (a > 0); m_alpha_min= a; m_use_texture= true; m_texture= t; return *this; }
+    DrawParam& alpha_texture( const GLuint t, const float a= 0.5f ) { m_use_alpha_test= (a > 0); m_alpha_min= a; m_use_texture= true; m_texture= t; return *this; }
 
 // a virer     
     //! utilise une source de lumire pour eclairer l'objet, ou pas si use_light= false.
@@ -141,6 +141,10 @@ protected:
     bool m_debug_texcoords;
 };
 
+
+void draw( Mesh& m, DrawParam& param );
+// \todo void draw( Mesh& m, const Transform& model, DrawParam& param );
+// drawparams = parametres globaux, camera, light, texture, debug, etc...
 
 //! description d'un shader program compile.
 struct PipelineProgram
