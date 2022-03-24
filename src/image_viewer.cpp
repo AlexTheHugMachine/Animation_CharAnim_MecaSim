@@ -116,7 +116,11 @@ struct ImageViewer : public App
         glGenVertexArrays(1, &m_vao);
         glBindVertexArray(m_vao);
         
+#ifdef __EMSCRIPTEN__
+        m_program= read_program( smart_path("data/es2_shaders/tonemap.glsl") );
+#else
         m_program= read_program( smart_path("data/shaders/tonemap.glsl") );
+#endif
         program_print_errors(m_program);
         
         // 

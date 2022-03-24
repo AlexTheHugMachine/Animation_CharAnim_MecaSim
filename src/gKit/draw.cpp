@@ -125,10 +125,18 @@ GLuint DrawParam::create_program( const GLenum primitives, const bool use_texcoo
         definitions.append("#define USE_ALPHATEST\n");
 
     //~ printf("--\n%s", definitions.c_str());
+#ifdef __EMSCRIPTEN__
+    const char *filename= smart_path("data/es3_shaders/mesh.glsl");
+#else
     const char *filename= smart_path("data/shaders/mesh.glsl");
+#endif
     bool use_mesh_color= (primitives == GL_POINTS || primitives == GL_LINES || primitives == GL_LINE_STRIP || primitives == GL_LINE_LOOP);
     if(use_mesh_color) 
+#ifdef __EMSCRIPTEN__
+        filename= smart_path("data/es3_shaders/mesh_color.glsl");
+#else
         filename= smart_path("data/shaders/mesh_color.glsl");
+#endif
     
     PipelineProgram *program= PipelineCache::manager().find(filename, definitions.c_str());
     return program->program;
@@ -136,7 +144,11 @@ GLuint DrawParam::create_program( const GLenum primitives, const bool use_texcoo
 
 GLuint DrawParam::create_debug_normals_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test )
 {
+#ifdef __EMSCRIPTEN__
+    const char *filename= smart_path("data/es3_shaders/normals.glsl");
+#else
     const char *filename= smart_path("data/shaders/normals.glsl");
+#endif
     bool use_mesh_color= (primitives == GL_POINTS || primitives == GL_LINES || primitives == GL_LINE_STRIP || primitives == GL_LINE_LOOP);
     if(use_mesh_color) 
         // pas la peine, les normales ne sont definies que pour les triangles...
@@ -148,7 +160,11 @@ GLuint DrawParam::create_debug_normals_program( const GLenum primitives, const b
 
 GLuint DrawParam::create_debug_texcoords_program( const GLenum primitives, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_light, const bool use_alpha_test )
 {
+#ifdef __EMSCRIPTEN__
+    const char *filename= smart_path("data/es3_shaders/texcoords.glsl");
+#else
     const char *filename= smart_path("data/shaders/texcoords.glsl");
+#endif
     PipelineProgram *program= PipelineCache::manager().find(filename);
     return program->program;
 }

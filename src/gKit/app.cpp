@@ -35,7 +35,16 @@ void App::loop_iteration(void* instance) {
   if(app->update(global_time(), delta_time()) < 0) {
     emscripten_cancel_main_loop() ;
   }
+
+  if(app->prerender() < 0) {
+    emscripten_cancel_main_loop() ;
+  }
+
   if(app->render() < 1) {
+    emscripten_cancel_main_loop() ;
+  }
+
+  if(app->postrender() < 0) {
     emscripten_cancel_main_loop() ;
   }
   SDL_GL_SwapWindow(app->m_window);

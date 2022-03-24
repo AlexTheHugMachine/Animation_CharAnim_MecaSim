@@ -165,8 +165,10 @@ int reload_program( GLuint program, const char *filename, const char *definition
         }
     }
 
+#ifndef __EMSCRIPTEN__
 #ifdef GL_VERSION_4_3
     glObjectLabel(GL_PROGRAM, program, -1, filename);
+#endif
 #endif
 
     // prepare les sources

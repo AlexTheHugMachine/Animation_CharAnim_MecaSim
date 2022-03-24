@@ -17,6 +17,7 @@ int location( const GLuint program, const char *uniform, const int array_size= 0
     // recuperer l'identifiant de l'uniform dans le program
     char error[4096]= { 0 };
     GLint location= glGetUniformLocation(program, uniform);
+#ifndef __EMSCRIPTEN__
     if(location < 0)
     {
     #ifdef GL_VERSION_4_3
@@ -37,6 +38,7 @@ int location( const GLuint program, const char *uniform, const int array_size= 0
         
         return -1; 
     }
+#endif
     
 #ifndef GK_RELEASE
     // verifier que le program est bien en cours d'utilisation, ou utiliser glProgramUniform, mais c'est gl 4
@@ -187,11 +189,13 @@ void program_uniform( const GLuint program, const char *uniform, const std::vect
 
 void program_uniform( const GLuint program, const char *uniform, const Transform& v )
 {
-#ifdef __EMSCRIPTEN__
-    glUniformMatrix4fv( location(program, uniform), 1, GL_FALSE, v.transpose().buffer() );
-#else
-    glUniformMatrix4fv( location(program, uniform), 1, GL_TRUE, v.buffer() );
-#endif
+	//__EMSCRIPTEN__ ? transpose
+    glUniformMatrix4fv( location(program, uniform), 1, GL_TRUE, v.data() );
+}
+
+void program_uniform( const GLuint program, const char *uniform, const std::vector<Transform>& v )
+{
+    glUniformMatrix4fv( location(program, uniform, v.size()), v.size(), GL_TRUE, v[0].data() );
 }
 
 void program_use_texture( const GLuint program, const char *uniform, const int unit, const GLuint texture, const GLuint sampler )

@@ -20,6 +20,8 @@
 #include "emscripten.h"
 #endif
 
+static float aspect= 1;
+
 static int width= 0;
 static int height= 0;
 int window_width( )
@@ -281,8 +283,9 @@ Window create_window( const int w, const int h, const int major, const int minor
     // enregistre le destructeur de sdl
     atexit(SDL_Quit);
 
-    printf("creating window(%d, %d) openGL %d.%d, %d MSAA samples...\n", w, h, major, minor, samples);
     
+#ifndef __EMSCRIPTEN__
+    printf("creating window(%d, %d) openGL %d.%d, %d MSAA samples...\n", w, h, major, minor, samples);
     // configuration openGL
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
@@ -292,6 +295,14 @@ Window create_window( const int w, const int h, const int major, const int minor
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+#else
+    printf("creating window(%d, %d) openGL ES 3.0, default MSAA samples...\n", w, h);
+	  //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    //SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+#endif
+
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     
     if(samples > 1)
@@ -358,26 +369,8 @@ void DEBUGCALLBACK debug_print( GLenum source, GLenum type, unsigned int id, GLe
 //! cree et configure un contexte opengl
 Context create_context( Window window )
 {
-    if(window == NULL)
-        return NULL;
-
-#ifndef __EMSCRIPTEN__
-    // configure la creation du contexte opengl core profile, debug profile
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
-#ifndef GK_RELEASE
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-#endif
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 15);
-#else
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-#endif
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    if(window == nullptr)
+        return nullptr;
 
     Context context= SDL_GL_CreateContext(window);
     if(context == nullptr)
@@ -386,6 +379,7 @@ Context create_context( Window window )
         return nullptr;
     }
     
+#ifndef __EMSCRIPTEN__
     if(SDL_GL_SetSwapInterval(-1) != 0)
         printf("[warning] can't set adaptive vsync...\n");
     
@@ -423,15 +417,15 @@ Context create_context( Window window )
     if(GLEW_ARB_debug_output)
     {
         printf("debug output enabled...\n");
-#ifndef __EMSCRIPTEN__
         glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
         // desactive les messages du compilateur de shaders
         glDebugMessageControlARB(GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
 
         glDebugMessageCallbackARB(debug_print, NULL);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
-#endif
+
     }
+#endif
 #endif
 #endif
 

@@ -48,7 +48,7 @@ Text create_text( )
 #ifndef __EMSCRIPTEN__
     text.program= read_program( smart_path("data/shaders/text.glsl") );
 #else
-    text.program= read_program( smart_path("data/shaders/es2_text.glsl") );
+    text.program= read_program( smart_path("data/es3_shaders/text.glsl") );
 #endif
     program_print_errors(text.program);
 

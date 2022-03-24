@@ -1,10 +1,10 @@
 solution "gKit2light"
     configurations { "debug", "release" }
 
-    platforms { "x64", "x32" }
-if _PREMAKE_VERSION >="5.0" then
-    platforms { "arm64" }
-end
+--     platforms { "x64", "x32" }
+-- if _PREMAKE_VERSION >="5.0" then
+--     platforms { "arm64" }
+-- end
     
     includedirs { ".", "src/gKit" }
     
@@ -30,7 +30,7 @@ end
         end
         
     configuration "linux"
-        buildoptions { "-mtune=native -march=native" }
+        -- buildoptions { "-mtune=native -march=native" }
         buildoptions { "-std=c++11" }
         buildoptions { "-W -Wall -Wextra -Wsign-compare -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable", "-pipe" }
         links { "GLEW", "SDL2", "SDL2_image", "GL" }
@@ -177,11 +177,12 @@ tutos = {
     "tuto_rayons",
     "tuto_englobant",
     "tuto_bvh",
+    "tuto_widgets",
     
 }
 
 for i, name in ipairs(tutos) do
-    project(name)
+    project(name .. ".html")
         language "C++"
         kind "ConsoleApp"
         targetdir "bin"
