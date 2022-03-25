@@ -12,6 +12,8 @@
 #include <string>
 #include <iostream>
 
+#include <SDL2/SDL_image.h>
+
 #include "glcore.h"
 #include "window.h"
 #include "files.h"
@@ -243,7 +245,7 @@ int events( Window window )
 Window create_window( const int w, const int h, const int major, const int minor, const int samples )
 {
     // init sdl
-    if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0)
     {
         printf("[error] SDL_Init() failed:\n%s\n", SDL_GetError());
         return nullptr;
@@ -252,9 +254,10 @@ Window create_window( const int w, const int h, const int major, const int minor
     // enregistre le destructeur de sdl
     atexit(SDL_Quit);
 
+    // configuration openGL
+#ifndef GK_OPENGLES
     printf("creating window(%d, %d) openGL %d.%d, %d MSAA samples...\n", w, h, major, minor, samples);
     
-    // configuration openGL
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
 #ifndef GK_RELEASE
@@ -271,6 +274,15 @@ Window create_window( const int w, const int h, const int major, const int minor
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples);
     }
     
+#else
+    printf("creating window(%d, %d) openGL ES 3.0...\n", w, h);
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+#endif
+    
     // creer la fenetre
     Window window= SDL_CreateWindow("gKit",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h,
@@ -281,6 +293,17 @@ Window create_window( const int w, const int h, const int major, const int minor
         return nullptr;
     }
 
+    // icone
+    {
+        //~ SDL_Surface *icon= IMG_Load( smart_path("data/surprise.png") );
+        SDL_Surface *icon= IMG_Load( smart_path("data/smirk.png") );
+        if(icon)
+        {
+            SDL_SetWindowIcon(window, icon);
+            SDL_FreeSurface(icon);
+        }
+    }
+    
     // recupere l'etat du clavier
     int keys;
     const unsigned char *state= SDL_GetKeyboardState(&keys);
