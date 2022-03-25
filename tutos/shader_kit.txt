@@ -1,45 +1,121 @@
 
 /*! \addtogroup shader_kit prototyper un shader program
 
-autre solution, \ref shader_kit.cpp peut être utilisé comme compilateur de shader, il affiche les erreurs de manière lisible, et permet de recharger et de recompiler le shader 
-en appuyant sur la touche R. ça permet de corriger interactivement le source du shader en le modifiant dans un éditeur.
+autre solution pour ecrire et tester facilement des shaders : \ref shader_kit.cpp, c'est un petit programme qui compile les shaders, affiche les erreurs de compilation de 
+manière assez lisible, et permet de dessiner un seul triangle ou un mesh. le gros interet de shader_kit est qu'il recharge et recompile les shaders automatiquement 
+lorsqu'ils sont modifiés, ce qui permet de corriger interactivement le source du shader en le modifiant dans un éditeur (ouvert à coté) sans avoir besoin de fermer 
+l'application et de la recharger.
 
-shader_kit est un 'bac à sable' permettant d'écrire et de tester des shaders assez facilement. il permet aussi de charger 
-un objet .obj, des textures et permet de déplacer la camera à la souris. 
+# comment ça marche ?
+
+shader_kit est un 'bac à sable' permettant d'écrire et de tester des shaders assez facilement. il permet aussi de charger un objet `.obj / wavefront`, des textures et 
+gère une camera que l'on peut contrôler à la souris (cf AppCamera)
 
 comme il n'est pas possible d'écrire une solution totalement générique, shader_kit à des limites :
-	- 1 seul shader program, écrit dans un seul fichier .glsl, avec les \#ifdef VERTEX_SHADER, etc, voir plus haut,
-	- il n'est pas obligatoire de charger un objet, dans ce cas, il fonctionne comme [shadertoy.com](https://www.shadertoy.com/),
-	- charge 1 seul objet, les attributs position, normal, etc, doivent etre numérotés dans le vertex shader :
-		\code
-			layout(location= 0) in vec3 position;
-			layout(location= 1) in vec2 texcoord;
-			layout(location= 2) in vec3 normal;
-			layout(location= 3) in vec4 color;		
-		\endcode
-	- plusieurs textures 2d rgba8, jusqu'à la limite d'openGL, 16 ou 32 selon les machines :
-		- uniform sampler2D texture0;
-		- uniform sampler2D texture1; etc, en fonction du nombre d'images chargées,
-	
-il définit également les valeurs de plusieurs uniforms :
-	- uniform float time; le temps en milli secondes,
-	- uniform vec3 mouse; la position x, y de la souris dans la fenêtre, et l'état du bouton gauche, mouse.z (!= 0 enfoncé, == 0 pas enfoncé),
-	- uniform vec3 motion; le déplacement x, y de la souris, et l'état du bouton gauche, motion.z (!= 0 enfoncé, == 0 pas enfoncé),
-	- uniform vec2 viewport; les dimensions de l'image / de la fenêtre,
-	- ainsi que les transformations standards et leurs inverses :
-		- uniform mat4 mvpMatrix, mvpInvMatrix; la transformation standard pour passer du repère local au repère projectif,
-		- uniform mat4 mvMatrix, mvInvMatrix; la composition de model et view, repère local vers le repère caméra,
-		- uniform mat4 normalMatrix; même transformation que mv, mais pour les normales des sommets,
-		- uniform mat4 modelMatrix, modelInvMatrix;
-		- uniform mat4 viewMatrix, viewInvMatrix;
-		- uniform mat4 projectionMatrix, projectionInvMatrix;
-		- uniform mat4 viewportMatrix, viewportInvMatrix;
+        - 1 seul shader program, écrit dans un seul fichier .glsl, les shaders sont séparés par des `#ifdef VERTEX_SHADER`,  `#ifdef FRAGMENT_SHADER`, etc,
+        - il n'est pas obligatoire de charger un objet, dans ce cas, il fonctionne comme [shadertoy.com](https://www.shadertoy.com/), et ne dessine qu'un triangle / 3 sommets,
+        - si un objet est chargé, les attributs de sommets : position, normal, etc, doivent être déclarés comme ça pour être accessibles par le shader :
+                \code
+                        layout(location= 0) in vec3 position;
+                        layout(location= 1) in vec2 texcoord;
+                        layout(location= 2) in vec3 normal;
+                        layout(location= 3) in vec4 color;		
+                \endcode
+        - plusieurs textures 2d rgba8, jusqu'à la limite d'openGL, 16 ou 32 selon les machines :
+                \code
+                        uniform sampler2D texture0;
+                        uniform sampler2D texture1;
+                        ...
+                        uniform sampler2D texture7;
+                \endcode
+                etc, en fonction du nombre d'images chargées,
+        
+        - il définit également les valeurs de plusieurs uniforms :
+                \code
+                        uniform float time; 	// le temps en milli secondes,
+                        uniform vec3 mouse; 	// la position x, y de la souris dans la fenêtre, 
+                                                // et l'état du bouton gauche, mouse.z (!= 0 enfoncé, == 0 pas enfoncé),
+                        uniform vec3 motion; 	// le déplacement x, y de la souris, et l'état du bouton gauche, 
+                                                // motion.z (!= 0 enfoncé, == 0 pas enfoncé),
+                        uniform vec2 viewport; 	// les dimensions de l'image / de la fenêtre,
+                \endcode
+        - ainsi que les transformations standards et leurs inverses :
+                \code
+                // la transformation standard pour passer du repère objet au repère projectif, et son inverse
+                        uniform mat4 mvpMatrix, mvpInvMatrix;	
+                // la composition de model et view, transformation du repère objet vers le repère caméra, 
+                        uniform mat4 mvMatrix, mvInvMatrix; 	
+                // même transformation que mv, mais pour les normales des sommets,
+                        uniform mat4 normalMatrix; 		
+                // transformations standards et leurs inverses : 
+                        uniform mat4 modelMatrix, modelInvMatrix;               // objet vers scene
+                        uniform mat4 viewMatrix, viewInvMatrix;                 // scene vers camera
+                        uniform mat4 projectionMatrix, projectionInvMatrix;     // camera vers projectif
+                        uniform mat4 viewportMatrix, viewportInvMatrix;         // projectif vers image
+                \endcode
 
-malgré ces limites, on peut écrire des choses interressantes :
-	- un shader qui éclaire un objet texturé :
-		\image html mesh_kit.png
-	- un lancer de rayons classique :
-		\image html trace_kit.png
-	- un lancer de rayons sur champ de distance :
-		\image html march_kit.png
+# et alors ?
+
+commencez par compiler shader_kit, si ce n'est pas deja fait : 
+\code
+make shader_kit -j8
+\endcode
+
+enregistrez un shader de base dans un ficher `shader.glsl` :
+\code
+#version 330
+
+#ifdef VERTEX_SHADER
+// doit calculer la position d'un sommet dans le repere projectif
+// indice du sommet : gl_VertexID
+void main( )
+{
+        gl_Position= { ... };                   // a completer
+}
+#endif
+
+#ifdef FRAGMENT_SHADER
+// doit calculer la couleur du fragment
+void main( )
+{
+        gl_FragColor= vec4(1, 1, 1, 1);       // blanc opaque
+}
+#endif
+\endcode
+
+exécutez shader_kit avec le nom du fichier en paramètre :
+\code
+bin/shader_kit shader.glsl
+\endcode
+
+le vertex shader ne compile pas (pour l'instant), shader_kit va afficher les erreurs de compilation :
+<IMG SRC="shaderkit_1.png" width="100%"> 
+
+après quelques modifications, on peut dessiner un triangle en initialisant un tableau de positions pour les 3 sommets : 
+<IMG SRC="shaderkit_2.png" width="100%"> 
+
+shader_kit recharge et recompile le shader tout seul, lorsqu'il est modifié et enregistré par l'éditeur. pratique non ? vous pouvez aussi appuyer sur 
+la touche `R` pour forcer la compilation du shader...
+
+# mouarf, il sait dessiner qu'un seul triangle !!
+
+ben non, on peut aussi charger un fichier `.obj / wavefront` et des images :
+\code
+bin/shader_kit shader.glsl data/bigguy.obj data/grid.png
+\endcode
+
+<IMG SRC="mesh_kit.png" width="100%"> 
+
+mais en ne dessinant qu'un seul triangle qui couvre tous les pixels de l'image... on peut quand meme faire des choses assez rigolotes avec des formes procédurales, 
+[exemple par iq/quillez](https://www.shadertoy.com/view/3lsSzf) et la [video version longue sur youtube](https://www.youtube.com/watch?v=Cfe5UQ-1L9Q) qui 
+explique comment il programme ce genre de choses... 
+
+on peut aussi faire du lancer de rayons classique :
+\code
+bin/shader_kit trace.glsl
+\endcode
+
+<IMG SRC="trace_kit.png" width="100%"> 
+
+
 */
