@@ -1,5 +1,5 @@
 
-/*! \addtogroup debut Première application avec gKit
+/*! \addtogroup debut première application avec gKit
 
 Une application openGL est composée de plusieurs éléments :
     - une fenêtre pour voir ce que l'on dessine,

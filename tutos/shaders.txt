@@ -1,0 +1,211 @@
+
+/*!  \addtogroup shaders premiers shaders
+
+maintenant que construire ou charger des objets et les afficher est plus clair, cf \ref debut, que peut-on faire de plus ?
+
+écrire des shaders ! 
+
+# comment ça marche ?
+
+un shader est une fonction assez classique exécutée par les processeurs de la carte graphique, il y a 2 types de shaders :
+	- vertex shader : applique les transformations aux sommets des objets pour les dessiner,
+	- fragment shader : calcule les couleurs des pixels pour dessiner la forme des objets dans l'image.
+
+les shaders d'openGL s'écrivent en GLSL, c'est un langage très proche du C/C++ avec quelques différences quand meme, et une librairie de fonctions standards
+pour faire des calculs sur des points, des matrices, des vecteurs, des couleurs, etc...
+
+_lorsque l'application dessine un objet, que se passe-t-il ? ou sont les shaders ?_
+
+pour l'instant, ils sont cachés... pour simplifier la prise en main, gKit construit un shader en fonction du contenu du mesh qu'il dessine.
+mais la seule chose à retenir est que dessiner \f$ n \f$ triangles, provoque l'exécution de \f$ n*3 \f$ vertex shaders qui transforment les sommets de l'objet vers le repère projectif de la camera. 
+ensuite la carte graphique trouve sur quels pixels dessiner chaque triangle. un fragment shader est exécuté pour calculer la couleur de chacun de ces pixels (mais on ne connait pas le nombre de 
+fragment shaders exécutés...)
+
+chaque shader a besoin de paramètres pour s'exécuter (les matrices de transformation, par exemple, ou une couleur de base), comme n'importe quelle fonction de l'application. une grosse 
+difference existe par contre : ce n'est pas l'application qui appelle / exécute directement la fonction, c'est le pipeline graphique / la carte graphique.  _pourquoi ?_ tout ça est fait en parallèle 
+automatiquement sur plusieurs processeurs, et l'application ne controle pas ce mécanisme.
+
+du coup, on ne peut pas écrire `vertex_shader( Translation(0, 2, 0) );` pour déplacer tous les sommets le long de l'axe Y... vu que l'appel de la fonction n'est pas immédiat, l'application affecte 
+une valeur à chaque paramètre (avec un mécanisme particulier), et enfin l'application utilise glDraw() pour dessiner les triangles. au final, c'est le pipeline graphique qui exécute les shaders 
+et leur passe les paramètres.
+
+
+_pour les curieux :_ les shaders par défaut de gKit sont construits par DrawParam::create_program() dans draw.cpp.
+
+# à quoi ca ressemble ?
+
+les shaders s'écrivent en GLSL, cf \ref glsl, et ils utilisent une convention particulière : la fonction se déclare `void main( )` et les paramètres se déclarent comme des variables globales, par exemple :
+\code
+#version 330
+
+uniform float param;
+
+void main( )
+{
+	// utiliser le parametre 
+	{ ... }
+}
+
+// remarque : il existe ~10 versions de GLSL... il faut preciser la version du langage utilisée par le shader
+// celle d'openGL 3.3 est la version 330...
+\endcode
+
+les résultats (obligatoires...) calculés par les shaders utilisent aussi une convention particulière, ce sont aussi des variables globales déjà déclarées, `vec4 gl_Position` pour un vertex shader,
+et `vec4 gl_FragColor` pour un fragment shader.
+
+autre difference, il y a 2 types de paramètres, les `uniform` et les autres, que gKit affecte automatiquement. les `uniform` sont les paramètres classiques.
+par exemple, on peut déclarer une matrice de transformation 4x4 avec le type `mat4` utilisé dans un vertex shader :
+\code
+#version 330
+
+uniform mat4 mvp;	// parametre du vertex shader, transformation vers le repere projectif de la camera
+
+void main( )
+{
+	gl_Position= mvp * position_du_sommet;
+}
+\endcode
+
+pour un fragment shader, on peut ecrire :
+\code
+#version 330
+
+void main( )
+{
+	gl_FragColor= vec4(1, 1, 1, 1);	// blanc opaque
+}
+\endcode
+
+# par ou on commence ?
+
+par lire \ref glsl qui fournit plus d'informations sur GLSL et les paramètres des shaders.
+
+ensuite, le plus simple est d'utiliser [shader_kit](\ref shader_kit) pour écrire et tester les premiers shaders. lorsqu'ils fonctionnent on peut les intégrer à une application en suivant les explications 
+de \ref tuto_mesh_shader.
+
+# quelques exemples avec shader_kit...
+
+## dessiner un triangle rectangle en haut à droite de la fenetre :
+
+\code
+#version 330
+
+#ifdef VERTEX_SHADER
+void main( )
+{
+	vec4 positions[3]= vec4[3]( vec4(0, 0, 0, 1), vec4(1, 0, 0, 1), vec4(0, 1, 0, 1) );
+	gl_Position= positions[gl_VertexID];
+}
+#endif
+
+#ifdef FRAGMENT_SHADER
+void main( )
+{
+	gl_FragColor= vec4(1, 1, 1, 1);
+}
+#endif
+
+// executer avec 
+bin/shader_kit shader.glsl
+\endcode
+
+
+les coordonnées des sommets visibles / dessinés sont entre -1 et 1 sur x, y, z (dans le repere projectif de la camera).
+shader_kit dessine 1 triangle, donc 3 vertex shader sont exécutés pour transformer les sommets d'indice 0, 1, et 2. l'indice du sommet pour lequel le vertex shader s'execute est dans le 
+paramètre (initialisé par le pipeline graphique) `gl_VertexID`.
+
+## et avec des coordonnées en pixels ?
+
+le vertex shader doit calculer des coordonnées dans le repère projectif de la camera. si on veut décrire la position des sommets d'un triangle avec les coordonnées des pixels de l'image,
+il faut transformer ces coordonnées du repère image vers le repère projectif... avec l'inverse de la matrice viewport.
+
+\code
+#version 330
+
+#ifdef VERTEX_SHADER
+uniform mat4 viewportInvMatrix;
+
+void main( )
+{
+	vec4 positions[3]= vec4[3]( vec4(0, 0, 0, 1), vec4(400, 0, 0, 1), vec4(0, 400, 0, 1) );
+	gl_Position= viewportInvMatrix * positions[gl_VertexID];
+}
+#endif
+
+#ifdef FRAGMENT_SHADER
+void main( )
+{
+	gl_FragColor= vec4(1, 1, 1, 1);
+}
+#endif
+
+// executer avec 
+bin/shader_kit shader.glsl
+\endcode
+
+## et avec une animation ?
+
+il suffit d'utiliser `uniform float time;` qui donne le temps écoulé depuis le démarrage de shader_kit en millisecondes.
+on peut par exemple deplacer les sommets du triangle en fonction du temps... mais pas trop vite...
+
+\code
+#version 330
+uniform float time;
+
+#ifdef VERTEX_SHADER
+void main( )
+{
+	vec2 positions[3]= vec2[3]( vec2(0, 0), vec2(1, 0), vec2(0, 1) );	// coordonnées en 2d
+	
+	// interpole entre 2 points o et e en fonction du temps
+	vec2 o= vec2(-1, -1);
+	vec2 e= vec2(1, 1);
+        
+	float t= mod(time / 1000, 1);		// t entre 0 et 1...
+	vec2 p= (1 - t) * o + t * e;
+	gl_Position= vec4(p + positions[gl_VertexID], 0, 1);
+	// vec4( p, 0, 1 ) ?? 
+	// vec4( p.x, p.y, 0, 1 ), idem mais plus long à écrire... 
+}
+#endif
+
+#ifdef FRAGMENT_SHADER
+void main( )
+{
+	gl_FragColor= vec4(1, 1, 1, 1);
+}
+#endif
+
+// executer avec 
+bin/shader_kit shader.glsl
+\endcode
+
+## et avec un mesh et une camera ?
+
+il faut déclarer les attributs de sommets en respectant la convention de [shader kit](\ref shader_kit) / Mesh et récupérer la matrice de transformation entre le repère objet 
+et le repère projectif, toujours en fonction des paramètres gérés par shader_kit, cf `uniform mat4 mvpMatrix`.
+
+\code
+#version 330
+#ifdef VERTEX_SHADER
+layout(location= 0) in vec3 position;
+uniform mat4 mvpMatrix;
+
+void main( )
+{
+	gl_Position= mvpMatrix * vec4(position, 1);
+}
+#endif
+
+#ifdef FRAGMENT_SHADER
+void main( )
+{
+	gl_FragColor= vec4(1, 1, 1, 1);
+}
+#endif
+
+// executer avec 
+bin/shader_kit shader.glsl data/bigguy.obj
+\endcode
+
+*/

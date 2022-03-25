@@ -8,7 +8,7 @@ pour l'utiliser, il faut installer quelques dépendances, selon le système que 
 	
 ensuite, c'est parti ! comment écrire une première application gKit : 
 	- \ref debut
-	
+	- \ref shaders
 
 gKit2light est composé de plusieurs utilitaires :
     - window.h fournit un squelette d'application, app.h fournit une classe application de base,
