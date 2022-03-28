@@ -91,7 +91,7 @@ bin/shader_kit shader.glsl
 le vertex shader ne compile pas (pour l'instant), shader_kit va afficher les erreurs de compilation :
 <IMG SRC="shaderkit_1.png" width="100%"> 
 
-après quelques modifications, on peut dessiner un triangle en initialisant un tableau de positions pour les 3 sommets : 
+après quelques modifications, __sans fermer la fenetre de shader_kit__, on peut dessiner un triangle en initialisant un tableau de positions pour les 3 sommets : 
 <IMG SRC="shaderkit_2.png" width="100%"> 
 
 shader_kit recharge et recompile le shader tout seul, lorsqu'il est modifié et enregistré par l'éditeur. pratique non ? vous pouvez aussi appuyer sur 

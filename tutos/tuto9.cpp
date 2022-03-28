@@ -10,24 +10,26 @@
 #include "uniforms.h"
 #include "draw.h"
 
-#include "app.h"        // classe Application a deriver
+#include "app_camera.h"        // classe Application a deriver
 
 
-class TP : public App
+class TP : public AppCamera
 {
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    TP( ) : App(1024, 640) {}
+    TP( ) : AppCamera(1024, 640) {}
     
     int init( )
     {
+        // charge un obet
         m_objet= read_mesh("data/cube.obj");
         
+        // parametre la camera pour observer l'objet
         Point pmin, pmax;
         m_objet.bounds(pmin, pmax);
-        m_camera.lookat(pmin, pmax);
+        camera().lookat(pmin, pmax);
         
-        // etape 1 : creer le shader program
+        // cree le shader program
         m_program= read_program("tutos/tuto9_color.glsl");
         program_print_errors(m_program);
         
@@ -44,8 +46,9 @@ public:
     // destruction des objets de l'application
     int quit( )
     {
-        // etape 3 : detruire le shader program
+        // detruire le shader program
         release_program(m_program);
+        // et l'objet...
         m_objet.release();
         return 0;
     }
@@ -55,42 +58,25 @@ public:
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        // deplace la camera
-        int mx, my;
-        unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
-        if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
-            m_camera.rotation(mx, my);
-        else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
-            m_camera.move(mx);
-        else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
-            m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
-        
-        // etape 2 : dessiner m_objet avec le shader program
         // configurer le pipeline 
         glUseProgram(m_program);
         
         // configurer le shader program
         // . recuperer les transformations
-        Transform model= RotationX(global_time() / 20);
-        Transform view= m_camera.view();
-        Transform projection= m_camera.projection(window_width(), window_height(), 45);
+        Transform model= RotationX(global_time() / 20);         // fait tourner l'objet sur lui meme en fonction du temps
+        Transform view= camera().view();
+        Transform projection= camera().projection();
         
         // . composer les transformations : model, view et projection
         Transform mvp= projection * view * model;
         
         // . parametrer le shader program :
-        //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+        //   . transformation : la matrice declaree dans le vertex shader s'appelle 'mvpMatrix'
         program_uniform(m_program, "mvpMatrix", mvp);
-        //   . ou, directement en utilisant openGL :
-        //   int location= glGetUniformLocation(program, "mvpMatrix");
-        //   glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
         
-        // . parametres "supplementaires" :
-        //   . couleur des pixels, cf la declaration 'uniform vec4 color;' dans le fragment shader
-        program_uniform(m_program, "color", vec4(1, 1, 0, 1));
-        //   . ou, directement en utilisant openGL :
-        //   int location= glGetUniformLocation(program, "color");
-        //   glUniform4f(location, 1, 1, 0, 1);
+        // . parametre "supplementaire" :
+        //   . couleur des pixels, la couleur declaree dans le fragment shader s'appelle 'color'
+        program_uniform(m_program, "color", Color(1, 1, 0, 1));
         
         // go !
         // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
@@ -101,10 +87,8 @@ public:
     }
 
 protected:
-    Transform m_model;
     Mesh m_objet;
-    Orbiter m_camera;
-    GLuint m_texture;
+    Transform m_model;
     GLuint m_program;
 };
 

@@ -92,21 +92,20 @@ public:
             Transform mvp= projection * mv;
             
             // . parametrer le shader program :
-            //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+            //   . transformations : la matrice declaree dans le vertex shader s'appelle mvpMatrix
             program_uniform(m_program, "mvpMatrix", mvp);
+            // et mvMatrix 
             program_uniform(m_program, "mvMatrix", mv);
             
-            //   . ou, directement en utilisant openGL :
-            //   int location= glGetUniformLocation(program, "mvpMatrix");
-            //   glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
-            
             // afficher chaque groupe
+            const Materials& materials= m_objet.materials();
             for(unsigned i= 0; i < m_groups.size(); i++)
             {
-                const Material& material= m_objet.materials().material(m_groups[i].index);
+                // recuperer la couleur de base de la matiere
+                const Material& material= materials(m_groups[i].index);
                 
                 // . parametres "supplementaires" :
-                //   . couleur diffuse de la matiere du groupe de triangle
+                //   . couleur de la matiere du groupe de triangle
                 program_uniform(m_program, "material_color", material.diffuse);
                 
                 //   . c'est aussi le bon moment pour changer de texture, par exemple...
