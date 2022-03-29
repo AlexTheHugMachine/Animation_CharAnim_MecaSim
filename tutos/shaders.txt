@@ -8,8 +8,8 @@ maintenant que construire ou charger des objets et les afficher est plus clair, 
 # comment ça marche ?
 
 un shader est une fonction assez classique exécutée par les processeurs de la carte graphique, il y a 2 types de shaders :
-	- vertex shader : applique les transformations aux sommets des objets pour les dessiner,
-	- fragment shader : calcule les couleurs des pixels pour dessiner la forme des objets dans l'image.
+    - vertex shader : applique les transformations aux sommets des objets pour les dessiner,
+    - fragment shader : calcule les couleurs des pixels pour dessiner la forme des objets dans l'image.
 
 les shaders d'openGL s'écrivent en GLSL, c'est un langage très proche du C/C++ avec quelques différences quand meme, et une librairie de fonctions standards
 pour faire des calculs sur des points, des matrices, des vecteurs, des couleurs, etc...
@@ -27,6 +27,10 @@ le repère projectif de la camera. ensuite, la carte graphique détermine sur qu
 couleur de chacun de ces pixels (mais on ne connait pas le nombre de  fragment shaders exécutés à l'avance...)
 
 _rappel :_ la surface des objets est triangulée pour être dessinée par la carte graphique...
+
+_fragment ou pixel ?_ les pixels sont les éléments de l'image et les fragments sont les morceaux des triangles qui couvrent / remplissent un pixel. un fragment est
+un bout de geometrie avec toutes les informations associées, normale, couleur, matiere, etc... et plusieurs fragments peuvent se projetter sur le meme pixel, le fragment 
+le plus proche de la camera sera le seul visible dans l'image à la fin du dessin / calcul.
 
 chaque shader a besoin de paramètres pour s'exécuter (les matrices de transformation, par exemple, ou une couleur de base), comme n'importe quelle fonction de 
 l'application. une grosse difference existe par contre : ce n'est pas l'application qui appelle / exécute directement la fonction, c'est le pipeline graphique / la carte 
@@ -50,8 +54,8 @@ uniform float param;
 
 void main( )
 {
-	// utiliser le parametre 
-	{ ... }
+    // utiliser le parametre 
+    { ... }
 }
 
 // remarque : il existe ~10 versions de GLSL... il faut preciser la version du langage utilisée par le shader
@@ -74,7 +78,7 @@ uniform mat4 mvp;	// parametre du vertex shader, transformation vers le repere p
 
 void main( )
 {
-	gl_Position= mvp * position_du_sommet;
+    gl_Position= mvp * position_du_sommet;
 }
 \endcode
 
@@ -85,9 +89,11 @@ pour un fragment shader, on peut ecrire :
 uniform vec4 color;	// parametre du fragment shader, affecte par l'application
 void main( )
 {
-	gl_FragColor= color;
+    gl_FragColor= color;
 }
 \endcode
+
+il faut ensuite compiler ces 2 shaders et les linker pour obtenir un shader program utilisable pour dessiner des objets.
 
 # par ou on commence ?
 
@@ -100,6 +106,8 @@ de \ref tuto_mesh_shader.
 
 # quelques exemples avec shader_kit...
 
+_si ce n'est pas déjà fait,_ lisez comment utiliser [shader_kit](\ref shader_kit).
+
 ## dessiner un triangle rectangle en haut à droite de la fenetre :
 
 \code
@@ -108,15 +116,15 @@ de \ref tuto_mesh_shader.
 #ifdef VERTEX_SHADER
 void main( )
 {
-	vec4 positions[3]= vec4[3]( vec4(0, 0, 0, 1), vec4(1, 0, 0, 1), vec4(0, 1, 0, 1) );
-	gl_Position= positions[gl_VertexID];
+    vec4 positions[3]= vec4[3]( vec4(0, 0, 0, 1), vec4(1, 0, 0, 1), vec4(0, 1, 0, 1) );
+    gl_Position= positions[gl_VertexID];
 }
 #endif
 
 #ifdef FRAGMENT_SHADER
 void main( )
 {
-	gl_FragColor= vec4(1, 1, 1, 1);
+    gl_FragColor= vec4(1, 1, 1, 1);
 }
 #endif
 
@@ -128,11 +136,25 @@ les coordonnées des sommets visibles / dessinés sont entre -1 et 1 sur x, y, z
 shader_kit dessine 1 triangle, donc 3 vertex shader sont exécutés pour transformer les sommets d'indice 0, 1, et 2. l'indice du sommet pour lequel le vertex shader s'execute est dans le 
 paramètre (initialisé par le pipeline graphique) `gl_VertexID`.
 
+<IMG SRC="simple_04.png" width="100%">
+
+__et sans shader_kit ?__ comme il n'y a pas de (coordonnées de) sommets à stocker dans l'application (le shader produit les sommets tout seul), on ne peut pas utiliser Mesh et 
+Mesh::draw(), mais on peut bien sur utiliser directement une fonction `draw()` d'openGL. et comme ces shaders n'ont pas de paramètres non plus, il suffit de dessiner un 
+triangle / 3 sommets pour que le pipeline graphique exécute les shaders.
+
+\code
+init( ): 
+    program= read_program("shader.glsl");
+    
+render( ):
+    glUseProgram(program);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+\endcode
+
 ## et avec des coordonnées en pixels ?
 
 le vertex shader doit produire des coordonnées dans le repère projectif de la camera. si on veut décrire la position des sommets d'un triangle avec les coordonnées des pixels de l'image,
 il faut transformer ces coordonnées du repère image vers le repère projectif... avec l'inverse de la matrice viewport. ce parametre `mat4 viewportInvMatrix` est affecte par shader_kit.
-
 
 \code
 #version 330
@@ -142,21 +164,39 @@ uniform mat4 viewportInvMatrix;
 
 void main( )
 {
-	vec4 positions[3]= vec4[3]( vec4(0, 0, 0, 1), vec4(400, 0, 0, 1), vec4(0, 400, 0, 1) );
-	gl_Position= viewportInvMatrix * positions[gl_VertexID];
+    vec4 positions[3]= vec4[3]( vec4(0, 0, 0, 1), vec4(400, 0, 0, 1), vec4(0, 400, 0, 1) );
+    gl_Position= viewportInvMatrix * positions[gl_VertexID];
 }
 #endif
 
 #ifdef FRAGMENT_SHADER
 void main( )
 {
-	gl_FragColor= vec4(1, 1, 1, 1);
+    gl_FragColor= vec4(1, 1, 1, 1);
 }
 #endif
 
 // executer avec 
 bin/shader_kit shader.glsl
 \endcode
+
+<IMG SRC="simple_03.png" width="100%">
+
+__et sans shader_kit ?__ cf l'exemple précédent. mais dans ce cas, il faut aussi affecter une valeur au paramètre `mat4 viewportInvMatrix` avant l'appel de `draw()`: 
+\code
+init( ): 
+    program= read_program("shader.glsl");
+    
+render( ):
+    Transform viewport= Viewport(window_width(), window_height());	// passage repere projectif vers image
+    Transform viewport_inv= Inverse(viewport);			            // inverse
+
+    glUseProgram(program);
+    program_uniform(program, "viewportInvMatrix", viewport_inv);     // affectation du parametre
+    
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+\endcode
+
 
 ## et avec une animation ?
 
@@ -170,30 +210,45 @@ uniform float time;
 #ifdef VERTEX_SHADER
 void main( )
 {
-	vec2 positions[3]= vec2[3]( vec2(0, 0), vec2(1, 0), vec2(0, 1) );	// coordonnées en 2d
-	
-	// interpole entre 2 points o et e en fonction du temps
-	vec2 o= vec2(-1, -1);
-	vec2 e= vec2(1, 1);
+    vec2 positions[3]= vec2[3]( vec2(0, 0), vec2(1, 0), vec2(0, 1) );	// coordonnées en 2d
+    
+    // interpole entre 2 points o et e en fonction du temps
+    vec2 o= vec2(-1, -1);
+    vec2 e= vec2(1, 1);
         
-	float t= mod(time / 1000, 1);		// t entre 0 et 1...
-	vec2 p= (1 - t) * o + t * e;
-	gl_Position= vec4(p + positions[gl_VertexID], 0, 1);
-	// vec4( p, 0, 1 ) ?? 
-	// vec4( p.x, p.y, 0, 1 ), idem mais plus long à écrire... 
+    float t= mod(time / 1000, 1);		// t entre 0 et 1...
+    vec2 p= (1 - t) * o + t * e;
+    gl_Position= vec4(p + positions[gl_VertexID], 0, 1);
+    // vec4( p, 0, 1 ) ?? 
+    // vec4( p.x, p.y, 0, 1 ), idem mais plus long à écrire... 
 }
 #endif
 
 #ifdef FRAGMENT_SHADER
 void main( )
 {
-	gl_FragColor= vec4(1, 1, 1, 1);
+    gl_FragColor= vec4(1, 1, 1, 1);
 }
 #endif
 
 // executer avec 
 bin/shader_kit shader.glsl
 \endcode
+
+<IMG SRC="simple_02.png" width="100%">
+
+__et sans shader_kit ?__ cf l'exemple précédent. mais dans ce cas, il faut aussi affecter une valeur au paramètre `float time` avant l'appel de `draw()`: 
+\code
+init( ): 
+    program= read_program("shader.glsl");
+    
+render( ):
+    glUseProgram(program);
+    program_uniform(program, "time", float(global_time()));     // affectation du parametre
+    
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+\endcode
+
 
 ## et avec un mesh et une camera ?
 
@@ -208,22 +263,98 @@ uniform mat4 mvpMatrix;
 
 void main( )
 {
-	gl_Position= mvpMatrix * vec4(position, 1);
+    gl_Position= mvpMatrix * vec4(position, 1);
 }
 #endif
 
 #ifdef FRAGMENT_SHADER
 void main( )
 {
-	gl_FragColor= vec4(1, 1, 1, 1);
+    gl_FragColor= vec4(1, 1, 1, 1);
 }
 #endif
 
 // executer avec 
-bin/shader_kit shader.glsl data/bigguy.obj
+bin/shader_kit shader.glsl data/robot.obj
 \endcode
 
-## et avec des couleurs différentes ?
+<IMG SRC="simple_05.png" width="100%">
+
+__et sans shader_kit ?__ dans ce cas, il y a bien des coordonnées de sommets à stocker, on va pouvoir utiliser Mesh comme prévu.
+quels sont les paramètres des shaders ? 
+    - `in vec3 position` : coordonnées des sommets, géré par Mesh::draw(),
+    - `uniform mat4 mvpMatrix` : composition des transformations standard, cf  \ref tuto_mesh_shader pour les explications
+
+\code
+init( ):
+    program= read_program("shader.glsl");
+    mesh= read_mesh("mesh.obj");
+    
+render( ):
+    // transformations
+    Transform model= { ... };
+    Transform mvp= camera().projection() * camera().view() * model;
+    
+    glUseProgram(program);
+    program_uniform(program, "mvpMatrix", mvp);
+    
+    mesh.draw(program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false, 
+        /* use material index */ false);
+\endcode
+
+
+## et avec des couleurs ?
+
+les shaders précédents donnent la même couleur à tous les pixels, ce qui permet de dessiner une forme simple mais devient vite très limité lorsque l'on charge un objet 3d...
+
+en reprenant le premier exemple, rien n'empêche d'associer une couleur à chaque sommet du triangle... mais le vertex shader ne peut pas écrire de couleur dans un pixel, 
+c'est le rôle du fragment shader. il faut donc transmettre la couleur au fragment shader en déclarant une sortie dans le vertex shader, cf `out vec3 vertex_color;`
+et l'entrée associée dans le fragment shader, cf `in vec3 vertex_color;`. ce paramètre s'appelle un _varying_, cette valeur n'existe que pendant l'exécution du pipeline graphique, 
+elle n'est pas accessible à l'application...
+
+\code
+#version 330
+
+#ifdef VERTEX_SHADER
+out vec3 vertex_color;
+
+void main( )
+{
+    vec4 positions[3]= vec4[3]( vec4(-0.5, -0.5, 0, 1), vec4(0.5, -0.5, 0, 1), vec4(0, 0.5, 0, 1) );
+    vec3 colors[3]= vec3[3]( vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1) );
+    
+    gl_Position= positions[gl_VertexID];
+    vertex_color= colors[gl_VertexID];
+}
+#endif
+
+#ifdef FRAGMENT_SHADER
+in vec3 vertex_color;
+void main( )
+{
+    gl_FragColor= vec4(vertex_color, 1);
+}
+#endif
+\endcode
+
+<IMG SRC="simple_01.png" width="100%">
+
+ce résultat est quand même un peu surprenant, non ? pourquoi la couleur est-elle interpolée entre les sommets ? chaque fragment recoit un mélange de la couleur des 
+3 sommets (le 1er sommet est rouge, le second vert et le dernier bleu...)
+
+ce mécanisme d'interpolation des varyings, des sorties du vertex shader, fait parti du fonctionnement du pipeline graphique. 
+
+__et sans shader_kit ?__ comme dans le tout premier exemple...
+\code
+init( ): 
+    program= read_program("shader.glsl");
+    
+render( ):
+    glUseProgram(program);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+\endcode
+
+\endcode
 
 
 */

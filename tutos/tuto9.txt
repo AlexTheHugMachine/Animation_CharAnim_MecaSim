@@ -25,9 +25,13 @@ program_print_errors(program);
 # configurer un shader program
 
 les shaders sont des fonctions comme les autres, pour produire leurs résultats, il faut d'abord affecter une valeur à leurs paramètres avant de pouvoir les exécuter.
-par exemple, un vertex shader déclare, en général, 2 types de paramètres : les uniforms et les attributs de sommet (la position, la couleur, la normale, etc...)
+la syntaxe est inhabituelle, mais pas compliquée. les paramètres se déclarent avec le mot-clé `uniform` dans les fragment et vertex shaders.
+mais un vertex shader peut déclarer un autre type de paramètre : un ou plusieurs attributs de sommet comme la position, la couleur, la normale, etc...
 
-_pourquoi ?_
+_pourquoi 2 types de parametres ?_ les shaders (et le reste du pipeline graphique) sont exécutés par les processeurs de la carte graphique au moment ou l'application 
+utilise une fonction `draw( )`. La carte graphique transforme tous les sommets en parallèle : un vertex shader (cf l'exemple suivant) est exécuté par n threads. La
+matrice de transformation est la même pour tous les sommets (et tous les threads), mais bien sur ce n'est pas le cas pour les attributs de sommets... comme la position. 
+Chaque thread qui exécute le vertex shader doit transformer un sommet different... et il faut bien "fournir" la position de chaque sommet à chaque thread. 
 
 \code
 #ifdef VERTEX_SHADER
@@ -43,21 +47,15 @@ void main( )
 #endif
 \endcode
 
-Les shaders (et le reste du pipeline graphique) sont exécutés par les processeurs de la carte graphique au moment ou l'application utilise 
-une fonction `draw( )`.
-
-La carte graphique transforme tous les sommets en parallèle : un vertex shader (la fonction ci-dessus) est exécutée en parallèle par n threads. La matrice 
-de transformation est la même pour tous les sommets (et tous les threads), mais bien sur ce n'est pas le cas pour les attributs de sommets... comme la position. 
-Chaque thread qui execute le vertex shader doit transformer un sommet different... et il faut bien "fournir" la position de chaque sommet à chaque thread. 
-
 C'est pour cette raison que les paramètres `mvpMatrix` et `position` sont déclarés avec des mots-clés différents, `uniform` pour indiquer que tous les sommets 
-utilisent la même transformation (la même matrice) et le mot-clé `in` pour indiquer que position est différent pour chaque sommet. Et bien sur, affecter 
-une (seule) valeur à un uniform est différent d'affecter un ensemble de valeurs à un attribut. Mesh s'occuppe des attributs, le plus "complique", mais l'application est 
+utilisent la même transformation (la même matrice, c'est un paramètre "normal") et le mot-clé `in` pour indiquer que position est différent pour chaque sommet. Et bien sur, 
+affecter une (seule) valeur à un uniform est différent d'affecter un ensemble de valeurs à un attribut. Mesh s'occuppe des attributs, le plus "complique", mais l'application est 
 responsable des uniforms.
 
-## les uniforms 
+## comment ça marche ?
 
-uniforms.h fournit plusieurs utilitaires simplifiés :
+il faut affecter une valeur à chaque paramètre uniform déclaré par le vertex shader et par le fragment shader. les fonctions d'openGL ne sont pas très pratiques à utiliser, du coup
+`uniforms.h` fournit plusieurs utilitaires simplifiés, qui permettent d'affecter des valeurs des types courants :
 \code
 #include "uniforms.h"
 // selectionner le shader program, si necessaire
@@ -79,14 +77,13 @@ Color c= { ... }:
 program_uniform(program, "couleur", c);     // uniform vec4 couleur; dans le shader
 \endcode
 
-oui c'est moche... les parametres sont identifiés par une chaine de caractères.
+oui c'est moche... les paramètres sont identifiés par une chaine de caractères.
 
 _mais pourquoi ??_ les variables / les paramètres des shaders sont stockés dans la mémoire de la carte graphique, pas dans la mémoire accessible normalement 
 à l'application. il faut imaginer que l'application et les shaders fonctionnent sur 2 machines différentes connectées par un réseau. 
 
-il faut aussi, comme d'habitude, affecter une valeur du bon type. les erreurs ne sont 
-detectés qu'à l'exécution de l'application, pas lors de la compilation. elles s'afficheront dans la console, qu'il faudra penser à surveiller en cas de comportement bizarre, 
-image noire, etc. 
+il faut aussi, comme d'habitude, affecter une valeur du bon type. les erreurs ne sont detectés qu'à l'exécution de l'application, pas lors de la compilation. elles 
+s'afficheront dans la console, qu'il faudra penser à surveiller en cas de comportement bizarre, image noire, etc. 
 
 _remarque :_ \ref tuto3GL explique en détail comment affecter une valeur à chaque uniform déclaré dans les shaders directement avec les fonctions openGL. 
 
@@ -193,11 +190,6 @@ mesh.draw(program, /* use position */ true, /* use texcoord */ false, /* use nor
 
 cf \ref tuto9.cpp pour un exemple complet qui utilise un uniform supplémentaire, qui permet de donner la même couleur aux pixels de l'objet.
 
-Mesh transfère les attributs nécessaire à l'exécution du shader / déclarés par le vertex shader :
-\code
-mesh.draw(mesh, program, /* use position */ true, /* use texcoord */ false, /* use normal */ false, /* use color */ false, /* use material index */ false);
-\endcode
-
 Mesh::draw( ) vérifie (en mode debug, en tout cas) que les attributs déclarés dans le vertex shader sont disponibles dans le Mesh. par exemple, si le vertex 
 shader déclare / utilise un attribut normale par sommet mais que ces valeurs ne sont pas dans le Mesh, le shader ne peut pas fonctionner...
 
@@ -250,13 +242,11 @@ reload_program() de `program.h`.
 #include "program.h"
 #include "window.h"
 
-GLuint program;
-
-// init( ) :
+init( ) :
     program=read_program("tutos/tuto9_color.glsl");
     program_print_errors(program);
     
-// draw( ) :
+draw( ) :
     if(key_state('r'))
     {
         clear_key_state('r');
@@ -294,7 +284,7 @@ Dernière étape, configurer le pipeline pour utiliser la texture, vous pouvez l
 \code
 #include "texture.h"
 
-// init( ) :
+init( ) :
     // verifie que l'objet a bien des coordonnées de texture
     if(m_objet.texcoord_buffer_size() == 0)
         return "erreur, pas de texcoords...";
@@ -302,7 +292,7 @@ Dernière étape, configurer le pipeline pour utiliser la texture, vous pouvez l
     // charge une texture sur l'unite 0
     m_texture= read_texture(0, "...");
 
-// render( ) :
+render( ) :
     // selectionner le shader program, si necessaire
     // glUseProgram(program);
 
@@ -323,7 +313,7 @@ C'est la même chose, par contre, il faut charger et configurer une unité de te
 \code
 #include "texture.h"
 
-// init( ) :
+init( ) :
     // verifie que l'objet a bien des coordonnées de texture
     if(m_objet.texcoord_buffer_size() == 0)
         return "erreur, pas de texcoords...";
@@ -334,7 +324,7 @@ C'est la même chose, par contre, il faut charger et configurer une unité de te
     // charge une texture sur l'unite 1
     m_texture1= read_texture(1, "...");
 
-// render( ) :
+render( ) :
     // selectionner le shader program, si necessaire
     // glUseProgram(program);
 
