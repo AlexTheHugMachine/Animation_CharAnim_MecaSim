@@ -186,10 +186,7 @@ Mesh read_mesh_fast( const char *filename )
         line_buffer[sizeof(line_buffer) -1]= 0;
         
         // saute les espaces en debut de ligne
-        const char *line= line_buffer;
-        while(*line && isspace(*line))
-            line++;
-        
+        const char *line= skip_whitespace(line_buffer);
         if(line[0] == 'v')
         {
             float x, y, z;
@@ -248,7 +245,7 @@ Mesh read_mesh_fast( const char *filename )
                     }
                 }
                 
-                while(*line && isspace(*line))
+                while(isspace(*line))
                     line++;
             }
         
@@ -369,10 +366,7 @@ Mesh read_indexed_mesh_fast( const char *filename )
         line_buffer[sizeof(line_buffer) -1]= 0;
         
         // saute les espaces en debut de ligne
-        const char *line= line_buffer;
-        while(*line && isspace(*line))
-            line++;
-        
+        const char *line= skip_whitespace(line_buffer);
         if(line[0] == 'v')
         {
             float x, y, z;
@@ -430,8 +424,8 @@ Mesh read_indexed_mesh_fast( const char *filename )
                         line= parse_int(line, &idn.back());
                     }
                 }
-                
-                while(*line && isspace(*line))
+              
+                while(isspace(*line))
                     line++;
             }
             
