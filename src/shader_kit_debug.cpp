@@ -25,29 +25,83 @@
 #include "widgets.h"
 
 
-
 // program
 const char *program_filename;
 GLuint program;
 
-// affichage des erreurs
+// affichage des erreurs de compilation
 std::string program_log;
 int program_area;
 bool program_failed;
 
+// mesh, si charge...
 const char *mesh_filename;
 Mesh mesh;
 Point mesh_pmin;
 Point mesh_pmax;
 int vertex_count;
-GLuint vao;
-bool wireframe= false;
 
+GLuint vao;
+
+// textures
 std::vector<const char *> texture_filenames;
 std::vector<GLuint> textures;
 
+// affichage
+bool wireframe= false;
+bool debug= false;
+
+// camera
 Orbiter camera;
+
+// ui
 Widgets widgets;
+
+// mode debug
+GLuint debug_framebuffer= 0;
+GLuint debug_color;
+GLuint debug_depth;
+GLuint debug_position;
+GLuint debug_normal;
+GLuint debug_data;
+
+GLuint debug_program= 0;
+Orbiter debug_camera;
+
+GLuint make_debug_framebuffer( const int w, const int h )
+{
+    glGenFramebuffers(1, &debug_framebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, debug_framebuffer);
+    
+    debug_depth= make_depth_texture(0, w, h);
+    debug_color= make_vec4_texture(0, w, h);
+    debug_position= make_vec4_texture(0, w, h);
+    debug_normal= make_vec4_texture(0, w, h);
+    debug_data= make_vec4_texture(0, w, h);
+    
+    glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, debug_depth, /* mipmap */ 0);
+    glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, debug_color, /* mipmap */ 0);
+    glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, debug_position, /* mipmap */ 0);
+    glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, debug_normal, /* mipmap */ 0);
+    glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, debug_data, /* mipmap */ 0);
+
+    GLenum buffers[]= { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+    glDrawBuffers(4, buffers);
+    
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    return debug_framebuffer;
+}
+
+void release_debug_framebuffer( )
+{
+    glDeleteTextures(1, &debug_depth);
+    glDeleteTextures(1, &debug_color);
+    glDeleteTextures(1, &debug_position);
+    glDeleteTextures(1, &debug_normal);
+    glDeleteTextures(1, &debug_data);
+    glDeleteFramebuffers(1, &debug_framebuffer);
+}
+
 
 // application
 size_t last_load= 0;
@@ -119,7 +173,7 @@ int init( std::vector<const char *>& options )
             vertex_count= mesh.vertex_count();
             
             mesh.bounds(mesh_pmin, mesh_pmax);
-            camera.lookat(mesh_pmin, mesh_pmax * 1024);
+            camera.lookat(mesh_pmin, mesh_pmax);
         }
         
         // ou generer une erreur ? 
@@ -144,6 +198,11 @@ int init( std::vector<const char *>& options )
             textures.push_back(texture);
         }
     }
+    
+    // debug
+    debug_program= read_program( smart_path("data/shaders/debug.glsl") );
+    program_print_errors(debug_program);
+    make_debug_framebuffer(window_width(), window_height());
     
     // nettoyage
     glUseProgram(0);
@@ -180,7 +239,13 @@ int quit( )
 
 int draw( void )
 {
-    if(wireframe)
+    if(key_state('d'))
+    {
+        clear_key_state('d');
+        debug= (debug +1) %2;
+    }
+    
+    if(wireframe && !debug)
     {
         glClearColor(1, 1, 1, 1);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -273,44 +338,76 @@ int draw( void )
             wireframe= !wireframe;
         }
         
-        // configuration minimale du pipeline
-        glBindVertexArray(vao);
-        glUseProgram(program);
-        
-        // affecte une valeur aux uniforms
-        // transformations standards
-        program_uniform(program, "modelMatrix", model);
-        program_uniform(program, "modelInvMatrix", model.inverse());
-        program_uniform(program, "viewMatrix", view);
-        program_uniform(program, "viewInvMatrix", view.inverse());
-        program_uniform(program, "projectionMatrix", projection);
-        program_uniform(program, "projectionInvMatrix", projection.inverse());
-        program_uniform(program, "viewportMatrix", viewport);
-        program_uniform(program, "viewportInvMatrix", viewport.inverse());
-        
-        program_uniform(program, "mvpMatrix", mvp);
-        program_uniform(program, "mvpInvMatrix", mvpInv);
-        
-        program_uniform(program, "mvMatrix", mv);
-        program_uniform(program, "mvInvMatrix", mv.inverse());
-        program_uniform(program, "normalMatrix", mv.normal());
-        
-        // interactions
-        program_uniform(program, "viewport", vec2(window_width(), window_height()));
-        program_uniform(program, "time", time);
-        program_uniform(program, "motion", vec3(mx, my, mb & SDL_BUTTON(1)));
-        program_uniform(program, "mouse", vec3(mousex, window_height() - mousey -1, mb & SDL_BUTTON(1)));
-        
-        // textures
-        for(int i= 0; i < int(textures.size()); i++)
+        if(debug)
         {
-            char uniform[1024];
-            sprintf(uniform, "texture%d", i);
-            program_use_texture(program, uniform, i, textures[i]);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+            
+            glUseProgram(debug_program);
+            program_uniform(debug_program, "viewport", vec2(window_width(), window_height()));
+            program_uniform(debug_program, "mvpMatrix", mvp);
+            
+            program_use_texture(debug_program, "positions", 0, debug_position);
+            
+            glPointSize(2.5f);
+            glDrawArrays(GL_POINTS, 0, window_width()* window_height());
         }
+        else
+        {
+            // configuration minimale du pipeline
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, debug_framebuffer);
         
-        // go
-        glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+            // effacer l'image
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            
+            glBindVertexArray(vao);
+            glUseProgram(program);
+            
+            // affecte une valeur aux uniforms
+            // transformations standards
+            program_uniform(program, "modelMatrix", model);
+            program_uniform(program, "modelInvMatrix", model.inverse());
+            program_uniform(program, "viewMatrix", view);
+            program_uniform(program, "viewInvMatrix", view.inverse());
+            program_uniform(program, "projectionMatrix", projection);
+            program_uniform(program, "projectionInvMatrix", projection.inverse());
+            program_uniform(program, "viewportMatrix", viewport);
+            program_uniform(program, "viewportInvMatrix", viewport.inverse());
+            
+            program_uniform(program, "mvpMatrix", mvp);
+            program_uniform(program, "mvpInvMatrix", mvpInv);
+            
+            program_uniform(program, "mvMatrix", mv);
+            program_uniform(program, "mvInvMatrix", mv.inverse());
+            program_uniform(program, "normalMatrix", mv.normal());
+            
+            // interactions
+            program_uniform(program, "viewport", vec2(window_width(), window_height()));
+            program_uniform(program, "time", time);
+            program_uniform(program, "motion", vec3(mx, my, mb & SDL_BUTTON(1)));
+            program_uniform(program, "mouse", vec3(mousex, window_height() - mousey -1, mb & SDL_BUTTON(1)));
+            
+            // textures
+            for(int i= 0; i < int(textures.size()); i++)
+            {
+                char uniform[1024];
+                sprintf(uniform, "texture%d", i);
+                program_use_texture(program, uniform, i, textures[i]);
+            }
+            
+            // go
+            glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+            
+            // copie l'image...
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, debug_framebuffer);
+            glReadBuffer(GL_COLOR_ATTACHMENT0);
+            
+            int w= window_width();
+            int h= window_height();
+            glBlitFramebuffer(0, 0, w, h,  0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        }
     }
     
     

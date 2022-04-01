@@ -87,7 +87,7 @@ void Framebuffer::bind( const GLuint program, const bool color, const bool depth
             printf("[oops] %s: not active... undefined draw !!\n", label); 
     #endif
         
-    #ifndef GL_VERSION_4_3
+    #ifdef GL_VERSION_4_3
         // lister les sorties du fragment shader
         // fonctionnalite openGL 4.3, n'existe pas sur mac...
         GLint outputs= 0;
@@ -470,37 +470,4 @@ void Framebuffer::blit_normal( const int dstX0, const int dstY0, const int dstX1
 
     //~ glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 //~ }
-
-
-// utilitaires
-// creation des textures
-GLuint make_depth_texture( const int unit, const int width, const int height, const GLenum texel_type )
-{
-    return make_flat_texture(unit, width, height, texel_type, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
-}
-
-GLuint make_uint_texture( const int unit, const int width, const int height, const GLenum texel_type )
-{
-    return make_flat_texture(unit, width, height, texel_type, GL_RED_INTEGER, GL_UNSIGNED_INT);
-}
-
-GLuint make_float_texture( const int unit, const int width, const int height, const GLenum texel_type )
-{
-    return make_flat_texture(unit, width, height, texel_type, GL_RED, GL_FLOAT);
-}
-
-GLuint make_vec2_texture( const int unit, const int width, const int height, const GLenum texel_type )
-{
-    return make_flat_texture(unit, width, height, texel_type, GL_RG, GL_FLOAT);
-}
-
-GLuint make_vec3_texture( const int unit, const int width, const int height, const GLenum texel_type )
-{
-    return make_flat_texture(unit, width, height, texel_type, GL_RGB, GL_FLOAT);
-}
-
-GLuint make_vec4_texture( const int unit, const int width, const int height, const GLenum texel_type )
-{
-    return make_flat_texture(unit, width, height, texel_type, GL_RGBA, GL_FLOAT);
-}
 

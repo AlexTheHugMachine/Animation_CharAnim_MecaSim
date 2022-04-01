@@ -151,7 +151,6 @@ GLuint make_texture( const int unit, const ImageData& im, const GLenum texel_typ
     return texture;
 }
 
-
 GLuint read_texture( const int unit, const char *filename, const GLenum texel_type )
 {
     ImageData image= read_image_data(filename);
@@ -159,6 +158,39 @@ GLuint read_texture( const int unit, const char *filename, const GLenum texel_ty
 }
 
 
+// creation des textures
+GLuint make_depth_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
+}
+
+GLuint make_uint_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_RED_INTEGER, GL_UNSIGNED_INT);
+}
+
+GLuint make_float_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_RED, GL_FLOAT);
+}
+
+GLuint make_vec2_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_RG, GL_FLOAT);
+}
+
+GLuint make_vec3_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_RGB, GL_FLOAT);
+}
+
+GLuint make_vec4_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_RGBA, GL_FLOAT);
+}
+
+
+//
 int screenshot( const char *filename )
 {
     // recupere le contenu de la fenetre / framebuffer par defaut
