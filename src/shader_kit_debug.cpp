@@ -49,7 +49,7 @@ std::vector<GLuint> textures;
 
 // affichage
 bool wireframe= false;
-bool debug= false;
+int debug= false;
 
 // camera
 Orbiter camera;
@@ -58,6 +58,7 @@ Orbiter camera;
 Widgets widgets;
 
 // mode debug
+Transform debug_mvpi_inv;
 GLuint debug_framebuffer= 0;
 GLuint debug_color;
 GLuint debug_depth;
@@ -89,6 +90,8 @@ GLuint make_debug_framebuffer( const int w, const int h )
     glDrawBuffers(4, buffers);
     
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    
     return debug_framebuffer;
 }
 
@@ -102,6 +105,53 @@ void release_debug_framebuffer( )
     glDeleteFramebuffers(1, &debug_framebuffer);
 }
 
+
+vec4 read_debug( const int x, const int y, const GLenum attach )
+{
+    glReadBuffer(attach);
+    
+    vec4 tmp[16];
+    glReadPixels(x - 2, y - 2, 4, 4, GL_RGBA, GL_FLOAT, tmp);
+    
+    // trouver un pixel avec des donnees
+    for(int i= 0; i < 16; i++)
+        if(tmp[i].x || tmp[i].y || tmp[i].z || tmp[i].w)
+            return tmp[i];
+    
+    return vec4(0, 0, 0, 0);
+}
+
+vec4 read_debug_color( const int x, const int y )
+{
+    return read_debug(x, y, GL_COLOR_ATTACHMENT0);
+}
+vec4 read_debug_position( const int x, const int y )
+{
+    return read_debug(x, y, GL_COLOR_ATTACHMENT1);
+}
+vec4 read_debug_normal( const int x, const int y )
+{
+    return read_debug(x, y, GL_COLOR_ATTACHMENT2);
+}
+vec4 read_debug_data( const int x, const int y )
+{
+    return read_debug(x, y, GL_COLOR_ATTACHMENT3);
+}
+
+float read_depth( const int x, const int y )
+{
+    glReadBuffer(GL_BACK);
+    
+    float tmp[16];
+    glReadPixels(x - 2, y - 2, 4, 4, GL_DEPTH_COMPONENT, GL_FLOAT, tmp);
+    
+    // trouver un pixel avec des donnees
+    for(int i= 0; i < 16; i++)
+        if(tmp[i] != 1)
+            return tmp[i];
+    
+    return -1;
+}
 
 // application
 size_t last_load= 0;
@@ -344,18 +394,20 @@ int draw( void )
             
             glUseProgram(debug_program);
             program_uniform(debug_program, "viewport", vec2(window_width(), window_height()));
-            program_uniform(debug_program, "mvpMatrix", mvp);
+            program_uniform(debug_program, "mvpMatrix", mvp * debug_mvpi_inv);
             
-            program_use_texture(debug_program, "positions", 0, debug_position);
+            program_use_texture(debug_program, "zbuffer", 0, debug_depth);
+            program_use_texture(debug_program, "color", 1, debug_color);
             
-            glPointSize(2.5f);
-            glDrawArrays(GL_POINTS, 0, window_width()* window_height());
+            glPointSize(3.5f);
+            glDrawArrays(GL_POINTS, 0, window_width() * window_height());
         }
         else
         {
-            // configuration minimale du pipeline
+            // prepare le debug
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, debug_framebuffer);
-        
+            debug_mvpi_inv= Inverse(viewport * mvp);
+            
             // effacer l'image
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             
@@ -418,6 +470,60 @@ int draw( void )
         label(widgets, "[error] program '%s'", program_filename);
         begin_line(widgets);
         text_area(widgets, 20, program_log.c_str(), program_area);
+    }
+    else if(debug)
+    {
+        button(widgets, "[d] debug", debug);
+        
+        // reprojette le pixel sous la souris dans le point de vue capture...
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        float x= mousex + 0.5f;
+        float y= window_height() - mousey -1 + 0.5f;
+        float z= read_depth(x, y);
+        if(z > 0)
+        {
+            Transform m= Inverse(viewport * mvp * debug_mvpi_inv);
+            Point debug_fragment= m( Point(x, y, z) );
+            
+            // relit les infos du fragment...
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, debug_framebuffer);
+            vec4 position= read_debug_position(debug_fragment.x, debug_fragment.y);
+            vec4 color= read_debug_color(debug_fragment.x, debug_fragment.y);
+            vec4 normal= read_debug_normal(debug_fragment.x, debug_fragment.y);
+            vec4 data= read_debug_data(debug_fragment.x, debug_fragment.y);
+            
+            begin_line(widgets);
+            label(widgets, "debug (%f, %f, %f)", x, y, z);
+            
+            begin_line(widgets);
+            label(widgets, "debug fragment (%f, %f, %f)", debug_fragment.x, debug_fragment.y, debug_fragment.z);
+            
+            begin_line(widgets);
+            label(widgets, "position (%f, %f, %f, %f)", position.x, position.y, position.z, position.w);
+            
+            begin_line(widgets);
+            label(widgets, "color (%f, %f, %f, %f)", color.x, color.y, color.z, color.w);
+            
+            begin_line(widgets);
+            label(widgets, "normal (%f, %f, %f)", normal.x, normal.y, normal.z);
+            
+            begin_line(widgets);
+            label(widgets, "data (%f, %f, %f, %f)", data.x, data.y, data.z, data.w);
+            
+            // copie une vignette de la capture...
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, debug_framebuffer);
+            glReadBuffer(GL_COLOR_ATTACHMENT0);
+            glBlitFramebuffer(debug_fragment.x -16, debug_fragment.y -16, debug_fragment.x +16, debug_fragment.y +16,  
+                //~ 0, 0, 256,256, 
+                window_width() -256, window_height() -256, window_width(), window_height(), 
+                GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        }
+        else    // pas de geometrie dessinee...
+        {
+            begin_line(widgets);
+            label(widgets, "debug (%f, %f)", x, y);
+        }
     }
     else
     {
