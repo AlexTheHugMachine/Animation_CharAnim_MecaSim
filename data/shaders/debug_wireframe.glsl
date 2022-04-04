@@ -17,8 +17,8 @@ out vec4 fragment_color;
 void main( )
 {
     if(gl_FrontFacing == false)
-        fragment_color= vec4(0.2, 0.1, 0, 1);
+        fragment_color= vec4(0.4, 0.2, 0, 1);
     else
-        fragment_color= vec4(0.6, 0.3, 0, 1);
+        fragment_color= vec4(0.8, 0.4, 0, 1);
 }
 #endif

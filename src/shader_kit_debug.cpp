@@ -433,7 +433,11 @@ int draw( void )
             
             glBindVertexArray(vao);
             glUseProgram(debug_program);
-            program_uniform(debug_program, "mode", debug_mode == 4 ? 1 : debug_mode);
+            
+            int mode= debug_mode;
+            if(debug_mode == 4) // triangles
+                debug_mode= 1;  // affiche la couleur en plus de dessiner les triangles...
+            program_uniform(debug_program, "mode", mode);
             
             program_uniform(debug_program, "viewport", vec2(window_width(), window_height()));
             program_uniform(debug_program, "mvpMatrix", mvp * debug_mvpi_inv);
