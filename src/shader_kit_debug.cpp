@@ -49,16 +49,17 @@ std::vector<GLuint> textures;
 
 // affichage
 bool wireframe= false;
-int debug= false;
+int debug= 0;
+int debug_capture= 0;
+int debug_mode= 1;
 
 // camera
-Orbiter camera;
+Orbiter mesh_camera;
 
 // ui
 Widgets widgets;
 
 // mode debug
-Transform debug_mvpi_inv;
 GLuint debug_framebuffer= 0;
 GLuint debug_color;
 GLuint debug_depth;
@@ -67,7 +68,11 @@ GLuint debug_normal;
 GLuint debug_data;
 
 GLuint debug_program= 0;
+GLuint debug_wireframe_program= 0;
+
 Orbiter debug_camera;
+Transform debug_mvpi_inv;
+
 
 GLuint make_debug_framebuffer( const int w, const int h )
 {
@@ -93,6 +98,18 @@ GLuint make_debug_framebuffer( const int w, const int h )
     glBindTexture(GL_TEXTURE_2D, 0);
     
     return debug_framebuffer;
+}
+
+void clear_debug_framebuffer( )
+{
+    float one[]= { 1 };
+    glClearBufferfv(GL_DEPTH, 0, one);
+    
+    float zero[]= { 0, 0, 0, 0 };
+    glClearBufferfv(GL_COLOR, 0, zero);
+    glClearBufferfv(GL_COLOR, 1, zero);
+    glClearBufferfv(GL_COLOR, 2, zero);
+    glClearBufferfv(GL_COLOR, 3, zero);
 }
 
 void release_debug_framebuffer( )
@@ -147,7 +164,7 @@ float read_depth( const int x, const int y )
     
     // trouver un pixel avec des donnees
     for(int i= 0; i < 16; i++)
-        if(tmp[i] != 1)
+        if(tmp[i] != 1) // si zbufffer == 1, pas de geometrie dessinee sur le pixel...
             return tmp[i];
     
     return -1;
@@ -196,7 +213,7 @@ const char *option_find( std::vector<const char *>& options, const char *ext )
 int init( std::vector<const char *>& options )
 {
     widgets= create_widgets();
-    camera= Orbiter();
+    mesh_camera= Orbiter();
     
     program= 0;
     const char *option;
@@ -223,7 +240,7 @@ int init( std::vector<const char *>& options )
             vertex_count= mesh.vertex_count();
             
             mesh.bounds(mesh_pmin, mesh_pmax);
-            camera.lookat(mesh_pmin, mesh_pmax);
+            mesh_camera.lookat(mesh_pmin, mesh_pmax);
         }
         
         // ou generer une erreur ? 
@@ -250,6 +267,8 @@ int init( std::vector<const char *>& options )
     }
     
     // debug
+    debug_wireframe_program= read_program( smart_path("data/shaders/debug_wireframe.glsl") );
+    program_print_errors(debug_wireframe_program);
     debug_program= read_program( smart_path("data/shaders/debug.glsl") );
     program_print_errors(debug_program);
     make_debug_framebuffer(window_width(), window_height());
@@ -289,21 +308,31 @@ int quit( )
 
 int draw( void )
 {
+    // active / desactive le mode debug
     if(key_state('d'))
     {
         clear_key_state('d');
         debug= (debug +1) %2;
+        
+        if(debug)
+        {
+            // capture le rendu...
+            debug_capture= 1;
+            debug_camera= mesh_camera;
+        }
+        else
+            mesh_camera= debug_camera;
     }
     
     if(wireframe && !debug)
     {
-        glClearColor(1, 1, 1, 1);
+        //~ glClearColor(1, 1, 1, 1);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glLineWidth(2);
     }
     else
     {
-        glClearColor(0.2f, 0.2f, 0.2f, 1);
+        //~ glClearColor(0.2f, 0.2f, 0.2f, 1);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     
@@ -316,8 +345,14 @@ int draw( void )
     if(global_time() > last_time + 400)
     {
         if(timestamp(program_filename) != last_load)
+        {
             // date modifiee, recharger les sources et recompiler...
             reload_program();
+        
+            // capture l'execution de la nouvelle version du shader...
+            if(debug)
+                debug_capture= 1; 
+        }
         
         // attends le chargement et la compilation des shaders... au cas ou ce soit plus long qu'une seconde...
         // (oui ca arrive...)
@@ -329,6 +364,9 @@ int draw( void )
         clear_key_state('r');
         reload_program();
     }
+
+    // controle camera
+    Orbiter& camera= debug ? debug_camera : mesh_camera;
     
     // recupere les mouvements de la souris
     int mx, my;
@@ -379,8 +417,8 @@ int draw( void )
     if(freeze == 0)
         time= global_time();
     
-    // affiche l'objet
-    if(program_failed == false)
+    // affiche l'objet, ou pas si le shader n'est pas compile...
+    if(!program_failed)
     {
         if(key_state('w'))
         {
@@ -388,28 +426,51 @@ int draw( void )
             wireframe= !wireframe;
         }
         
-        if(debug)
+        if(debug && !debug_capture)
         {
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             
+            glBindVertexArray(vao);
             glUseProgram(debug_program);
+            program_uniform(debug_program, "mode", debug_mode == 4 ? 1 : debug_mode);
+            
             program_uniform(debug_program, "viewport", vec2(window_width(), window_height()));
             program_uniform(debug_program, "mvpMatrix", mvp * debug_mvpi_inv);
             
             program_use_texture(debug_program, "zbuffer", 0, debug_depth);
             program_use_texture(debug_program, "color", 1, debug_color);
+            program_use_texture(debug_program, "position", 2, debug_position);
+            program_use_texture(debug_program, "normal", 3, debug_normal);
+            program_use_texture(debug_program, "data", 4, debug_data);
             
             glPointSize(3.5f);
             glDrawArrays(GL_POINTS, 0, window_width() * window_height());
+            
+            if(debug_mode == 4)
+            {
+                // dessine aussi les aretes des triangles
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                
+                glUseProgram(debug_wireframe_program);
+                program_uniform(debug_wireframe_program, "mvpMatrix", mvp);
+                
+                glLineWidth(2);
+                glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+            }
         }
         else
         {
-            // prepare le debug
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, debug_framebuffer);
-            debug_mvpi_inv= Inverse(viewport * mvp);
-            
-            // effacer l'image
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            if(debug_capture)
+            {
+                // prepare le debug
+                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, debug_framebuffer);
+                clear_debug_framebuffer();
+                
+                debug_mvpi_inv= Inverse(viewport * mvp);
+                
+                debug_capture= 0;
+            }
             
             glBindVertexArray(vao);
             glUseProgram(program);
@@ -448,31 +509,25 @@ int draw( void )
             
             // go
             glDrawArrays(GL_TRIANGLES, 0, vertex_count);
-            
-            // copie l'image...
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, debug_framebuffer);
-            glReadBuffer(GL_COLOR_ATTACHMENT0);
-            
-            int w= window_width();
-            int h= window_height();
-            glBlitFramebuffer(0, 0, w, h,  0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-            
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         }
     }
     
     
     // affiche les infos...
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    
     begin(widgets);
     if(program_failed)
     {
+        // interface erreurs...
         label(widgets, "[error] program '%s'", program_filename);
         begin_line(widgets);
         text_area(widgets, 20, program_log.c_str(), program_area);
     }
     else if(debug)
     {
+        // interface debug...
         button(widgets, "[d] debug", debug);
         
         // reprojette le pixel sous la souris dans le point de vue capture...
@@ -495,38 +550,61 @@ int draw( void )
             begin_line(widgets);
             label(widgets, "debug (%f, %f, %f)", x, y, z);
             
-            begin_line(widgets);
-            label(widgets, "debug fragment (%f, %f, %f)", debug_fragment.x, debug_fragment.y, debug_fragment.z);
+            //~ begin_line(widgets);
+            //~ label(widgets, "debug fragment (%f, %f, %f)", debug_fragment.x, debug_fragment.y, debug_fragment.z);
             
             begin_line(widgets);
-            label(widgets, "position (%f, %f, %f, %f)", position.x, position.y, position.z, position.w);
+            select(widgets, "draw position", 0, debug_mode);
+            label(widgets, "(%f, %f, %f, %f)", position.x, position.y, position.z, position.w);
             
             begin_line(widgets);
-            label(widgets, "color (%f, %f, %f, %f)", color.x, color.y, color.z, color.w);
+            select(widgets, "draw color   ", 1, debug_mode);
+            label(widgets, "(%f, %f, %f, %f)", color.x, color.y, color.z, color.w);
             
             begin_line(widgets);
-            label(widgets, "normal (%f, %f, %f)", normal.x, normal.y, normal.z);
+            select(widgets, "draw normal  ", 2, debug_mode);
+            label(widgets, "(%f, %f, %f)", normal.x, normal.y, normal.z);
             
             begin_line(widgets);
-            label(widgets, "data (%f, %f, %f, %f)", data.x, data.y, data.z, data.w);
+            select(widgets, "draw data    ", 3, debug_mode);
+            label(widgets, "(%f, %f, %f, %f)", data.x, data.y, data.z, data.w);
+
+            begin_line(widgets);
+            select(widgets, "draw triangles", 4, debug_mode);
             
             // copie une vignette de la capture...
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, debug_framebuffer);
+            //~ glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+            //~ glBindFramebuffer(GL_READ_FRAMEBUFFER, debug_framebuffer);
             glReadBuffer(GL_COLOR_ATTACHMENT0);
             glBlitFramebuffer(debug_fragment.x -16, debug_fragment.y -16, debug_fragment.x +16, debug_fragment.y +16,  
                 //~ 0, 0, 256,256, 
                 window_width() -256, window_height() -256, window_width(), window_height(), 
                 GL_COLOR_BUFFER_BIT, GL_NEAREST);
         }
-        else    // pas de geometrie dessinee...
+        else    // pas de capture sur le pixel
         {
             begin_line(widgets);
             label(widgets, "debug (%f, %f)", x, y);
+            
+            begin_line(widgets);
+            select(widgets, "draw position", 0, debug_mode);
+            
+            begin_line(widgets);
+            select(widgets, "draw color   ", 1, debug_mode);
+            
+            begin_line(widgets);
+            select(widgets, "draw normal  ", 2, debug_mode);
+            
+            begin_line(widgets);
+            select(widgets, "draw data    ", 3, debug_mode);
+            
+            begin_line(widgets);
+            select(widgets, "draw triangles", 4, debug_mode);
         }
     }
     else
     {
+        // interface standard...
         button(widgets, "[s] screenshot ", frame);
         button(widgets, "capture frames", video);
         begin_line(widgets);
@@ -555,7 +633,6 @@ int draw( void )
     end(widgets);
     
     draw(widgets, window_width(), window_height());
-    
     
     if(frame || key_state('s'))
     {
