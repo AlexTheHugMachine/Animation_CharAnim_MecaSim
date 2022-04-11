@@ -436,7 +436,7 @@ int draw( void )
             
             int mode= debug_mode;
             if(debug_mode == 4) // triangles
-                debug_mode= 1;  // affiche la couleur en plus de dessiner les triangles...
+                mode= 1;  // affiche la couleur en plus de dessiner les triangles...
             program_uniform(debug_program, "mode", mode);
             
             program_uniform(debug_program, "viewport", vec2(window_width(), window_height()));
@@ -467,13 +467,13 @@ int draw( void )
         {
             if(debug_capture)
             {
+                debug_capture= 0;       // une seule capture suffit...
+                
                 // prepare le debug
                 glBindFramebuffer(GL_DRAW_FRAMEBUFFER, debug_framebuffer);
                 clear_debug_framebuffer();
                 
                 debug_mvpi_inv= Inverse(viewport * mvp);
-                
-                debug_capture= 0;
             }
             
             glBindVertexArray(vao);
@@ -554,9 +554,6 @@ int draw( void )
             begin_line(widgets);
             label(widgets, "debug (%f, %f, %f)", x, y, z);
             
-            //~ begin_line(widgets);
-            //~ label(widgets, "debug fragment (%f, %f, %f)", debug_fragment.x, debug_fragment.y, debug_fragment.z);
-            
             begin_line(widgets);
             select(widgets, "draw position", 0, debug_mode);
             label(widgets, "(%f, %f, %f, %f)", position.x, position.y, position.z, position.w);
@@ -577,11 +574,8 @@ int draw( void )
             select(widgets, "draw triangles", 4, debug_mode);
             
             // copie une vignette de la capture...
-            //~ glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-            //~ glBindFramebuffer(GL_READ_FRAMEBUFFER, debug_framebuffer);
             glReadBuffer(GL_COLOR_ATTACHMENT0);
             glBlitFramebuffer(debug_fragment.x -16, debug_fragment.y -16, debug_fragment.x +16, debug_fragment.y +16,  
-                //~ 0, 0, 256,256, 
                 window_width() -256, window_height() -256, window_width(), window_height(), 
                 GL_COLOR_BUFFER_BIT, GL_NEAREST);
         }
@@ -609,8 +603,10 @@ int draw( void )
     else
     {
         // interface standard...
+        button(widgets, "[d] debug", debug);
         button(widgets, "[s] screenshot ", frame);
         button(widgets, "capture frames", video);
+        
         begin_line(widgets);
         button(widgets, "[t] freeze time", freeze);
         button(widgets, "[f] reset camera", reset_camera);
@@ -631,9 +627,7 @@ int draw( void )
             begin_line(widgets);
             label(widgets, "texture%u '%s'", i, texture_filenames[i]);
         }
-        
     }
-    
     end(widgets);
     
     draw(widgets, window_width(), window_height());
