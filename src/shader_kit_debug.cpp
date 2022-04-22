@@ -90,7 +90,7 @@ GLuint make_debug_framebuffer( const int w, const int h )
     glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, debug_position, /* mipmap */ 0);
     glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, debug_normal, /* mipmap */ 0);
     glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, debug_data, /* mipmap */ 0);
-
+    
     GLenum buffers[]= { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
     glDrawBuffers(4, buffers);
     
@@ -441,6 +441,7 @@ int draw( void )
             
             program_uniform(debug_program, "viewport", vec2(window_width(), window_height()));
             program_uniform(debug_program, "mvpMatrix", mvp * debug_mvpi_inv);
+            program_uniform(debug_program, "mvMatrix", mv * debug_mvpi_inv);
             
             program_use_texture(debug_program, "zbuffer", 0, debug_depth);
             program_use_texture(debug_program, "color", 1, debug_color);
