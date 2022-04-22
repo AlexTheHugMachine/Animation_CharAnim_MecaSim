@@ -107,6 +107,7 @@ end
  -- description des projets		 
 projects = {
     "shader_kit",
+    "shader_kit_debug",
     "image_viewer"
 }
 
