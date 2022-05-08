@@ -26,7 +26,7 @@ struct GLTFCamera
 };
 
 //! charge un fichier .gltf renvoie les cameras.
-std::vector<GLTFCamera> read_gltf_camera( const char *filename );
+std::vector<GLTFCamera> read_gltf_cameras( const char *filename );
 
 
 struct GLTFLight

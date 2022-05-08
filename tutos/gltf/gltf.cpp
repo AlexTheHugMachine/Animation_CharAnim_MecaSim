@@ -38,6 +38,7 @@ Mesh read_gltf_mesh( const char *filename )
     std::vector<vec3> positions;
     std::vector<vec2> texcoords;
     std::vector<vec3> normals;
+    std::vector<vec4> colors;
     
     Materials materials;
     
@@ -90,6 +91,9 @@ Mesh read_gltf_mesh( const char *filename )
         materials.insert(m, material->name);
     }
     
+    bool mesh_has_texcoords= false;
+    bool mesh_has_normals= false;
+    bool mesh_has_colors= false;
     
     std::vector<float> buffer;
     // parcourir les noeuds de la scene et transformer les meshs associes aux noeuds...
@@ -107,6 +111,7 @@ Mesh read_gltf_mesh( const char *filename )
         Transform model;
         model.column_major(model_matrix);       // gltf organise les 16 floats par colonne...
         Transform normal= model.normal();       // transformation pour les normales
+        //~ Transform normal= model;       // transformation pour les normales
         
         cgltf_mesh *mesh= node->mesh;
         // parcourir les groupes de triangles du mesh...
@@ -114,6 +119,11 @@ Mesh read_gltf_mesh( const char *filename )
         {
             cgltf_primitive *primitives= &mesh->primitives[primitive_id];
             assert(primitives->type == cgltf_primitive_type_triangles);
+            
+            bool primitive_has_texcoords= false;
+            bool primitive_has_normals= false;
+            bool primitive_has_colors= false;
+            unsigned offset= positions.size();
             
             // matiere associee au groupe de triangles
             int material_id= -1;
@@ -127,7 +137,6 @@ Mesh read_gltf_mesh( const char *filename )
             // indices
             if(primitives->indices)
             {
-                unsigned offset= positions.size();
                 for(unsigned i= 0; i < primitives->indices->count; i++)
                     indices.push_back(offset + cgltf_accessor_read_index(primitives->indices, i));
                 
@@ -157,25 +166,78 @@ Mesh read_gltf_mesh( const char *filename )
                 {
                     assert(attribute->data->type == cgltf_type_vec3);
                     
+                    primitive_has_normals= true;
+                    if(mesh_has_normals == false)
+                    {
+                        mesh_has_normals= true;
+                        // insere une normale par defaut pour tous les sommets precedents...
+                        for(unsigned i= 0; i < offset; i++)
+                            normals.push_back( vec3() );
+                    }
+                    
                     buffer.resize(cgltf_accessor_unpack_floats(attribute->data, nullptr, 0));
                     cgltf_accessor_unpack_floats(attribute->data, buffer.data(), buffer.size());
                     
                     // transforme les normales des sommets
                     for(unsigned i= 0; i+2 < buffer.size(); i+= 3)
                         normals.push_back( normal(Vector(buffer[i], buffer[i+1], buffer[i+2])) );
+                    assert(normals.size() == positions.size());
                 }
                 
                 if(attribute->type == cgltf_attribute_type_texcoord)
                 {
                     assert(attribute->data->type == cgltf_type_vec2);
                     
+                    primitive_has_texcoords= true;
+                    if(mesh_has_texcoords == false)
+                    {
+                        mesh_has_texcoords= true;
+                        // insere des texcoords par defaut pour tous les sommets precedents
+                        for(unsigned i= 0; i < offset; i++)
+                            texcoords.push_back( vec2() );
+                    }
+                    
                     buffer.resize(cgltf_accessor_unpack_floats(attribute->data, nullptr, 0));
                     cgltf_accessor_unpack_floats(attribute->data, buffer.data(), buffer.size());
                     
                     for(unsigned i= 0; i+1 < buffer.size(); i+= 2)
                         texcoords.push_back( vec2(buffer[i], buffer[i+1]) );
+                    assert(texcoords.size() == positions.size());
+                }
+                
+                if(attribute->type == cgltf_attribute_type_color)
+                {
+                    assert(attribute->data->type == cgltf_type_vec4);
+                    
+                    primitive_has_colors= true;
+                    if(mesh_has_colors == false)
+                    {
+                        mesh_has_colors= true;
+                        // insere une couleur par defaut pour tous les sommtes precedents
+                        for(unsigned i= 0; i < offset; i++)
+                            colors.push_back( vec4(1, 1, 1, 1) );
+                    }
+                    
+                    buffer.resize(cgltf_accessor_unpack_floats(attribute->data, nullptr, 0));
+                    cgltf_accessor_unpack_floats(attribute->data, buffer.data(), buffer.size());
+                    for(unsigned i= 0; i+3 < buffer.size(); i+= 4)
+                        colors.push_back( vec4(buffer[i], buffer[i+1], buffer[i+2], buffer[i+3]) );
+                    assert(colors.size() == positions.size());
                 }
             }
+            
+            // complete la description des attributs par defaut...
+            if(mesh_has_texcoords && primitive_has_texcoords == false)
+                for(unsigned i= offset; i < positions.size(); i++)
+                    texcoords.push_back( vec2() );
+                    
+            if(mesh_has_normals && primitive_has_normals == false)
+                for(unsigned i= offset; i < positions.size(); i++)
+                    normals.push_back( vec3() );
+            
+            if(mesh_has_colors && primitive_has_colors == false)
+                for(unsigned i= offset; i < positions.size(); i++)
+                    colors.push_back( vec4(1, 1, 1, 1) );
         }
     }
     
@@ -187,10 +249,13 @@ Mesh read_gltf_mesh( const char *filename )
     // 1. les sommets et les attributs, si necessaire...
     bool has_texcoords= (texcoords.size() == positions.size());
     bool has_normals= (normals.size() == positions.size());
+    bool has_colors= (colors.size() == positions.size());
     for(unsigned i= 0; i < positions.size(); i++)
     {
         if(has_texcoords) mesh.texcoord(texcoords[i]);
         if(has_normals) mesh.normal(normals[i]);
+        if(has_colors) mesh.color(colors[i]);
+        
         mesh.vertex(positions[i]);
     }
     
@@ -209,7 +274,7 @@ Mesh read_gltf_mesh( const char *filename )
 }
 
 
-std::vector<GLTFCamera> read_gltf_camera( const char *filename )
+std::vector<GLTFCamera> read_gltf_cameras( const char *filename )
 {
     printf("loading glTF camera '%s'...\n", filename);
     
@@ -241,43 +306,39 @@ std::vector<GLTFCamera> read_gltf_camera( const char *filename )
         return {};
     }
     
+    std::vector<GLTFCamera> cameras;
     // retrouve la transformation associee a la camera 0
     for(unsigned i= 0; i < data->nodes_count; i++)
     {
         cgltf_node *node= &data->nodes[i];
         if(node->camera != nullptr)
         {
-            if(node->camera == camera)
-            {
-                //~ printf("camera[0] attached to node[%u]...\n", i);
-                cgltf_camera_perspective *perspective= &camera->data.perspective;
-                
-                //~ if(perspective->has_aspect_ratio)
-                    //~ printf("  aspect ratio %f\n", perspective->aspect_ratio);
-                //~ printf("  yfov %f\n", perspective->yfov);
-                //~ printf("  znear %f", perspective->znear);
-                //~ if(perspective->has_zfar)
-                    //~ printf(", zfar %f", perspective->zfar);
-                //~ printf("\n");
-                
-                Transform projection= Perspective(degrees(perspective->yfov), perspective->aspect_ratio, perspective->znear, perspective->zfar);
-                
-                float model_matrix[16];
-                cgltf_node_transform_world(node, model_matrix); // transformation globale
-                
-                Transform model;
-                model.column_major(model_matrix);               // gltf organise les 16 floats par colonne...
-                Transform view= Inverse(model);                 // view= inverse(model)
-                
-                std::vector<GLTFCamera> cameras;
-                cameras.push_back( { degrees(perspective->yfov), perspective->aspect_ratio, perspective->znear, perspective->zfar, view, projection } );
-                return cameras;
-            }
+            //~ printf("camera[0] attached to node[%u]...\n", i);
+            cgltf_camera_perspective *perspective= &node->camera->data.perspective;
+            
+            //~ if(perspective->has_aspect_ratio)
+                //~ printf("  aspect ratio %f\n", perspective->aspect_ratio);
+            //~ printf("  yfov %f\n", perspective->yfov);
+            //~ printf("  znear %f", perspective->znear);
+            //~ if(perspective->has_zfar)
+                //~ printf(", zfar %f", perspective->zfar);
+            //~ printf("\n");
+            
+            Transform projection= Perspective(degrees(perspective->yfov), perspective->aspect_ratio, perspective->znear, perspective->zfar);
+            
+            float model_matrix[16];
+            cgltf_node_transform_world(node, model_matrix); // transformation globale
+            
+            Transform model;
+            model.column_major(model_matrix);               // gltf organise les 16 floats par colonne...
+            Transform view= Inverse(model);                 // view= inverse(model)
+            
+            cameras.push_back( { degrees(perspective->yfov), perspective->aspect_ratio, perspective->znear, perspective->zfar, view, projection } );
         }
     }
     
     cgltf_free(data);
-    return {};
+    return cameras;
 }
 
 
@@ -453,7 +514,7 @@ std::vector<ImageData> read_gltf_images( const char *filename )
     
     std::vector<ImageData> images(data->images_count);
     
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic, 1)
     for(unsigned i= 0; i < data->images_count; i++)
     {
         //~ printf("[%u] %s\n", i, data->images[i].uri);
