@@ -134,7 +134,7 @@ public:
     //! definit la couleur du prochain sommet.
     Mesh& color( const Color& c ) { return color(vec4(c.r, c.g, c.b, c.a)); }
     //! definit la couleur du prochain sommet.
-    Mesh& color( const float r, const float g, const float b, const float a= 1) { return color(Color(r, g, b, a)); }
+    Mesh& color( const float r, const float g, const float b, const float a= 1) { return color(vec4(r, g, b, a)); }
     
     //! definit la normale du prochain sommet.
     Mesh& normal( const vec3& n );
