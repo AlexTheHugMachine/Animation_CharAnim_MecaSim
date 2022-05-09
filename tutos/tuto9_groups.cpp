@@ -1,5 +1,5 @@
 
-//! \file tuto9_materials.cpp utilisation d'un shader 'utilisateur' pour afficher un objet Mesh et ses matieres.
+//! \file tuto9_groups.cpp afficher un objet Mesh et ses matieres, dessine les groupe de triangles, un par un.
 
 #include "mat.h"
 #include "mesh.h"
@@ -28,7 +28,7 @@ public:
         
         printf("%d materials.\n", m_objet.materials().count());
         
-        // trie les triangles par matiere et recupere les groupes de triangles utilisant la meme mateire.
+        // trie les triangles par matiere et recupere les groupes de triangles utilisant la meme matiere.
         m_groups= m_objet.groups();
         /* remarque : c'est long, donc il vaut mieux le faire une seule fois au debut du programme...
          */
@@ -48,7 +48,7 @@ public:
         glClearDepth(1.f);                          // profondeur par defaut
         glDepthFunc(GL_LESS);                       // ztest, conserver l'intersection la plus proche de la camera
         glEnable(GL_DEPTH_TEST);                    // activer le ztest
-
+        
         return 0;   // ras, pas d'erreur
     }
     
@@ -71,16 +71,14 @@ public:
         Transform view= camera().view();
         Transform projection= camera().projection();
         
-    #if 1
+    #if 0
         // option 1 : avec les utilitaires draw()
         {
-            DrawParam pipeline;
-            pipeline.model(model).camera(camera());
-            
-            for(int i= 0; i < int(m_groups.size()); i++)
-            {
-                pipeline.draw(m_groups[i], m_objet);
-            }
+            // dessine chaque groupe de triangle, avec sa matiere
+            for(unsigned i= 0; i < m_groups.size(); i++)
+                draw(m_groups[i], m_objet, model, view, projection);
+                // ou :
+                // draw(m_groups[i], m_objet, model, camera());    // meme resultat...
         }
     #else
         // option 2 : dessiner m_objet avec le shader program
@@ -94,21 +92,20 @@ public:
             Transform mvp= projection * mv;
             
             // . parametrer le shader program :
-            //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+            //   . transformations : la matrice declaree dans le vertex shader s'appelle mvpMatrix
             program_uniform(m_program, "mvpMatrix", mvp);
+            // et mvMatrix 
             program_uniform(m_program, "mvMatrix", mv);
             
-            //   . ou, directement en utilisant openGL :
-            //   int location= glGetUniformLocation(program, "mvpMatrix");
-            //   glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
-            
             // afficher chaque groupe
-            for(int i= 0; i < int(m_groups.size()); i++)
+            const Materials& materials= m_objet.materials();
+            for(unsigned i= 0; i < m_groups.size(); i++)
             {
-                const Material& material= m_objet.materials().material(m_groups[i].material_index);
+                // recuperer la couleur de base de la matiere
+                const Material& material= materials(m_groups[i].index);
                 
                 // . parametres "supplementaires" :
-                //   . couleur diffuse de la matiere du groupe de triangle
+                //   . couleur de la matiere du groupe de triangle
                 program_uniform(m_program, "material_color", material.diffuse);
                 
                 //   . c'est aussi le bon moment pour changer de texture, par exemple...
@@ -116,14 +113,47 @@ public:
                 
                 // go !
                 // indiquer quels attributs de sommets du mesh sont necessaires a l'execution du shader.
-                // tuto9_groups.glsl n'utilise que position. les autres de servent a rien.
+                // tuto9_groups.glsl n'utilise que position et normale. les autres de servent a rien.
                 
                 // 1 draw par groupe de triangles...
                 m_objet.draw(m_groups[i].first, m_groups[i].n, m_program, /* use position */ true, /* use texcoord */ false, /* use normal */ true, /* use color */ false, /* use material index*/ false);
             }
         }
     #endif
-
+        
+        /* et directement avec openGL, qu'est ce qui change ?
+            
+            il faut creer un ou plusieurs buffers pour stocker les positions et les normales de l'objet, et configurer le format de sommet, 
+            cf vertex array object / vao, comme dans tuto9_buffers.cpp ou tuto4GL.cpp et tuto4GL_normals.cpp, par exemple
+            
+            ensuite, c'est comme d'habitude :
+            
+            glBindVertexAttrib(m_vao);
+            glUseProgram(m_program);
+            
+            // composer les transformations : model, view et projection
+            Transform mv= view * model;
+            Transform mvp= projection * mv;
+            
+            // parametrer le shader program :
+            program_uniform(m_program, "mvpMatrix", mvp);
+            program_uniform(m_program, "mvMatrix", mv);
+            
+            // dessiner chaque groupe...
+            for(unsigned i= 0; i < groups.size(); i++)
+            {
+                // recuperer la couleur de la matiere du groupe de triangles
+                const Material& material= m_objet.materials().material(m_groups[i].material_index);
+                Color color= material.diffuse;
+                
+                // parametrer les uniforms du shader qui dependent de la matiere
+                program_uniform(m_program, "material_color", color);
+                
+                // go ! dessiner les triangles du groupe
+                glDrawArrays(GL_TRIANGLES, groups[i].first, groups[i].n);
+            }
+        */
+        
         return 1;
     }
 

@@ -128,7 +128,7 @@ public:
         
         //  . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
         location= glGetUniformLocation(m_program, "mvpMatrix");
-        glUniformMatrix4fv(location, 1, GL_TRUE, mvp.buffer());
+        glUniformMatrix4fv(location, 1, GL_TRUE, mvp.data());
         
         // . parametres "supplementaires" :
         // . couleur des pixels, cf la declaration 'uniform vec4 color;' dans le fragment shader

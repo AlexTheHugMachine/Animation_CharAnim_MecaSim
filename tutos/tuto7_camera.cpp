@@ -60,20 +60,16 @@ public:
     int init( )
     {
         // decrire un repere / grille 
-        m_repere= make_grid(20);
+        m_repere= make_grid(10);
         
-        // charge l'element
+        // charge un objet
         m_cube= read_mesh("data/cube.obj");
         
-        // objet dynamique, commence par un element
-        m_objet= m_cube;
-        
-        // si l'objet est "gros", il faut regler la camera pour l'observer entierement :
-        // recuperer les points extremes de l'objet (son englobant)
-        Point pmin, pmax;
-        m_repere.bounds(pmin, pmax);
-        // parametrer la camera de l'application, renvoyee par la fonction camera()
-        camera().lookat(pmin, pmax);
+        // un autre objet
+        m_objet= Mesh(GL_TRIANGLES);
+        {
+            // ajouter des triplets de sommet == des triangles dans objet...
+        }
         
         // etat openGL par defaut
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
@@ -82,7 +78,7 @@ public:
         glDepthFunc(GL_LESS);                       // ztest, conserver l'intersection la plus proche de la camera
         glEnable(GL_DEPTH_TEST);                    // activer le ztest
 
-        return 0;   // ras, pas d'erreur
+        return 0;   // pas d'erreur, sinon renvoyer -1
     }
     
     // destruction des objets de l'application
@@ -90,7 +86,7 @@ public:
     {
         m_objet.release();
         m_repere.release();
-        return 0;
+        return 0;   // pas d'erreur
     }
     
     // dessiner une nouvelle image
@@ -98,19 +94,25 @@ public:
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-    // dessine l'objet, place au centre du monde, pour le point de vue de la camera 
-        draw(m_objet, Identity(), camera());
+    // dessine le repere, place au centre du monde, pour le point de vue de la camera 
+        draw(m_repere, /* model */ Identity(), camera());
         
-    // dessine le meme objet, a un autre endroit. il faut modifier la matrice model, qui sert a ca : placer un objet dans le monde, ailleurs qu'a l'origine.
-        // par exemple, a la verticale au dessus du premier cube :
+    // dessine un cube, lui aussi place au centre du monde
+        draw(m_cube, /* model */ Identity(), camera());
+        
+    // dessine le meme cube, a un autre endroit. 
+        // il faut modifier la matrice model, qui sert a ca : placer un objet dans le monde, ailleurs qu'a l'origine.
+        // par exemple, pour dessiner un 2ieme cube a la verticale au dessus du premier cube :
         // la transformation est une translation le long du vecteur Y= (0, 1, 0), si on veut placer le cube plus haut, il suffit d'utiliser une valeur > 1
         Transform t= Translation(0, 2, 0);
-        draw(m_objet, t, camera());
+        draw(m_cube, /* model */ t, camera());
         
-        // dessine aussi le repere, pour le meme point de vue
-        draw(m_repere, Identity(), camera());
+    // comment dessiner m_objet ?? 
+    
+    // et sans le superposer au cube deja dessine ?
         
-        // continuer...
+        // continuer, afficher une nouvelle image
+        // tant que la fenetre est ouverte...
         return 1;
     }
 

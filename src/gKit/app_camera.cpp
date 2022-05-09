@@ -1,7 +1,8 @@
 
 #include "app_camera.h"
 
-AppCamera::AppCamera( const int width, const int height, const int major, const int minor, const int samples ) : App(width, height, major, minor, samples), m_camera() 
+AppCamera::AppCamera( const int width, const int height, const int major, const int minor, const int samples ) 
+    : App(width, height, major, minor, samples), m_camera() 
 {
     // projection par defaut, adaptee a la fenetre
     m_camera.projection(window_width(), window_height(), 45);
@@ -32,6 +33,27 @@ int AppCamera::prerender( )
         m_camera.move(8.f * wheel.y);  // approche / eloigne l'objet
     }
 
+    const char *orbiter_filename= "app_orbiter.txt";
+    // copy / export / write orbiter
+    if(key_state('c'))
+    {
+        clear_key_state('c');
+        m_camera.write_orbiter(orbiter_filename);
+        
+    }
+    // paste / read orbiter
+    if(key_state('v'))
+    {
+        clear_key_state('v');
+        
+        Orbiter tmp;
+        if(tmp.read_orbiter(orbiter_filename) < 0)
+            // ne pas modifer la camera en cas d'erreur de lecture...
+            tmp= m_camera;
+        
+        m_camera= tmp;
+    }
+    
     // appelle la fonction update() de la classe derivee
     return update(global_time(), delta_time());
 }

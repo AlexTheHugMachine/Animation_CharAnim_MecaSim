@@ -33,8 +33,8 @@ void Orbiter::translation( const float x, const float y )
 void Orbiter::move( const float z )
 {
     m_size= m_size - m_size * 0.01f * z;
-    if(m_size < 0.01f)
-        m_size= 0.01f;
+    if(m_size < 0.001f)
+        m_size= 0.001f;
 }
 
 Transform Orbiter::view( ) const
@@ -53,16 +53,31 @@ Transform Orbiter::projection( const int width, const int height, const float fo
     return projection();
 }
 
+float Orbiter::znear( ) const
+{
+    // calcule la distance entre le centre de l'objet et la camera
+    float d= distance(m_center, Point(m_position.x, m_position.y, m_size));
+    return std::max(float(0.1), d - m_radius);
+}
+
+float Orbiter::zfar( ) const
+{
+    // calcule la distance entre le centre de l'objet et la camera
+    float d= distance(m_center, Point(m_position.x, m_position.y, m_size));
+    return std::max(float(1), d + m_radius);
+}
+
+
 Transform Orbiter::projection( ) const
 {
     // calcule la distance entre le centre de l'objet et la camera
     //~ Transform t= view();
     //~ Point c= t(m_center);
     //~ float d= -c.z;
-    float d= distance(m_center, Point(m_position.x, m_position.y, m_size));     // meme resultat plus rapide a calculer
+    //~ float d= distance(m_center, Point(m_position.x, m_position.y, m_size));     // meme resultat plus rapide a calculer
     
     // regle near et far en fonction du centre et du rayon englobant l'objet 
-    return Perspective(m_fov, float(m_width) / float(m_height), std::max(0.1f, d - m_radius), std::max(1.f, d + m_radius));
+    return Perspective(m_fov, m_width / m_height, znear(), zfar());
 }
 
 Transform Orbiter::viewport( ) const
@@ -118,6 +133,9 @@ int Orbiter::read_orbiter( const char *filename )
         errors= true;
     if(fscanf(in, "s %f %f\n", &m_size, &m_radius) != 2)
         errors= true;
+        
+    if(fscanf(in, "f %f %f %f\n", &m_fov, &m_width, &m_height) != 3)
+        errors= true;
     
     fclose(in);
     if(errors)
@@ -141,6 +159,7 @@ int Orbiter::write_orbiter( const char *filename )
     fprintf(out, "p %f %f\n", m_position.x, m_position.y);
     fprintf(out, "r %f %f\n", m_rotation.x, m_rotation.y);
     fprintf(out, "s %f %f\n", m_size, m_radius);
+    fprintf(out, "f %f %f %f\n", m_fov, m_width, m_height);
     
     fclose(out);
     return 0;

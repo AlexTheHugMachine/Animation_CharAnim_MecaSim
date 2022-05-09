@@ -33,7 +33,7 @@ uniform sampler2D alpha;
 float hash2D( in vec2 v ) { return fract(1.0e4*sin(17.0*v.x + 0.1*v.y) * (0.1 + abs(sin(13.0*v.y + v.x)))); }
 float hash3D( in vec3 v ) { return hash2D(vec2(hash2D(v.xy), v.z)); }
 
-const int n= 8; // MSAA samples
+const int msaa= 8; // MSAA samples
 
 void main()
 {
@@ -48,13 +48,14 @@ void main()
     //~ float rng= hash3D(vertex_position);
     //~ fragment_color= vec4(0.9, 0.4, 0, rng);
 
-// construit le masque des samples 
     vec4 color= texture(alpha, vertex_texcoords);
-    //~ vec4 color= vec4(0.8, 0.8, 0.9, 0.15);
     // threshold
-    int i= int(floor(color.a * n));
-    // jitter threshold
-    float rng= (i+ hash3D(vertex_position)) / float(n);
+    float i= floor(color.a * msaa);
+	
+    //~ // jitter threshold
+    //~ float rng= (i+ hash3D(vertex_position)) / float(n);
+	// jitter
+    float rng= min(msaa, (color.a * msaa + hash3D(vec3(vertex_position.xy, view_position.z)) - 0.5)) / float(msaa);
     //~ // no jitter
     //~ float rng= i / float(n);
     

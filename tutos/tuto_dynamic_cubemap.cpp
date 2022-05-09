@@ -279,8 +279,8 @@ public:
                     mvp[i]= projection * faces[i] * model;
                 
                 // go !!
-                glUniformMatrix4fv(location_mvp, 6, GL_TRUE, mvp[0].buffer());
-                glUniformMatrix4fv(location_model, 1, GL_TRUE, model.buffer());
+                glUniformMatrix4fv(location_mvp, 6, GL_TRUE, mvp[0].data());
+                glUniformMatrix4fv(location_model, 1, GL_TRUE, model.data());
                 glDrawArraysInstanced(GL_TRIANGLES, 0, m_object.vertex_count(), 6);
             }
             

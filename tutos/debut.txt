@@ -1,0 +1,57 @@
+
+/*! \addtogroup debut première application avec gKit
+
+Une application openGL est composée de plusieurs éléments :
+    - une fenêtre pour voir ce que l'on dessine,
+    - un contexte openGL pour dessiner,
+    - 3 fonctions :
+        - init( ) : pour créer les objets que l'on veut dessiner,
+        - quit( ) : pour détruire les objets crées dans init( ), à la fermeture de l'application,
+        - draw( ) : pour afficher / dessiner quelque chose 60 fois par seconde.
+
+La classe AppCamera permet d'écrire simplement une application openGL en dérivant ces 3 méthodes :
+
+\code
+#include "app_camera.h"
+ 
+class TP : public AppCamera
+{
+public:
+    // constructeur : donner les dimensions de la fenetre, et eventuellement la version d'openGL.
+    TP( ) : AppCamera(1024, 640) {}
+    
+    // creation des objets openGL de l'application
+    int init( ) { ... }
+    
+    // destruction des objets openGL, à la fin de l'application
+    int quit( ) { ... }
+    
+    // dessiner une nouvelle image.
+    int render( ) { ... }
+};
+ 
+int main( int argc, char **argv )
+{
+    TP tp;
+    tp.run();
+    
+    return 0;
+}
+\endcode
+
+# par ou on commence ?
+
+par lire \ref transformations qui explique rapidement comment décrire un objet, comment le placer dans la scène, et enfin comment contrôler une camera, pour le dessiner.
+bref, tout ce qu'il faut pour écrire une application interactive.
+
+les explications plus complètes sont dans la doc de Mesh.
+
+les calculs avec des points (cf la classe Point), des vecteurs (cf classe Vector) et des transformations / matrices (cf classse Transform) sont décrits dans vec.h ainsi que mat.h.
+
+# à quoi ca ressemble ?
+
+si vous préferrez partir d'un code simple et le modifier, c'est possible aussi, ouvrez `tutos/tuto7_camera.cpp` et compilez le projet correspondant `tuto7_camera`.
+(normalement c'est déjà fait ! cf \ref installation)
+
+
+*/

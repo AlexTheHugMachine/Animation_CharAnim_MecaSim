@@ -17,7 +17,7 @@ class Orbiter
 {
 public:
     //! cree une camera par defaut. observe le centre (0, 0, 0) a une distance 5.
-    Orbiter( ) : m_center(), m_position(), m_rotation(), m_size(5.f), m_radius(5.f) {}
+    Orbiter( ) : m_center(), m_position(), m_rotation(), m_size(5.f), m_radius(5.f), m_width(1), m_height(1), m_fov(45) {}
     
     //! observe le point center a une distance size.
     void lookat(  const Point& center, const float size );
@@ -26,6 +26,10 @@ public:
     
     //! fixe la projection reglee pour une image d'aspect width / height, et une demi ouverture de fov degres.
     Transform projection( const int width, const int height, const float fov );
+    //! renvoie le plan proche de la projection. distance min des points dans le frustum de la camera (valeur dans le repere camera).
+    float znear( ) const;
+    //! revnvoie le plan loin de la projection. distance max des points dans le frustum de la camera (valeur dans le repere camera).
+    float zfar( ) const;
     
     //! change le point de vue / la direction d'observation.
     void rotation( const float x, const float y );
@@ -95,8 +99,8 @@ protected:
     float m_size;
     float m_radius;
     
-    int m_width;
-    int m_height;
+    float m_width;
+    float m_height;
     float m_fov;
 };
 

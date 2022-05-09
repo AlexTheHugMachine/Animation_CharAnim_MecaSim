@@ -624,6 +624,22 @@ la définition se trouve aussi dans :\n
 ["Some Integral Geometry Tools to Estimate the Complexity of 3D Scenes"](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.31.8104), 
 F. Cazals, M. Sbert, 1997.
 
+on peut estimer le nombre de visites d'un noeud avec le nombre de droites (passant par le noeud) multiplié par le nombre de rayons par droite, en 
+sommant l'aire des triangles associés au noeud :
+\f[
+aire(F) \left[ 1 + \frac{\sum_i 2 \times aire(triangle_i)}{aire(F)} \right] = aire(F) + \sum_i 2 \times aire(triangle_i)
+\f]
+
+et re-écrire le cout d'un arbre, en normalisant par R le nombre de rayons dans toute la scène (nombre de rayons de la racine) :
+\f[
+\begin{eqnarray*}
+C & = &\sum_{i=1}^{T-1} noeud_i \times 2C_{box} + \sum_{i=1}^T feuille_i \times C_{triangle}\\
+noeud_i & = & \frac{aire(n_i) + \sum_k 2 \times aire(triangle_k)}{R}\\
+feuille_i & = & \frac{aire(f_i) + 2 \times aire(triangle_i)}{R}\\
+R & = & aire(racine) + \sum_k 2 \times aire(triangle_k)
+\end{eqnarray*}
+\f]
+
 par contre, pour faire cette estimation pendant la construction d'un bvh, il va falloir déterminer l'aire de la géométrie présente dans l'englobant
 du noeud, et donc calculer l'aire de l'intersection des triangles (avec l'englobant) ... c'est numériquement assez pénible à faire (de manière robuste), 
 et aussi très (trop) long à calculer...

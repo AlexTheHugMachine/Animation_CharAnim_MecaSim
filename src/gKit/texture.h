@@ -62,9 +62,28 @@ exemple d'utilisation : cf shader_kit.cpp
     
     if(video) capture("shader_kit");
 \endcode
-
- */
+*/
 int capture( const char *prefix );
+
+//! creation de textures filtrables / mipmaps
+GLuint make_texture( const int unit, const int width, const int height, const GLenum texel_type, const GLenum data_format= GL_RGBA, const GLenum data_type= GL_UNSIGNED_BYTE );
+
+//! creation de textures non filtrables / 1 mipmap
+GLuint make_flat_texture( const int unit, const int width, const int height, const GLenum texel_type, const GLenum data_format= GL_RGBA, const GLenum data_type= GL_UNSIGNED_BYTE );
+
+// utilitaires.
+//! creation de textures pour stocker des donnees (autres qu'une couleur).
+GLuint make_depth_texture( const int unit, const int width, const int height, const GLenum texel_type= GL_DEPTH_COMPONENT );
+//! creation de textures pour stocker des donnees (autres qu'une couleur).
+GLuint make_uint_texture( const int unit, const int width, const int height, const GLenum texel_type= GL_R32UI );
+//! creation de textures pour stocker des donnees (autres qu'une couleur).
+GLuint make_float_texture( const int unit, const int width, const int height, const GLenum texel_type= GL_R32F );
+//! creation de textures pour stocker des donnees (autres qu'une couleur).
+GLuint make_vec2_texture( const int unit, const int width, const int height, const GLenum texel_type= GL_RG32F );
+//! creation de textures pour stocker des donnees (autres qu'une couleur).
+GLuint make_vec3_texture( const int unit, const int width, const int height, const GLenum texel_type= GL_RGB32F );
+//! creation de textures pour stocker des donnees (autres qu'une couleur).
+GLuint make_vec4_texture( const int unit, const int width, const int height, const GLenum texel_type= GL_RGBA32F );
 
 ///@}
 #endif

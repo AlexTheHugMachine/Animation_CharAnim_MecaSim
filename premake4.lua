@@ -2,6 +2,9 @@ solution "gKit2light"
     configurations { "debug", "release" }
 
     platforms { "x64", "x32" }
+if _PREMAKE_VERSION >="5.0" then
+    platforms { "arm64" }
+end
     
     includedirs { ".", "src/gKit" }
     
@@ -63,20 +66,7 @@ if _PREMAKE_VERSION >="5.0" then
         defines { "WIN32", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
         defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
 
-    configuration { "windows", "vs2017" }
-        location "build"
-        debugdir "."
-        
-        system "Windows"
-        architecture "x64"
-        disablewarnings { "4244", "4305" }
-        flags { "MultiProcessorCompile", "NoMinimalRebuild" }
-        
-        includedirs { "extern/visual/include" }
-        libdirs { "extern/visual/lib" }
-        links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
-        
-    configuration { "windows", "vs2019" }
+    configuration { "windows", "vs*" }
         location "build"
         debugdir "."
         
@@ -92,11 +82,17 @@ end
     
     configuration "macosx"
         frameworks= "-F /Library/Frameworks/"
-        buildoptions { "-std=c++11" }
+        buildoptions { "-std=c++11 -Wno-deprecated-declarations" }
         defines { "GK_MACOS" }
         buildoptions { frameworks }
         linkoptions { frameworks .. " -framework OpenGL -framework SDL2 -framework SDL2_image" }
     
+    -- force les mac M1 arm a compiler en x86_64 tant que les librairies ne sont pas dispo en arm64... 
+    -- sinon installer les libs arm avec brew et tout compiler en natif
+    configuration { "macosx", "arm64" } 
+        buildoptions { "-target x86_64-apple-macos10.12" }
+        linkoptions { "-target x86_64-apple-macos10.12" }
+    -- oui c'est moche...
     
  -- description des fichiers communs
 gkit_files = { gkit_dir .. "/src/gKit/*.cpp", gkit_dir .. "/src/gKit/*.h" }
@@ -111,6 +107,7 @@ end
  -- description des projets		 
 projects = {
     "shader_kit",
+    "shader_kit_debug",
     "image_viewer"
 }
 
@@ -137,6 +134,9 @@ tutos = {
     "tuto_transformations",
     "tuto_transformations_camera",
     "tuto_transformations_lookat",
+    "tuto_decal",
+    "tuto_shadows",
+    "tuto_deferred_decal",
 
     "tuto8",
     "tuto9",
@@ -190,18 +190,18 @@ for i, name in ipairs(tutos) do
         files { gkit_dir .. "/tutos/" .. name..'.cpp' }
 end
 
-project("mesh_viewer")
-    language "C++"
-    kind "ConsoleApp"
-    targetdir "bin"
-    files ( gkit_files )
-    files { gkit_dir .. "/tutos/mesh_viewer.cpp"}
-    files { gkit_dir .. "/tutos/mesh_buffer.cpp"}
-    files { gkit_dir .. "/tutos/mesh_buffer.h"}
-    files { gkit_dir .. "/tutos/mesh_data.cpp"}
-    files { gkit_dir .. "/tutos/mesh_data.h"}
-    files { gkit_dir .. "/tutos/material_data.cpp"}
-    files { gkit_dir .. "/tutos/material_data.h"}
+--~ project("mesh_viewer")
+--~     language "C++"
+--~     kind "ConsoleApp"
+--~     targetdir "bin"
+--~     files ( gkit_files )
+--~     files { gkit_dir .. "/tutos/mesh_viewer.cpp"}
+--~     files { gkit_dir .. "/tutos/mesh_buffer.cpp"}
+--~     files { gkit_dir .. "/tutos/mesh_buffer.h"}
+--~     files { gkit_dir .. "/tutos/mesh_data.cpp"}
+--~     files { gkit_dir .. "/tutos/mesh_data.h"}
+--~     files { gkit_dir .. "/tutos/material_data.cpp"}
+--~     files { gkit_dir .. "/tutos/material_data.h"}
 
 
 -- description des tutos openGL avances / M2
@@ -216,7 +216,9 @@ tutosM2 = {
     "tuto_raytrace_compute",
     "tuto_histogram1_compute",
     "tuto_histogram2_compute",
-    "tuto_histogram_compute"
+    "tuto_histogram_compute",
+    "tuto_read_buffer",
+    "tuto_count_buffer"
 }
 
 for i, name in ipairs(tutosM2) do
@@ -229,5 +231,23 @@ for i, name in ipairs(tutosM2) do
 end
 
 
+project("gltf")
+	language "C++"
+	kind "ConsoleApp"
+	targetdir "bin"
+	files ( gkit_files )
+	files { gkit_dir .. "/tutos/gltf/cgltf.cpp" }
+	files { gkit_dir .. "/tutos/gltf/gltf.cpp" }
+--~ 	files { gkit_dir .. "/tutos/gltf/simple.cpp" }
+	files { gkit_dir .. "/tutos/gltf/viewer.cpp" }
 
+project("simple_gltf")
+	language "C++"
+	kind "ConsoleApp"
+	targetdir "bin"
+	files ( gkit_files )
+	files { gkit_dir .. "/tutos/gltf/cgltf.cpp" }
+	files { gkit_dir .. "/tutos/gltf/gltf.cpp" }
+	files { gkit_dir .. "/tutos/gltf/simple.cpp" }
+--~ 	files { gkit_dir .. "/tutos/gltf/viewer.cpp" }
 

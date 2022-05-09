@@ -22,6 +22,63 @@ int miplevels( const int width, const int height )
     return levels;
 }
 
+GLuint make_texture( const int unit, const int width, const int height, const GLenum texel_type, const GLenum data_format, const GLenum data_type )
+{
+    // cree la texture openGL
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    
+    // fixe les parametres de filtrage par defaut
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // transfere les donnees dans la texture, 4 float par texel
+    glTexImage2D(GL_TEXTURE_2D, 0,
+        texel_type, width, height, 0,
+        data_format, data_type, nullptr);
+    
+    // prefiltre la texture / alloue les mipmaps
+    glGenerateMipmap(GL_TEXTURE_2D);
+    return texture;
+}
+
+GLuint make_flat_texture( const int unit, const int width, const int height, const GLenum texel_type, const GLenum data_format, const GLenum data_type )
+{
+    // cree la texture openGL
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    
+    // fixe les parametres de filtrage par defaut
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    
+    // 1 seul mipmap
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    
+    // transfere les donnees dans la texture, 4 float par texel
+    glTexImage2D(GL_TEXTURE_2D, 0,
+        texel_type, width, height, 0,
+        data_format, data_type, nullptr);
+    
+    // prefiltre la texture / alloue les mipmaps
+    glGenerateMipmap(GL_TEXTURE_2D);
+    return texture;
+}
+
+GLuint make_flat_depth_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
+}
+
+
 GLuint make_texture( const int unit, const Image& im, const GLenum texel_type )
 {
     if(im == Image::error())
@@ -94,7 +151,6 @@ GLuint make_texture( const int unit, const ImageData& im, const GLenum texel_typ
     return texture;
 }
 
-
 GLuint read_texture( const int unit, const char *filename, const GLenum texel_type )
 {
     ImageData image= read_image_data(filename);
@@ -102,6 +158,39 @@ GLuint read_texture( const int unit, const char *filename, const GLenum texel_ty
 }
 
 
+// creation des textures
+GLuint make_depth_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
+}
+
+GLuint make_uint_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_RED_INTEGER, GL_UNSIGNED_INT);
+}
+
+GLuint make_float_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_RED, GL_FLOAT);
+}
+
+GLuint make_vec2_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_RG, GL_FLOAT);
+}
+
+GLuint make_vec3_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_RGB, GL_FLOAT);
+}
+
+GLuint make_vec4_texture( const int unit, const int width, const int height, const GLenum texel_type )
+{
+    return make_flat_texture(unit, width, height, texel_type, GL_RGBA, GL_FLOAT);
+}
+
+
+//
 int screenshot( const char *filename )
 {
     // recupere le contenu de la fenetre / framebuffer par defaut

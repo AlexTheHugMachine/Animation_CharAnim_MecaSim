@@ -15,7 +15,7 @@
 typedef SDL_Window *Window;
 
 //! creation d'une fenetre pour l'application.
-Window create_window( const int width, const int height, const int major= 3, const int minor= 2, const int samples= 1 );
+Window create_window( const int width, const int height, const int major= 3, const int minor= 2, const int samples= 0 );
 //! destruction de la fenetre.
 void release_window( Window w );
 

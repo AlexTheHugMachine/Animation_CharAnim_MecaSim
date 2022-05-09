@@ -81,6 +81,11 @@ unsigned int d= m.vertex(Point(...));
 // decrit 2 triangles avec les indices des 4 sommets
 m.triangle(a, b, c);
 m.triangle(a, c, d);
+
+// ou decrit un triangle indexe sommet par sommet (indice par indice)
+m.index(a);
+m.index(b);
+m.index(c);
 \endcode
 */
 
@@ -96,9 +101,9 @@ struct TriangleData
 //! representation d'un ensemble de triangles de meme matiere.
 struct TriangleGroup
 {
-    int material_index; //!< indice de la matiere du groupe de triangles
-    int first;          //!< premier triangle du groupe
-    int n;              //!< nombre de triangles du groupe
+    int index;  //!< indice de la "propriete"du groupe de triangles, par defaut : indice de la matiere
+    int first;  //!< premier triangle du groupe
+    int n;      //!< nombre de triangles du groupe
 };
 
 
@@ -110,11 +115,11 @@ public:
     //@{
     //! constructeur par defaut.
     Mesh( ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
-        m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_buffer(0), m_index_buffer(0), m_update_buffers(false) {}
+        m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_buffer(0), m_index_buffer(0), m_vertex_buffer_size(0), m_index_buffer_size(0), m_update_buffers(false) {}
     
     //! constructeur.
     Mesh( const GLenum primitives ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
-        m_color(White()), m_primitives(primitives), m_vao(0), m_buffer(0), m_index_buffer(0), m_update_buffers(false) {}
+        m_color(White()), m_primitives(primitives), m_vao(0), m_buffer(0), m_index_buffer(0), m_vertex_buffer_size(0), m_index_buffer_size(0), m_update_buffers(false) {}
     
     //! construit les objets openGL.
     int create( const GLenum primitives );
@@ -129,7 +134,7 @@ public:
     //! definit la couleur du prochain sommet.
     Mesh& color( const Color& c ) { return color(vec4(c.r, c.g, c.b, c.a)); }
     //! definit la couleur du prochain sommet.
-    Mesh& color( const float r, const float g, const float b, const float a= 1) { return color(Color(r, g, b, a)); }
+    Mesh& color( const float r, const float g, const float b, const float a= 1) { return color(vec4(r, g, b, a)); }
     
     //! definit la normale du prochain sommet.
     Mesh& normal( const vec3& n );
@@ -180,6 +185,21 @@ public:
     
     //! demarre un nouveau strip. a utiliser avec un objet composes de GL_TRIANGLE_STRIP, doit aussi fonctionner avec GL_TRIANGLE_FAN, GL_LINE_STRIP, GL_LINE_LOOP, etc.
     Mesh& restart_strip( );
+    
+    /*! insere un indice de sommet. 
+    \code
+    Mesh m(GL_TRIANGLES);
+    unsigned int a= m.vertex( Point(ax, ay, az) );
+    unsigned int b= m.vertex( Point(bx, by, bz) );
+    unsigned int c= m.vertex( Point(cx, cy, cz) );
+    
+    // insere le triangle abc
+    m.index(a);
+    m.index(b);
+    m.index(c);
+    \endcode
+    */
+    Mesh& index( const int a );
     //@}
     
     //! \name modification des attributs des sommets.
@@ -215,6 +235,7 @@ public:
     //@{
     //! renvoie la description des matieres.
     const Materials& materials( ) const;
+    //! renvoie la description des matieres.
     Materials& materials( );
     //! remplace la description des matieres.
     void materials( const Materials& materials );
@@ -238,8 +259,10 @@ public:
     //! renvoie la matiere d'un triangle.
     const Material &triangle_material( const unsigned int id ) const;
     
-    //! renvoie les groupes de triangles de meme matiere. permet d'afficher l'objet matiere par matiere.
+    //! renvoie les groupes de triangles de meme matiere. re-organise les triangles. permet d'afficher l'objet matiere par matiere.
     std::vector<TriangleGroup> groups( );
+    //! renvoie les groupes de triangles de meme 'propriete'. re-organise les triangles.
+    std::vector<TriangleGroup> groups( const std::vector<unsigned int>& triangle_properties );
     //@}
     
     //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet (boite englobante alignee sur les axes, aabb).
@@ -294,13 +317,7 @@ public:
     bool has_texcoord( ) const { return m_texcoords.size() == m_positions.size(); }
     bool has_normal( ) const { return m_normals.size() == m_positions.size(); }
     bool has_color( ) const { return m_colors.size() == m_positions.size(); }
-    bool has_material_index( ) const 
-    { 
-        // solution simple, pas compatible avec un mesh indexe.
-        if(m_indices.size())
-            return false;
-        return m_triangle_materials.size() == m_positions.size() / 3; 
-    }
+    bool has_material_index( ) const { return int(m_triangle_materials.size()) == triangle_count(); }
     //@}
     
     //! renvoie le type de primitives.
@@ -336,7 +353,7 @@ public:
     //! dessine une partie de l'objet avec un shader program.
     void draw( const int first, const int n, const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     
-private:    
+private:
     //! modifie les buffers openGL, si necessaire.
     int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     

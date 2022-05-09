@@ -1,13 +1,6 @@
 
 //! \file window.cpp
 
-#ifndef _MSC_VER
-    #include <sys/stat.h>
-#else
-    #include <sys/types.h>
-    #include <sys/stat.h>
-#endif
-
 #include <cassert>
 #include <cstdio>
 #include <cstdio>
@@ -19,9 +12,11 @@
 #include <string>
 #include <iostream>
 
+#include <SDL2/SDL_image.h>
+
 #include "glcore.h"
 #include "window.h"
-
+#include "files.h"
 
 
 static float aspect= 1;
@@ -148,7 +143,7 @@ int run( Window window, int (*draw)() )
         // dessiner
         if(draw() < 1)
             stop= 1;    // fermer l'application si draw() renvoie 0 ou -1...
-
+        
         // presenter le resultat
         SDL_GL_SwapWindow(window);
     }
@@ -250,7 +245,7 @@ int events( Window window )
 Window create_window( const int w, const int h, const int major, const int minor, const int samples )
 {
     // init sdl
-    if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0)
     {
         printf("[error] SDL_Init() failed:\n%s\n", SDL_GetError());
         return nullptr;
@@ -260,6 +255,9 @@ Window create_window( const int w, const int h, const int major, const int minor
     atexit(SDL_Quit);
 
     // configuration openGL
+#ifndef GK_OPENGLES
+    printf("creating window(%d, %d) openGL %d.%d, %d MSAA samples...\n", w, h, major, minor, samples);
+    
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
 #ifndef GK_RELEASE
@@ -276,7 +274,14 @@ Window create_window( const int w, const int h, const int major, const int minor
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples);
     }
     
-    SDL_GL_SetSwapInterval(-1);
+#else
+    printf("creating window(%d, %d) openGL ES 3.0...\n", w, h);
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+#endif
     
     // creer la fenetre
     Window window= SDL_CreateWindow("gKit",
@@ -288,11 +293,22 @@ Window create_window( const int w, const int h, const int major, const int minor
         return nullptr;
     }
 
+    // icone
+    {
+        //~ SDL_Surface *icon= IMG_Load( smart_path("data/surprise.png") );
+        SDL_Surface *icon= IMG_Load( smart_path("data/smirk.png") );
+        if(icon)
+        {
+            SDL_SetWindowIcon(window, icon);
+            SDL_FreeSurface(icon);
+        }
+    }
+    
     // recupere l'etat du clavier
     int keys;
     const unsigned char *state= SDL_GetKeyboardState(&keys);
     key_states.assign(state, state + keys);
-
+    
     SDL_SetWindowDisplayMode(window, nullptr);
     SDL_StartTextInput();
 
@@ -345,7 +361,10 @@ Context create_context( Window window )
         printf("[error] creating openGL context.\n");
         return nullptr;
     }
-
+    
+    if(SDL_GL_SetSwapInterval(-1) != 0)
+        printf("[warning] can't set adaptive vsync...\n");
+    
     if(SDL_GL_GetSwapInterval() != -1)
     {
         printf("vsync ON\n");
@@ -399,27 +418,6 @@ void release_context( Context context )
     SDL_GL_DeleteContext(context);
 }
 
-
-//! verifie l'existance d'un fichier.
-bool exists( const char *filename )
-{
-#ifndef _MSC_VER
-    struct stat info;
-    if(stat(filename, &info) < 0)
-        return false;
-
-    // verifie aussi que c'est bien un fichier standard
-    return S_ISREG(info.st_mode);
-
-#else
-    struct _stat64 info;
-    if(_stat64(filename, &info) < 0)
-        return false;
-
-    // verifie aussi que c'est bien un fichier standard
-    return (info.st_mode & _S_IFREG);
-#endif
-}
 
 static std::string smartpath;
 static std::string path;

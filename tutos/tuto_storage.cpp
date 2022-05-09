@@ -258,12 +258,12 @@ int quit( )
 int main( int argc, char **argv )
 {
     // etape 1 : creer la fenetre
-    Window window= create_window(1024, 640);
+    Window window= create_window(1024, 640,  4, 3);       // openGL version 4.3
     if(window == nullptr)
         return 1;
 
     // etape 2 : creer un contexte opengl pour pouvoir dessiner
-    Context context= create_context(window, 4,3);       // openGL version 4.3
+    Context context= create_context(window);
     if(context == nullptr)
         return 1;
 

@@ -1,0 +1,289 @@
+
+
+/*! \addtogroup decals transformations, projection et textures : ombres simples et details
+
+# projetter une texture ? 
+
+_mais à quoi ça sert ?_ à décorer des objets (en plus des textures habituelles), ou à ajouter des détails à la volée, à peindre sur le décor
+et, après un peu de travail, à projetter l'ombre des objets sur le décor !
+
+vous pouvez regarder des exemples de jeux de plateforme ou de runners, souvent les ombres sont très simples / simplifiées et ne représentent pas 
+vraiment la forme de l'objet qui les projette...
+
+pour projetter une texture, une image, on commence par placer et orienter une camera qui doit observer la zone sur laquelle projetter la texture, 
+relisez en détail la partie camera dans \ref transformations, si nécessaire.
+
+ce type de détail, ajouté par projection d'une image, s'appelle un _décal_.
+
+# décal 
+
+_comment dessiner une ombre simplifiée sous un personnage ?_
+
+comme suggéré juste au dessus, il 'suffit' de placer et d'orienter une camera à la verticale au dessus d'un personnage, en suivant les 
+explications de \ref transformations. 
+
+<IMG SRC="decal_1.png" width="100%">
+
+\code
+// par exemple, a la verticale au dessus d'un objet :
+// la transformation est une translation le long du vecteur Z= (0, 0, 1), si on veut placer le cube plus haut, il suffit d'utiliser une valeur > 1
+// on re-oriente aussi la camera pour qu'elle regarde vers le bas, cf RotationX(-90)
+
+Transform r= RotationX(-90);
+Transform t= Translation(0,0, 8);
+Transform m= r * t;
+
+// dessine le robot
+draw(objet, /* model */ m_position, camera());
+// dessine les axes du repere de la camera 
+draw(axes, /* model */ m_position * m, camera());
+\endcode
+
+reste à afficher / dessiner une texture sur le décor observé par cette camera : 
+
+<IMG SRC="decal_3.png" width="100%">
+
+quelles sont les matrices `view` et `projection` de cette nouvelle camera ? pour view, pas de problèmes, c'est l'inverse de `position` et `m`, pour 
+la projection, on a le choix : soit une perspective comme d'habitude, cf Perspective(), soit une projection orthographique cf Ortho() : 
+
+\code
+// transformation view pour placer la camera a la verticale du robot
+Transform decal_view= Inverse(m_position * m);
+
+// projection vers la scène
+Transform decal_projection= Perspective(35, 1, float(0.1), float(10));	// projection 'classique'
+Transform decal_projection= Ortho(-2, 2, -2, 2, float(0.1), float(10));	// projection 'cube'
+\endcode
+
+pour obtenir ca :
+<IMG SRC="decal_2.png" width="100%">
+
+## comment régler les paramètres des projections ?
+pour ajuster les paramètres des projections, le plus simple est de pouvoir visualiser la forme du frustum de la camera : afficher la région observée 
+par la camera. 
+
+c'est encore une application (directe) des compositions des transformations et des produits de matrices... 
+
+on connait les coordonnées des sommets de la région observée par la camera, mais dans le repère projectif de la camera. ce sont les sommets 
+du cube `[-1 1]` sur les 3 axes (par définition)... pour dessiner ce cube dans le repère de la scène, il faut calculer le changement vers la scène.
+habituellement, on connait les coordonnées dans le repère de la scène, puis ils sont transformés dans le repère camera, puis dans le repère projectif. 
+là, on veut faire le contraire : on connait les coordonnées dans le repère projectif... 
+
+c'est tout simplement l'inverse des transformations (de leur produit) !
+si `q` représente les coordonnées dans le repère projectif, et `p` les coordonnées dans le repère de la scène, on peut écrire :
+
+\f$ q= projection * view * p \f$
+
+et dans l'autre sens : 
+
+\f$ p= (projection * view)^{-1} * q \f$
+
+\code
+Mesh make_frustum( )
+{
+    glLineWidth(2);    
+    Mesh camera= Mesh(GL_LINES);
+    
+    camera.color(Yellow());
+    // face avant
+    camera.vertex(-1, -1, -1);
+    camera.vertex(-1, 1, -1);
+    camera.vertex(-1, 1, -1);
+    camera.vertex(1, 1, -1);
+    camera.vertex(1, 1, -1);
+    camera.vertex(1, -1, -1);
+    camera.vertex(1, -1, -1);
+    camera.vertex(-1, -1, -1);
+    
+    // face arriere
+    camera.vertex(-1, -1, 1);
+    camera.vertex(-1, 1, 1);
+    camera.vertex(-1, 1, 1);
+    camera.vertex(1, 1, 1);
+    camera.vertex(1, 1, 1);
+    camera.vertex(1, -1, 1);
+    camera.vertex(1, -1, 1);
+    camera.vertex(-1, -1, 1);
+    
+    // aretes
+    camera.vertex(-1, -1, -1);
+    camera.vertex(-1, -1, 1);
+    camera.vertex(-1, 1, -1);
+    camera.vertex(-1, 1, 1);
+    camera.vertex(1, 1, -1);
+    camera.vertex(1, 1, 1);
+    camera.vertex(1, -1, -1);
+    camera.vertex(1, -1, 1);
+    
+    return camera;
+}
+
+// passage repere projection vers global : inverse de projection*view
+Transform decal_m= Inverse(decal_projection * decal_view);
+
+// affiche le frustum de la camera
+draw(frustum, decal_m, camera());
+\endcode
+
+<IMG SRC="decal_4.png" width="50%"><IMG SRC="decal_5.png" width="50%">
+
+## finir le calcul : projetter le décal
+
+maintenant que tous les paramètres sont bien choisis, il ne reste plus qu'à finir le travail... pour chaque point `p` de chaque objet que l'on dessine, 
+il faut trouver ses coordonnées dans le repère projectif de la camera que l'on vient de positionner, récupérer la couleur de l'image et modifier la couleur 
+de l'objet... 
+
+c'est encore une application des compositions de transformations, il _suffit_ de calculer un changement de repère : depuis la scène vers la projection puis 
+vers les coordonnées de pixels dans l'image / la texture que l'on projette.
+
+c'est la même chose que toute à l'heure : 
+
+\f$ q= viewport * projection * view  * p \f$
+
+avec un détail supplémentaire : les coordonnées utilisées pour lire la couleur d'un pixel de la texture sont dans [0 1], alors que les coordonnées de la projection
+sont dans [-1 1], c'est la transformation Viewport() qui ajuste ça : 
+
+\code
+Transform decal_viewport= Viewport(1, 1);
+// transformation complete : 
+Transform decal_matrix= decal_viewport * decal_projection * decal_view;
+\endcode
+
+il ne reste plus qu'à écrire les shaders pour faire les calculs sur la carte graphique : 
+
+\code
+// vertex shader
+layout(location= 0) in vec3 position;
+
+uniform mat4 mvpMatrix;
+uniform mat4 decalMatrix;
+
+out vec4 decal_position;
+
+void main( )
+{
+    gl_Position= mvpMatrix * vec4(position, 1);
+    decal_position= decalMatrix * vec4(position, 1);
+}
+\endcode
+
+le vertex shader est sans surprise, il fait la transformation habituelle pour dessiner un objet, mais en plus calcule aussi les coordonnées du sommet dans la 
+repère projectif de la camera placée au dessus de l'objet pour projetter le décal.
+
+le fragment shader récupère ces coordonnées, lit la texture et modifie la couleur de l'objet : 
+\code
+// fragment shader
+out vec4 fragment_color;
+
+uniform sampler2D decal;		// texture du decal
+in vec4 decal_position;		    // position dans la projection du decal
+
+void main( )
+{
+	... 
+	vec3 color= ... ; 	        // calcul habituel de la couleur de l'objet
+	
+	// recupere la couleur du decal
+	// termine la projection : passage repere homogene 4d vers repere reel 3d
+	vec3 decal_texcoord= decal_position.xyz / decal_position.w;
+	vec3 decal_color= texture(decal, decal_texcoord.xy).rgb;
+	
+	fragment_color= vec4(color * decal_color, 1);
+}
+\endcode
+
+### c'est moche les bandes sur les cotés...
+
+pourquoi les bords de la texture se repètent sur tout l'objet ? tout simplement parce que tous les points de l'objet se transforment correctement dans l'espace
+projectif de la camera du décal. mais, bien sur, il est possible d'éliminer les bordures et vérifiant les coordonnées que l'on vient de calculer... si les coordonnées 
+transformées ne sont pas dans le repère image [0 1], ils ne correspondent pas à un pixel de la texture, mais openGL affiche quand meme quelque chose 
+(la couleur du bord), au lieu de crasher (parce qu'on accède à un pixel de la texture qui n'existe pas)...
+
+on peut vérifier les coordonnées avant de lire la couleur de la texture et ne pas modifier la couleur de l'objet : 
+\code
+// teste les coordonnées du decal
+vec3 texcoord= decal_position.xyz / decal_position.w;
+vec3 decal_color= texture(decal, texcoord.xy).rgb;
+if(texcoord.x < 0 || texcoord.x > 1)
+	decal_color.g= 1;	// trop a gauche / droite
+if(texcoord.y < 0 || texcoord.y > 1)
+	decal_color.r= 1;	// trop en haut / bas
+if(texcoord.z < 0 || texcoord.z > 1)
+	decal_color.b= 1;	// en dehors 
+
+// remarque : chaque bordure est affichee en rouge, vert ou bleu. 
+// pour ne pas afficher la bordure, il suffit de remplacer decal_color par du blanc, decal_color= vec3(1)
+
+color= color * decal_color;
+\endcode
+
+<IMG SRC="decal_6.png" width="50%"><IMG SRC="decal_7.png" width="50%">
+
+<IMG SRC="decal_8.png" width="100%">
+
+### c'est moche avec une grille...
+
+il suffit de charger une autre texture, par exemple, une magnifique patate noire sur fond blanc, dessinée dans gimp....
+
+<IMG SRC="decal_9.png" width="100%">
+
+ou un splash de couleur... on peut aussi dessiner le decal sur plusieurs objets, pas uniquement le decor... 
+
+<IMG SRC="decal_10.png" width="100%">
+
+
+code complet dans tuto_decal.cpp et decal.glsl
+
+
+### pour les curieux : 
+
+openGL permet d'ajuster la couleur renvoyee par la texture pour des coordonnées en dehors de [0 1] : il faut modifier les parametres de la texture, après 
+l'avoir chargée dans l'init : 
+
+\code
+init( ) :
+	GLuint texture= read_texture(0, "data/grid.png");
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);	// utiliser la couleur du bord
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+	float border[]= { 1, 1, 1, 1 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);		// couleur du bord = blanc
+	\endcode
+
+`GL_CLAMP_TO_BORDER` indique que les coordonnées en dehors de la texture renvoie la couleur du `bord` (la couleur du premier ou du dernier pixel 
+de la ligne ou de la colonne dans l'image) , et `GL_TEXTURE_BORDER_COLOR` permet de choisir cette couleur, mais uniquement du blanc ou du noir, 
+les autres valeurs ne sont pas prises en compte. dans le cas des décals, on peut utiliser cette fonctionnalité (renvoyer du blanc en dehors de la texture). 
+sinon, il faut faire les tests sur `texcoord` dans le shader et renvoyer la bonne couleur, comme dans l'exemple au dessus qui colorie chaque bordure d'une 
+couleur différente.
+
+_remarque :_ ce problème n'est visible que lorsque le bord de la texture n'est pas constant, comme sur la grille. avec une patate peinte au milieu de la 
+texture, le problème n'est pas visible...
+
+openGL peut aussi faire le passage coordonnées homgènes (4d) vers coordonnées réelles (3d) automatiquement, il suffit d'utiliser `textureProj()` pour 
+lire la texture au lieu de la fonction habituelle `texture()` : 
+
+\code
+// fragment shader
+out vec4 fragment_color;
+
+uniform sampler2D decal;		// texture du decal
+in vec4 decal_position;		    // position dans la projection du decal
+
+void main( )
+{
+	... 
+	vec3 color= ... ; 	        // calcul habituel de la couleur de l'objet
+	
+	// recupere la couleur du decal
+	// termine automatiquement la projection : passage repere homogene 4d vers repere reel 3d
+	vec3 decal_color= textureProj(decal, decal_position).rgb;
+	
+	fragment_color= vec4(color * decal_color, 1);
+}
+\endcode
+
+_attention :_ la texture renvoie aussi la couleur du `bord` dans ce cas. on peut corriger ce défaut en modifiant les paramètres de la texture ou en écrivant
+les tests sur les coordonnées, comme au dessus.
+
+*/

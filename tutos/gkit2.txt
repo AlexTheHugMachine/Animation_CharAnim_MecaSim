@@ -5,6 +5,10 @@ gKit2light est une base de code permettant d'écrire des applications utilisant 
 
 pour l'utiliser, il faut installer quelques dépendances, selon le système que vous utilisez :
     - \ref installation
+	
+ensuite, c'est parti ! comment écrire une première application gKit : 
+	- \ref debut
+	- \ref shaders
 
 gKit2light est composé de plusieurs utilitaires :
     - window.h fournit un squelette d'application, app.h fournit une classe application de base,
@@ -24,13 +28,8 @@ mais il y a aussi pas mal de tutos / exemple de code :
     - \ref intro3d,
     - \ref tuto_application,
     - \ref transformations,
-    - tuto2.cpp utilisation de mesh pour décrire les sommets d'un ou plusieurs triangles et les dessiner,
-    - tuto3.cpp transformations, rotation d'un triangle dans l'image,
-    - tuto4.cpp utiliser une camera pour observer un objet,
-    - tuto5.cpp charger un fichier .obj, utiliser une camera pour l'observer et controler la camera à la souris,
-    - tuto6.cpp idem tuto5, charge une texture et la plaque sur l'objet dessiné.
-    
-    - tuto7.cpp, idem tuto6 mais utilise la classe App pour construire l'application,
+    - \ref decals,
+    - tuto7.cpp, utilise la classe App pour construire l'application,
     - tuto7_camera.cpp, idem tuto7 mais utilise la classe AppCamera, qui définit une camera par défaut,
     - tuto8.cpp, exemple d'utilisation de App::update() pour modifier la transformation de l'objet en fonction du temps,
     
@@ -40,6 +39,7 @@ mais il y a aussi pas mal de tutos / exemple de code :
     - \ref tuto_mesh_buffer, complète le tuto9 avec la création des buffers et du vertex array object, pour dessiner un objet Mesh, directement avec openGL... 
     
     - \ref matiere, lumière, matière et brdf,
+    - \ref reflets, matière et reflets réalistes,
     - \ref brdf, écrire un shader, matière, brdf, pbr, etc.
     
     - \ref shader_kit est un utilitaire pour prototyper rapidement des shaders.

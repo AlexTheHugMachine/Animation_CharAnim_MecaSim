@@ -21,16 +21,28 @@ struct Transform
 {
     //! constructeur.
     Transform (
-        const float t00=1.f, const float t01=0.f, const float t02=0.f, const float t03=0.f,
-        const float t10=0.f, const float t11=1.f, const float t12=0.f, const float t13=0.f,
-        const float t20=0.f, const float t21=0.f, const float t22=1.f, const float t23=0.f,
-        const float t30=0.f, const float t31=0.f, const float t32=0.f, const float t33=1.f );
+        const float t00= 1, const float t01= 0, const float t02= 0, const float t03= 0,
+        const float t10= 0, const float t11= 1, const float t12= 0, const float t13= 0,
+        const float t20= 0, const float t21= 0, const float t22= 1, const float t23= 0,
+        const float t30= 0, const float t31= 0, const float t32= 0, const float t33= 1 );
     
     //! constructeur a partir de 4 Vector colonnes, met (0, 0, 0, 1) dans la 4e ligne 
-    Transform(const Vector& x, const Vector& y, const Vector& z, const Vector& w);
-
+    Transform( const Vector& x, const Vector& y, const Vector& z, const Vector& w );
+    
+    //! initialise une colonne de la matrice a partir de 4 floats.
+    Transform& column( const int id, const float t0, const float t1, const float t2, const float t3 );
+    
+    //! initialise une ligne de la matrice.
+    Transform& row( const int id, const float t0, const float t1, const float t2, const float t3 );
+    
+    //! initialise la matrice avec 16 floats organises par colonne.
+    Transform& column_major( const float matrix[16] );
+    
+    //! initialise la matrice avec 16 floats organises par ligne.
+    Transform& row_major( const float matrix[16] );
+    
     //! renvoie le Vector colonne c de la matrice
-    Vector operator[](int c) const;
+    Vector operator[] ( const int c ) const;
 
     //! renvoie le point transforme.
     Point operator() ( const Point& p ) const;
@@ -50,7 +62,7 @@ struct Transform
     Transform normal( ) const;  
     
     //! renvoie l'adresse de la premiere valeur de la matrice.
-    const float *buffer( ) const { return &m[0][0]; }
+    const float *data( ) const { return &m[0][0]; }
     
     float m[4][4];
 };

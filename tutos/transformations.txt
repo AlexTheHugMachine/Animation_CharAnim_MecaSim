@@ -152,7 +152,7 @@ class Ex1 : public AppCamera
 	
 	int render( )
 	{
-		glClear(Gl_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 		
 		draw(m_objet, /* model */ Identity(), camera());
 	}
@@ -239,7 +239,7 @@ class Ex1 : public AppCamera
 	
 	int render( )
 	{
-		glClear(Gl_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 		
 		Transform model= Identity();
 		draw(m_objet, model, camera());
@@ -471,7 +471,6 @@ Pour vous aider à visualiser cette relation, on va afficher les axes du repere 
 placée au meme endroit que l'objet : 
 
 \code
-
 Mesh make_grid_camera( )
 {
     Mesh camera= Mesh(GL_LINES);
@@ -506,10 +505,7 @@ Mesh make_grid_camera( )
 }
 \endcode
 
-il suffit de modifer le code précedent pour afficher ce 'repere' à la place du petit cube qui tourne... 
-\endcode
-
-<IMG SRC="transformations_view1.png" width="100%">
+il suffit de modifer le code précedent pour afficher ce 'repere' à la place du cube qui tourne... 
 
 <IMG SRC="transformations_view2.png" width="100%">
 
@@ -625,5 +621,13 @@ on peut simplifier tout ca et ne calculer qu'une seule inversion :
 \endcode
 
 le code complet est disponible, cf tuto_transformations_lookat.cpp
+
+*/
+
+/*
+# et avec un gamepad ?
+
+pas de problème, SDL est développé par valve, utiliser un pad est très simple, la [doc GameController de SDL2](https://wiki.libsdl.org/CategoryGameController)
+un code d'exemple complet est dispo dans tuto_gamepads.cpp
 
 */

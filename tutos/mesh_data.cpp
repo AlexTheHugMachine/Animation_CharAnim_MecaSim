@@ -3,39 +3,14 @@
 #include <cstdio>
 #include <ctype.h>
 #include <climits>
+#include <cmath>
 
 #include <algorithm>
 #include <map>
 
+#include "files.h"
 #include "material_data.h"
 #include "mesh_data.h"
-
-
-/*! renvoie le chemin d'acces a un fichier. le chemin est toujours termine par /
-    pathname("path\to\file") == "path/to/"
-    pathname("path\to/file") == "path/to/"
-    pathname("path/to/file") == "path/to/"
-    pathname("file") == "./"
- */
-std::string pathname( const std::string& filename )
-{
-    std::string path= filename;
-#ifndef WIN32
-    std::replace(path.begin(), path.end(), '\\', '/');   // linux, macos : remplace les \ par /.
-    size_t slash = path.find_last_of( '/' );
-    if(slash != std::string::npos)
-        return path.substr(0, slash +1); // inclus le slash
-    else
-        return "./";
-#else
-    std::replace(path.begin(), path.end(), '/', '\\');   // windows : remplace les / par \.
-    size_t slash = path.find_last_of( '\\' );
-    if(slash != std::string::npos)
-        return path.substr(0, slash +1); // inclus le slash
-    else
-        return ".\\";
-#endif
-}
 
 
 MeshData read_mesh_data( const char *filename )
@@ -331,6 +306,8 @@ void bounds( const MeshData& data, Point& pmin, Point& pmax )
 
 void normals( MeshData& data )
 {
+printf("[mesh] building normals...\n");
+
     // une normale par position
     std::vector<Vector> normals(data.positions.size(), Vector());
     for(int i= 0; i + 2 < (int) data.position_indices.size(); i+= 3)
@@ -342,11 +319,20 @@ void normals( MeshData& data )
         
         // normale geometrique
         Vector n= normalize(cross(normalize(b - a), normalize(c - a)));
+        float anglea= std::acos(dot(normalize(b - a), normalize(c - a)));
+        //~ float anglea= std::atan2(length(cross(normalize(b - a), normalize(c - a))), dot(normalize(b - a), normalize(c - a)));
+        //~ if(anglea < 0) anglea+= float(2*M_PI);
+        float angleb= std::acos(dot(normalize(c - b), normalize(a - b)));
+        //~ float angleb= std::atan2(length(cross(normalize(c - b), normalize(a - b))), dot(normalize(c - b), normalize(a - b)));
+        //~ if(angleb < 0) angleb+= float(2*M_PI);
+        float anglec= std::acos(dot(normalize(a - c), normalize(b - c)));
+        //~ float anglec= std::atan2(length(cross(normalize(a - c), normalize(b - c))), dot(normalize(a - c), normalize(b - c)));
+        //~ if(anglec < 0) anglec+= float(2*M_PI);
         
         // somme la normale sur les sommets du triangle
-        normals[data.position_indices[i]]=    normals[data.position_indices[i]] + n;
-        normals[data.position_indices[i +1]]= normals[data.position_indices[i +1]] + n;
-        normals[data.position_indices[i +2]]= normals[data.position_indices[i +2]] + n;
+        normals[data.position_indices[i]]=    normals[data.position_indices[i]]    + n * anglea;
+        normals[data.position_indices[i +1]]= normals[data.position_indices[i +1]] + n * angleb;
+        normals[data.position_indices[i +2]]= normals[data.position_indices[i +2]] + n * anglec;
     }
     
     // copie 

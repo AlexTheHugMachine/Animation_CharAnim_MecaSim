@@ -4,17 +4,11 @@
 #include <cstdio>
 #include <cstring>
 
-#ifndef _MSC_VER
-    #include <sys/stat.h>
-#else
-    #include <sys/types.h>
-    #include <sys/stat.h>
-#endif
-
 #include <chrono>
 
 #include "glcore.h"
 #include "window.h"
+#include "files.h"
 
 #include "program.h"
 #include "uniforms.h"
@@ -29,34 +23,6 @@
 
 #include "text.h"
 #include "widgets.h"
-
-
-// utilitaire
-// renvoie la date de la derniere modification d'un fichier
-long int timestamp( const char *filename )
-{
-#ifndef _MSC_VER
-    struct stat info;
-    if(stat(filename, &info) < 0)
-        return 0;
-
-    // verifie aussi que c'est bien un fichier standard
-    if(S_ISREG(info.st_mode))
-        return info.st_mtime;
-
-#else
-    struct _stat64 info;
-    if(_stat64(filename, &info) < 0)
-        return 0;
-
-    // verifie aussi que c'est bien un fichier standard
-    if(info.st_mode & _S_IFREG)
-        return info.st_mtime;
-#endif
-
-    return 0;
-}
-
 
 
 
@@ -84,7 +50,7 @@ Orbiter camera;
 Widgets widgets;
 
 // application
-long int last_load= 0;
+size_t last_load= 0;
 void reload_program( )
 {
     if(program == 0)
@@ -270,6 +236,15 @@ int draw( void )
         camera.move(8.f * wheel.y);  // approche / eloigne l'objet
     }
     
+    // etat 
+    static float time= 0;
+    static int frame= 0;
+    static int video= 0;
+    static int freeze= 0;
+    static int reset_camera= 0;
+    static int copy_camera= 0;
+    static int paste_camera= 0;
+    
     // recupere les transformations
     Transform model= Identity();
     Transform view= camera.view();
@@ -279,6 +254,15 @@ int draw( void )
     Transform mvp= projection * view * model;
     Transform mvpInv= Inverse(mvp);
     Transform mv= model * view;
+    
+    // temps
+    if(key_state('t'))
+    {
+        clear_key_state('t');
+        freeze= (freeze+1) % 2;
+    }
+    if(freeze == 0)
+        time= global_time();
     
     // affiche l'objet
     if(program_failed == false)
@@ -313,9 +297,9 @@ int draw( void )
         
         // interactions
         program_uniform(program, "viewport", vec2(window_width(), window_height()));
-        program_uniform(program, "time", (float) global_time());
+        program_uniform(program, "time", time);
         program_uniform(program, "motion", vec3(mx, my, mb & SDL_BUTTON(1)));
-        program_uniform(program, "mouse", vec3(mousex, mousey, mb & SDL_BUTTON(1)));
+        program_uniform(program, "mouse", vec3(mousex, window_height() - mousey -1, mb & SDL_BUTTON(1)));
         
         // textures
         for(int i= 0; i < int(textures.size()); i++)
@@ -329,7 +313,8 @@ int draw( void )
         glDrawArrays(GL_TRIANGLES, 0, vertex_count);
     }
     
-    // affiche les infos
+    
+    // affiche les infos...
     begin(widgets);
     if(program_failed)
     {
@@ -339,6 +324,16 @@ int draw( void )
     }
     else
     {
+        button(widgets, "[s] screenshot ", frame);
+        button(widgets, "capture frames", video);
+        begin_line(widgets);
+        button(widgets, "[t] freeze time", freeze);
+        button(widgets, "[f] reset camera", reset_camera);
+        button(widgets, "[c] copy/save camera", copy_camera);
+        button(widgets, "[v] paste/read camera", paste_camera);
+        
+        begin_line(widgets);
+        begin_line(widgets);
         label(widgets, "program '%s' running...", program_filename);
         if(mesh_filename && mesh_filename[0])
         {
@@ -351,6 +346,7 @@ int draw( void )
             begin_line(widgets);
             label(widgets, "texture%u '%s'", i, texture_filenames[i]);
         }
+        
     }
     
     end(widgets);
@@ -358,8 +354,9 @@ int draw( void )
     draw(widgets, window_width(), window_height());
     
     
-    if(key_state('s'))
+    if(frame || key_state('s'))
     {
+        frame= 0;
         clear_key_state('s');
         
         static int calls= 1;
@@ -367,27 +364,18 @@ int draw( void )
         screenshot("shader_kit", calls++);
     }
     
-    static bool video= false;
-    if(key_state(SDLK_RETURN))
-    {
-        clear_key_state(SDLK_RETURN);
-        video= !video;
-        
-        if(video) 
-            printf("start video capture...\n");
-        else 
-            printf("stop video capture.\n");
-    }
     if(video) 
         capture("shader_kit");
     
-    if(key_state('c'))
+    if(copy_camera || key_state('c'))
     {
+        copy_camera= 0;
         clear_key_state('c');
         camera.write_orbiter("orbiter.txt");
     }
-    if(key_state('v'))
+    if(paste_camera || key_state('v'))
     {
+        paste_camera= 0;
         clear_key_state('v');
         if(camera.read_orbiter("orbiter.txt") < 0)
         {
@@ -395,9 +383,12 @@ int draw( void )
             camera.lookat(mesh_pmin, mesh_pmax);
         }
     }
-    if(key_state('f'))
+    
+    if(reset_camera || key_state('f'))
     {
+        reset_camera= 0;
         clear_key_state('f');
+        
         camera= Orbiter();
         camera.lookat(mesh_pmin, mesh_pmax);
     }

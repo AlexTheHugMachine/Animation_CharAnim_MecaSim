@@ -1,4 +1,6 @@
 
+// version avec memoire partagee...
+
 #version 430
 
 #ifdef COMPUTE_SHADER
@@ -19,7 +21,7 @@ void main( )
     vec4 pixel= imageLoad(image, ivec2(gl_GlobalInvocationID.xy));
     
     // calculer la cellule de l'histogramme pour le pixel
-    float grey= (pixel.r + pixel.b + pixel.b) / 3;      // entre 0 et 1
+    float grey= (pixel.r + pixel.g + pixel.b) / 3;      // entre 0 et 1
     int bin= int(grey * 15);
     
     uint ID= gl_LocalInvocationIndex;

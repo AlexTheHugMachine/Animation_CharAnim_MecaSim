@@ -11,6 +11,7 @@
 
 
 // utilitaire. creation d'une grille / repere.
+// n= 0 ne dessine que les axes du repere.
 Mesh make_grid( const int n= 10 )
 {
     Mesh grid= Mesh(GL_LINES);
@@ -20,29 +21,29 @@ Mesh make_grid( const int n= 10 )
     for(int x= 0; x < n; x++)
     {
         float px= float(x) - float(n)/2 + .5f;
-        grid.vertex(Point(px, 0, - float(n)/2 + .5f)); 
-        grid.vertex(Point(px, 0, float(n)/2 - .5f));
+        grid.vertex(px, 0, - float(n)/2 + .5f); 
+        grid.vertex(px, 0, float(n)/2 - .5f);
     }
 
     for(int z= 0; z < n; z++)
     {
         float pz= float(z) - float(n)/2 + .5f;
-        grid.vertex(Point(- float(n)/2 + .5f, 0, pz)); 
-        grid.vertex(Point(float(n)/2 - .5f, 0, pz)); 
+        grid.vertex(- float(n)/2 + .5f, 0, pz); 
+        grid.vertex(float(n)/2 - .5f, 0, pz); 
     }
     
     // axes XYZ
     grid.color(Red());
-    grid.vertex(Point(0, .1, 0));
-    grid.vertex(Point(1, .1, 0));
+    grid.vertex(0, .1, 0);
+    grid.vertex(1, .1, 0);
     
     grid.color(Green());
-    grid.vertex(Point(0, .1, 0));
-    grid.vertex(Point(0, 1, 0));
+    grid.vertex(0, .1, 0);
+    grid.vertex(0, 1, 0);
     
     grid.color(Blue());
-    grid.vertex(Point(0, .1, 0));
-    grid.vertex(Point(0, .1, 1));
+    grid.vertex(0, .1, 0);
+    grid.vertex(0, .1, 1);
     
     glLineWidth(2);
     
@@ -110,7 +111,7 @@ public:
             m_position= m_position * RotationY(4);     // tourne vers la droite
         if(key_state(SDLK_RIGHT))
             m_position= m_position * RotationY(-4);     // tourne vers la gauche
-        
+           
         draw(m_objet, /* model */ m_position, camera());
       
     // dessine le meme objet a un autre endroit. il faut modifier la matrice model, qui sert a ca : placer un objet dans le monde, ailleurs qu'a l'origine.
@@ -139,6 +140,14 @@ public:
         
         // dessine le repere global, pour le meme point de vue
         draw(m_repere, Identity(), camera());
+        
+        // screenshot
+        if(key_state('s'))
+        {
+            clear_key_state('s');
+            static int id= 1;
+            screenshot("camera", id++);
+        }
         
         // continuer...
         return 1;

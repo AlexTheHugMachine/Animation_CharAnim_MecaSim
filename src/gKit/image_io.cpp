@@ -145,17 +145,17 @@ ImageData read_image_data( const char *filename )
         printf("[error] loading image '%s'... sdl_image failed.\n%s\n", filename, SDL_GetError());
         return ImageData();
     }
-
+    
     // verifier le format, rgb ou rgba
     SDL_PixelFormat format= *surface->format;
-
+    
     int width= surface->w;
     int height= surface->h;
     int channels= format.BitsPerPixel / 8;
     
     if(channels < 3) channels= 3;
     ImageData image(width, height, channels);
-
+    
     printf("loading image '%s' %dx%d %d channels...\n", filename, width, height, channels);
 
     // converti les donnees en pixel rgba, et retourne l'image, origine en bas a gauche.
@@ -165,14 +165,14 @@ ImageData read_image_data( const char *filename )
         for(int y= height -1; y >= 0; y--, py++)
         {
             Uint8 *pixel= (Uint8 *) surface->pixels + py * surface->pitch;
-
+            
             for(int x= 0; x < width; x++)
             {
                 Uint8 r= pixel[format.Rshift / 8];
                 Uint8 g= pixel[format.Gshift / 8];
                 Uint8 b= pixel[format.Bshift / 8];
                 Uint8 a= pixel[format.Ashift / 8];
-
+                
                 std::size_t offset= image.offset(x, y);
                 image.pixels[offset]= r;
                 image.pixels[offset +1]= g;
@@ -189,7 +189,7 @@ ImageData read_image_data( const char *filename )
         for(int y= height -1; y >= 0; y--, py++)
         {
             Uint8 *pixel= (Uint8 *) surface->pixels + py * surface->pitch;
-
+            
             for(int x= 0; x < surface->w; x++)
             {
                 Uint8 r= 0;
@@ -199,7 +199,7 @@ ImageData read_image_data( const char *filename )
                 if(format.BitsPerPixel >=  8) { r= pixel[format.Rshift / 8]; g= r; b= r; }      // rgb= rrr
                 if(format.BitsPerPixel >= 16) { g= pixel[format.Gshift / 8]; b= 0; }    // rgb= rg0
                 if(format.BitsPerPixel >= 24) { b= pixel[format.Bshift / 8]; }  // rgb
-
+                
                 std::size_t offset= image.offset(x, y);
                 image.pixels[offset]= r;
                 image.pixels[offset +1]= g;
@@ -208,7 +208,7 @@ ImageData read_image_data( const char *filename )
             }
         }
     }
-
+    
     SDL_FreeSurface(surface);
     return image;
 }
@@ -379,5 +379,24 @@ ImageData copy( const ImageData& image, const int xmin, const int ymin, const in
     }
     
     return copy;
+}
+
+ImageData downscale( const ImageData& image )
+{
+    ImageData mip(std::max(1, image.width/2), std::max(1, image.height/2), image.channels);
+    
+    for(int y= 0; y < mip.height; y++)
+    for(int x= 0; x < mip.width; x++)
+    {
+        size_t d= mip.offset(x, y);
+        for(int i= 0; i < image.channels; i++)
+            mip.pixels[d+i]= (
+                    image.pixels[image.offset(2*x, 2*y)+i] 
+                + image.pixels[image.offset(2*x+1, 2*y)+i] 
+                + image.pixels[image.offset(2*x, 2*y+1)+i] 
+                + image.pixels[image.offset(2*x+1, 2*y+1)+i] ) / 4;
+    }
+    
+    return mip;
 }
 

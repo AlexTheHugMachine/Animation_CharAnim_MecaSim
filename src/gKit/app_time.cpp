@@ -5,8 +5,8 @@
 #include "texture.h"
 
 
-AppTime::AppTime( const int width, const int height, const int major, const int minor ) 
-    : App(width, height, major, minor)
+AppTime::AppTime( const int width, const int height, const int major, const int minor, const int samples ) 
+    : App(width, height, major, minor, samples)
 {
     // desactive vsync pour les mesures de temps
     SDL_GL_SetSwapInterval(0);

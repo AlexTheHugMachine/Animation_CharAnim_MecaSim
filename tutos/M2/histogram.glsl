@@ -1,4 +1,6 @@
 
+// version finale
+
 #version 430
 
 #ifdef COMPUTE_SHADER
@@ -31,7 +33,7 @@ void main( )
         vec4 pixel= imageLoad(image, ivec2(gl_WorkGroupID.xy)*32 + ivec2(gl_LocalInvocationID.xy) + offset*8);
         
         // calculer la cellule de l'histogramme pour le pixel
-        float grey= (pixel.r + pixel.b + pixel.b) / 3;      // entre 0 et 1
+        float grey= (pixel.r + pixel.g + pixel.b) / 3;      // entre 0 et 1
         int bin= int(grey * 15);
         
         local_histogram[bin]++;

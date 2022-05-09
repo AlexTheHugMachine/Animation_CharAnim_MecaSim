@@ -20,7 +20,7 @@ class App
 {
 public:
     //! constructeur, dimensions de la fenetre et version d'openGL.
-    App( const int width, const int height, const int major= 3, const int minor= 3, const int samples= 1 );
+    App( const int width, const int height, const int major= 3, const int minor= 3, const int samples= 0 );
     virtual ~App( );
 
     //! a deriver pour creer les objets openGL. renvoie -1 pour indiquer une erreur, 0 sinon.
