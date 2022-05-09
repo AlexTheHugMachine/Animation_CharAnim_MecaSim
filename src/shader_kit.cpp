@@ -119,7 +119,7 @@ int init( std::vector<const char *>& options )
             vertex_count= mesh.vertex_count();
             
             mesh.bounds(mesh_pmin, mesh_pmax);
-            camera.lookat(mesh_pmin, mesh_pmax * 1024);
+            camera.lookat(mesh_pmin, mesh_pmax);
         }
         
         // ou generer une erreur ? 

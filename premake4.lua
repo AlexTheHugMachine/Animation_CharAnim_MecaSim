@@ -107,6 +107,7 @@ end
  -- description des projets		 
 projects = {
     "shader_kit",
+    "shader_kit_debug",
     "image_viewer"
 }
 
@@ -189,18 +190,18 @@ for i, name in ipairs(tutos) do
         files { gkit_dir .. "/tutos/" .. name..'.cpp' }
 end
 
-project("mesh_viewer")
-    language "C++"
-    kind "ConsoleApp"
-    targetdir "bin"
-    files ( gkit_files )
-    files { gkit_dir .. "/tutos/mesh_viewer.cpp"}
-    files { gkit_dir .. "/tutos/mesh_buffer.cpp"}
-    files { gkit_dir .. "/tutos/mesh_buffer.h"}
-    files { gkit_dir .. "/tutos/mesh_data.cpp"}
-    files { gkit_dir .. "/tutos/mesh_data.h"}
-    files { gkit_dir .. "/tutos/material_data.cpp"}
-    files { gkit_dir .. "/tutos/material_data.h"}
+--~ project("mesh_viewer")
+--~     language "C++"
+--~     kind "ConsoleApp"
+--~     targetdir "bin"
+--~     files ( gkit_files )
+--~     files { gkit_dir .. "/tutos/mesh_viewer.cpp"}
+--~     files { gkit_dir .. "/tutos/mesh_buffer.cpp"}
+--~     files { gkit_dir .. "/tutos/mesh_buffer.h"}
+--~     files { gkit_dir .. "/tutos/mesh_data.cpp"}
+--~     files { gkit_dir .. "/tutos/mesh_data.h"}
+--~     files { gkit_dir .. "/tutos/material_data.cpp"}
+--~     files { gkit_dir .. "/tutos/material_data.h"}
 
 
 -- description des tutos openGL avances / M2
@@ -230,5 +231,23 @@ for i, name in ipairs(tutosM2) do
 end
 
 
+project("gltf")
+	language "C++"
+	kind "ConsoleApp"
+	targetdir "bin"
+	files ( gkit_files )
+	files { gkit_dir .. "/tutos/gltf/cgltf.cpp" }
+	files { gkit_dir .. "/tutos/gltf/gltf.cpp" }
+--~ 	files { gkit_dir .. "/tutos/gltf/simple.cpp" }
+	files { gkit_dir .. "/tutos/gltf/viewer.cpp" }
 
+project("simple_gltf")
+	language "C++"
+	kind "ConsoleApp"
+	targetdir "bin"
+	files ( gkit_files )
+	files { gkit_dir .. "/tutos/gltf/cgltf.cpp" }
+	files { gkit_dir .. "/tutos/gltf/gltf.cpp" }
+	files { gkit_dir .. "/tutos/gltf/simple.cpp" }
+--~ 	files { gkit_dir .. "/tutos/gltf/viewer.cpp" }
 

@@ -59,6 +59,8 @@ ImageData flipX( const ImageData& image );
 //! renvoie un bloc de l'image
 ImageData copy( const ImageData& image, const int xmin, const int ymin, const int width, const int height );
 
+ImageData downscale( const ImageData& image );
+
 ///@}
 
 #endif

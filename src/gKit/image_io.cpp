@@ -381,3 +381,22 @@ ImageData copy( const ImageData& image, const int xmin, const int ymin, const in
     return copy;
 }
 
+ImageData downscale( const ImageData& image )
+{
+    ImageData mip(std::max(1, image.width/2), std::max(1, image.height/2), image.channels);
+    
+    for(int y= 0; y < mip.height; y++)
+    for(int x= 0; x < mip.width; x++)
+    {
+        size_t d= mip.offset(x, y);
+        for(int i= 0; i < image.channels; i++)
+            mip.pixels[d+i]= (
+                    image.pixels[image.offset(2*x, 2*y)+i] 
+                + image.pixels[image.offset(2*x+1, 2*y)+i] 
+                + image.pixels[image.offset(2*x, 2*y+1)+i] 
+                + image.pixels[image.offset(2*x+1, 2*y+1)+i] ) / 4;
+    }
+    
+    return mip;
+}
+

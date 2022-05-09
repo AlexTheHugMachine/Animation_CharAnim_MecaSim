@@ -53,34 +53,40 @@ struct GLTF : public AppCamera
     
     int init( )
     {
-        m_mesh= read_gltf_mesh( "data/robot.gltf" );
+        //~ const char *filename= "data/robot.gltf";
+        const char *filename= "/home/jciehl/scenes/sponza-intel/Main/NewSponza_Main_Blender_glTF.gltf";
+        
+        m_mesh= read_gltf_mesh( filename );
         if(m_mesh.triangle_count() == 0)
             return -1;
         
         size_t size= m_mesh.vertex_buffer_size() + m_mesh.normal_buffer_size() + m_mesh.index_buffer_size();
         printf("%dKB\n", int(size / 1024));
         
-        m_lights= read_gltf_lights( "data/robot.gltf" );
+        m_lights= read_gltf_lights( filename );
         printf("%d lights\n", int(m_lights.size()));
         
         m_draw_light= Mesh(GL_LINES);
         {
             m_draw_light.color(Yellow());
-            Point light= m_lights[0].position;
-            m_draw_light.vertex(light.x, 0, light.z);
-            m_draw_light.vertex(light.x, light.y, light.z);
+            for(unsigned i= 0; i < m_lights.size(); i++)
+            {
+                Point light= m_lights[i].position;
+                m_draw_light.vertex(light.x, 0, light.z);
+                m_draw_light.vertex(light.x, light.y, light.z);
+            }
         }
         
-        std::vector<GLTFCamera> cameras= read_gltf_camera( "data/robot.gltf" );
-        if(cameras.size() > 0)
+        m_cameras= read_gltf_cameras( filename );
+        if(m_cameras.size() > 0)
         {
-            m_camera= cameras[0];
+            m_camera= m_cameras[0];
             printf("fov %f\n", m_camera.fov);
             printf("aspect %f\n", m_camera.aspect);
             printf("znear %f\n", m_camera.znear);
             printf("zfar  %f\n", m_camera.zfar);
         }
-        printf("%d camera\n", int(cameras.size()));
+        printf("%d camera\n", int(m_cameras.size()));
         
         m_repere= make_grid(20);
         
@@ -138,8 +144,9 @@ struct GLTF : public AppCamera
     Mesh m_mesh;
     Mesh m_repere;
     Mesh m_draw_light;
-    
     GLTFCamera m_camera;
+    
+    std::vector<GLTFCamera> m_cameras;
     std::vector<GLTFLight> m_lights;
 };
 
