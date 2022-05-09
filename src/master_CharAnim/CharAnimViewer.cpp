@@ -90,7 +90,7 @@ int CharAnimViewer::render()
 	float a, b, c, d;
 
 	static int t = 3;
-	//if (t == 4) t = 0; else t++;
+	if (t == 4) t = 0; else t++;
 
 	a = A[t];
 	b = B[t];
