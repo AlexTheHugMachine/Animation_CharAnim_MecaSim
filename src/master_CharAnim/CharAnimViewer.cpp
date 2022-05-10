@@ -56,6 +56,47 @@ int CharAnimViewer::init()
 void CharAnimViewer::draw_skeleton(const Skeleton& )
 {
     // TODO
+
+	const int N = 4;
+	static float angleA[N] = { 0, 10, 20, 10 };
+	static float angleB[N] = { 30, -10, -20, -25 };
+	static float t = 0;
+
+
+
+	int et = int(t);
+	float q = t - et;
+	float a = q * angleA[(et+1)%N] + (1 - q) * angleA[(et) % N];
+	Transform  a2w = Translation(10, 10, 0) * RotationZ(  a );
+	draw_sphere(   a2w*Scale( 2,2,2)   );
+	draw_cylinder(a2w * RotationZ(-90) * Scale(1,10,1) );
+
+	float b = q * angleB[(et + 1) % N] + (1 - q) * angleB[(et) % N];
+	Transform b2a = Translation(10, 0, 0) * RotationZ(b);
+	draw_sphere(  a2w*b2a * Scale(2, 2, 2));
+	draw_cylinder( a2w * b2a * RotationZ(-90) * Scale(1, 10, 1));
+
+	Transform c2b = Translation(10, 0, 0);
+	draw_sphere(a2w * b2a * c2b * Scale(2, 2, 2));
+
+	t += 0.01;
+	if (t >= N) t = 0.f;
+	//sleep(100);
+
+	//draw_cylinder( );
+
+
+
+	//Transform a2w = Translation(10, 10, 0) ;
+	//draw_sphere( a2w*Scale(2,2,2));
+	//draw_cylinder(a2w * RotationZ(-90)*Translation(0, 1, 0)*Scale(1,10,1) );
+
+	//Transform b2a = Translation(10, 0, 0);
+	//Transform b2w = a2w * b2a;
+	//draw_sphere( b2w * Scale(2, 2, 2));
+	//draw_cylinder(b2w * RotationZ(-90) * Translation(0, 1, 0) * Scale(1, 10, 1));
+
+
 }
 
 
@@ -73,7 +114,7 @@ int CharAnimViewer::render()
     //m_world.draw();
 
 
-	// Affiche le skeleton à partir de la structure linéaire (tableau) Skeleton
+	// Affiche le skeleton ï¿½ partir de la structure linï¿½aire (tableau) Skeleton
     draw_skeleton( m_ske );
 
 
