@@ -60,7 +60,15 @@ end
         includedirs { "extern/mingw/include" }
         libdirs { "extern/mingw/lib" }
         links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
-    
+
+    configuration { "windows", "codeblocks", "x64" }
+        buildoptions { "-U__STRICT_ANSI__"} -- pour definir M_PI
+        buildoptions { "-std=c++11", "-fpermissive" }
+        defines { "WIN32", "_WIN32" }
+        includedirs { "extern/mingw/include" }
+        libdirs { "extern/mingw/lib" }
+        links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
+
 if _PREMAKE_VERSION >="5.0" then
     configuration { "windows" }
         defines { "WIN32", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
