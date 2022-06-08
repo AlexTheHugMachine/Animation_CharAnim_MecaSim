@@ -53,8 +53,7 @@ struct GLTF : public AppCamera
     
     int init( )
     {
-        //~ const char *filename= "data/robot.gltf";
-        const char *filename= "/home/jciehl/scenes/sponza-intel/Main/NewSponza_Main_Blender_glTF.gltf";
+        const char *filename= "data/robot.gltf";
         
         m_mesh= read_gltf_mesh( filename );
         if(m_mesh.triangle_count() == 0)
@@ -125,18 +124,25 @@ struct GLTF : public AppCamera
             projection= m_camera.projection;
         }
         
-        
         draw(m_repere, Identity(), view, projection);
-        draw(m_draw_light, Identity(), view, projection);
         
-        DrawParam params;
-        //~ params.camera(camera());
-        params.view(view);
-        params.projection(projection);
-        params.model(Identity());
-        params.light( m_lights[0].position, m_lights[0].emission );
-        
-        draw(m_mesh, params);
+        if(m_lights.size() > 0)
+        {
+            draw(m_draw_light, Identity(), view, projection);
+            
+            //
+            DrawParam params;
+            params.view(view);
+            params.projection(projection);
+            params.model(Identity());
+            params.light( m_lights[0].position, m_lights[0].emission );
+            
+            draw(m_mesh, params);
+        }
+        else
+        {
+            draw(m_mesh, Identity(), view, projection);
+        }
         
         return 1;
     }
