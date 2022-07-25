@@ -175,6 +175,7 @@ struct BBox
     Point pmin, pmax;	// points extremes de l'englobant
     
     BBox( const Point& p ) : pmin(p), pmax(p) {}
+    BBox( const Point& a, const Point& b ) : pmin(a), pmax(b) {}
     BBox( const BBox& b ) : pmin(b.pmin), pmax(b.pmax) {}
     
     // ajouter un point dans l'englobant
@@ -187,6 +188,8 @@ struct BBox
     // intersection avec un rayon
     bool intersect( const RayHit& ray ) const;
 };
+
+BBox EmptyBox( ) { return BBox(Point(FLT_MAX, FLT_MAX, FLT_MAX), Point(-FLT_MAX, -FLT_MAX, -FLT_MAX)); }
 \endcode
 
 Et voila l'algo principal :
@@ -230,9 +233,7 @@ void divide( const BBox& bounds,
     
     // construit les englobants des triangles de la partie 1 / a gauche
     // les triangles se trouvent dans [tbegin .. m)
-    BBox left= triangles[tbegin].bounds();                              // englobant du premier triangle
-    for(int i= tbegin+1; i < m; i++)                                    // insere les sommets des autres triangles
-        left.insert(triangles[i].bounds());
+    BBox left= triangle_bounds(tbegin, m);
     
     // place les rayons qui touchent l'englobant au debut du tableau
     RayHit *prleft= std::partition(rays.data() + rbegin, rays.data() + rend, ray_less1(left));
@@ -244,9 +245,7 @@ void divide( const BBox& bounds,
     
     // on recommence pour la partie 2 / a droite
     // les triangles se trouvent dans [m .. tend)
-    BBox right= triangles[m].bounds();
-    for(int i= m+1; i < tend; i++)
-        right.insert(triangles[i].bounds());
+    BBox right= triangle_bounds(m, tend);
     
     // place les rayons qui touchent l'englobant au debut du tableau
     RayHit *prright= std::partition(rays.data() + rbegin, rays.data() + rend, ray_less1(right));
@@ -255,6 +254,15 @@ void divide( const BBox& bounds,
     
     // recursion sur T2 et les rayons qui touchent l'englobant de T2
     divide(right, triangles, m, tend, rays, rbegin, rright);
+}
+
+BBox triangle_bounds( const int begin, const int end )
+{
+    BBox bounds= EmptyBox();
+    for(int i= begin; i < end;i++)
+        bounds.insert(triangles[i].bounds());
+    
+    return bounds;
 }
 \endcode
 
@@ -291,6 +299,26 @@ struct triangle_less1
         return bounds.centroid(axis) < cut;
     }
 };
+\endcode
+
+_remarque :_ oui, bien sur on peut aussi utiliser des [lambdas c++](https://en.cppreference.com/w/cpp/language/lambda) pour écrire les prédicats, c'est la même chose.
+par exemple :
+\code
+    // avec un predicat
+    // Triangle *pm= std::partition(triangles.data() + tbegin, triangles.data() + tend, triangle_less1(axis, cut));
+    // int m= std::distance(triangles.data(), pm);
+    
+    // idem mais avec une lambda 
+    Triangle *pm= std::partition(triangles.data() + tbegin, triangles.data() + tend, 
+        [axis, cut] ( const Triangle& triangle ) 
+        {
+            // re-construit l'englobant du triangle
+            BBox bounds= triangle.bounds();
+            // renvoie vrai si le triangle est dans la partie gauche / avant le plan qui coupe l'englobant au milieu
+            return bounds.centroid(axis) < cut;
+        }
+    );
+    int m= std::distance(triangles.data(), pm);
 \endcode
 
 ## et alors ?
@@ -330,8 +358,9 @@ Voici les englobants construits par l'algorithme de répartition, ainsi que les 
 
 <IMG SRC="arbre_englobant.png" width="35%"> 
 
-il suffit de modifier l'algorithme :
+il suffit de modifier l'algorithme de répartition de la section précédente :
 \code
+// rappel
 repartition( englobant, rayons, objets ) :
     si rayons < limite ou objets < limite
         direct(rayons, objets)
@@ -455,7 +484,7 @@ protected:
         {
             // inserer une feuille et renvoyer son indice
             int index= nodes.size();
-            nodes.push_back(make_leaf(bounds, begin, end));
+            nodes.push_back( make_leaf(bounds, begin, end) );
             return index;
         }
         
@@ -495,14 +524,16 @@ protected:
         
         // inserer un noeud interne et renvoyer son indice
         int index= nodes.size();
-        nodes.push_back(make_node(bounds, left, right));
+        nodes.push_back( make_node(bounds, left, right) );
         return index;
     }
+    // oui, on peut simplifier l'algorithme en virant bounds des parametres, il suffit de recalculer l'englobant des triangles au debut de la fonction, avec triangle_bounds(begin, end)...
+    
     
     BBox triangle_bounds( const int begin, const int end )
     {
-        BBox bbox= triangles[begin].bounds();
-        for(int i= begin +1; i < end; i++)
+        BBox bbox= EmptyBox();
+        for(int i= begin; i < end; i++)
             bbox.insert(triangles[i].bounds());
         
         return bbox;
@@ -615,15 +646,6 @@ sur 6 coeurs / 12 threads : le temps de construction du bvh ne change pas, par c
 
 c'est mieux, la construction du bvh et son parcours / intersection parallelisé sont toujours plus rapides que `divide()` et le bvh sera plus simple à utiliser 
 pour calculer une image. 
-
-\bug
-Mais les résultats sont quand meme assez bizarres, les 2 algorithmes sont sensés faire 
-la même chose...\n
-En regardant de plus près, les 2 méthodes ne calculent pas le meme nombre d'intersections rayons / triangles. Par exemple, sur sibenik :
-    - `divide()` 1036443892 tests !!, soit > 1000 tests par rayon,
-    - bvh 6283869 tests, soit 8 tests par rayon...\n    
-
-\todo c'est corrige, les temps d'intersection aussi, la repartition degeneree n'etait pas la meme, cf `if(m == begin || m ==end) `, par contre bvh plus lent que divide() ??
 
 _pour les curieux :_ la version en ligne de [PBRT](http://pbr-book.org) (un livre de référence sur le lancer rayons et les calculs réalistes) propose également 
 d'utiliser des [BVH](http://www.pbr-book.org/3ed-2018/Primitives_and_Intersection_Acceleration/Bounding_Volume_Hierarchies.html#). 

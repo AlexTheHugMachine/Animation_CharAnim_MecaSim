@@ -26,14 +26,16 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
         // construire l'englobant des triangles
         BBox bounds= triangle_bounds(begin, end);
         
-        if(end - begin < 2)			                // construire une feuille, s'il ne reste plus qu'un triangle
+        if(end - begin <= 2)			                
         {
+            // il ne reste plus qu'un ou 2 triangles,
+            // construire une feuille et renvoyer son indice
             int index= nodes.size();
             nodes.push_back( make_leaf(bounds, begin, end) );
             return index;
         }
         
-        // axe le plus etire de l'englobant        
+        // axe le plus etire de l'englobant
         int axis= bounds.max();
         
         // trier les triangles sur l'axe
@@ -57,12 +59,20 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
     {
         assert(begin < end);
         
+        // construire l'englobant des triangles
+        BBox bounds= triangle_bounds(begin, end);
+        if(end - begin <= 2)			                
+        {
+            // il ne reste plus qu'un ou 2 triangles,
+            // construire une feuille et renvoyer son indice
+            int index= nodes.size();
+            nodes.push_back( make_leaf(bounds, begin, end) );
+            return index;
+        }
+        
         // construire l'englobant des centres des triangles
         BBox cbounds= centroid_bounds(begin, end);
-        // construire aussi l'englobant des triangles
-        BBox bounds= triangle_bounds(begin, end);
-        
-        // axe le plus etire de l'englobant
+        // axe le plus etire de l'englobant des centres des triangles
         int axis= cbounds.max(); 
         
         // repartir les triangles 
@@ -70,12 +80,8 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
             centroid_less(axis, cbounds.centroid(axis));
         int m= std::distance(triangles.data(), p);
         
-        if(m == begin || m == end)              // l'englobant est degenere, construire une feuille
-        {
-            int index= int(nodes.size());
-            nodes.push_back( make_leaf(bounds, begin, end) );
-            return index;
-        }
+        if(m == begin || m == end)              // l'englobant est degenere, forcer une repartition...
+            m= (begin + end) / 2;
         
         // repartir les triangles et construire les fils du noeud
         int left= build_node(begin, m);
@@ -93,24 +99,50 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
 La solution 1 construit un arbre équilibré, la moitiée des triangles est affectée à chaque fils, la solution 2 par contre, construit un arbre 
 déséquilibré, mais qui est plus rapide à parcourir...
 
+__pourquoi ?__ si on suppose que les triangles `[begin .. end]` sont répartis uniformement dans l'englobant :
+
+<IMG SRC="sah_uniforme.png" width="35%"> 
+
+il n'y aura pas vraiment de différence entre les 2 solutions : 
+
+<IMG SRC="sah_sort.png" width="35%"> 
+<IMG SRC="sah_spatial_split.png" width="35%"> 
+
+par contre, si les triangles ne sont pas répartis de manière uniforme dans l'englobant :
+
+<IMG SRC="sah_pas_uniforme.png" width="35%"> 
+
+la solution 1 et la solution 2 ne vont pas du tout construire les mêmes noeuds / répartir les triangles de la même façon. La solution 1 place les 3
+premiers triangles (les plus à gauche) dans le fils gauche et les 3 suivants (les plus à droite) dans le fils droit du noeud :
+
+<IMG SRC="sah_sort_2.png" width="35%"> 
+
+et les englobants des fils se chevauchent et sont aussi plus "gros" que les englobants construits par la solution 2 qui construit un arbre plus rapide à 
+parcourir pour les rayons...
+
+<IMG SRC="sah_spatial_split_2.png" width="35%"> 
+
+Et intuitivement si l'englobant d'un noeud est plus gros, on peut s'attendre à ce que plus de rayons le visite / le traverse... Si les englobants des fils
+d'un noeud se chevauchent, on peut aussi s'attendre à ce que les rayons visitent tous les fils du noeud, ce qui n'est probablement pas très efficace...
+
 La solution 3, compare plusieurs répartitions et choisit la meilleure pour construire chaque noeud... la construction est plus longue, mais 
 permet de gagner du temps sur le calcul de l'image. Mais il va falloir cogiter un peu pour évaluer si une répartition est interessante ou pas...
 
 
 # Géométrie et probabilité
 
-On peut résumer notre problème à cette question : "pour N rayons qui traversent un noeud, combien visitent chaque fils ?", ou, encore plus simple : 
-"pour N rayons qui traversent un englobant, combien traversent un autre englobant (inclut dans le premier) ??"...
+On peut résumer notre problème à cette question : "pour N rayons qui traversent un noeud, combien visitent chaque fils ?", ou : 
+"pour N rayons qui traversent un englobant, combien traversent l'englobant d'un fils ??"...
 
 De manière assez surprenante, la réponse à cette question est très simple, c'est un des premiers résultats de la géométrie intégrale. 
 
-Pour 2 objets convexes, F et P, avec F inclut dans P, comme les englobants d'un pere et d'un fils, si N droites uniformes traversent le noeud P,
+Pour 2 englobants, (P)ère et (F)ils, avec F inclut dans P, comme les englobants d'un père et d'un fils, si N droites uniformes traversent le noeud P,
 alors \f$ \frac{aire(F)}{aire(P)} N\f$ droites traversent le fils F... 
 ou interprété différement :
 \f[ 
     \frac{aire(F)}{aire(P)} 
 \f]
-représente le nombre de fois ou le fils est visité (sachant que le pere est visité). et c'est assez logique : plus un fils est gros, plus il sera visité lors 
+représente le nombre de fois ou le fils est visité (si le père est visité). et c'est assez logique : plus un englobant est gros, plus il sera visité lors 
 du parcours de l'arbre...
 
 Ces notions sont définies plus précisement dans :\n
@@ -118,9 +150,9 @@ Ces notions sont définies plus précisement dans :\n
 F. Cazals, M. Sbert, 1997.
 
 et si A et B sont les fils de P,  \f$ \frac{aire(A)+aire(B)}{aire(P)} \in [0 .. 2]\f$ représente le nombre de fils visité en moyenne.\n
-(_remarque :_ on obtient bien 2 lorsque les fils A et B font la meme taille que P)
+(_remarque :_ on obtient bien 2 lorsque les fils A et B font la même taille que P)
 
-_plus intuitivement, :_ on peut se représenter les 2N points d'intersections des N droites avec l'englobant P du pere :
+_plus intuitivement :_ on peut se représenter les 2N points d'intersections des N droites avec l'englobant P du père :
 
 <IMG SRC="sah_box1.png" width="35%"> 
 
@@ -139,9 +171,9 @@ par les droites.
 
 ## et alors ?
 
-on peut utiliser cette relation pour comparer plusieurs répartitions de triangles entre les 2 fils d'un noeud... 
-chaque fils est associé à un sous-ensemble de triangles, si on connait le nombre de visite des fils, on peut calculer le nombre de tests 
-d'intersections rayon/triangle...
+on peut utiliser cette relation pour comparer plusieurs répartitions de triangles entre les 2 fils d'un noeud... Pour une répartition, 
+chaque fils est associé à un sous-ensemble de triangles, si on connait aussi le nombre de visites de chaque fils, on peut calculer le nombre de tests 
+d'intersections rayon/triangle... et garder la répartition qui réalisera le moins de tests d'intersections.
 
 _exemple :_ on a T triangles. sans répartition, il faudra tous les tester pour chaque rayon : on calculera T tests rayon/triangle. 
 si on répartit les triangles en 2 sous-ensembles T1 et T2, on peut aussi calculer l'englobant F1 des triangles T1 et l'englobant F2 des triangles T2 et 
@@ -157,14 +189,16 @@ du fils 1, et \f$ \frac{aire(F2)}{aire(P)} \times T2 \f$ tests rayon/triangle po
 Pour les droites visitant les 2 fils, on fera autant de tests rayon/triangle que sans la répartition, par contre dans les autres cas, on fera moins de
 tests, mais il faudra aussi tester les englobants des 2 fils. La répartition ne sera interessante que si on fait moins de T tests rayon/triangle en moyenne.
 
-les 2 répartitions utilisées pour construire le BVH reviennent soit à controler le nombre de triangles T1 et T2, soit à controler les englobants F1 et F2 :
-    - solution 1 : T1= T/2, T2= T/2, puis on estime les englobants F1 et F2,
-    - solution 2 : F1= P/2, F2= P/2, puis on répartit les triangles dans F1 et F2 pour connaitre T1 et T2.
+les 2 exemples de répartitions utilisées pour construire le BVH reviennent soit à controler le nombre de triangles T1 et T2, soit à "controler" (plus ou moins précisement)
+les englobants F1 et F2 :
+    - solution 1 : T1= T/2, T2= T/2, puis on estime les englobants F1 et F2, mais on ne connait pas, a priori leur taille,
+    - solution 2 : on répartit les triangles dans T1 et T2 en fonction de leur position par rapport au milieu de P, puis on estime F1 et F2 
+    qui correspondent plus ou moins à la moitiée de P : F1= ~P/2, F2= ~P/2, mais on ne connait pas a priori le nombre de triangles associé à chaque fils.
 
-_remarque :_ quand on coupe l'englobant P en 2 moitiées, quelle est l'aire de chaque moitiée ? _indication :_ ce n'est pas la moitiée de l'aire de P... 
-on ne découpe le cube que sur un seul axe, pas sur tous...
+En pratique on pourrait très bien estimer le nombre d'intersections rayon/triangle pour les 2 solutions avant de construire chaque noeud de l'arbre et choisir la meilleure. 
+mais on peut faire mieux que ca ! 
 
-
+\if false
 _quel est le meilleur axe pour répartir les triangles ?_
 
 Pour les 2 solutions précédentes, au lieu de choisir l'axe le plus étiré de l'englobant des triangles, on peut maintenant estimer quel est l'axe le plus 
@@ -247,38 +281,43 @@ int build_node( const int begin, const int end )
 _pour les curieux :_ combien de noeuds font un choix différent ? construisez un arbre avec cette solution et comparez l'axe sélectionné 
 avec l'axe le plus étiré. est-ce que l'heuristique est correcte ? ou est-elle régulièrement fausse ? pouvez-vous déterminer dans quel cas ?
 
+\endif
+
 
 # combien de répartitions ?
 
 maintenant que l'on sait comparer plusieurs répartitions, il ne reste plus qu'à toutes les évaluer, garder la meilleure, et hop, magie, on a le meilleur 
 arbre possible...
 
-_comment ça, c'est débile comme solution ?_ ben, il y a \f$ 2^T \f$ manières de répartir T triangles en 2 groupes... ca fait un poil beaucoup... 
-meme pour T= 32, comme dans la cornell_box, on a pas du tout envie de les tester, et pour T= 64 on a pas le temps de faire le calcul...
+_comment ça, c'est débile comme solution ?_ ben, il y a, à peu près, \f$ 2^T \f$ manières de répartir T triangles en 2 groupes... ca fait un poil beaucoup... 
+même pour T= 32, comme dans la cornell_box, on a pas du tout envie de les tester, et pour T= 64 on a pas le temps de faire le calcul...
 
 ## et alors ?
 
 on va limiter le nombre de répartitions de triangles que l'on va tester... on ne regarde que la projection des englobants des triangles triés sur les 
 3 axes, ce qui ne fait que 3T répartitions à tester. _mieux, non ?_ ben, ça dépend...
 
-De manière générale, on va construitre un arbre binaire avec T feuilles (1 triangle par feuille), donc on aura T-1 noeuds internes et 2T-1 
-englobants au total. On peut estimer a priori combien de noeuds internes vont etre testes, et combien de feuilles vont etre testées :
+De manière générale, on va construitre un arbre binaire avec F= T feuilles (1 triangle par feuille), donc on aura N= F-1 noeuds internes (rappel: arbre binaire) et 2T-1 
+englobants au total. On peut estimer a priori combien de noeuds internes vont etre testes, et combien de feuilles vont etre testées en utilisant les résultats au dessus :
 
 \f[
 \begin{eqnarray*}
-    noeuds &=& \sum_{i=1}^{T-1}\frac{aire(n_i)}{aire(racine)}\\
-    feuilles &=& \sum_{i=1}^{T} \frac{aire(f_i)}{aire(racine)} \\
+    noeuds &=& \sum_{i=1}^{N}\frac{aire(n_i)}{aire(racine)}\\
+    feuilles &=& \sum_{i=1}^{F} \frac{aire(f_i)}{aire(racine)}\\
 \end{eqnarray*}
 \f]
 
 avec \f$ \{ n_i \} \f$ les noeuds internes, et \f$ \{ f_i \} \f$ les feuilles. 
 
 on sait que pour chaque visite d'un noeud interne, on teste l'intersection du rayon avec les englobants des 2 fils, et pour chaque visite d'une feuille
-on teste l'intersection du rayon avec un triangle. Si on mesure le temps d'execution d'un test d'intersection rayon/englobant, noté \f$ C_{box} \f$ et
+on teste l'intersection du rayon avec \f$ T_i\f$ triangles. Si on mesure le temps d'execution d'un test d'intersection rayon/englobant, noté \f$ C_{box} \f$ et
 le temps d'execution d'un test rayon/triangle, noté \f$ C_{triangle} \f$, on peut estimer le temps moyen d'intersection d'un rayon avec les englobants
 et les triangles de l'arbre :
 \f[
-    C= \sum_{i=1}^{T-1}\frac{aire(n_i)}{aire(racine)} \times 2C_{box} + \sum_{i=1}^{T} \frac{aire(f_i)}{aire(racine)} \times C_{triangle}
+\begin{eqnarray*}
+    C &= & noeuds \times 2C_{box} + feuilles \times C_{triangle}\\
+    C &= & \sum_{i=1}^{N}\frac{aire(n_i)}{aire(racine)} \times 2C_{box} + \sum_{i=1}^{F} \frac{aire(f_i)}{aire(racine)} \times T_i \times C_{triangle}
+\end{eqnarray*}
 \f]
 
 et il ne reste plus qu'à minimiser \f$ C \f$, le temps d'intersection, ou de manière générale, le _cout_ de l'arbre...
@@ -302,11 +341,13 @@ reste plus qu'un seul triangle. c'est la même stratégie que l'algorithme de r�
 
 pour chaque noeud, on souhaite trouver la répartition des triangles qui minimise le _cout_ du noeud : c'est à dire 
 \f[
-    2C_{box} + \frac{aire(F1) \times T1 \times C_{triangle} + aire(F2) \times T2 \times C_{triangle}}{aire(P)} 
+    2C_{box} + \frac{aire(F1)}{aire(P)} \times T1 \times C_{triangle} + \frac{aire(F2)}{aire(P)} \times T2 \times C_{triangle}
 \f]
 avec F1 l'englobant des T1 triangles associés au fils 1, et F2, l'englobant des T2 triangles associés au fils 2.
 autrement dit, pour chaque visite du noeud, on estime le temps nécessaire à tester l'intersection des englobants des 2 fils, et pour chaque visite 
 d'un fils, on estime le temps nécessaire à tester l'intersection avec le sous ensemble correspondant de triangles.
+
+_remarque :_ on obtient bien cette expression avec le cout d'un arbre composé d'un seul noeud (sa racine) et de 2 feuilles. 
 
 mais comme vu au dessus, on ne peut pas tester la totalité des répartitions possible de triangles, on va 'juste' en tester un nombre raisonnable.
 
@@ -345,6 +386,8 @@ struct Bucket
 {
     BBox bounds;
     int n;
+    
+    Bucket( ) : bounds(EmptyBox()), n(0) {}
 };
 #define BUCKETS_MAX 16
 
@@ -352,10 +395,19 @@ int build_node( const int begin, const int end )
 {
     assert(end > begin);
     
-    // construire l'englobant des centres des triangles
-    BBox cbounds= centroid_bounds(begin, end);
-    // construire aussi l'englobant des triangles
+    // construire l'englobant des triangles
     BBox bounds= triangle_bounds(begin, end);
+    
+    if(end - begin <= 2)
+    {
+        // construire une feuille
+        int index= int(nodes.size());
+        nodes.push_back( make_leaf(bounds, begin, end) );
+        return index;
+    }
+    
+    // construire l'englobant des centres des triangles pour evaluer les repartitions
+    BBox cbounds= centroid_bounds(begin, end);
     
     // compare le cout de la repartition sur chaque axe et garde le meilleur...
     float area= bounds.area();    
@@ -364,9 +416,10 @@ int build_node( const int begin, const int end )
     float min_cost= FLT_MAX;
     for(int axis= 0; axis < 3; axis++)
     {
-        // hachage spatial
+        // hachage spatial, remplace le tri des triangles sur l'axe
         Bucket buckets[BUCKETS_MAX];
         
+        // compte le nombre de triangles par cellule de l'histogramme
         for(int i= begin; i < end; i++)
         {
             int k= BUCKETS_MAX * (triangles[i].centroid(axis) - cbounds.pmin(axis)) 
@@ -382,21 +435,23 @@ int build_node( const int begin, const int end )
         // 1|n-1, 2|n-2, 3|n-3 ... n-1|1
         for(int i= 1; i < BUCKETS_MAX-1; i++)
         {
-            BBox left;
+            BBox left= EmptyBox();
             int left_n= 0;
             for(int k= 0; k < i; k++)                           // cellules de 0 à i
             {
                 left_n+= buckets[k].n;
                 left.insert(buckets[k].bounds);
             }
+            assert(left_n > 0);
 
-            BBox right;
+            BBox right= EmptyBox();
             int right_n= 0;
             for(int k= i; k < BUCKETS_MAX; k++)                 // cellules de i a n
             {
                 right_n+= buckets[k].n;
                 right.insert(buckets[k].bounds);
             }
+            assert(right_n > 0);
             
             // evalue le cout de la repartition
             float cost= 2                                       // 2 tests rayon/boite
@@ -417,20 +472,12 @@ int build_node( const int begin, const int end )
     if(min_axis != -1)
     {
         auto *p= std::partition(triangles.data() + begin, triangles.data() + end, 
-            bucket_less(min_index, min_axis, cbounds));
+            bucket_less(min_index, min_axis, cbounds.pmin(min_axis), cbounds.pmax(min_axis)));
         m= std::distance(triangles.data(), p);
     }
     
-    if(m == begin || m == end)
-    {
-        // construit une feuille si la partition est degeneree,
-        // ou si repartir les triangles est moins interressant que de construire une feuille de plusieurs triangles...
-        // quel est le cout de n triangles ?
-        
-        int index= int(nodes.size());
-        nodes.push_back( make_leaf(bounds, begin, end) );
-        return index;
-    }
+    if(m == begin || m == end)  // si la repartition echoue, couper arbitrairement
+        m= (begin + end) / 2;
     
     // repartir les triangles et construire les fils du noeud
     int left= build_node(nodes, begin, m);
@@ -441,7 +488,31 @@ int build_node( const int begin, const int end )
     nodes.push_back( make_node(bounds, left, right) );
     return index;
 }
+
+// et le predicat pour partitionner les triangles
+struct bucket_less
+{
+    int axis, index;
+    float cmin, cmax;
+    
+    bucket_less( const int _index, const int _axis, const float _cmin, const float _cmax ) 
+        : axis(_axis), index(_index), cmin(_cmin), cmax(_cmax) {}
+    
+    bool operator() ( const Triangle& triangle ) const
+    {
+        int k= buckets_max * (triangle.centroid(axis) - cmin) / (cmax - cmin);
+        return k < index;
+    }
+};
+
+// il manque aussi une fonction membre de BBox pour calculer l'aire d'une boite
+float BBox::area( ) const
+{
+    Vector d(pmin, pmax);
+    return 2 * d.x*d.y + 2 * d.x*d.z + 2 * d.y*d.z;
+}
 \endcode
+
 
 ## et ça marche ?
 
@@ -627,22 +698,22 @@ F. Cazals, M. Sbert, 1997.
 on peut estimer le nombre de visites d'un noeud avec le nombre de droites (passant par le noeud) multiplié par le nombre de rayons par droite, en 
 sommant l'aire des triangles associés au noeud :
 \f[
-aire(F) \left[ 1 + \frac{\sum_i 2 \times aire(triangle_i)}{aire(F)} \right] = aire(F) + \sum_i 2 \times aire(triangle_i)
+aire(F) \left[ 1 + \frac{\sum_k 2 \times aire(triangle_k)}{aire(F)} \right] = aire(F) + \sum_k 2 \times aire(triangle_k)
 \f]
 
 et re-écrire le cout d'un arbre, en normalisant par R le nombre de rayons dans toute la scène (nombre de rayons de la racine) :
 \f[
 \begin{eqnarray*}
-C & = &\sum_{i=1}^{T-1} noeud_i \times 2C_{box} + \sum_{i=1}^T feuille_i \times C_{triangle}\\
-noeud_i & = & \frac{aire(n_i) + \sum_k 2 \times aire(triangle_k)}{R}\\
-feuille_i & = & \frac{aire(f_i) + 2 \times aire(triangle_i)}{R}\\
-R & = & aire(racine) + \sum_k 2 \times aire(triangle_k)
+    C         & = & \sum_{i=1}^{N} noeud_i \times 2C_{box} + \sum_{i=1}^F feuille_i \times T_i \times C_{triangle}\\
+    noeud_i   & = & \frac{1}{R} \left[ aire(n_i) + \sum_k 2 \times aire(t_k) \right]\\
+    feuille_i & = & \frac{1}{R} \left[ aire(f_i) + \sum_k 2 \times aire(t_k) \right]\\
+    R         & = & aire(racine) + \sum_k 2 \times aire(t_k)
 \end{eqnarray*}
 \f]
 
 par contre, pour faire cette estimation pendant la construction d'un bvh, il va falloir déterminer l'aire de la géométrie présente dans l'englobant
-du noeud, et donc calculer l'aire de l'intersection des triangles (avec l'englobant) ... c'est numériquement assez pénible à faire (de manière robuste), 
-et aussi très (trop) long à calculer...
+du noeud, et donc calculer l'aire de l'intersection des triangles \f$ \sum_k 2 \times aire(t_k)\f$ avec son englobant.
+c'est numériquement assez pénible à faire (de manière robuste), et aussi très long à calculer...
 
 
 # comment ça, les arbres équilibrés ne sont pas efficaces ?
@@ -671,18 +742,10 @@ _pour les curieux :_ comment construire un arbre binaire de recherche optimal, e
 _que peut-on faire (de plus) pour minimiser le nombre moyen de fils visités ?_
 
 Pour être efficace, chaque noeud devrait vérifier : \f$ \frac{aire(F1) + aire(F2)}{aire(P)} <= 1 \f$ (un seul fils visité en moyenne), lorsque ce n'est 
-pas le cas, il est possible d'utiliser plus de fils pour mieux répartir les triangles :\n
+pas le cas, il est possible d'utiliser plus de fils pour mieux répartir les triangles, l'idée est présentée dans cet article :\n
 ["Shallow Bounding Volume Hierarchies for Fast SIMD Ray Tracing ofIncoherent Rays"](https://www.uni-ulm.de/fileadmin/website_uni_ulm/iui.inst.100/institut/Papers/QBVH.pdf) H. Dammertz, J. Hanika, A. Keller, 2008
 
  ou de découper les triangles génants :\n
 ["Spatial splits in bounding volume hierarchies"](https://www.nvidia.com/docs/IO/77714/sbvh.pdf) M. Stich, H. Friedrich, A. Dietrich, 2009
-
-
-
-# et si les objets bougent ? 
-
-
-# et s'il y a pleins d'instances ?
-
 
 */
