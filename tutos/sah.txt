@@ -42,8 +42,9 @@ il est bien sur possible de constuire les 2 arbres et de vérifier leur efficaci
         std::sort(triangles.data() + begin, triangles.data() + end, triangle_less(axis));
         
         // repartir les triangles et construire les fils du noeud
-        int left= build_node(begin, (begin + end) / 2);
-        int right= build_node((begin + end) / 2, end);
+        int m= (begin + end) / 2;
+        int left= build_node(begin, m);
+        int right= build_node(m, end);
         
         // construire le noeud
         int index= nodes.size();
@@ -179,8 +180,7 @@ _exemple :_ on a T triangles. sans répartition, il faudra tous les tester pour 
 si on répartit les triangles en 2 sous-ensembles T1 et T2, on peut aussi calculer l'englobant F1 des triangles T1 et l'englobant F2 des triangles T2 et 
 on connait l'englobant P des T triangles. 
 
-
-_combien de tests rayon/triangle pour la répartition ?_ 
+__combien de tests rayon/triangle pour une répartition T1/T2  ?__
 
 on peut estimer \f$ \frac{aire(F1)}{aire(P)}\f$ et \f$ \frac{aire(F2)}{aire(P)}\f$, 
 le nombre de fois ou les fils 1 et 2 seront visités. donc on fera au total \f$ \frac{aire(F1)}{aire(P)} \times T1 \f$ tests rayon/triangle lors des visites 
@@ -297,9 +297,10 @@ même pour T= 32, comme dans la cornell_box, on a pas du tout envie de les teste
 on va limiter le nombre de répartitions de triangles que l'on va tester... on ne regarde que la projection des englobants des triangles triés sur les 
 3 axes, ce qui ne fait que 3T répartitions à tester. _mieux, non ?_ ben, ça dépend...
 
-De manière générale, on va construitre un arbre binaire avec F= T feuilles (1 triangle par feuille), donc on aura N= F-1 noeuds internes (rappel: arbre binaire) et 2T-1 
-englobants au total. On peut estimer a priori combien de noeuds internes vont etre testes, et combien de feuilles vont etre testées en utilisant les résultats au dessus :
+De manière générale, on va construitre un arbre binaire avec 1 triangle par feuille, soit T feuilles (par la suite on utilise F= T pour le nombre de feuilles). 
+Un arbre binaire avec F feuilles aura N= F-1 noeuds internes et 2T-1 englobants au total (F englobants pour les feuilles et N englobants pour les noeuds). 
 
+On peut estimer combien de noeuds , et combien de feuilles, vont être touchés par des droites uniformes en utilisant les résultats de la section précédente :
 \f[
 \begin{eqnarray*}
     noeuds &=& \sum_{i=1}^{N}\frac{aire(n_i)}{aire(racine)}\\
@@ -330,7 +331,7 @@ et cette manière de construire un BVH s'appelle SAH, pour surface area heuristi
 
 que peut-on modifier/optimiser dans l'expression du cout d'un arbre ? les feuilles et leurs englobants sont fixés par la géométrie/les triangles. le nombre
 de noeuds internes est fixé lui aussi (cf arbre binaire...), donc le seul dégré de liberté est la taille des englobants des noeuds internes... et on sait 
-deja qu'il faut qu'ils soient les plus petits possibles pour limiter le nombre de tests d'intersection des englobants.
+deja qu'il faut qu'ils soient les plus petits possibles pour limiter le nombre de visites / de tests d'intersection des englobants.
 
 ## glouton ?
 
@@ -339,7 +340,7 @@ triangles en 2 groupes. L'algorithme démarre avec l'ensemble complet des triang
 chaque sous ensemble. chaque étape de l'algorithme permet de construire un noeud et ses 2 fils et s'arrete, en créant une feuille, lorsqu'il ne 
 reste plus qu'un seul triangle. c'est la même stratégie que l'algorithme de répartition dans \ref acceleration.
 
-pour chaque noeud, on souhaite trouver la répartition des triangles qui minimise le _cout_ du noeud : c'est à dire 
+pour chaque noeud, on souhaite trouver une répartition de triangles qui minimise le _cout_ du noeud : c'est à dire 
 \f[
     2C_{box} + \frac{aire(F1)}{aire(P)} \times T1 \times C_{triangle} + \frac{aire(F2)}{aire(P)} \times T2 \times C_{triangle}
 \f]
@@ -363,6 +364,14 @@ obtenue en balayant les triangles par ordre croissant :
 ce qui nous donne T-1 répartitions possibles par axe. on évalue le cout de chacune et on garde la meilleure, la plus petite, que l'on utilise pour 
 construire les 2 fils et recommencer.
 
+Avec les 6 triangles de l'exemple précédent : 
+
+<IMG SRC="sah_pas_uniforme.png" width="35%"> 
+
+on va évaluer le cout des 5 répartitions que l'on peut construire avec 6 triangles et utiliser celle avec le cout le plus petit pour construire le noeud :
+
+<IMG SRC="sah_repartitions.png" width="35%"> 
+
 _remarque :_ oui, si le temps estimé est plus grand que \f$ T \times C_{triangle} \f$ (tester tous les triangles) la répartition n'est pas très 
 interressante, et c'est probablement le bon moment d'arreter la recursion et de créer une feuille dans l'arbre.
 
@@ -381,6 +390,29 @@ Mais on peut remplacer le tri par un hachage spatial, qui lui est en \f$ O(n) \f
 ["On fast Construction of SAH-based Bounding Volume Hierarchies"](http://www.sci.utah.edu/~wald/Publications/2007/ParallelBVHBuild/fastbuild.pdf) I. Wald, 2007.\n
 (_remarque :_ si vous ne lisez qu'un seul article de construction d'arbre cette année, lisez celui-la...)
 
+La construction des répartitions est un peu différente mais le principe reste le même : on a plusieurs manières de répartir les triangles entre les 2 fils, on évalue le cout de chaque 
+répartition et on utilise la meilleure pour construire le noeud. 
+
+Par exemple, avec un histogramme / hachage spatial à 4 cellules :
+
+<IMG SRC="sah_bins.png" width="35%"> 
+
+La première étape construit l'histogramme. On utilise le centre de l'englobant de chaque triangle pour décider dans quelle cellule le placer. 
+Il ne reste plus qu'à construire l'englobant des triangles qui occuppent chaque cellule (et _oui_, l'englobant peut "déborder" de la cellule, comme la 3ieme et la 4ieme de l'exemple).
+
+Ensuite, on évalue le cout des répartitions que l'on peut construire avec les cellules de l'histogramme :
+    - triangles de la première cellule dans le fils 1, les autres dans le fils 2,
+    - triangles des 2 premières cellules dans le fils 1, les autres dans le fils 2,
+    -  etc.
+    - triangles de la dernière cellule dans le fils 2, les autres dans le fils 1.
+
+ce qui donne n-1 répartitions à tester pour un  histogramme à n cellules :
+
+<IMG SRC="sah_bins_repartitions.png" width="35%"> 
+
+Bien sur, on peut se demander combien de cellules utiliser, après pas mal de tests, 12 ou 16 cellules fonctionnent correctement. Ce qui correspond aussi aux résultats de l'article.
+
+
 \code
 struct Bucket
 {
@@ -389,7 +421,6 @@ struct Bucket
     
     Bucket( ) : bounds(EmptyBox()), n(0) {}
 };
-#define BUCKETS_MAX 16
 
 int build_node( const int begin, const int end )
 {
@@ -406,7 +437,7 @@ int build_node( const int begin, const int end )
         return index;
     }
     
-    // construire l'englobant des centres des triangles pour evaluer les repartitions
+    // construire l'englobant des centres des englobants des triangles pour evaluer les repartitions
     BBox cbounds= centroid_bounds(begin, end);
     
     // compare le cout de la repartition sur chaque axe et garde le meilleur...
@@ -417,16 +448,19 @@ int build_node( const int begin, const int end )
     for(int axis= 0; axis < 3; axis++)
     {
         // hachage spatial, remplace le tri des triangles sur l'axe
+        const int BUCKETS_MAX= 16;
         Bucket buckets[BUCKETS_MAX];
         
         // compte le nombre de triangles par cellule de l'histogramme
         for(int i= begin; i < end; i++)
         {
+            // 'projette' le centre de l'englobant du triangle dans l'histogramme
             int k= BUCKETS_MAX * (triangles[i].centroid(axis) - cbounds.pmin(axis)) 
                 / (cbounds.pmax(axis) - cbounds.pmin(axis));
             if(k <= 0) k= 0;
             if(k >= BUCKETS_MAX) k= BUCKETS_MAX -1;
-            
+            // attention aux calculs sur les floats... verifier que k est bien un indice de cellule
+
             buckets[k].bounds.insert(triangles[i].bounds());    // englobant des triangles de la cellule k
             buckets[k].n++;                                     // nombre de triangles de la cellule k
         }
@@ -511,6 +545,21 @@ float BBox::area( ) const
     Vector d(pmin, pmax);
     return 2 * d.x*d.y + 2 * d.x*d.z + 2 * d.y*d.z;
 }
+
+// et la construction des englobants des centres des englobants des triangles,
+// pour une fois le code est plus simple a comprendre que la phrase qui le decrit... 
+BBox centroid_bounds( const int begin, const int end )
+{
+    BBox bounds= EmptyBox();
+    for(int i= begin; i < end; i++)
+    {
+        Point c= triangles[i].bounds().centroid();
+        bounds.insert(c);
+    }
+    
+    return bounds;
+}
+
 \endcode
 
 
@@ -695,18 +744,18 @@ la définition se trouve aussi dans :\n
 ["Some Integral Geometry Tools to Estimate the Complexity of 3D Scenes"](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.31.8104), 
 F. Cazals, M. Sbert, 1997.
 
-on peut estimer le nombre de visites d'un noeud avec le nombre de droites (passant par le noeud) multiplié par le nombre de rayons par droite, en 
-sommant l'aire des triangles associés au noeud :
+on peut estimer le nombre de visites d'un noeud \f$ n \f$ avec le nombre de droites (passant par le noeud) multiplié par le nombre de rayons par droite, en 
+sommant l'aire des (bouts de) triangles se trouvant dans l'englobant du noeud :
 \f[
-aire(F) \left[ 1 + \frac{\sum_k 2 \times aire(triangle_k)}{aire(F)} \right] = aire(F) + \sum_k 2 \times aire(triangle_k)
+aire(n) \left[ 1 + \frac{\sum_k 2 \times aire(triangle_k \cap n)}{aire(n)} \right] = aire(n) + \sum_k 2 \times aire(triangle_k \cap n)
 \f]
 
 et re-écrire le cout d'un arbre, en normalisant par R le nombre de rayons dans toute la scène (nombre de rayons de la racine) :
 \f[
 \begin{eqnarray*}
     C         & = & \sum_{i=1}^{N} noeud_i \times 2C_{box} + \sum_{i=1}^F feuille_i \times T_i \times C_{triangle}\\
-    noeud_i   & = & \frac{1}{R} \left[ aire(n_i) + \sum_k 2 \times aire(t_k) \right]\\
-    feuille_i & = & \frac{1}{R} \left[ aire(f_i) + \sum_k 2 \times aire(t_k) \right]\\
+    noeud_i   & = & \frac{1}{R} \left[ aire(n_i) + \sum_k 2 \times aire(t_k \cap n_i) \right]\\
+    feuille_i & = & \frac{1}{R} \left[ aire(f_i) + \sum_k 2 \times aire(t_k \cap f_i) \right]\\
     R         & = & aire(racine) + \sum_k 2 \times aire(t_k)
 \end{eqnarray*}
 \f]
