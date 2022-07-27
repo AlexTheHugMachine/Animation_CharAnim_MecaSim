@@ -785,10 +785,14 @@ mais bien sur, on peut essayer de restructurer le bvh pour équilibrer sa struct
 et\n
 ["Fast Insertion-Based Optimization of Bounding Volume Hierarchies"](https://dspace.cvut.cz/bitstream/handle/10467/15603/2013-Fast-Insertion-Based-Optimization-of-Bounding-Volume-Hierarchies.pdf?sequence=1) J. Bittner, M. Hapala, V. Havran, 2013
 
+_remarque :_ ces 2 méthodes esayent aussi de trouver un minimum global du cout de l'arbre, puisque la construction gloutonne / la répartition utilisée dans les sections précédentes 
+est garantie de trouver un minimum local. essayer de  trouver un arbre avec un cout plus faible est aussi interressant... mais il est assez difficile d'équilibrer le temps d'optimisation et les
+performances du parcours de l'arbre, à moins de lancer des milliards de rayons...
+
 _pour les curieux :_ comment construire un arbre binaire de recherche optimal, en temps raisonnable ?\n
 ["Nearly Optimal Binary Search Trees"](http://edoc.mpg.de/get.epl?fid=40685&did=344677&ver=0) K. Mehlhorn, 1975
 
-_que peut-on faire (de plus) pour minimiser le nombre moyen de fils visités ?_
+__que peut-on faire (de plus) pour minimiser le nombre moyen de fils visités ?__
 
 Pour être efficace, chaque noeud devrait vérifier : \f$ \frac{aire(F1) + aire(F2)}{aire(P)} <= 1 \f$ (un seul fils visité en moyenne), lorsque ce n'est 
 pas le cas, il est possible d'utiliser plus de fils pour mieux répartir les triangles, l'idée est présentée dans cet article :\n
