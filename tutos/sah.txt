@@ -790,7 +790,7 @@ est garantie de trouver un minimum local. essayer de  trouver un arbre avec un c
 performances du parcours de l'arbre, à moins de lancer des milliards de rayons...
 
 _pour les curieux :_ comment construire un arbre binaire de recherche optimal, en temps raisonnable ?\n
-["Nearly Optimal Binary Search Trees"](http://edoc.mpg.de/get.epl?fid=40685&did=344677&ver=0) K. Mehlhorn, 1975
+["Nearly Optimal Binary Search Trees"](https://people.mpi-inf.mpg.de/~mehlhorn/ftp/mehlhorn3.pdf) K. Mehlhorn, 1975
 
 __que peut-on faire (de plus) pour minimiser le nombre moyen de fils visités ?__
 
