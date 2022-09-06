@@ -5,10 +5,12 @@ gKit2light est une base de code permettant d'écrire des applications utilisant 
 
 pour l'utiliser, il faut installer quelques dépendances, selon le système que vous utilisez :
     - \ref installation
-	
+    
 ensuite, c'est parti ! comment écrire une première application gKit : 
-	- \ref debut
-	- \ref shaders
+    - \ref debut
+    - \ref math
+    - \ref shaders
+    - \ref intro3d
 
 gKit2light est composé de plusieurs utilitaires :
     - window.h fournit un squelette d'application, app.h fournit une classe application de base,
