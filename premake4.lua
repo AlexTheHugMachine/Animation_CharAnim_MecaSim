@@ -236,8 +236,8 @@ project("gltf")
 	kind "ConsoleApp"
 	targetdir "bin"
 	files ( gkit_files )
-	files { gkit_dir .. "/tutos/gltf/cgltf.cpp" }
-	files { gkit_dir .. "/tutos/gltf/gltf.cpp" }
+--~ 	files { gkit_dir .. "/tutos/gltf/cgltf.cpp" }
+--~ 	files { gkit_dir .. "/tutos/gltf/gltf.cpp" }
 --~ 	files { gkit_dir .. "/tutos/gltf/simple.cpp" }
 	files { gkit_dir .. "/tutos/gltf/viewer.cpp" }
 
@@ -246,8 +246,8 @@ project("simple_gltf")
 	kind "ConsoleApp"
 	targetdir "bin"
 	files ( gkit_files )
-	files { gkit_dir .. "/tutos/gltf/cgltf.cpp" }
-	files { gkit_dir .. "/tutos/gltf/gltf.cpp" }
+--~ 	files { gkit_dir .. "/tutos/gltf/cgltf.cpp" }
+--~ 	files { gkit_dir .. "/tutos/gltf/gltf.cpp" }
 	files { gkit_dir .. "/tutos/gltf/simple.cpp" }
 --~ 	files { gkit_dir .. "/tutos/gltf/viewer.cpp" }
 
