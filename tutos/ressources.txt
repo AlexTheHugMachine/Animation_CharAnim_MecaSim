@@ -1,5 +1,5 @@
 
-/*! \addtogroup ressources openGL 4.4 : ressources cpu / gpu et transfert de données
+/*! \addtogroup ressources ressources cpu / gpu et transfert de données
 
 Les shaders ont besoin de données pour fonctionner et de stockage pour écrire leurs résultats. Pour une application très simple, toutes les données sont statiques et 
 l'application ne fait pas de mise à jour. Pour les applications un peu plus évoluées, il est souvent nécessaire de modifier certaines données utilisées par les shaders : 
@@ -10,10 +10,10 @@ Ce flag indique, en théorie, que le buffer est alloué dans la mémoire du gpu 
 
 \code
         // creer un buffer statique
-                GLint buffer;
-                glGenBuffers(1, &buffer);
-                glBindBuffer(GL_ARRAY_BUFFER, buffer);
-                glBufferData(GL_ARRAY_BUFFER, /* length */, /* data */, /* flags */ GL_STATIC_DRAW);
+        GLint buffer;
+        glGenBuffers(1, &buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, buffer);
+        glBufferData(GL_ARRAY_BUFFER, /* length */, /* data */, /* flags */ GL_STATIC_DRAW);
 \endcode
 
 Pour pouvoir modifier le contenu d'un buffer, il faut le créer avec le flag `GL_DYNAMIC_DRAW`, et utiliser `glBufferSubData()` :
@@ -41,12 +41,22 @@ Tous les drivers font _quelquechose_ et modifient quand même le contenu du buff
         performances de l'application s'écroulent complètement... 
 
 Les flags de `glBufferData()` ne sont que _informatifs_, modifier un buffer statique ne provoque pas d'erreur dans openGL 3.3, par contre les performances seront variables, selon ce 
-que fait le driver pour modifier le contenu du buffer, et les différences peuvent être vraiment importantes.
+que fait le driver pour modifier le contenu du buffer, et les différences peuvent être importantes.
 
 __En résumé,__ une solution correcte pour openGL 3 ou 4 consiste tout simplement à utiliser les bons flags lors de la création des buffers. On peut même s'autoriser a créer un premier 
-buffer statique, puis de le transformer en buffer dynamique lorsque l'on souhaite modifier son contenu, c'est ce que fait Mesh::create_buffers(), par exemple.
+buffer statique, puis de le transformer en buffer dynamique lorsque l'on souhaite modifier son contenu.
 
-# ça rame !! on peut pas faire mieux ?
+# openGL 3.3 : et si on veut initialiser un buffer statique en plusieurs fois ?
+
+\todo 
+
+en attendant une solution consiste à copier les données dans un buffer temporaire crée avec le flag dynamic puis à copier ce buffer dans le buffer statique... oui c'est tordu, mais c'est 
+le cpu qui  n'a pas d'acces direct au buffer statique... c'est la carte graphique qui effectue les copies de donnees entre buffers, et ça marche ! et ça marche encore mieux avec les fonctionnalités 
+de openGL 4.4...
+
+exemple : cf UpdateBuffer utilise par Mesh pour copier les attributs vers un buffer statique.
+
+# openGL 4.4 : ça rame !! on peut pas faire mieux ?
 OpenGL 4.4 a introduit de nouvelles fonctionnalités qui permettent d'obtenir de meilleures performances quelque soit l'architecture des cartes graphiques :
 - `glBufferStorage()` pour allouer des buffers et déclarer explicitement leur utilisation,
 - `glMapBufferRange()` pour écrire les données directement dans la zone de transfert vers la carte graphique, en évitant les copies réalisées par le driver.
