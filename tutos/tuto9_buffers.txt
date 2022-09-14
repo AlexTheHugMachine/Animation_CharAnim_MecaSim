@@ -26,38 +26,10 @@ pour donner la taille du buffer, et son contenu, cf glBufferData() :
 \code
 // selectionner le buffer, si necessaire :
 // glBindBuffer(GL_ARRAY_BUFFER, buffer);
-glBufferData(GL_ARRAY_BUFFER, /* size */, /* data */, GL_STATIC_DRAW);
+glBufferData(GL_ARRAY_BUFFER, /* size */, /* data */, /* usage */ GL_STATIC_DRAW);
 \endcode
 
 le dernier parametre, GL_STATIC_DRAW, indique que le contenu du buffer ne sera pas modifie.
-
-il ne reste plus qu'à utiliser glBufferData() pour allouer et copier toutes les positions des sommets d'un Mesh :
-\code
-Mesh mesh= read_mesh( ... );
-
-// selectionner le buffer, si necessaire :
-// glBindBuffer(GL_ARRAY_BUFFER, buffer);
-glBufferData(GL_ARRAY_BUFFER, /* size */ mesh.vertex_buffer_size(), /* data */ mesh.vertex_buffer(), GL_STATIC_DRAW);
-\endcode
-
-_remarque :_ on peut aussi ecrire une fonction utilitaire plus proche de l'utilisation de `malloc` :
-\code
-GLuint create_buffer( const int size, const void *data )
-{
-    GLuint buffer;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-    return buffer;
-}
-
-void release_buffer( const GLuint buffer )
-{
-    glDeleteBuffers(1, &buffer);
-}
-
-GLuint buffer= create_buffer(mesh.vertex_buffer_size(), mesh.vertex_buffer());
-\endcode
 
 dernière étape, décrire le format des sommets du Mesh avec un vertex array object : même démarche, il faut créer un identifiant, cf glGenVertexArrays(), 
 le sélectionner, cf glBindVertexArray(), et le configurer, cf glVertexAttribPointer() :
@@ -66,7 +38,8 @@ GLuint vao;
 glGenVertexArrays(1, &vao);
 glBindVertexArray(vao);
 
-// selectionner le buffer contenant les positions, si nécessaire, c'est un parametre implicite de glVertexAttribPointer !!
+// selectionner le buffer contenant les positions, si nécessaire, 
+// c'est un parametre implicite de glVertexAttribPointer !!
 // glBindBuffer(GL_ARRAY_BUFFER, buffer);
 
 // configurer l'attribut 0, position, cf convention de Mesh
@@ -92,7 +65,7 @@ glDrawArrays(GL_TRIANGLES, 0, n);
 
 dernier detail, il ne faut pas oublier de conserver le nombre de sommets, et il n'est plus nécessaire de conserver l'objet Mesh !
 
-cf \ref tuto4GL pour tous les détails supplémentaires, utiliser plusieurs buffers, plusieurs attributs, etc.
+cf \ref tuto4GL pour les détails supplémentaires, utiliser plusieurs buffers, plusieurs attributs, etc.
 
 
 \ref tuto9_buffers.cpp donne un exemple complet et stocke toutes les informations dans une structure Buffers :
@@ -110,23 +83,26 @@ struct Buffers
     {
         if(!mesh.vertex_buffer_size()) return;
         
-        // cree et initialise le buffer stockant les positions des sommets
-        glGenBuffers(1, &vertex_buffer);
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-        glBufferData(GL_ARRAY_BUFFER, mesh.vertex_buffer_size(), mesh.vertex_buffer(), GL_STATIC_DRAW);
-        
         // cree et configure un vertex array object: conserve la description des attributs de sommets
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
         
-        // attribut 0, position des sommets, declare dans le vertex shader : in vec3 position;
-        glVertexAttribPointer(0, 
-            3, GL_FLOAT,    // size et type, position est un vec3 dans le vertex shader
-            GL_FALSE,       // pas de normalisation des valeurs
-            0,              // stride 0, les valeurs sont les unes a la suite des autres
-            0               // offset 0, les valeurs sont au debut du buffer
+        // cree et initialise le buffer stockant les positions des sommets
+        glGenBuffers(1, &vertex_buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+        glBufferData(GL_ARRAY_BUFFER, mesh.vertex_buffer_size(), mesh.vertex_buffer(), GL_STATIC_DRAW);
+        // attention : le buffer est implicite, c'est celui qui est selectionne sur GL_ARRAY_BUFFER
+        
+        // attribut 0, position des sommets, declare dans le vertex shader : layout(location= 0) in vec3 position;
+        glVertexAttribPointer(0, // numero de l'attribut, cf declaration dans le shader
+            3, GL_FLOAT,         // size et type, position est un vec3 dans le vertex shader
+            GL_FALSE,            // pas de normalisation des valeurs
+            0,                   // stride 0, les valeurs sont les unes a la suite des autres
+            0                    // offset 0, les valeurs sont au debut du buffer
         );
-        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(0);   // numero de l'attribut, cf declaration dans le shader
+        // attention : le vertex array selectionne est un parametre implicite
+        // attention : le buffer selectionne sur GL_ARRAY_BUFFER est un parametre implicite 
         
         // conserve le nombre de sommets
         vertex_count= mesh.vertex_count();
@@ -163,5 +139,27 @@ struct Buffers
 \endcode
 
 les différentes variantes de glDraw() sont expliquées dans \ref draw.
+
+
+# remarque
+on peut aussi ecrire une fonction utilitaire plus proche de l'utilisation de `malloc` pour creer un buffer, mais ce n'est pas necessairement plus lisible que glBufferData...
+\code
+GLuint create_buffer( const int size, const void *data )
+{
+    GLuint buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    return buffer;
+}
+
+void release_buffer( const GLuint buffer )
+{
+    glDeleteBuffers(1, &buffer);
+}
+
+GLuint buffer= create_buffer(mesh.vertex_buffer_size(), mesh.vertex_buffer());
+\endcode
+
 */
 
