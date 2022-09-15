@@ -101,17 +101,11 @@ struct GLTFNode
 };
 
 
-struct draw_material
-{
-    int material_index;
-    int node_index;
-    int mesh_index;
-    int primitive_index;
-};
-
 /*! representation d'une scene statique glTF.
     resume : https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/README.md
+
     specification : https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
+
     parser : https://github.com/jkuhlmann/cgltf
 
     une scene est un ensemble de maillages places et orientes dans un repere.
@@ -130,8 +124,6 @@ struct GLTFScene
     
     void bounds( Point& pmin, Point& pmax) const;   //!< calcule les points extremes de la scene, utile pour regler un orbiter.
     std::vector<GLTFInstances> instances( ) const;  //!< regroupe les instances de chaque maillage.
-    
-    std::vector<draw_material> draw_materials( ) const;
 };
 
 //! charge un fichier .gltf et construit une scene statique, sans animation.

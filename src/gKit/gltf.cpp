@@ -50,20 +50,20 @@ Mesh read_gltf_mesh( const char *filename )
     // textures
     for(unsigned i= 0; i < data->images_count; i++)
     {
-        //~ printf("textures[%d] '%s' ", i, data->images[i].name);
-        
         if(data->images[i].uri)
         {
             //~ printf("uri '%s'...\n", data->images[i].uri);
             materials.insert_texture(data->images[i].uri);
         }
+    #if 0
         else if(data->images[i].buffer_view)
         {
+            // extraire la texture du glb...
+            
             cgltf_buffer_view *view= data->images[i].buffer_view;
             //~ printf("buffer %d/%d, offset %lu size %lu\n", int(std::distance(data->buffers, view->buffer)), int(data->buffers_count), view->offset, view->size);
             //~ printf("  type '%s'\n", data->images[i].mime_type);
             
-            // extraire la texture du glb...
             if(!view->buffer->uri)
             {
                 char tmp[1024];
@@ -72,9 +72,9 @@ Mesh read_gltf_mesh( const char *filename )
                 else
                     sprintf(tmp, "%stexture%d", pathname(filename).c_str(), i);
                 
-                if(strcasecmp(data->images[i].mime_type, "image/png") == 0)
+                if(strccmp(data->images[i].mime_type, "image/png") == 0)
                     strcat(tmp, ".png");
-                else if(strcasecmp(data->images[i].mime_type, "image/jpg") == 0)
+                else if(strcmp(data->images[i].mime_type, "image/jpg") == 0)
                     strcat(tmp, ".jpg");
                 else 
                     strcat(tmp, ".raw");        // ??
@@ -106,6 +106,7 @@ Mesh read_gltf_mesh( const char *filename )
                 data->images[i].uri= strdup(tmp);       // nomme la texture / cf analyse des matieres
             }
         }
+    #endif
     }
     
     // materials
@@ -646,6 +647,7 @@ GLTFScene read_gltf_scene( const char *filename )
 // etape 1 : construire les meshs et les groupes de triangles / primitives
     int primitives_index= 0;
     std::vector<float> buffer;
+    
     // parcourir tous les meshs de la scene
     for(unsigned mesh_id= 0; mesh_id < data->meshes_count; mesh_id++)
     {
@@ -784,42 +786,6 @@ std::vector<GLTFInstances> GLTFScene::instances( ) const
     return instances;
 }
 
-std::vector<draw_material> GLTFScene::draw_materials( ) const
-{
-    // trier les primitives par matiere
-    std::vector<draw_material> tmp;
-
-    for(unsigned node_id= 0; node_id < nodes.size(); node_id++)
-    {
-        const GLTFNode& node= nodes[node_id];
-        const GLTFMesh& mesh= meshes[node.mesh_index];
-        for(unsigned primitive_id= 0; primitive_id < mesh.primitives.size(); primitive_id++)
-        {
-            const GLTFPrimitives& primitives= mesh.primitives[primitive_id];
-            int material_id= primitives.material_index;
-            
-            tmp.push_back( {material_id, int(node_id), node.mesh_index, int(primitive_id)} );
-        }
-    }
-    
-    std::sort(tmp.begin(), tmp.end(), 
-        []( const draw_material& a, const draw_material& b )
-        {
-            if(a.material_index != b.material_index)
-                return a.material_index < b.material_index;
-            if(a.node_index != b.node_index)
-                return a.node_index < b.node_index;
-                
-            if(a.mesh_index != b.mesh_index)
-                return a.mesh_index < b.mesh_index;
-            if(a.primitive_index != b.primitive_index)
-                return a.primitive_index < b.primitive_index;
-            return false;
-        }
-    );
-    
-    return tmp;
-}
 
 void GLTFScene::bounds( Point& pmin, Point& pmax ) const
 {
