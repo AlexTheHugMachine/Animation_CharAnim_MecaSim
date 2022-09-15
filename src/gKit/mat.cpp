@@ -29,7 +29,7 @@ Transform::Transform (
     m[3][0]= t30; m[3][1]= t31; m[3][2]= t32; m[3][3]= t33;
 }
 
-Transform& Transform::column( const int id, const float t0, const float t1, const float t2, const float t3 )
+Transform& Transform::column( const unsigned id, const float t0, const float t1, const float t2, const float t3 )
 {
     m[0][id]= t0;
     m[1][id]= t1;
@@ -38,7 +38,20 @@ Transform& Transform::column( const int id, const float t0, const float t1, cons
     return *this;
 }
 
-Transform& Transform::row( const int id, const float t0, const float t1, const float t2, const float t3 )
+vec4 Transform::column( const unsigned id ) const
+{
+    assert(id < 4);
+    return vec4(m[0][id], m[1][id], m[2][id], m[3][id]);
+}
+
+vec4 Transform::column( const unsigned id )
+{
+    assert(id < 4);
+    return vec4(m[0][id], m[1][id], m[2][id], m[3][id]);
+}
+
+
+Transform& Transform::row( const unsigned id, const float t0, const float t1, const float t2, const float t3 )
 {
     m[id][0]= t0;
     m[id][1]= t1;
@@ -46,6 +59,19 @@ Transform& Transform::row( const int id, const float t0, const float t1, const f
     m[id][3]= t3;
     return *this;
 }
+
+vec4 Transform::row( const unsigned id ) const
+{
+    assert(id < 4);
+    return vec4(m[id][0], m[id][1], m[id][2], m[id][3]);
+}
+
+vec4 Transform::row( const unsigned id )
+{
+    assert(id < 4);
+    return vec4(m[id][0], m[id][1], m[id][2], m[id][3]);
+}
+
 
 Transform& Transform::column_major( const float matrix[16] ) 
 {
@@ -63,16 +89,24 @@ Transform& Transform::row_major( const float matrix[16] )
 
 Transform::Transform( const Vector& x, const Vector& y, const Vector& z, const Vector& w )
 {
-	m[0][0] = x.x;	m[0][1] = y.x;	m[0][2] = z.x;	m[0][3] = w.x;
-	m[1][0] = x.y;	m[1][1] = y.y;	m[1][2] = z.y;	m[1][3] = w.y;
-	m[2][0] = x.z;	m[2][1] = y.z;	m[2][2] = z.z;	m[2][3] = w.z;
-	m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
+    m[0][0] = x.x;	m[0][1] = y.x;	m[0][2] = z.x;	m[0][3] = w.x;
+    m[1][0] = x.y;	m[1][1] = y.y;	m[1][2] = z.y;	m[1][3] = w.y;
+    m[2][0] = x.z;	m[2][1] = y.z;	m[2][2] = z.z;	m[2][3] = w.z;
+    m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
 }
 
-Vector Transform::operator[] ( const int c ) const
+Transform::Transform( const vec4& x, const vec4& y, const vec4& z, const vec4& w )
 {
-	assert(c >= 0 && c <= 3);
-	return Vector(m[0][c], m[1][c], m[2][c]);
+    m[0][0] = x.x;	m[0][1] = y.x;	m[0][2] = z.x;	m[0][3] = w.x;
+    m[1][0] = x.y;	m[1][1] = y.y;	m[1][2] = z.y;	m[1][3] = w.y;
+    m[2][0] = x.z;	m[2][1] = y.z;	m[2][2] = z.z;	m[2][3] = w.z;
+    m[3][0] = x.w;  m[3][1] = y.w;	m[3][2] = z.w;	m[3][3] = w.w;
+}
+
+Vector Transform::operator[] ( const unsigned c ) const
+{
+    assert(c < 4);
+    return Vector(m[0][c], m[1][c], m[2][c]);
 }
 
 

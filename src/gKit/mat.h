@@ -26,14 +26,24 @@ struct Transform
         const float t20= 0, const float t21= 0, const float t22= 1, const float t23= 0,
         const float t30= 0, const float t31= 0, const float t32= 0, const float t33= 1 );
     
-    //! constructeur a partir de 4 Vector colonnes, met (0, 0, 0, 1) dans la 4e ligne 
+    //! constructeur a partir de 4 Vector colonnes, met (0, 0, 0, 1) dans la derniere ligne.
     Transform( const Vector& x, const Vector& y, const Vector& z, const Vector& w );
+    //! constructeur a partir de 4 colonnes
+    Transform( const vec4& x, const vec4& y, const vec4& z, const vec4& w );
     
     //! initialise une colonne de la matrice a partir de 4 floats.
-    Transform& column( const int id, const float t0, const float t1, const float t2, const float t3 );
+    Transform& column( const unsigned id, const float t0, const float t1, const float t2, const float t3 );
+    //!renvoie une colonne.
+    vec4 column( const unsigned id ) const;
+    //!renvoie une colonne.
+    vec4 column( const unsigned id );
     
     //! initialise une ligne de la matrice.
-    Transform& row( const int id, const float t0, const float t1, const float t2, const float t3 );
+    Transform& row( const unsigned id, const float t0, const float t1, const float t2, const float t3 );
+    //!renvoie une ligne.
+    vec4 row( const unsigned id ) const;
+    //!renvoie une ligne.
+    vec4 row( const unsigned id );
     
     //! initialise la matrice avec 16 floats organises par colonne.
     Transform& column_major( const float matrix[16] );
@@ -42,7 +52,7 @@ struct Transform
     Transform& row_major( const float matrix[16] );
     
     //! renvoie le Vector colonne c de la matrice
-    Vector operator[] ( const int c ) const;
+    Vector operator[] ( const unsigned c ) const;
 
     //! renvoie le point transforme.
     Point operator() ( const Point& p ) const;
