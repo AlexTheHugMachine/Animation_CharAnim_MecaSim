@@ -252,7 +252,7 @@ Mesh read_gltf_mesh( const char *filename )
                     // transforme les normales des sommets
                     for(unsigned i= 0; i+2 < buffer.size(); i+= 3)
                         normals.push_back( normal(Vector(buffer[i], buffer[i+1], buffer[i+2])) );
-                    assert(normals.size() == positions.size());
+                    //~ assert(normals.size() == positions.size());
                 }
                 
                 if(attribute->type == cgltf_attribute_type_texcoord)
@@ -273,7 +273,7 @@ Mesh read_gltf_mesh( const char *filename )
                     
                     for(unsigned i= 0; i+1 < buffer.size(); i+= 2)
                         texcoords.push_back( vec2(buffer[i], buffer[i+1]) );
-                    assert(texcoords.size() == positions.size());
+                    //~ assert(texcoords.size() == positions.size());
                 }
                 
                 if(attribute->type == cgltf_attribute_type_color)
@@ -358,6 +358,7 @@ std::vector<GLTFCamera> read_cameras( cgltf_data *data )
         cgltf_node *node= &data->nodes[i];
         if(node->camera == nullptr)
             continue;
+        
         cgltf_camera_perspective *perspective= &node->camera->data.perspective;
         
         //~ if(perspective->has_aspect_ratio)
@@ -482,7 +483,7 @@ std::vector<GLTFLight> read_gltf_lights( const char *filename )
 static
 std::vector<GLTFMaterial> read_materials( cgltf_data *data )
 {
-    std::vector<GLTFMaterial> materials(data->materials_count);
+    std::vector<GLTFMaterial> materials;
     for(unsigned i= 0; i < data->materials_count; i++)
     {
         cgltf_material *material= &data->materials[i];
@@ -497,6 +498,9 @@ std::vector<GLTFMaterial> read_materials( cgltf_data *data )
         m.occlusion_texture= -1;
         m.normal_texture= -1;
         m.emission_texture= -1;
+        m.transmission_texture= -1;
+        m.specular_texture= -1;
+        m.specular_color_texture= -1;
         
         if(material->has_pbr_metallic_roughness)
         {
@@ -534,6 +538,53 @@ std::vector<GLTFMaterial> read_materials( cgltf_data *data )
             //~ printf("    texture %d\n", int(std::distance(data->images, material->emissive_texture.texture->image)));
             m.emission_texture= int(std::distance(data->images, material->emissive_texture.texture->image));
         }
+        
+        
+        if(material->has_ior)
+        {
+            m.ior= material->ior.ior;
+            if(m.ior == float(1.5))
+                m.ior= 0;       // valeur par defaut
+            
+            //~ if(m.ior)
+                //~ printf("  ior %f\n", m.ior);
+        }
+        
+        if(material->has_specular)
+        {
+            m.specular= material->specular.specular_factor;
+            if(material->specular.specular_texture.texture && material->specular.specular_texture.texture->image)
+                m.specular_texture= std::distance(data->images, material->specular.specular_texture.texture->image);
+            
+            m.specular_color= Color(material->specular.specular_color_factor[0], material->specular.specular_color_factor[1], material->specular.specular_color_factor[2]);
+            if(material->specular.specular_color_texture.texture && material->specular.specular_color_texture.texture->image)
+                m.specular_color_texture= std::distance(data->images, material->specular.specular_color_texture.texture->image);
+            
+            if(m.specular_color.r*m.specular +m.specular_color.g*m.specular +m.specular_color.b*m.specular == 0)
+            {
+                // parametres incoherents... valeur par defaut / desactive ce comportement
+                m.specular= 0;
+                m.specular_color= Black();
+            }
+            
+            //~ if(m.specular)
+                //~ printf("  specular %f color %f %f %f, texture %d\n", m.specular, m.specular_color.r, m.specular_color.g, m.specular_color.b, m.specular_texture);
+        }
+        
+        if(material->has_transmission)
+        {
+            m.transmission= material->transmission.transmission_factor;
+            if(material->transmission.transmission_texture.texture && material->transmission.transmission_texture.texture->image)
+                m.transmission_texture= std::distance(data->images, material->transmission.transmission_texture.texture->image);
+            
+            //~ if(m.transmission)
+                //~ printf("  transmission %f, texture %d\n", m.transmission, m.transmission_texture);
+        }
+        
+        //~ if(material->has_volume) // todo
+        //~ {
+            //~ printf("  volume\n");
+        //~ }
         
         materials.push_back(m);
     }
