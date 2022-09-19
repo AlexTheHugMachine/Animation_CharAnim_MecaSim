@@ -3,7 +3,7 @@
 
 #include "cgltf.h"
 
-#include "gltf.h"
+//~ #include "gltf.h"
 #include "wavefront.h"
 #include "program.h"
 #include "uniforms.h"
@@ -18,7 +18,7 @@
 
 
 //~ #include "app_camera.h"        // classe Application a deriver
-//~ #include "app_time.h"        // classe Application a deriver
+#include "app_time.h"        // classe Application a deriver
 #include "app.h"        // classe Application a deriver
 #include "widgets.h"    // interface minimaliste
 
@@ -147,12 +147,13 @@ class TP : public App
 {
 public:
     // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
-    TP( ) : App(1024, 640, 3, 3, 4) 
+    TP( ) : App(1024, 640, 3, 3, 4) // MSAA 4
+    //~ TP( ) : AppTime(1024, 640)
     {
         //~ SDL_GL_SetSwapInterval(1);
         glEnable(GL_FRAMEBUFFER_SRGB);
-        //~ glEnable(GL_SAMPLE_SHADING);
-        //~ glMinSampleShading(0);
+        glEnable(GL_SAMPLE_SHADING);
+        glMinSampleShading(0);
         
         m_widgets= create_widgets();
     }
@@ -171,15 +172,21 @@ public:
         //~ const char *filename= "tutos/gltf/WaterBottle/WaterBottle.gltf";
         //~ const char *filename= "tutos/gltf/DamagedHelmet/DamagedHelmet.gltf";
         //~ const char *filename= "tutos/gltf/Drone/scene.gltf";
-        //~ const char *filename= "tutos/gltf/FlightHelmet/FlightHelmet.gltf";
+        const char *filename= "tutos/gltf/FlightHelmet/FlightHelmet.gltf";
         //~ const char *filename= "tutos/gltf/openGLNormal/normal.gltf";
         //~ const char *filename= "tutos/gltf/skinning.gltf";
         //~ const char *filename= "tutos/gltf/cube_scene.gltf";
         //~ const char *filename= "/home/jciehl/scenes/bistro_import/exterior.gltf";
         //~ const char *filename= "/home/jciehl/scenes/bistro-gltf/pack.gltf";
-        const char *filename= "/home/jciehl/scenes/quaternius/robot.gltf";
+        //~ const char *filename= "/home/jciehl/scenes/quaternius/robot.gltf";
         //~ const char *filename= "/home/jciehl/Downloads/sintel/sintel.gltf";
         //~ const char *filename= "/home/jciehl/Downloads/drone-city/drone-city.gltf";
+        //~ const char *filename= "/home/jciehl/scenes/sponza-intel/NewSponza_Main_Blender_glTF.gltf";
+        //~ const char *filename= "/home/jciehl/scenes/RWT143/Lily-Maria.glb";
+        //~ const char *filename= "/home/jciehl/scenes/RWT143/optimizer/export.gltf";
+        //~ const char *filename= "/home/jciehl/Downloads/quaternius/rpg/Ranger.gltf";
+        //~ const char *filename= "/home/jciehl/Downloads/quaternius/rpg/Rogue.gltf";
+        //~ const char *filename= "/home/jciehl/scenes/splash3/splash.gltf";
 
     #if 0
         {
@@ -277,6 +284,7 @@ public:
                         
                         // argh !! gltf inverse la convention uv, l'origine est en haut a gauche, au lieu de en bas a gauche pour openGL...
                         images[i]= flipY(image);
+                        //~ images[i]= image;
                     }
                     
                     /* \todo si l'image est stockee dans un buffer, utiliser SDL_RWFromConstMem + IMG_LoadPNG_RW / IMG_LoadJPG_RW
@@ -284,18 +292,7 @@ public:
                         + https://www.libsdl.org/projects/SDL_image/docs/SDL_image.html#SEC24
                      */
                 }
-                
-                // creer les textures sur le thread principal / opengl
-                for(unsigned i= 0; i < images.size(); i++)
-                {
-                    m_textures[i]= make_texture(0, images[i]);
-                    
-                    // repetition par defaut
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, float(4));
-                }
-                    
+
                 // texture par defaut, valeur constante 1
                 {
                     Image white(16, 16, White());
@@ -310,6 +307,19 @@ public:
                 {
                     Image black(16, 16, Black());
                     m_black_texture= make_texture(0, black, GL_RGBA);
+                }
+            
+                // creer les textures sur le thread principal / opengl
+                for(unsigned i= 0; i < images.size(); i++)
+                {
+                    m_textures[i]= make_texture(0, images[i]);
+                    if(m_textures[i] == 0)
+                        m_textures[i]= m_white_texture;
+                    
+                    // repetition par defaut
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                    //~ glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, float(4));
                 }
             }
             
@@ -333,10 +343,52 @@ public:
                 {
                     printf("  pbr metallic roughness\n");
                     cgltf_pbr_metallic_roughness *pbr= &material->pbr_metallic_roughness;
-                    printf("    base color %f %f %f %f\n", pbr->base_color_factor[0], pbr->base_color_factor[1], pbr->base_color_factor[2], pbr->base_color_factor[3]);
-                    printf("      texture %d\n", pbr->base_color_texture.texture ? int(std::distance(data->images, pbr->base_color_texture.texture->image)) : -1);
-                    printf("    metallic %f, roughness %f\n", pbr->metallic_factor, pbr->roughness_factor);
-                    printf("      texture %d\n", pbr->metallic_roughness_texture.texture ? int(std::distance(data->images, pbr->metallic_roughness_texture.texture->image)) : -1);
+                    //~ printf("    base color %f %f %f %f\n", pbr->base_color_factor[0], pbr->base_color_factor[1], pbr->base_color_factor[2], pbr->base_color_factor[3]);
+                    //~ printf("      texture %d\n", pbr->base_color_texture.texture ? int(std::distance(data->images, pbr->base_color_texture.texture->image)) : -1);
+                    if(pbr->base_color_texture.texture)
+                    {
+                        //~ printf("      texcoord %d\n", pbr->base_color_texture.texcoord);
+                        if(pbr->base_color_texture.has_transform)
+                            printf("      transform !!\n");
+                        
+                    #if 0
+                        cgltf_sampler *sampler= pbr->base_color_texture.texture->sampler;
+                        const char *wrap_s= "";
+                        switch(sampler->wrap_s)
+                        {
+                            case GL_CLAMP_TO_EDGE: wrap_s= "clamp_to_edge"; break;
+                            case GL_MIRRORED_REPEAT: wrap_s= "mirrored repeat"; break;
+                            case GL_REPEAT: wrap_s= "repeat"; break;
+                        }
+                        const char *wrap_t= "";
+                        switch(sampler->wrap_t)
+                        {
+                            case GL_CLAMP_TO_EDGE: wrap_t= "clamp_to_edge"; break;
+                            case GL_MIRRORED_REPEAT: wrap_t= "mirrored repeat"; break;
+                            case GL_REPEAT: wrap_t= "repeat"; break;
+                        }
+                        
+                        const char *filter_min= "";
+                        switch(sampler->min_filter)
+                        {
+                            case GL_NEAREST: filter_min= "nearest"; break;
+                            case GL_LINEAR: filter_min= "linear"; break;
+                            case GL_NEAREST_MIPMAP_NEAREST: filter_min= "nearest mipmap nearest"; break;
+                            case GL_NEAREST_MIPMAP_LINEAR: filter_min= "nearest mipmap linear"; break;
+                            case GL_LINEAR_MIPMAP_NEAREST: filter_min= "linear mipmap linear"; break;
+                            case GL_LINEAR_MIPMAP_LINEAR: filter_min= "linear mipmap linear"; break;
+                        }
+                        
+                        const char *filter_mag= "";
+                        switch(sampler->mag_filter)
+                        {
+                            case GL_NEAREST: filter_mag= "nearest"; break;
+                            case GL_LINEAR: filter_mag= "linear"; break;
+                        }
+                        
+                        printf("    sampler wrap (%s, %s), filter (%s, %s)\n", wrap_s, wrap_t, filter_min, filter_mag);
+                    #endif
+                    }
                     
                     m.color= Color(pbr->base_color_factor[0], pbr->base_color_factor[1], pbr->base_color_factor[2], pbr->base_color_factor[3]);
                     if(pbr->base_color_texture.texture && pbr->base_color_texture.texture->image)
@@ -346,6 +398,12 @@ public:
                     m.roughness= pbr->roughness_factor;
                     if(pbr->metallic_roughness_texture.texture && pbr->metallic_roughness_texture.texture->image)
                         m.metallic_roughness_texture= int(std::distance(data->images, pbr->metallic_roughness_texture.texture->image));
+                    
+                    printf("    base color %f %f %f %f\n", m.color.r, m.color.g, m.color.b, m.color.a);
+                    printf("      texture %d\n", pbr->base_color_texture.texture ? int(std::distance(data->images, pbr->base_color_texture.texture->image)) : -1);
+                    printf("    metallic %f, roughness %f\n", pbr->metallic_factor, pbr->roughness_factor);
+                    printf("      texture %d\n", pbr->metallic_roughness_texture.texture ? int(std::distance(data->images, pbr->metallic_roughness_texture.texture->image)) : -1);
+                    
                 }
                 if(material->has_clearcoat)
                     printf("  clearcoat\n");
@@ -353,20 +411,20 @@ public:
                     printf("  sheen\n");
                 if(material->normal_texture.texture && material->normal_texture.texture->image)
                 {
-                    printf("  normal texture %d\n", int(std::distance(data->images, material->normal_texture.texture->image)));
+                    //~ printf("  normal texture %d\n", int(std::distance(data->images, material->normal_texture.texture->image)));
                     m.normal_texture= int(std::distance(data->images, material->normal_texture.texture->image));
                 }
                 if(material->occlusion_texture.texture && material->occlusion_texture.texture->image)
                 {
-                    printf("  occlusion texture %d\n", int(std::distance(data->images, material->occlusion_texture.texture->image)));
+                    //~ printf("  occlusion texture %d\n", int(std::distance(data->images, material->occlusion_texture.texture->image)));
                     m.occlusion_texture= int(std::distance(data->images, material->occlusion_texture.texture->image));
                 }
                 
-                printf("  emissive color %f %f %f\n", material->emissive_factor[0], material->emissive_factor[1], material->emissive_factor[2]);
+                //~ printf("  emissive color %f %f %f\n", material->emissive_factor[0], material->emissive_factor[1], material->emissive_factor[2]);
                 m.emission= Color(material->emissive_factor[0], material->emissive_factor[1], material->emissive_factor[2]);
                 if(material->emissive_texture.texture && material->emissive_texture.texture->image)
                 {
-                    printf("    texture %d\n", int(std::distance(data->images, material->emissive_texture.texture->image)));
+                    //~ printf("    texture %d\n", int(std::distance(data->images, material->emissive_texture.texture->image)));
                     m.emission_texture= int(std::distance(data->images, material->emissive_texture.texture->image));
                 }
                 
@@ -816,6 +874,7 @@ public:
             }
         }
         
+    #if 0
         if(p.material_id != -1)
         {
             assert(p.material_id < int(m_materials.size()));
@@ -826,6 +885,7 @@ public:
             if(material->normal_texture != -1 && has_tangent == false)
                 printf("  [warning] normal map but no tangents...\n");
         }
+    #endif
         
         assert(p.count != 0);
         return p;
@@ -1244,6 +1304,20 @@ public:
             update_transforms();
         }
         
+        {
+            glUseProgram(m_program);
+            program_uniform(m_program, "material_color", Color(0.8));
+            program_uniform(m_program, "material_metallic", float(0));
+            program_uniform(m_program, "material_roughness", float(0.5));
+            
+            program_use_texture(m_program, "material_color_texture", 0, m_white_texture);
+            program_use_texture(m_program, "material_metallic_roughness_texture", 1, m_white_texture);
+            program_use_texture(m_program, "material_occlusion_texture", 2, m_white_texture);
+            
+        }
+        
+        int draws= 0;
+        
         for(unsigned i= 0; i < m_nodes.size(); i++)
         {
             const gltf::Node& node= m_nodes[i];
@@ -1251,20 +1325,20 @@ public:
                 continue;   // rien a afficher...
             
             GLuint program= m_program;
-            if(node.skin_id != -1)
-                program= m_skinning_program;
+            //~ if(node.skin_id != -1)
+                //~ program= m_skinning_program;
             
-            glUseProgram(program);
-            if(node.skin_id != -1)
-            {
-                const gltf::Skeleton& skin= m_skins[node.skin_id];
-                std::vector<Transform> matrices(64);
-                for(unsigned s= 0; s < skin.nodes.size(); s++)
-                    matrices[s]= m_nodes[skin.nodes[s]].model * skin.matrices[s];
+            //~ glUseProgram(program);
+            //~ if(node.skin_id != -1)
+            //~ {
+                //~ const gltf::Skeleton& skin= m_skins[node.skin_id];
+                //~ std::vector<Transform> matrices(64);
+                //~ for(unsigned s= 0; s < skin.nodes.size(); s++)
+                    //~ matrices[s]= m_nodes[skin.nodes[s]].model * skin.matrices[s];
                 
-                assert(program == m_skinning_program);
-                program_uniform(program, "matrices", matrices);
-            }
+                //~ assert(program == m_skinning_program);
+                //~ program_uniform(program, "matrices", matrices);
+            //~ }
             
             Transform m= node.model;
             Transform mv= view * m;
@@ -1280,14 +1354,14 @@ public:
                 
                 glBindVertexArray(primitives.vao);
                 
-                if(node.has_animation)
-                    // affiche les noeuds animes...
-                    program_uniform(program, "material_color", Color(0.8, 0.4, 0));
-                else
-                    program_uniform(program, "material_color", Color(0.8));
+                //~ if(node.has_animation)
+                    //~ // affiche les noeuds animes...
+                    //~ program_uniform(program, "material_color", Color(0.8, 0.4, 0));
+                //~ else
+                    //~ program_uniform(program, "material_color", Color(0.8));
                 
-                if(node.skin_id != -1)
-                    program_uniform(program, "material_color", Color(0.8, 0, 0));
+                //~ if(node.skin_id != -1)
+                    //~ program_uniform(program, "material_color", Color(0.8, 0, 0));
                 
                 // materies
                 if(primitives.material_id != -1)
@@ -1324,6 +1398,7 @@ public:
                         program_use_texture(program, "material_emission_texture", 4, m_black_texture);    // argh (0, 0, 0) par defaut...
                 }
                 
+                draws++;
                 if(primitives.type != GL_NONE)
                     glDrawElements(primitives.mode, primitives.count, primitives.type, (const void *) std::ptrdiff_t(primitives.offset));
                 else
@@ -1333,6 +1408,9 @@ public:
                 // et trier par shader aussi : skinning vs statique
             }
         }
+        
+        
+        //~ printf("%d draws\n", draws);
         
         if(key_state('s'))
         {

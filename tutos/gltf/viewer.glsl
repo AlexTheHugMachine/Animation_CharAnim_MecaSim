@@ -75,9 +75,14 @@ void main( )
 	vec3 N= normalize(vertex_normal);
 	//~ vec3 N= cross(normalize(dFdx(vertex_position)), normalize(dFdy(vertex_position)));			// n, normale au point p
 
+#if 1
+// cf "Surface Gradient-Based Bump Mapping Framework", mikkelsen, jcgt 2020
+// https://jcgt.org/published/0009/03/04/paper.pdf
+
 // normal map
 	vec3 M= 2 * texture(material_normal_texture, vertex_texcoord).xyz - vec3(1);
 
+	// listing 2, tbn normal map to derivative
 	//~ float flip_deriv= -1;
 	float flip_deriv= 1;
 	vec2 dM;
@@ -89,13 +94,12 @@ void main( )
 	}
 	
 // repere tangent
+	// listing 4, procedural tbn basis
 	vec3 T;
 	vec3 B;
 	{
 		vec3 dPdx= dFdx(vertex_position);
-		T= normalize(dPdx);
 		vec3 dPdy= dFdy(vertex_position);
-		B= normalize(dPdy);
 		
 		vec2 dSTdx= dFdx(vertex_texcoord);
 		vec2 dSTdy= dFdy(vertex_texcoord);
@@ -109,11 +113,14 @@ void main( )
 	}
 	
 // normale perturbee
+	// listing 3, tbn style surface gradient
 	M= dM.x*T + dM.y*B;
 	N= normalize(N - M);
-	
+#endif
+
   	vec3 V= normalize(-vertex_position);
-	vec3 L= normalize(-vertex_position);	// la camera est aussi la source...
+	//~ vec3 L= normalize(vec3(1,2,0) - vertex_position);	// la camera est aussi la source...
+	vec3 L= normalize( -vertex_position);	// la camera est aussi la source...
 	vec3 H= normalize(V+L);
 
 // parametres
@@ -141,21 +148,27 @@ void main( )
 	float HdotV= abs(dot(H, V));
 	
 	vec3 fr_specular = F * D(alpha, NdotH) * GV(alpha, HdotL, HdotV, NdotL, NdotV);
+	//~ float ns= 6 * (2 / alpha - 1);
+	//~ vec3 fr_specular = F / NdotL * (ns+8)/(8*PI) * pow(NdotH, ns);
 	
 // AO
-	float ao= texture(material_occlusion_texture, vertex_texcoord).r;
-	ao= pow(ao, 2.2);
+	//~ float ao= texture(material_occlusion_texture, vertex_texcoord).r;
+	float ao= texture(material_metallic_roughness_texture, vertex_texcoord).r;
+	//~ ao= pow(ao, 2.2);
+	//~ float ao= 1;
 	
 // emission
 	vec3 Le= material_emission.rgb *  texture(material_emission_texture, vertex_texcoord).rgb;
 	Le= pow(Le, vec3(2.2));
+	//~ vec3 Le= vec3(0);
 
 // brdf
 	vec3 fr= fr_diffuse + fr_specular;
+	//~ vec3 fr= fr_specular;
 
 // evaluation
     fragment_color= vec4((Le + ao * fr) * NdotL, 1);
-    //~ fragment_color= vec4(vec3(NdotL), 1);
+    //~ fragment_color= vec4(vec3(NdotV), 1);
     //~ fragment_color= vec4(abs(N), 1);
 }
 
