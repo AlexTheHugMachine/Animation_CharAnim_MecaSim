@@ -41,27 +41,39 @@ struct GLTFLight
 //! charge un fichier .gltf et renvoie les sources de lumiere ponctuelles.
 std::vector<GLTFLight> read_gltf_lights( const char *filename );
 
-//! description d'une matiere pbr.
+/*! description d'une matiere PBR / Principled BRDF. 
+
+    cf specification glTF / implementation : https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#appendix-b-brdf-implementation
+    
+    utilise les extensions / parametres supplementaires :\n
+        - KHR_materials_ior : https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_ior
+        - KHR_materials_specular : https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_specular
+        - KHR_materials_transmission : https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_transmission
+        
+        - KHR_materials_clearcoat : https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_clearcoat
+ */
+
 struct GLTFMaterial
 {
-    Color color;
-    Color emission;
-    float metallic;
-    float roughness;
-    float transmission;
-    float ior;
-    float specular;
-    Color specular_color;
+    Color color;                    //!< base color.
+    Color emission;                 //!< emission pour les sources de lumieres ou pas (= noir).
+    float metallic;                 //!< metallic / dielectrique.
+    float roughness;                //!< rugosite de la micro surface.
+    float transmission;             //!< transmission, transparent ou pas (= 0)
+    float ior;                      //!< indice de refraction des dielectriques ou pas (= 0)
+    float specular;                 //!< modification de la reflexion speculaire des dielectriques ou pas (= 0)
+    Color specular_color;           //!< modification de la reflexion speculaire des dielectriques ou pas (= 0)
     // \todo volume...;
+    // \todo coating
     
-    int color_texture;              //<! indice de la texture ou -1.
-    int metallic_roughness_texture; //<! indice de la texture ou -1.
-    int emission_texture;           //<! indice de la texture ou -1.
-    int occlusion_texture;          //<! indice de la texture ou -1.    // \todo probablement pas necessaire, cf canal rouge de metallic_roughness_texture
-    int normal_texture;             //<! indice de la texture ou -1.
-    int transmission_texture;             //<! indice de la texture ou -1.
-    int specular_texture;             //<! indice de la texture ou -1.
-    int specular_color_texture;             //<! indice de la texture ou -1.
+    int color_texture;              //!< indice de la texture ou -1.
+    int metallic_roughness_texture; //!< indice de la texture ou -1. les valeurs RGB representent les parametres du modele : B= metallic, G= roughness, et R= ambient occlusion.
+    int emission_texture;           //!< indice de la texture ou -1.
+    int occlusion_texture;          //!< indice de la texture ou -1.    // \todo probablement pas necessaire, cf canal rouge de metallic_roughness_texture
+    int normal_texture;             //!< indice de la texture ou -1.
+    int transmission_texture;       //!< indice de la texture ou -1.
+    int specular_texture;           //!< indice de la texture ou -1.
+    int specular_color_texture;     //!< indice de la texture ou -1.
     
 };
 
@@ -76,8 +88,8 @@ std::vector<ImageData> read_gltf_images( const char *filename );
 struct GLTFPrimitives
 {
     int primitives_mode;    //!< triangles.
-    int primitives_index;   //<! indice unique.
-    int material_index;     //<! indice de la matiere des primitives.
+    int primitives_index;   //!< indice unique.
+    int material_index;     //!< indice de la matiere des primitives.
     
     // buffers...
     std::vector<unsigned> indices;
@@ -95,25 +107,26 @@ struct GLTFMesh
 //! instances d'un maillage.
 struct GLTFInstances
 {
-    std::vector<Transform> transforms;      //!< transformations model.
-    int mesh_index;                         //!< indice du maillage.
+    std::vector<Transform> transforms;      //!< transformation model de chaque instance
+    int mesh_index;                         //!< indice du maillage instancie.
 };
 
 //! position et orientation d'un maillage dans la scene.
 struct GLTFNode
 {
-    Transform model;                        //!< transformation model.
+    Transform model;                        //!< transformation model pour dessiner le maillage.
     int mesh_index;                         //!< indice du maillage.
 };
 
 
 /*! representation d'une scene statique glTF.
-    resume : https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/README.md
 
-    specification : https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
-
-    parser : https://github.com/jkuhlmann/cgltf
-
+    resume du format glTF : https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/README.md
+    
+    specification complete : https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
+    
+    parser gltf : https://github.com/jkuhlmann/cgltf
+    
     une scene est un ensemble de maillages places et orientes dans un repere.
     un GLTFNode permet de dessiner un maillage GLTFMesh a sa place.
     un maillage est un ensemble de groupes de triangles / primitives. cf GLTFPrimitives.
@@ -122,7 +135,7 @@ struct GLTFNode
 struct GLTFScene
 {
     std::vector<GLTFMesh> meshes;           //!< ensemble de maillages.
-    std::vector<GLTFNode> nodes;            //!< noeuds / position et orientation des maillages.
+    std::vector<GLTFNode> nodes;            //!< noeuds / position et orientation des maillages dans la scene.
     
     std::vector<GLTFMaterial> materials;    //!< matieres.
     std::vector<GLTFLight> lights;          //!< lumieres.
