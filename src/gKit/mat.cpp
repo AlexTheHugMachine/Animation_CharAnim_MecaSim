@@ -4,20 +4,17 @@
 #include <cmath>
 #include <algorithm>
 
-//#define _USE_MATH_DEFINES
 #include "mat.h"
 
 
 float radians( const float deg )
 {
-    const float pi = 3.1415926535f;
-    return (pi  / 180.f) * deg;
+    return ((float) M_PI  / 180.f) * deg;
 }
 
 float degrees( const float rad )
 {
-    const float pi = 3.1415926535f;
-    return (180.f / pi) * rad;
+    return (180.f / (float) M_PI) * rad;
 }
 
 Transform::Transform (
@@ -32,18 +29,84 @@ Transform::Transform (
     m[3][0]= t30; m[3][1]= t31; m[3][2]= t32; m[3][3]= t33;
 }
 
-Transform::Transform(const Vector& x, const Vector& y, const Vector& z, const Vector& w)
+Transform& Transform::column( const unsigned id, const float t0, const float t1, const float t2, const float t3 )
 {
-	m[0][0] = x.x;	m[0][1] = y.x;	m[0][2] = z.x;	m[0][3] = w.x;
-	m[1][0] = x.y;	m[1][1] = y.y;	m[1][2] = z.y;	m[1][3] = w.y;
-	m[2][0] = x.z;	m[2][1] = y.z;	m[2][2] = z.z;	m[2][3] = w.z;
-	m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
+    m[0][id]= t0;
+    m[1][id]= t1;
+    m[2][id]= t2;
+    m[3][id]= t3;
+    return *this;
 }
 
-Vector Transform::operator[](int c) const
+vec4 Transform::column( const unsigned id ) const
 {
-	assert(c >= 0 && c <= 3);
-	return Vector(m[0][c], m[1][c], m[2][c]);
+    assert(id < 4);
+    return vec4(m[0][id], m[1][id], m[2][id], m[3][id]);
+}
+
+vec4 Transform::column( const unsigned id )
+{
+    assert(id < 4);
+    return vec4(m[0][id], m[1][id], m[2][id], m[3][id]);
+}
+
+
+Transform& Transform::row( const unsigned id, const float t0, const float t1, const float t2, const float t3 )
+{
+    m[id][0]= t0;
+    m[id][1]= t1;
+    m[id][2]= t2;
+    m[id][3]= t3;
+    return *this;
+}
+
+vec4 Transform::row( const unsigned id ) const
+{
+    assert(id < 4);
+    return vec4(m[id][0], m[id][1], m[id][2], m[id][3]);
+}
+
+vec4 Transform::row( const unsigned id )
+{
+    assert(id < 4);
+    return vec4(m[id][0], m[id][1], m[id][2], m[id][3]);
+}
+
+
+Transform& Transform::column_major( const float matrix[16] ) 
+{
+    for(int i= 0; i < 4; i++)
+        column(i, matrix[4*i], matrix[4*i+1], matrix[4*i+2], matrix[4*i+3]);
+    return *this;
+}
+
+Transform& Transform::row_major( const float matrix[16] )
+{
+    for(int i= 0; i < 4; i++)
+        row(i, matrix[4*i], matrix[4*i+1], matrix[4*i+2], matrix[4*i+3]);
+    return *this;
+}
+
+Transform::Transform( const Vector& x, const Vector& y, const Vector& z, const Vector& w )
+{
+    m[0][0] = x.x;	m[0][1] = y.x;	m[0][2] = z.x;	m[0][3] = w.x;
+    m[1][0] = x.y;	m[1][1] = y.y;	m[1][2] = z.y;	m[1][3] = w.y;
+    m[2][0] = x.z;	m[2][1] = y.z;	m[2][2] = z.z;	m[2][3] = w.z;
+    m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
+}
+
+Transform::Transform( const vec4& x, const vec4& y, const vec4& z, const vec4& w )
+{
+    m[0][0] = x.x;	m[0][1] = y.x;	m[0][2] = z.x;	m[0][3] = w.x;
+    m[1][0] = x.y;	m[1][1] = y.y;	m[1][2] = z.y;	m[1][3] = w.y;
+    m[2][0] = x.z;	m[2][1] = y.z;	m[2][2] = z.z;	m[2][3] = w.z;
+    m[3][0] = x.w;  m[3][1] = y.w;	m[3][2] = z.w;	m[3][3] = w.w;
+}
+
+Vector Transform::operator[] ( const unsigned c ) const
+{
+    assert(c < 4);
+    return Vector(m[0][c], m[1][c], m[2][c]);
 }
 
 
@@ -106,6 +169,12 @@ Transform Transform::transpose( ) const
         m[0][1], m[1][1], m[2][1], m[3][1],
         m[0][2], m[1][2], m[2][2], m[3][2],
         m[0][3], m[1][3], m[2][3], m[3][3]);
+}
+
+
+Transform Transform::operator() ( const Transform& b ) const
+{
+    return compose_transform(*this, b);
 }
 
 //! renvoie la transformation a appliquer aux normales d'un objet transforme par la matrice m.
@@ -205,17 +274,54 @@ Transform Rotation( const Vector& axis, const float angle )
         a.x * a.y * (1 - c ) - a.z * s,
         a.x * a.z * (1 - c ) + a.y * s,
         0,
-
+        
         a.x * a.y * (1 - c ) + a.z * s,
         a.y * a.y + (1 - a.y * a.y ) * c,
         a.y * a.z * (1 - c ) - a.x * s,
         0,
-
+        
         a.x * a.z * (1 - c ) - a.y * s,
         a.y * a.z * (1 - c ) + a.x * s,
         a.z * a.z + (1 - a.z * a.z ) * c,
         0,
+        
+        0, 0, 0, 1);
+}
 
+
+Transform Rotation( const Vector& u, const Vector& v )
+{
+    Vector a= normalize(u);
+    Vector b= normalize(v);
+    Vector w= cross(a, b);      // rotation autour de w, un vecteur perpendiculaire a u et v
+    float s= length(w); // sin theta
+    float c= dot(a, b); // cos theta
+    
+    // si u et v sont colineaires, pas d'axe de rotation, renvoyer +1 ou -1
+    if(s < float(0.00001))
+        //! \todo ajuster epsilon, ou trouver une autre formulation non degeneree...
+        return Scale(std::copysign(c, 1));
+    
+    // normalise l'axe de rotation
+    w= w / s;
+    
+    // meme matrice de rotation qu'au dessus , cf Rotation(axis, angle), l'axe est le vecteur w, s et c sont le sinus et le cosinus de l'angle
+    return Transform(
+        w.x * w.x + (1 - w.x * w.x ) * c,
+        w.x * w.y * (1 - c ) - w.z * s,
+        w.x * w.z * (1 - c ) + w.y * s,
+        0,
+        
+        w.x * w.y * (1 - c ) + w.z * s,
+        w.y * w.y + (1 - w.y * w.y ) * c,
+        w.y * w.z * (1 - c ) - w.x * s,
+        0,
+        
+        w.x * w.z * (1 - c ) - w.y * s,
+        w.y * w.z * (1 - c ) + w.x * s,
+        w.z * w.z + (1 - w.z * w.z ) * c,
+        0,
+        
         0, 0, 0, 1);
 }
 
@@ -232,6 +338,21 @@ Transform Perspective( const float fov, const float aspect, const float znear, c
                   0,    0, (zfar+znear)*id, 2.f*zfar*znear*id,
                   0,    0,              -1,                 0);
 }
+
+
+Transform Ortho( const float left, const float right, const float bottom, const float top, const float znear, const float zfar )
+{
+    float tx= - (right + left) / (right - left);
+    float ty= - (top + bottom) / (top - bottom);
+    float tz= - (zfar + znear) / (zfar - znear);
+   
+    return Transform(
+        2.f / (right - left),                    0,                     0, tx,
+                           0, 2.f / (top - bottom),                     0, ty,
+        0,                                       0, -2.f / (zfar - znear), tz,
+        0,                                       0,                     0, 1);
+}
+
 
 Transform Viewport( const float width, const float height )
 {
@@ -298,7 +419,7 @@ Transform Transform::inverse( ) const
                         }
                     }
                     else if (ipiv[k] > 1)
-                        printf("singular matrix in make_inverse()\n");
+                        printf("singular matrix in Transform::inverse()\n");
                 }
             }
         }
@@ -316,7 +437,7 @@ Transform Transform::inverse( ) const
         indxr[i] = irow;
         indxc[i] = icol;
         if (minv.m[icol][icol] == 0.)
-            printf("singular matrix in make_inverse()\n");
+            printf("singular matrix in Transform::inverse()\n");
 
         // Set $m[icol][icol]$ to one by scaling row _icol_ appropriately
         float pivinv = 1.f / minv.m[icol][icol];

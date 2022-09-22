@@ -1,14 +1,18 @@
 
-#include "app.h"
-#include "glcore.h"
+//! \file app.cpp
+
 #include <cstdio>
 #include <cstring>
 
-App::App( const int width, const int height, const int major, const int minor )
+#include "app.h"
+#include "glcore.h"
+
+
+App::App( const int width, const int height, const int major, const int minor, const int samples )
     : m_window(nullptr), m_context(nullptr)
 {
-    m_window= create_window(width, height);
-    m_context= create_context(m_window, major, minor);
+    m_window= create_window(width, height, major, minor, samples);
+    m_context= create_context(m_window);
 }
 
 App::~App( )
@@ -23,37 +27,34 @@ int App::run( )
 {
     if(init() < 0)
         return -1;
-
+    
     // configure openGL
     glViewport(0, 0, window_width(), window_height());
-
-    // utiliser SDL_GetPerformanceCounter() / SDL_GetPerformanceFrequency() si la precision n'est pas suffisante
-    m_time= SDL_GetTicks();
+    
+    // gestion des evenements
     while(events(m_window))
     {
-        m_delta= SDL_GetTicks() - m_time;
-        if(update(global_time(), delta_time()) < 0)
+        if(prerender() < 0)
             break;
+        
         if(render() < 1)
             break;
-
-        m_time= SDL_GetTicks();
-
+        
+        if(postrender() < 0)
+            break;
+        
         // presenter le resultat
         SDL_GL_SwapWindow(m_window);
+        
+        // force openGL a finir d'executer toutes les commandes, 
+        // cf https://www.khronos.org/opengl/wiki/Swap_Interval#GPU_vs_CPU_synchronization
+        // devrait limiter la consommation sur portable
+        glFinish();
     }
-
+    
     if(quit() < 0)
         return -1;
+    
+    // tout c'est bien passe...
     return 0;
-}
-
-float App::global_time( )
-{
-    return (float) m_time;
-}
-
-float App::delta_time( )
-{
-    return (float) m_delta;
 }

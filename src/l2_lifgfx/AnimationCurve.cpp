@@ -113,7 +113,7 @@ void AnimationCurve::init(const char* nom_fichier)
 }
 
 
-    void AnimationCurve::draw(const Orbiter& camera)
+    void AnimationCurve::draw(Orbiter& camera)
     {
         ::draw( m_curve,  camera);
     }

@@ -232,7 +232,7 @@ bool value( Widgets& w, const char *label, int& value, const int value_min, cons
 bool value( Widgets& w, const char *label, float& value, const float value_min, const float value_max, const float value_step )
 {
     char tmp[128];
-    sprintf(tmp, "%s: %.4f", label, value);
+    sprintf(tmp, "%s: %.6f", label, value);
     
     Rect r= place(w, (int) strlen(tmp));
 
@@ -261,7 +261,7 @@ bool value( Widgets& w, const char *label, float& value, const float value_min, 
         int l= (int) strlen(tmp);
         print(w.console, r.x, r.y, tmp);
         
-        sprintf(tmp, "%.4f", value);
+        sprintf(tmp, "%.6f", value);
         print_background(w.console, r.x + l, r.y, tmp);
     }
     else

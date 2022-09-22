@@ -20,33 +20,28 @@ class App
 {
 public:
     //! constructeur, dimensions de la fenetre et version d'openGL.
-    App( const int width, const int height, const int major= 3, const int minor= 3 );
+    App( const int width, const int height, const int major= 3, const int minor= 3, const int samples= 0 );
     virtual ~App( );
 
-    //! a deriver pour creer les objets openGL.
+    //! a deriver pour creer les objets openGL. renvoie -1 pour indiquer une erreur, 0 sinon.
     virtual int init( ) = 0;
-    //! a deriver pour detruire les objets openGL.
+    //! a deriver pour detruire les objets openGL. renvoie -1 pour indiquer une erreur, 0 sinon.
     virtual int quit( ) = 0;
 
-    //! a deriver et redefinir pour animer les objets en fonction du temps.
+    //! a deriver et redefinir pour animer les objets en fonction du temps. 
     virtual int update( const float time, const float delta ) { return 0; }
-    //! a deriver pour afficher les objets.
+    //! a deriver pour afficher les objets. renvoie 1 pour continuer, 0 pour fermer l'application.
     virtual int render( ) = 0;
 
     //! execution de l'application.
     int run( );
-
-    //! renvoie le temps ecoule depuis le lancement de l'application, en millisecondes.
-    float global_time( );
-    //! renvoie le temps ecoule depuis la derniere frame, en millisecondes.
-    float delta_time( );
-
+    
 protected:
+    virtual int prerender( ) { return update(global_time(), delta_time()); }
+    virtual int postrender( ) { return 0; }
+
     Window m_window;
     Context m_context;
-
-    unsigned int m_time;
-    unsigned int m_delta;
 };
 
 

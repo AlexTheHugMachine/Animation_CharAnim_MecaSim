@@ -39,38 +39,27 @@ solution "gKit2light"
 		defines { "WIN32", "NVWIDGETS_EXPORTS", "_USE_MATH_DEFINES", "_CRT_SECURE_NO_WARNINGS" }
 		defines { "NOMINMAX" } -- allow std::min() and std::max() in vc++ :(((
 
-	configuration { "windows", "gmake", "x32" }
+	configuration { "windows", "gmake" }
 		buildoptions { "-std=c++11"}
 		includedirs { "extern/mingw/include" }
 		libdirs { "extern/mingw/lib" }
 		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
 
-	configuration { "windows", "codeblocks", "x32" }
+	configuration { "windows", "codeblocks" }
+		location "build"
 		buildoptions { "-std=c++11"}
 		includedirs { "extern/mingw/include" }
-		libdirs { "extern/mingw/lib" }
+		libdirs { "bin" }
 		links { "mingw32", "SDL2main", "SDL2", "SDL2_image", "opengl32", "glew32" }
 		
-	configuration { "windows", "vs2013" }
+	configuration { "windows", "vs*" }
 		if _PREMAKE_VERSION >="5.0" then
 			system "Windows"
 			architecture "x64"
 			disablewarnings { "4244", "4305" }
 		end
-		includedirs { "extern/visual2013/include" }
-		libdirs { "extern/visual2013/lib" }
-		platforms { "x64" }
-		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
-
-		
-	configuration { "windows", "vs2015" }
-		if _PREMAKE_VERSION >="5.0" then
-			system "Windows"
-			architecture "x64"
-			disablewarnings { "4244", "4305" }
-		end
-		includedirs { "extern/visual2015/include" }
-		libdirs { "extern/visual2015/lib" }
+		includedirs { "extern/visual/include" }
+		libdirs { "extern/visual/lib" }
 		links { "opengl32", "glew32", "SDL2", "SDL2main", "SDL2_image" }
 		
 	configuration "macosx"

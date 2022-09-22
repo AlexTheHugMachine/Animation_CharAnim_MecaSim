@@ -19,7 +19,7 @@ public:
     //! initialise la courbe d'animation avec une liste de points de C du fichier "nom_fichier"
     void init(const char* nom_fichier);
 
-    void draw(const Orbiter& camera);
+    void draw(Orbiter& camera);
 
     const Point& operator[]( const int i) { assert(i>=0); assert(i<m_nbp);  return m_P[i]; }
     int nb_points() const { return m_nbp; }

@@ -10,7 +10,7 @@
 #include "vec.h"
 #include "mat.h"
 #include "color.h"
-
+#include "materials.h"
 
 //! \addtogroup objet3D utilitaires pour manipuler des objets 3d
 ///@{
@@ -81,19 +81,14 @@ unsigned int d= m.vertex(Point(...));
 // decrit 2 triangles avec les indices des 4 sommets
 m.triangle(a, b, c);
 m.triangle(a, c, d);
+
+// ou decrit un triangle indexe sommet par sommet (indice par indice)
+m.index(a);
+m.index(b);
+m.index(c);
 \endcode
 */
 
-//! representation d'une matiere.
-struct Material
-{
-    Color diffuse;      //!< couleur diffuse
-    Color specular;     //!< couleur du reflet
-    Color emission;     //!< pour une source de lumiere
-    float ns;           //!< exposant pour les reflets blinn-phong
-    
-    Material( ) : diffuse(0.8f, 0.8f, 0.8f), specular(0.2f, 0.2f, 0.2f), emission(), ns(22) {}
-};
 
 //! representation d'un triangle.
 struct TriangleData
@@ -101,6 +96,14 @@ struct TriangleData
     vec3 a, b, c;       //!< positions       
     vec3 na, nb, nc;    //!< normales
     vec2 ta, tb, tc;    //!< texcoords
+};
+
+//! representation d'un ensemble de triangles de meme matiere.
+struct TriangleGroup
+{
+    int index;  //!< indice de la "propriete"du groupe de triangles, par defaut : indice de la matiere
+    int first;  //!< premier triangle du groupe
+    int n;      //!< nombre de triangles du groupe
 };
 
 
@@ -111,12 +114,12 @@ public:
     //! \name construction.
     //@{
     //! constructeur par defaut.
-    Mesh( ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), m_state_map(), m_state(0),
-        m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_buffer(0), m_index_buffer(0), m_program(0), m_update_buffers(false) {}
+    Mesh( ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
+        m_color(White()), m_primitives(GL_POINTS), m_vao(0), m_buffer(0), m_index_buffer(0), m_vertex_buffer_size(0), m_index_buffer_size(0), m_update_buffers(false) {}
     
     //! constructeur.
-    Mesh( const GLenum primitives ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), m_state_map(), m_state(0),
-        m_color(White()), m_primitives(primitives), m_vao(0), m_buffer(0), m_index_buffer(0), m_program(0), m_update_buffers(false) {}
+    Mesh( const GLenum primitives ) : m_positions(), m_texcoords(), m_normals(), m_colors(), m_indices(), 
+        m_color(White()), m_primitives(primitives), m_vao(0), m_buffer(0), m_index_buffer(0), m_vertex_buffer_size(0), m_index_buffer_size(0), m_update_buffers(false) {}
     
     //! construit les objets openGL.
     int create( const GLenum primitives );
@@ -131,7 +134,7 @@ public:
     //! definit la couleur du prochain sommet.
     Mesh& color( const Color& c ) { return color(vec4(c.r, c.g, c.b, c.a)); }
     //! definit la couleur du prochain sommet.
-    Mesh& color( const float r, const float g, const float b, const float a= 1) { return color(Color(r, g, b, a)); }
+    Mesh& color( const float r, const float g, const float b, const float a= 1) { return color(vec4(r, g, b, a)); }
     
     //! definit la normale du prochain sommet.
     Mesh& normal( const vec3& n );
@@ -151,6 +154,9 @@ public:
     unsigned int vertex( const Point& p ) { return vertex(vec3(p)); }
     //! insere un sommet de position p, et ses attributs (s'ils sont definis par color(), texcoord(), normal()), dans l'objet. renvoie l'indice du sommet.
     unsigned int vertex( const float x, const float y, const float z ) { return vertex(vec3(x, y, z)); }
+    
+    //! vide la description.
+    void clear( );
     //@}
 
     //! \name description de triangles indexes.
@@ -179,6 +185,21 @@ public:
     
     //! demarre un nouveau strip. a utiliser avec un objet composes de GL_TRIANGLE_STRIP, doit aussi fonctionner avec GL_TRIANGLE_FAN, GL_LINE_STRIP, GL_LINE_LOOP, etc.
     Mesh& restart_strip( );
+    
+    /*! insere un indice de sommet. 
+    \code
+    Mesh m(GL_TRIANGLES);
+    unsigned int a= m.vertex( Point(ax, ay, az) );
+    unsigned int b= m.vertex( Point(bx, by, bz) );
+    unsigned int c= m.vertex( Point(cx, cy, cz) );
+    
+    // insere le triangle abc
+    m.index(a);
+    m.index(b);
+    m.index(c);
+    \endcode
+    */
+    Mesh& index( const int a );
     //@}
     
     //! \name modification des attributs des sommets.
@@ -212,32 +233,40 @@ public:
     
     //! \name description des matieres.
     //@{
-    //! ajoute une description de matiere. et renvoie son indice.
-    unsigned int mesh_material( const Material& m );
-    //! ajoute un ensemble de description de matieres.
-    void mesh_materials( const std::vector<Material>& m );
-
-    //! renvoie le nombre de matieres.
-    int mesh_material_count( ) const;
-    //! renvoie la description de matiere d'indice id.
-    const Material& mesh_material( const unsigned int id ) const;
+    //! renvoie la description des matieres.
+    const Materials& materials( ) const;
+    //! renvoie la description des matieres.
+    Materials& materials( );
+    //! remplace la description des matieres.
+    void materials( const Materials& materials );
     
-    //! definit la matiere du prochain triangle. id est l'indice d'une matiere ajoutee par mesh_material() ou mesh_materials( ). ne fonctionne que pour les primitives GL_TRIANGLES, indexees ou pas.
+    //! renvoie les indices des matieres des triangles.
+    const std::vector<unsigned int>& material_indices( ) const;
+    
+    //! definit la matiere du prochain triangle. id est l'indice d'une matiere ajoutee dans materials(), cf la classe Materials. ne fonctionne que pour les primitives GL_TRIANGLES, indexees ou pas.
     Mesh& material( const unsigned int id );
     //@}
     
     //! \name description des triangles d'un maillage.
     //@{
-    //! renvoie la matiere d'un triangle.
-    const Material &triangle_material( const unsigned int id ) const;
     //! renvoie le nombre de triangles.
     int triangle_count( ) const;
     //! renvoie un triangle.
     TriangleData triangle( const unsigned int id ) const;
+    
+    //! renvoie l'indice de la matiere d'un triangle.
+    int triangle_material_index( const unsigned int id ) const;
+    //! renvoie la matiere d'un triangle.
+    const Material &triangle_material( const unsigned int id ) const;
+    
+    //! renvoie les groupes de triangles de meme matiere. re-organise les triangles. permet d'afficher l'objet matiere par matiere.
+    std::vector<TriangleGroup> groups( );
+    //! renvoie les groupes de triangles de meme 'propriete'. re-organise les triangles.
+    std::vector<TriangleGroup> groups( const std::vector<unsigned int>& triangle_properties );
     //@}
     
     //! renvoie min et max les coordonnees des extremites des positions des sommets de l'objet (boite englobante alignee sur les axes, aabb).
-    void bounds( Point& pmin, Point& pmax );
+    void bounds( Point& pmin, Point& pmax ) const;
     
     //! renvoie la couleur par defaut du mesh, utilisee si les sommets n'ont pas de couleur associee.
     Color default_color( ) const { return m_color; }
@@ -282,6 +311,13 @@ public:
     const std::vector<vec3>& normals( ) const { return m_normals; }
     const std::vector<vec4>& colors( ) const { return m_colors; }
     const std::vector<unsigned int>& indices( ) const { return m_indices; }
+    
+    //! verifie que les attributs sont decrits de maniere coherente.
+    bool has_position( ) const { return !m_positions.empty(); }
+    bool has_texcoord( ) const { return m_texcoords.size() == m_positions.size(); }
+    bool has_normal( ) const { return m_normals.size() == m_positions.size(); }
+    bool has_color( ) const { return m_colors.size() == m_positions.size(); }
+    bool has_material_index( ) const { return int(m_triangle_materials.size()) == triangle_count(); }
     //@}
     
     //! renvoie le type de primitives.
@@ -309,37 +345,17 @@ public:
     }
     //@}
     
-    /*! dessine l'objet avec les transformations model, vue et projection.\n
-        eventuellement eclaire l'objet avec une source de lumiere.\n
-        eventuellement applique une texture sur la surface de l'objet. 
     
-        \param use_light si vrai light et light_color doivent etre definis,
-        \param use_texture si vrai texture doit est l'identifiant d'une texture openGL.
-    */
-    void draw( const Transform& model, const Transform& view, const Transform& projection, 
-        const bool use_light, const Point& light, const Color& light_color, 
-        const bool use_texture, const GLuint texture,
-        const bool use_alpha_test, const float alpha_min );
+    //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).
+    GLuint create_buffers( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
+    //! dessine l'objet avec un shader program. 
+    void draw( const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
+    //! dessine une partie de l'objet avec un shader program.
+    void draw( const int first, const int n, const GLuint program, const bool use_position, const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     
-    //! dessine l'objet avec un shader fourni par l'application. les uniforms du shader doivent deja etre configure, cf transformations...
-    void draw( const GLuint program );
-    
-    //! construit les buffers et le vertex array object necessaires pour dessiner l'objet avec openGL. utilitaire. detruit par release( ).\n
-    GLuint create_buffers( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true );
-    
-protected:    
-
-    /*! construit un shader program configure.
-    \param use_texcoord force l'utilisation des coordonnees de texture
-    \param use_normal force l'utilisation des normales
-    \param use_color force l'utilisation des couleurs 
-    \param use_light force l'utilisation d'un source de lumiere 
-    \param use_alpha_test force l'utilisation d'un test de transparence, cf utilisation d'une texture avec un canal alpha
-     */
-    GLuint create_program( const bool use_texcoord= true, const bool use_normal= true, const bool use_color= true, const bool use_light= false, const bool use_alpha_test= false );
-    
+private:
     //! modifie les buffers openGL, si necessaire.
-    int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color );
+    int update_buffers( const bool use_texcoord, const bool use_normal, const bool use_color, const bool use_material_index );
     
     //
     std::vector<vec3> m_positions;
@@ -349,11 +365,8 @@ protected:
     
     std::vector<unsigned int> m_indices;
 
-    std::vector<Material> m_materials;
+    Materials m_materials;
     std::vector<unsigned int> m_triangle_materials;
-
-    std::unordered_map<unsigned int, GLuint> m_state_map;
-    unsigned int m_state;
 
     Color m_color;
     
@@ -361,10 +374,12 @@ protected:
     GLuint m_vao;
     GLuint m_buffer;
     GLuint m_index_buffer;
-    GLuint m_program;
+    size_t m_vertex_buffer_size;
+    size_t m_index_buffer_size;
     
     bool m_update_buffers;
 };
+
 
 ///@}
 #endif

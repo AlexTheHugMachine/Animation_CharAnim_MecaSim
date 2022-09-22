@@ -9,6 +9,12 @@ Gamepads::Gamepads( ) {}
 
 bool Gamepads::create( )
 {
+    if(SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER))
+    {
+        printf("[error] init gamecontroller failed:\n%s\n", SDL_GetError());
+        return false;
+    }
+    
     // mapping cf https://github.com/gabomdq/SDL_GameControllerDB
     SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
     
@@ -35,6 +41,7 @@ bool Gamepads::create( )
 Gamepads::~Gamepads( )
 {
     release();
+    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
 }
 
 void Gamepads::release( )
@@ -89,7 +96,7 @@ void Gamepads::update( )
 
 int Gamepads::pads( )
 {
-    return m_pads.size();
+    return (int) m_pads.size();
 }
 
 Gamepad& Gamepads::pad( const unsigned int index )
