@@ -1,4 +1,6 @@
 
+//! \file gltf.h scene glTF.
+
 #ifndef _GLTF_MESH_H
 #define _GLTF_MESH_H
 
@@ -66,15 +68,15 @@ struct GLTFMaterial
     // \todo volume...;
     // \todo coating
     
-    int color_texture;              //!< indice de la texture ou -1.
+    int color_texture;              //!< indice de la texture ou -1. cf read_gltf_images() pour charger les textures dans le bon ordre...
     int metallic_roughness_texture; //!< indice de la texture ou -1. les valeurs RGB representent les parametres du modele : B= metallic, G= roughness, et R= ambient occlusion.
     int emission_texture;           //!< indice de la texture ou -1.
     int occlusion_texture;          //!< indice de la texture ou -1.    // \todo probablement pas necessaire, cf canal rouge de metallic_roughness_texture
     int normal_texture;             //!< indice de la texture ou -1.
-    int transmission_texture;       //!< indice de la texture ou -1.
-    int specular_texture;           //!< indice de la texture ou -1.
-    int specular_color_texture;     //!< indice de la texture ou -1.
-    
+    int transmission_texture;             //!< indice de la texture ou -1.
+    int specular_texture;             //!< indice de la texture ou -1.
+    int specular_color_texture;             //!< indice de la texture ou -1.
+
 };
 
 //! charge un fichier .gltf et renvoie les matieres.
