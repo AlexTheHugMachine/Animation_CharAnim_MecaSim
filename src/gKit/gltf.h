@@ -1,4 +1,6 @@
 
+//! \file gltf.h scene glTF.
+
 #ifndef _GLTF_MESH_H
 #define _GLTF_MESH_H
 
@@ -54,7 +56,7 @@ struct GLTFMaterial
     Color specular_color;
     // \todo volume...;
     
-    int color_texture;              //<! indice de la texture ou -1.
+    int color_texture;              //<! indice de la texture ou -1. cf read_gltf_images() pour charger les textures dans le bon ordre...
     int metallic_roughness_texture; //<! indice de la texture ou -1.
     int emission_texture;           //<! indice de la texture ou -1.
     int occlusion_texture;          //<! indice de la texture ou -1.    // \todo probablement pas necessaire, cf canal rouge de metallic_roughness_texture
