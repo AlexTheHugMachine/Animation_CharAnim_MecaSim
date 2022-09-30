@@ -20,7 +20,7 @@ qui instancie ~3 milliards de triangles...
 
 
 
-# instances construire un arbre sans dupliquer les instances ?
+# construire un arbre sans dupliquer les instances ?
 
 comment ? euh en faisant la même chose ? si on regarde un peu plus précisement le fonctionnement des méthodes de construction des bvh, il est assez facile 
 de se rendre compte que seules les boites englobantes des triangles sont utilisées... 
@@ -154,6 +154,11 @@ chevauchement dans le bvh, il est relativement simple de descendre plus bas dans
 
 _à lire :_ "Improved Two-Level BVHs using Partial Re-Braiding", C. Benthin, S. Woop, I. Wald, A. Afra 2017\n
 [pdf](https://www.embree.org/papers/2017-HPG-openmerge.pdf) et [slides](https://www.embree.org/papers/2017-HPG-openmerge-slides.pdf)
+
+
+# oulala, c'est compliqué, c'est ou le code ?
+
+un exemple tout simple est dispo dans tuto_bvh2.cpp
 
 
 */

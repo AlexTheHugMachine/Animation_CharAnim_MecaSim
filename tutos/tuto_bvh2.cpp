@@ -14,7 +14,7 @@
 #include "mesh.h"
 #include "wavefront.h"
 
-
+// rayon 
 struct Ray
 {
     Point o;            // origine
@@ -27,6 +27,7 @@ struct Ray
     Ray( const Point& _o, const Vector& _d, const float _tmax ) :  o(_o), d(_d), tmax(_tmax) {}
 };
 
+// intersection avec un triangle
 struct Hit
 {
     float t;            // p(t)= o + td, position du point d'intersection sur le rayon
@@ -40,6 +41,7 @@ struct Hit
     operator bool ( ) { return (triangle_id != -1); }
 };
 
+// intersection avec une boite / un englobant
 struct BBoxHit
 {
     float tmin, tmax;
@@ -51,6 +53,7 @@ struct BBoxHit
 };
 
 
+// boite englobante
 struct BBox
 {
     Point pmin, pmax;
@@ -123,6 +126,7 @@ Node make_leaf( const BBox& bounds, const int begin, const int end )
 }
 
 
+// bvh parametre par le type des primitives, cf triangle et instance...
 template < typename T >
 struct BVHT
 {
@@ -130,27 +134,29 @@ struct BVHT
     std::vector<T> primitives;
     int root;
     
-    // construit un bvh pour l'ensemble de triangles
+    // construit un bvh pour l'ensemble de primitives
     int build( const std::vector<T>& _primitives )
     {
-        primitives= _primitives;  // copie les triangles pour les trier
+        primitives= _primitives;  // copie les primitives pour les trier
         nodes.clear();          // efface les noeuds
         nodes.reserve(primitives.size());
         
         // construit l'arbre... 
         root= build(0, primitives.size());
-        // et renvoie la racine
         return root;
     }
     
+    // intersection avec un rayon, entre 0 et ray.tmax
     Hit intersect( const Ray& ray ) const
     {
-        Hit hit(ray);
+        Hit hit;
+        hit.t= ray.tmax;
         Vector invd= Vector(1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z);
         intersect(root, ray, invd, hit);
         return hit;
     }
     
+    // intersection avec un rayon, entre 0 et htmax
     Hit intersect( const Ray& ray, const float htmax ) const
     {
         Hit hit;
@@ -171,7 +177,7 @@ protected:
             return index;
         }
         
-        // axe le plus etire de l'englobant des centres 
+        // axe le plus etire de l'englobant des centres des englobants des primitives... 
         BBox cbounds= centroid_bounds(begin, end);
         Vector d= Vector(cbounds.pmin, cbounds.pmax);
         int axis;
@@ -185,7 +191,7 @@ protected:
         // coupe l'englobant au milieu
         float cut= cbounds.centroid(axis);
         
-        // repartit les triangles 
+        // repartit les primitives 
         T *pm= std::partition(primitives.data() + begin, primitives.data() + end, 
             [axis, cut]( const T& primitive ) 
             { 
@@ -194,7 +200,7 @@ protected:
         );
         int m= std::distance(primitives.data(), pm);
         
-        // la repartition des triangles peut echouer, et tous les triangles sont dans la meme partie... 
+        // la repartition peut echouer, et toutes les primitives sont dans la meme moitiee de l'englobant
         // forcer quand meme un decoupage en 2 ensembles 
         if(m == begin || m == end)
             m= (begin + end) / 2;
@@ -213,7 +219,7 @@ protected:
         return index;
     }
     
-    
+    // englobant des primitives
     BBox primitive_bounds( const int begin, const int end )
     {
         BBox bbox= primitives[begin].bounds();
@@ -223,6 +229,7 @@ protected:
         return bbox;
     }
     
+    // englobant des centres des primitives
     BBox centroid_bounds( const int begin, const int end )
     {
         BBox bbox= primitives[begin].bounds().centroid();
@@ -232,6 +239,7 @@ protected:
         return bbox;
     }
     
+    // intersection et parcours simple
     void intersect( const int index, const Ray& ray, const Vector& invd, Hit& hit ) const
     {
         const Node& node= nodes[index];
@@ -252,7 +260,7 @@ protected:
     }
 };
 
-
+// triangle pour le bvh, cf fonction bounds() et intersect()
 struct Triangle
 {
     Point p;            // sommet a du triangle
@@ -299,6 +307,7 @@ struct Triangle
 typedef BVHT<Triangle> BVH;
 typedef BVHT<Triangle> BLAS;
 
+// instance pour le bvh, cf fonctions bounds() et intersect()
 struct Instance
 {
     Transform object_transform;
@@ -370,6 +379,7 @@ int main( int argc, char **argv )
                 // transforme le sommet de l'englobant 
                 bounds.insert(model(p));
             }
+            // todo : pas super logique, a deplacer dans le constructeur de Instance...
             
             primitives.push_back( Instance(bounds, model, bvh) );
         }
@@ -379,7 +389,8 @@ int main( int argc, char **argv )
     
     Orbiter camera;
     if(orbiter_filename == nullptr || camera.read_orbiter(orbiter_filename) < 0)
-        camera.lookat(mesh_bounds.pmin * 5, mesh_bounds.pmax * 5);      // les objets sont instancies sur une ligne...
+        // les objets sont instancies sur une ligne, agrandir la zone observee par la camera...
+        camera.lookat(mesh_bounds.pmin * 5, mesh_bounds.pmax * 5);      
         //~ camera.lookat(Origin(), 50);        // ou comme ca...
 
     Image image(1024, 640);
@@ -396,8 +407,8 @@ int main( int argc, char **argv )
     for(int x= 0; x < image.width(); x++)
     {
         // genere le rayon pour le pixel x,y
-        Point o= inv( Point(x, y, 0) );
-        Point e= inv( Point(x, y, 1) );
+        Point o= inv( Point(x, y, 0) ); // origine
+        Point e= inv( Point(x, y, 1) ); // extremite
         Ray ray(o, e);
         
         // intersections !

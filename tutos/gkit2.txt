@@ -70,6 +70,7 @@ et ceux dédiés au lancer de rayons :
     - \ref intrort,
     - \ref acceleration,
     - \ref sah,
+    - \ref bvh2,
     - \ref precision...
     
     
