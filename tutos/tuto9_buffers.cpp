@@ -23,15 +23,15 @@ struct Buffers
     void create( const Mesh& mesh )
     {
         if(!mesh.vertex_buffer_size()) return;
+
+        // cree et configure le vertex array object: conserve la description des attributs de sommets
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
         
         // cree et initialise le buffer: conserve la positions des sommets
         glGenBuffers(1, &vertex_buffer);
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
         glBufferData(GL_ARRAY_BUFFER, mesh.vertex_buffer_size(), mesh.vertex_buffer(), GL_STATIC_DRAW);
-        
-        // cree et configure le vertex array object: conserve la description des attributs de sommets
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
         
         // attribut 0, position des sommets, declare dans le vertex shader : in vec3 position;
         glVertexAttribPointer(0, 
@@ -41,6 +41,8 @@ struct Buffers
             0               // offset 0, les valeurs sont au debut du buffer
         );
         glEnableVertexAttribArray(0);
+        // attention : le vertex array selectionne est un parametre implicite
+        // attention : le buffer selectionne sur GL_ARRAY_BUFFER est un parametre implicite 
         
         // conserve le nombre de sommets
         vertex_count= mesh.vertex_count();
