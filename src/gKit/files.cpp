@@ -102,6 +102,7 @@ std::string normalize_filename( const std::string& filename )
 /*! renvoie un nom de fichier relatif a un chemin.
     relative_pathname("textures/base.png", "textures") == "base.png"
     relative_pathname("base.png", "textures") == "base.png"
+    relative_pathname("model/textures/base.png", "model/model.obj") == "textures/base.png"
 */
 //~ const char *relative_filename( const std::string& filename, const std::string& path )
 std::string relative_filename( const std::string& filename, const std::string& path )
@@ -110,10 +111,5 @@ std::string relative_filename( const std::string& filename, const std::string& p
     while(filename[i] && path[i] && filename[i] == path[i]) 
         i++;
     
-    if(path[i] == 0)
-        //~ return &filename[i];
-        return filename.substr(i);
-    else
-        //~ return filename.data();
-        return filename;
+    return filename.substr(i);
 }
