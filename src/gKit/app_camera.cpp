@@ -1,4 +1,5 @@
 
+#include "texture.h"
 #include "app_camera.h"
 
 AppCamera::AppCamera( const int width, const int height, const int major, const int minor, const int samples ) 
@@ -52,6 +53,14 @@ int AppCamera::prerender( )
             tmp= m_camera;
         
         m_camera= tmp;
+    }
+    
+    // screenshot
+    if(key_state('s'))
+    {
+        static int calls= 1;
+        clear_key_state('s');
+        screenshot("app", calls++);
     }
     
     // appelle la fonction update() de la classe derivee
