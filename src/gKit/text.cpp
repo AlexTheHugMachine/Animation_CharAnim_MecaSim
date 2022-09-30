@@ -56,7 +56,7 @@ Text create_text( )
     glGenVertexArrays(1, &text.vao);
     glGenBuffers(1, &text.ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, text.ubo);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(text.buffer), text.buffer, GL_STATIC_DRAW);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(text.buffer), text.buffer, GL_DYNAMIC_DRAW);
 
     return text;
 }
