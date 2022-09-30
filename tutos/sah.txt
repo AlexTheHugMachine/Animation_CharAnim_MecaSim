@@ -559,7 +559,6 @@ BBox centroid_bounds( const int begin, const int end )
     
     return bounds;
 }
-
 \endcode
 
 

@@ -1,0 +1,159 @@
+
+/*! \addtogroup bvh2 instances et lancer de rayons ?
+
+	Toutes les scènes ne sont pas décrites par un seul maillage / objet. dans pas mal de cas, on utilise plusieurs instances du même objet placées à des endroits 
+différents de la scène. Il est bien sur possible de dupliquer tous les triangles (sans oublier de transformer leurs sommets...) et de construire une seule structure 
+accélératrice comme expliqué dans \ref acceleration et \ref sah, mais il y a souvent trop de triangles dupliqués, et le temps de construction de l'arbre augmente
+fortement (et dans certains cas, il n'est pas possible de stocker tous les triangles instanciés).
+
+exemple : la scène du [tp 2022](https://perso.univ-lyon1.fr/jean-claude.iehl/Public/educ/M2PROIMA/2022/tp2.html), contient au total 36M de triangles instanciés 
+
+<IMG SRC="splash3.png" width="90%"> 
+
+cette scène est composée de 200 objets uniques et de 6M de triangles... mais les objets sont instanciés plusieurs fois : la scène utilise 15000 instances et au final,
+il y a bien 36M de triangles.
+
+et dans certains cas, il n'est pas possible de stocker les triangles dupliqués, par exemple cette scene de test de [pbrt3](https://www.pbrt.org/scenes-v3), 
+qui instancie ~3 milliards de triangles...
+
+<IMG SRC="https://www.pbrt.org/scenes-v3_images/landscape-0.jpg" width="90%"> 
+
+
+
+# instances construire un arbre sans dupliquer les instances ?
+
+comment ? euh en faisant la même chose ? si on regarde un peu plus précisement le fonctionnement des méthodes de construction des bvh, il est assez facile 
+de se rendre compte que seules les boites englobantes des triangles sont utilisées... 
+
+du coup, on peut voir un bvh comme un arbre qui trie / organise des boites englobantes, sans se préoccuper des objets à l'intérieur des boites. on va donc pouvoir 
+construire un bvh uniquement en fonction des englobants des instances ! 
+
+_reste un détail :_ comment représenter la transformation qui place chaque instance dans la scène ? ie chaque instance est décrite par un objet et une 
+transformation _model_. les rayons sont générés dans le repère de la scène. pour calculer les intersections rayon / englobant et rayon / triangle, il faut choisir un 
+repère commun... celui de la scène ? ou plutot celui de l'objet : il suffit de transformer l'origine et la direction du rayon dans le repère local de l'objet pour calculer les
+intersections avec ses triangles. il faut donc connaitre la transformation _inverse_ de model, pour transformer le rayon.
+
+_pourquoi dans ce sens ?_ il est nettement plus rapide de transformer le rayon (un point et une direction) que de transformer tous les sommets des triangles de l'objet...
+
+on va donc construire un bvh avec les englobants de chaque instance. les feuilles de ce bvh stockent la transformation de la scène vers le repère de l'objet et une reference
+vers les triangles de l'objet. mais bien sur, pour calculer les intersections d'un rayon avec les triangles d'un objet, on va aussi construire un bvh... au final on va construire 
+un bvh par objet et un bvh _global_ qui reference chaque instance ! 
+
+cette organisation s'appelle un bvh à 2 niveaux, l'arbre d'instances est le premier niveau (ou top level bvh) et les bvhs de triangles des objets forment le second niveau 
+ou bottom level bvh. cette organisation est pas mal répandue...
+
+\section TLAS TLAS : top level acceleration structure / bvh d'instances
+
+comment construire le bvh des instances ? facile : de la même manière que l'on construit un bvh sur des triangles... en regardant les algos de construction de bvh, il
+est assez facile de vérifier qu'ils utilisent uniquement 2 propriétés des triangles : l'englobant et la fonction d'intersection...
+\code
+struct Triangle
+{
+	{ ... }		// representation du triangle
+	BBox bounds;
+	Hit intersect( const Ray& ray, const float tmax );
+}
+\endcode
+
+du coup, il suffit de représenter une instance de la même manière pour pouvoir construire un bvh sur un ensemble d'instances :
+\code
+struct Instance
+{
+	{ ... }		// representation de l'instance
+	BBox bounds;
+	Hit intersect( const Ray& ray, const float tmax );
+};
+\endcode
+
+il y a 2 manières de le faire en c++, soit en créant une classe de base, Primitive par exemple, dont dérivent les structures Triangle et Instance, soit en transformant 
+le bvh en template...
+\code
+template< typename T >
+struct BVHT
+{
+	std::vector<T> primitives;
+	std::vector<Node> nodes;
+	int root;
+	
+	void build( const std::vector<T>& _primitives );
+	Hit intersect( const Ray& ray );
+};
+
+typedef BVHT<Instance> TLAS;
+typedef BVHT<Triangle> BLAS;
+typedef BVHT<Triangle> BVH;
+\endcode
+
+_remarque :_ transformer le bvh en fonction du type des primitives qu'il stocke / organise est quand meme plus simple et plus efficace que d'utiliser une classe de 
+base Primitive dont dérivent Triangle et Instance
+
+## intersection 
+
+on vient de construire le bvh des instances, mais comment l'utiliser pour calculer les intersections d'un rayon ? les englobants des instances sont dans le repère de la 
+scène, le rayon aussi, mais lorsque le rayon visite une feuille du bvh, il faut aussi parcourir le bvh de l'objet instancié. Mais avant de commencer le parcours du bvh de 
+l'objet, il faut transformer le rayon dans le repère de l'objet.
+
+c'est la fonction instersect d' Instance qui va faire cette transformation :
+\code
+Hit Instance::intersect( const Ray& ray, const float tmax )
+{
+	Ray object_ray;
+	{ ... } // transformer l'origine et la direction du rayon 
+	{ ... } // continuer le parcours dans le repere de l'objet...
+	{ ... } // et s'il y a une intersection ??
+	return hit;
+}
+\endcode
+
+pour transformer un rayon,  pas de problemes, connaissant la transformation vers le repere de l'objet : il suffit de transformer l'origine et la direction :
+\code
+	object_ray.o= object_transform(ray.o);
+	object_ray.d= object_transform(ray.d);
+	object_ray.tmax= hit.t;
+\endcode
+
+par contre, les valeurs de tmax et de hit.t ne changent pas lorsque l'on transforme le rayon... 
+
+_pourquoi ?_ faites le calcul et vérifiez que t ne change pas !\n
+_indication :_ si on connait les coordonnées du point d'intersection, l'origine et l'extremite (ou la direction) du rayon, comment s'écrit la transformation ? 
+quelle est la valeur de t dans chaque repère ?
+
+maintenant que le rayon est dans le bon repère, il suffit d'appeler la fonction d'intersection du bvh de l'objet :
+\code
+Hit hit= object_bvh->intersect(object_ray, tmax);
+\endcode
+
+et c'est fini ! eventuellement on peut stocker l'indice de l'instance et de l'objet dans la structure hit, si c'est nécessaire, par exemple pour interpoler la normale 
+ou les coordonnées de texture au point d'intersection.
+
+maintenant que l'on sait quoi faire, il suffit de compléter la structure Instance avec la transformation et le bvh : 
+\code
+struct Instance
+{
+	Transform object_transform;
+	BBox bounds;
+	int mesh_index;
+	int instance_index;
+	BVH *object_bvh;
+	
+	Hit intersect( const Ray& ray, const float tmax );	
+};
+\endcode
+
+
+# BLAS : bottom level acceleration structure / bvh de triangles
+
+rien à signaler, c'est la même chose que d'habitude, un bvh construit sur un ensemble de triangles.
+
+# et ça marche ?
+
+ben ça dépend bien sur ! sur une scène raisonnable on peut comparer les 2 solutions : un seul arbre avec tous les triangles dupliqués ou un bvh à 2 niveaux... 
+selon la répartiton des englobants des instances dans la scène, il fréquent que le calcul d'intersection soit 2 fois plus lent avec le bvh à 2 niveaux. mais bien sur, 
+on peut construire l'arbre d'instances de manière un peu plus astucieuse : au lieu de prendre la racine du bvh de chaque instance et introduire pas mal de 
+chevauchement dans le bvh, il est relativement simple de descendre plus bas dans les bvh des instances... 
+
+_à lire :_ "Improved Two-Level BVHs using Partial Re-Braiding", C. Benthin, S. Woop, I. Wald, A. Afra 2017\n
+[pdf](https://www.embree.org/papers/2017-HPG-openmerge.pdf) et [slides](https://www.embree.org/papers/2017-HPG-openmerge-slides.pdf)
+
+
+*/

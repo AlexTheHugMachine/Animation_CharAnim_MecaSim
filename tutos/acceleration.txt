@@ -184,9 +184,6 @@ struct BBox
     
     // position du centre de l'englobant sur un axe
     float centroid( const int axis ) const { return (pmin(axis) + pmax(axis)) / 2; }
-    
-    // intersection avec un rayon
-    bool intersect( const RayHit& ray ) const;
 };
 
 BBox EmptyBox( ) { return BBox(Point(FLT_MAX, FLT_MAX, FLT_MAX), Point(-FLT_MAX, -FLT_MAX, -FLT_MAX)); }
@@ -538,7 +535,6 @@ protected:
         
         return bbox;
     }
-    
 };
 \endcode
 
@@ -569,13 +565,15 @@ ce qui s'écrit directement :
 struct BVH
 {
     ... 
-    void intersect( RayHit& ray ) const
+    Hit intersect( const Ray& ray ) const
     {
-        intersect(root, ray);
+        Hit hit(ray.tmax);
+        intersect(root, ray, hit);
+        return hit;
     }
 
 protected:
-    void intersect( const int index, RayHit& ray ) const
+    void intersect( const int index, const Ray& ray, Hit& hit ) const
     {
         const Node& node= nodes[index];
         if(node.bounds.intersect(ray))
@@ -583,12 +581,13 @@ protected:
             if(node.leaf())
             {
                 for(int i= node.leaf_begin(); i < node.leaf_end(); i++)
-                    triangles[i].intersect(ray);
+                    if(Hit h= triangles[i].intersect(ray, hit.t))
+                        hit= h;
             }
             else // if(node.internal())
             {
-                intersect(node.internal_left(), ray);
-                intersect(node.internal_right(), ray);
+                intersect(node.internal_left(), ray, hit);
+                intersect(node.internal_right(), ray, hit);
             }
         }
     }

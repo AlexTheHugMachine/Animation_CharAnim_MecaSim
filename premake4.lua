@@ -178,6 +178,7 @@ tutos = {
     "tuto_rayons",
     "tuto_englobant",
     "tuto_bvh",
+    "tuto_bvh2",
     
 }
 
