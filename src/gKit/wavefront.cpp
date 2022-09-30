@@ -1,5 +1,6 @@
 
 #include <cstdio>
+#include <cstring>
 #include <ctype.h>
 #include <climits>
 
@@ -101,6 +102,8 @@ Mesh read_mesh( const char *filename )
                 else if(next == 0)      // fin de ligne
                     break;
             }
+            assert(idt.size() == idp.size());
+            assert(idn.size() == idp.size());
             
             // force une matiere par defaut, si necessaire
             if(material_id == -1)
@@ -112,15 +115,15 @@ Mesh read_mesh( const char *filename )
             data.material(material_id);
             
             // triangule la face
-            for(int v= 2; v +1 < (int) idp.size(); v++)
+            for(int v= 2; v +1 < int(idp.size()); v++)
             {
                 int idv[3]= { 0, v -1, v };
                 for(int i= 0; i < 3; i++)
                 {
                     int k= idv[i];
-                    int p= (idp[k] < 0) ? (int) positions.size() + idp[k] : idp[k] -1;
-                    int t= (idt[k] < 0) ? (int) texcoords.size() + idt[k] : idt[k] -1;
-                    int n= (idn[k] < 0) ? (int) normals.size()   + idn[k] : idn[k] -1;
+                    int p= (idp[k] < 0) ? int(positions.size()) + idp[k] : idp[k] -1;
+                    int t= (idt[k] < 0) ? int(texcoords.size()) + idt[k] : idt[k] -1;
+                    int n= (idn[k] < 0) ? int(normals.size())   + idn[k] : idn[k] -1;
                     
                     if(p < 0) break; // error
                     
@@ -134,12 +137,20 @@ Mesh read_mesh( const char *filename )
         
         else if(line[0] == 'm')
         {
-           if(sscanf(line, "mtllib %[^\r\n]", tmp) == 1)
-           {
-               Materials materials= read_materials( normalize_filename(pathname(filename) + tmp).c_str() );
-               // enregistre les matieres dans le mesh
-               data.materials(materials);
-           }
+            if(sscanf(line, "mtllib %[^\r\n]", tmp) == 1)
+            {
+                std::string  materials_filename;
+                if(tmp[0] != '/' && tmp[1] != ':')   // windows c:\ pour les chemins complets...
+                    materials_filename= normalize_filename(pathname(filename) + tmp);
+                else
+                    materials_filename= std::string(tmp);
+                
+                // charge les matieres
+                Materials materials= read_materials( materials_filename.c_str() );
+                
+                // enregistre les matieres dans le mesh
+                data.materials(materials);
+            }
         }
         
         else if(line[0] == 'u')
@@ -155,7 +166,7 @@ Mesh read_mesh( const char *filename )
         printf("[error] loading mesh '%s'...\n%s\n\n", filename, line_buffer);
     else
         printf("mesh '%s': %d positions %s %s\n", filename, int(data.positions().size()), data.has_texcoord() ? "texcoord" : "", data.has_normal() ? "normal" : "");
-    
+
     return data;
 }
 
@@ -344,7 +355,8 @@ Mesh read_indexed_mesh( const char *filename )
     return data;
 }
 
-int write_mesh( const Mesh& mesh, const char *filename )
+
+int write_mesh( const Mesh& mesh, const char *filename, const char *materials_filename )
 {
     if(mesh == Mesh::error())
         return -1;
@@ -353,14 +365,22 @@ int write_mesh( const Mesh& mesh, const char *filename )
         return -1;
     if(mesh.positions().size() == 0)
         return -1;
-    if(filename == NULL)
+    if(filename == nullptr)
         return -1;
     
     FILE *out= fopen(filename, "wt");
-    if(out == NULL)
+    if(out == nullptr)
         return -1;
     
     printf("writing mesh '%s'...\n", filename);
+    if(materials_filename && materials_filename[0] && strcmp(filename, materials_filename))
+    {
+        printf("  materials '%s'...\n", materials_filename);
+        fprintf(out, "mtllib %s\n", materials_filename);
+    }
+    {
+        printf("  %d positions, %d texcoords, %d normals\n", int(mesh.positions().size()), int(mesh.texcoords().size()), int(mesh.normals().size()));
+    }
     
     const std::vector<vec3>& positions= mesh.positions();
     for(unsigned i= 0; i < positions.size(); i++)
@@ -526,10 +546,12 @@ int write_materials( const Materials& materials, const char *filename, const cha
         
         fprintf(out, "newmtl %s\n", materials.name(i));
         
-        fprintf(out, "  Kd %f %f %f\n", m.diffuse.r, m.diffuse.g, m.diffuse.b);
+        if(m.diffuse.r + m.diffuse.g + m.diffuse.b)
+            fprintf(out, "  Kd %f %f %f\n", m.diffuse.r, m.diffuse.g, m.diffuse.b);
         if(m.diffuse_texture != -1)
             fprintf(out, "  map_Kd %s\n", relative_filename(materials.filename(m.diffuse_texture), path).c_str());
         
+        if(m.specular.r + m.specular.g + m.specular.b)
         fprintf(out, "  Ks %f %f %f\n", m.specular.r, m.specular.g, m.specular.b);
         if(m.specular_texture != -1)
             fprintf(out, "  map_Ks %s\n", relative_filename(materials.filename(m.specular_texture), path).c_str());

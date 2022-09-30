@@ -18,7 +18,7 @@ Mesh read_mesh( const char *filename );
 Mesh read_indexed_mesh( const char *filename );
 
 //! enregistre un mesh dans un fichier .obj.
-int write_mesh( const Mesh& mesh, const char *filename );
+int write_mesh( const Mesh& mesh, const char *filename, const char *materials_filename= nullptr );
 
 //! charge une description de matieres, utilise par read_mesh.
 Materials read_materials( const char *filename );
