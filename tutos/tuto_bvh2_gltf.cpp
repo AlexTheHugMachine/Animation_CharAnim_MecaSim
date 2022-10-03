@@ -1,6 +1,7 @@
 
-//! \file tuto_bvh2.cpp bvh 2 niveaux et instances
+//! \file tuto_bvh2_gltf.cpp bvh 2 niveaux et instances, charge un fichier gltf...
 
+#include <random>
 #include <algorithm>
 #include <vector>
 #include <cfloat>
@@ -11,8 +12,7 @@
 #include "image.h"
 #include "image_io.h"
 #include "orbiter.h"
-#include "mesh.h"
-#include "wavefront.h"
+#include "gltf.h"
 
 
 // rayon 
@@ -21,11 +21,11 @@ struct Ray
     Point o;            // origine
     float pad;
     Vector d;           // direction
-    float tmax;
+    float tmax;         // tmax= 1 ou \inf, le rayon est un segment ou une demi droite infinie
     
-    Ray( const Point& _o, const Point& _e ) :  o(_o), d(Vector(_o, _e)), tmax(1) {}
-    Ray( const Point& _o, const Vector& _d ) :  o(_o), d(_d), tmax(FLT_MAX) {}
-    Ray( const Point& _o, const Vector& _d, const float _tmax ) :  o(_o), d(_d), tmax(_tmax) {}
+    Ray( const Point& _o, const Point& _e ) :  o(_o), d(Vector(_o, _e)), tmax(1) {} // segment, t entre 0 et 1
+    Ray( const Point& _o, const Vector& _d ) :  o(_o), d(_d), tmax(FLT_MAX) {}  // demi droite, t entre 0 et \inf
+    Ray( const Point& _o, const Vector& _d, const float _tmax ) :  o(_o), d(_d), tmax(_tmax) {} // explicite
 };
 
 // intersection avec un triangle
@@ -33,14 +33,19 @@ struct Hit
 {
     float t;            // p(t)= o + td, position du point d'intersection sur le rayon
     float u, v;         // p(u, v), position du point d'intersection sur le triangle
-    int instance_id;    // indice de l'instance
-    int triangle_id;    // indice du triangle dans le mesh
+    int instance_id;    // indice de l'instance, pour retrouver la transformation
+    int mesh_id;        // indexation globale du triangle dans la scene gltf
+    int primitive_id;
+    int triangle_id;
+    int pad;
     
-    Hit( ) : t(FLT_MAX), u(), v(), instance_id(-1), triangle_id(-1) {}
-    Hit( const Ray& ray ) : t(ray.tmax), u(), v(), instance_id(-1), triangle_id(-1) {}
-    Hit( const float _t, const float _u, const float _v, const int _id ) : t(_t), u(_u), v(_v), instance_id(-1), triangle_id(_id) {}
+    Hit( ) : t(FLT_MAX), u(), v(), instance_id(-1), mesh_id(-1), primitive_id(-1), triangle_id(-1) {}
+    Hit( const Ray& ray ) : t(ray.tmax), u(), v(), instance_id(-1), mesh_id(-1), primitive_id(-1), triangle_id(-1) {}
     
-    operator bool ( ) { return (triangle_id != -1); }
+    Hit( const float _t, const float _u, const float _v, const int _mesh_id, const int _primitive_id, const int _id ) : t(_t), u(_u), v(_v), 
+        instance_id(-1), mesh_id(_mesh_id), primitive_id(_primitive_id), triangle_id(_id) {}
+    
+    operator bool ( ) { return (triangle_id != -1); }   // renvoie vrai si l'intersection est definie / existe
 };
 
 // intersection avec une boite / un englobant
@@ -51,7 +56,7 @@ struct BBoxHit
     BBoxHit() : tmin(FLT_MAX), tmax(-FLT_MAX) {}
     BBoxHit( const float _tmin, const float _tmax ) : tmin(_tmin), tmax(_tmax) {}
     
-    operator bool( ) const { return tmin <= tmax; }
+    operator bool( ) const { return tmin <= tmax; }   // renvoie vrai si l'intersection est definie / existe
 };
 
 
@@ -255,9 +260,13 @@ struct Triangle
 {
     Point p;            // sommet a du triangle
     Vector e1, e2;      // aretes ab, ac du triangle
-    int id;
+    int mesh_id;
+    int primitive_id;
+    int triangle_id;
     
-    Triangle( const TriangleData& data, const int _id ) : p(data.a), e1(Vector(data.a, data.b)), e2(Vector(data.a, data.c)), id(_id) {}
+    Triangle( const vec3& a, const vec3& b, const vec3& c, const int _mesh_id, const int _primitive_id, const int _id ) : 
+        p(a), e1(Vector(a, b)), e2(Vector(a, c)), 
+        mesh_id(_mesh_id), primitive_id(_primitive_id), triangle_id(_id) {}
     
     /* calcule l'intersection ray/triangle
         cf "fast, minimum storage ray-triangle intersection" 
@@ -284,7 +293,7 @@ struct Triangle
         float t= dot(e2, qvec) * inv_det;
         if(t < 0 || t > htmax) return Hit();
         
-        return Hit(t, u, v, id);
+        return Hit(t, u, v, mesh_id, primitive_id, triangle_id);
     }
     
     BBox bounds( ) const 
@@ -306,9 +315,9 @@ struct Instance
     BVH *object_bvh;
     int instance_id;
     
-    Instance( const BBox& bounds, const Transform& model, BVH& bvh, const int id ) :  
+    Instance( const BBox& bounds, const Transform& model, BVH *bvh, const int id ) :  
         object_transform(Inverse(model)), world_bounds(transform(bounds, model)), 
-        object_bvh(&bvh),
+        object_bvh(bvh),
         instance_id(id)
     {}
     
@@ -352,80 +361,155 @@ protected:
 typedef BVHT<Instance> TLAS;
 
 
+struct Sampler
+{
+    std::uniform_real_distribution<float> u01;
+    std::default_random_engine rng;
+    
+    Sampler( const unsigned _seed ) : u01(), rng(_seed) {}
+    void seed( const unsigned _seed ) { rng= std::default_random_engine(_seed); }
+    
+    float sample( ) { return u01(rng); }
+    
+    int sample_range( const int n ) { return int(sample() * n); }
+};
+
+
 int main( int argc, char **argv )
 {
-    const char *mesh_filename= "data/robot.obj";
+    const char *mesh_filename= "data/robot.gltf";
     const char *orbiter_filename= nullptr;
     
     if(argc > 1) mesh_filename= argv[1];
     if(argc > 2) orbiter_filename= argv[2];
     
-    Mesh mesh= read_mesh(mesh_filename);
-    if(mesh.triangle_count() == 0)
-        return 1;
+    GLTFScene scene= read_gltf_scene(mesh_filename);
     
-    BBox mesh_bounds;
-    mesh.bounds(mesh_bounds.pmin, mesh_bounds.pmax);
-    
-    // construit le bvh de l'objet
-    BVH bvh;
+    // construit les bvh des objets de la scene, en parallele ! cf BLAS / bvh de triangles
+    std::vector<BVH *> bvhs(scene.meshes.size());
     {
-        // recupere les triangles du mesh
-        std::vector<Triangle> triangles;
-        for(int i= 0; i <mesh.triangle_count(); i++)
-        {
-            TriangleData data= mesh.triangle(i);
-            triangles.push_back( Triangle(data, triangles.size()) );
-        }
+        // parcourir les mesh
+        printf("%d meshes\n", int(scene.meshes.size()));
         
-        // construit le bvh...
-        bvh.build(triangles);
+    #pragma omp parallel for
+        for(unsigned mesh_id= 0; mesh_id < scene.meshes.size(); mesh_id++)
+        {
+            const GLTFMesh& mesh= scene.meshes[mesh_id];
+            
+            // groupes de triangles du mesh
+            std::vector<Triangle> triangles;
+            for(unsigned primitive_id= 0; primitive_id < mesh.primitives.size(); primitive_id++)
+            {
+                const GLTFPrimitives& primitives= mesh.primitives[primitive_id];
+                
+                for(unsigned i= 0; i +2 < primitives.indices.size(); i+= 3)
+                {
+                    // extraire les positions des sommets du triangle
+                    vec3 a= primitives.positions[primitives.indices[i]];
+                    vec3 b= primitives.positions[primitives.indices[i+1]];
+                    vec3 c= primitives.positions[primitives.indices[i+2]];
+                    triangles.push_back( Triangle(a, b, c, mesh_id, primitive_id, i/3) );
+                    // stocke aussi l'indice du triangle
+                }
+            }
+            
+            BVH *bvh= new BVH;
+            bvh->build(triangles);
+            bvhs[mesh_id]= bvh;
+        }
     }
     
-    // instancie l'objet
+    // instancie les objets de la scene, cf TLAS / bvh d'instances
     TLAS top_bvh;
     {
+        printf("%d nodes\n", int(scene.nodes.size()));
+        
+        // 1 instance par noeud de la scene gltf
         std::vector<Instance> instances;
-        for(int i= -2; i <= 2; i++)
+        for(unsigned node_id= 0; node_id < scene.nodes.size(); node_id++)
         {
-            Transform model= Translation(i*10, 0, 0);
-            instances.push_back( Instance(mesh_bounds, model, bvh, instances.size()) );
+            const GLTFNode& node= scene.nodes[node_id];
+            const GLTFMesh& mesh= scene.meshes[node.mesh_index];
+            
+            instances.push_back( Instance( BBox(mesh.pmin, mesh.pmax), node.model, bvhs[node.mesh_index], node_id ) );
         }
         
-        // construit le bvh...
         top_bvh.build(instances);
+        printf("done. %d instances\n", int(instances.size()));
     }
     
-    // regle la camera
-    Orbiter camera;
-    if(orbiter_filename == nullptr || camera.read_orbiter(orbiter_filename) < 0)
-        // les objets sont instancies sur une ligne, agrandir la zone observee par la camera...
-        camera.lookat(mesh_bounds.pmin * 5, mesh_bounds.pmax * 5);      
+    // recupere les matrices de la camera gltf
+    assert(scene.cameras.size());
+    Transform view= scene.cameras[0].view;
+    Transform projection= scene.cameras[0].projection;
     
-    // image resultat
-    Image image(1024, 640);
+    // cree l'image en respectant les proportions largeur/hauteur de la camera gltf
+    int width= 1024;
+    int height= width / scene.cameras[0].aspect;
+    Image image(width, height);
     
     // transformations
     Transform model= Identity();
-    Transform view= camera.view();
-    Transform projection= camera.projection();
     Transform viewport= Viewport(image.width(), image.height());
     Transform inv= Inverse(viewport * projection * view * model);
     
+    
     // calcule l'image en parallele avec openMP
-#pragma omp parallel for 
+#pragma omp parallel for
     for(int y= 0; y < image.height(); y++)
     for(int x= 0; x < image.width(); x++)
     {
         // genere le rayon pour le pixel x,y
         Point o= inv( Point(x, y, 0) ); // origine
         Point e= inv( Point(x, y, 1) ); // extremite
-        Ray ray(o, e);
+        Ray ray(o, Vector(o, e));
         
         // intersections !
         if(Hit hit= top_bvh.intersect(ray))
-            image(x, y)= Red(); // touche ! 
+        {
+            assert(hit.instance_id != -1);
+            assert(hit.mesh_id != -1);
+            assert(hit.primitive_id != -1);
+            // retrouve le triangle dans le mesh et ses primitives
+            const GLTFMesh& mesh= scene.meshes[hit.mesh_id];
+            const GLTFPrimitives& primitives= mesh.primitives[hit.primitive_id];
+            // indices des sommets du triangle
+            unsigned a= primitives.indices[3*hit.triangle_id];
+            unsigned b= primitives.indices[3*hit.triangle_id+1];
+            unsigned c= primitives.indices[3*hit.triangle_id+2];
+            // c'est a ca que servent les indices ajoutes dans triangle, instance et hit !!
+            
+            /* exemple : normale interpolee du point d'intersection
+                assert(primitives.normals.size());
+                Vector na= primitives.normals[a];
+                Vector nb= primitives.normals[b];
+                Vector nc= primitives.normals[c];
+                
+                // normale interpolee au point d'intersection, cf coordonnees barycentriques dans le triangle
+                Vector n= (1 - hit.u - hit.v) * na + hit.u * nb + hit.v * nc;
+                // n est dans le repere local de l'objet... 
+                
+                // changement de repere vers la scene !
+                const Transform& model= scene.nodes[hit.instance_id].model;   // recupere la transformation de l'instance...
+                
+                // todo : ecrire une fonction utilitaire !!
+             */ 
+             
+            // retrouve la couleur de base du triangle
+            Color diffuse= Yellow();
+            if(primitives.material_index != -1)
+            {
+                const GLTFMaterial& material= scene.materials[primitives.material_index];
+                
+                // parametres du modele pbr / gltf : couleur / metal / rugosite
+                Color base= material.color;
+                diffuse= base;
+            }
+            
+            image(x, y)= Color(diffuse, 1);
+        }
     }
+    printf("\n");
     
     write_image(image, "render.png");
     return 0;
