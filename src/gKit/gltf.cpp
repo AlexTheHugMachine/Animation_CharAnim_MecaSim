@@ -703,8 +703,10 @@ GLTFScene read_gltf_scene( const char *filename )
     for(unsigned mesh_id= 0; mesh_id < data->meshes_count; mesh_id++)
     {
         GLTFMesh m= { };
-        cgltf_mesh *mesh= &data->meshes[mesh_id];
+        m.pmin= Point(FLT_MAX, FLT_MAX, FLT_MAX);
+        m.pmax= Point(-FLT_MAX, -FLT_MAX, -FLT_MAX);
         
+        cgltf_mesh *mesh= &data->meshes[mesh_id];
         // parcourir les groupes de triangles du mesh...
         for(unsigned primitive_id= 0; primitive_id < mesh->primitives_count; primitive_id++)
         {
@@ -741,6 +743,23 @@ GLTFScene read_gltf_scene( const char *filename )
                     // transforme les positions des sommets
                     for(unsigned i= 0; i+2 < buffer.size(); i+= 3)
                         p.positions.push_back( vec3(buffer[i], buffer[i+1], buffer[i+2]) );
+                    
+                #if 0
+                    assert(attribute->data->has_min);
+                    assert(attribute->data->has_max);
+                    p.pmin= vec3(attribute->data->min[0], attribute->data->min[1], attribute->data->min[2]);
+                    p.pmax= vec3(attribute->data->max[0], attribute->data->max[1], attribute->data->max[2]);
+                #else
+                    p.pmin= p.positions[0];
+                    p.pmax= p.positions[0];
+                    for(unsigned i= 1; i < p.positions.size(); i++)
+                    {
+                        p.pmin= min(p.pmin, p.positions[i]);
+                        p.pmax= max(p.pmax, p.positions[i]);
+                    }
+                #endif
+                    m.pmin= min(m.pmin, p.pmin);
+                    m.pmax= max(m.pmax, p.pmax);
                 }
                 
                 if(attribute->type == cgltf_attribute_type_normal)

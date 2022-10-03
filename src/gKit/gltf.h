@@ -92,6 +92,8 @@ struct GLTFPrimitives
     int primitives_index;   //!< indice unique.
     int material_index;     //!< indice de la matiere des primitives.
     
+    Point pmin, pmax;        //!< points extremes de l'englobant dans le repere objet
+    
     // buffers...
     std::vector<unsigned> indices;
     std::vector<vec3> positions;
@@ -103,6 +105,7 @@ struct GLTFPrimitives
 struct GLTFMesh
 {
     std::vector<GLTFPrimitives> primitives; //!< groupes de triangles associes a une matiere.
+    Point pmin, pmax;        //!< points extremes de l'englobant dans le repere objet
 };
 
 //! instances d'un maillage.
