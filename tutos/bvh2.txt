@@ -25,24 +25,32 @@ qui instancie ~3 milliards de triangles...
 comment ? euh en faisant la même chose ? si on regarde un peu plus précisement le fonctionnement des méthodes de construction des bvh, il est assez facile 
 de se rendre compte que seules les boites englobantes des triangles sont utilisées... 
 
-du coup, on peut voir un bvh comme un arbre qui trie / organise des boites englobantes, sans se préoccuper des objets à l'intérieur des boites. on va donc pouvoir 
-construire un bvh uniquement en fonction des englobants des instances ! 
+<IMG SRC="blas.png" > 
 
-_reste un détail :_ comment représenter la transformation qui place chaque instance dans la scène ? ie chaque instance est décrite par un objet et une 
-transformation _model_. les rayons sont générés dans le repère de la scène. pour calculer les intersections rayon / englobant et rayon / triangle, il faut choisir un 
-repère commun... celui de la scène ? ou plutot celui de l'objet : il suffit de transformer l'origine et la direction du rayon dans le repère local de l'objet pour calculer les
-intersections avec ses triangles. il faut donc connaitre la transformation _inverse_ de model, pour transformer le rayon.
+du coup, on peut voir un bvh comme un arbre qui trie / organise des boites englobantes, sans se préoccuper des objets à l'intérieur des boites. on va donc 
+pouvoir construire un bvh uniquement en fonction des englobants des instances (dans le repère de la scène) ! 
+
+mais comment représenter la transformation qui place chaque instance dans la scène ? chaque instance est décrite par un objet et une 
+transformation _model_, qui permet de transformer les sommets des triangles du repere de l'objet vers le repere de la scène. les rayons sont générés dans 
+le repère de la scène, pas de problèmes pour calculer les intersections rayons / englobtans dans la scène, mais pour calculer les intersections rayons / triangles, 
+il faut choisir un repère commun... 
+
+celui de la scène ? plutot celui de l'objet : il suffit de transformer l'origine et la direction du rayon dans le repère local de l'objet pour calculer les
+intersections avec ses triangles. il faut donc connaitre la transformation _inverse_ de model, pour transformer le rayon et réaliser les calculs d'intersection.
 
 _pourquoi dans ce sens ?_ il est nettement plus rapide de transformer le rayon (un point et une direction) que de transformer tous les sommets des triangles de l'objet...
 
-on va donc construire un bvh avec les englobants de chaque instance. les feuilles de ce bvh stockent la transformation de la scène vers le repère de l'objet et une reference
-vers les triangles de l'objet. mais bien sur, pour calculer les intersections d'un rayon avec les triangles d'un objet, on va aussi construire un bvh... au final on va construire 
-un bvh par objet et un bvh _global_ qui reference chaque instance ! 
+on va donc construire un bvh avec les englobants de chaque instance dans le repère de la scène. par contre, les feuilles de ce bvh stockent la transformation de 
+la scène vers le repère de l'objet et une reference vers les triangles de l'objet. bien sur, pour calculer les intersections d'un rayon avec les triangles d'un objet, on 
+va aussi construire un bvh... au final on va construire un bvh par objet dans son repere et un bvh _global_ qui reference chaque instance dans le repere de la scene ! 
+
+<IMG SRC="tlas.png" > 
 
 cette organisation s'appelle un bvh à 2 niveaux, l'arbre d'instances est le premier niveau (ou top level bvh) et les bvhs de triangles des objets forment le second niveau 
-ou bottom level bvh. cette organisation est pas mal répandue...
+ou bottom level bvh. 
 
-\section TLAS TLAS : top level acceleration structure / bvh d'instances
+
+# TLAS : top level acceleration structure / bvh d'instances
 
 comment construire le bvh des instances ? facile : de la même manière que l'on construit un bvh sur des triangles... en regardant les algos de construction de bvh, il
 est assez facile de vérifier qu'ils utilisent uniquement 2 propriétés des triangles : l'englobant et la fonction d'intersection...
@@ -85,7 +93,10 @@ typedef BVHT<Triangle> BVH;
 \endcode
 
 _remarque :_ transformer le bvh en fonction du type des primitives qu'il stocke / organise est quand meme plus simple et plus efficace que d'utiliser une classe de 
-base Primitive dont dérivent Triangle et Instance
+base Primitive dont dérivent Triangle et Instance. la version template n'a pas besoin d'utiliser des appels de fonctions virtuelles sur les classes dérivées de Primitive.
+
+_remarque:_ on peut aussi construire explicitement le bvh sur un ensemble de boites englobantes qui referencent un objet ou un autre bvh...
+
 
 ## intersection 
 
@@ -143,22 +154,34 @@ struct Instance
 
 # BLAS : bottom level acceleration structure / bvh de triangles
 
-rien à signaler, c'est la même chose que d'habitude, un bvh construit sur un ensemble de triangles.
+rien à signaler, c'est la même chose que d'habitude, un bvh construit sur un ensemble de triangles dans le repère de l'objet.
 
-# et ça marche ?
-
-ben ça dépend bien sur ! sur une scène raisonnable on peut comparer les 2 solutions : un seul arbre avec tous les triangles dupliqués ou un bvh à 2 niveaux... 
-selon la répartiton des englobants des instances dans la scène, il fréquent que le calcul d'intersection soit 2 fois plus lent avec le bvh à 2 niveaux. mais bien sur, 
-on peut construire l'arbre d'instances de manière un peu plus astucieuse : au lieu de prendre la racine du bvh de chaque instance et introduire pas mal de 
-chevauchement dans le bvh, il est relativement simple de descendre plus bas dans les bvh des instances... 
-
-_à lire :_ "Improved Two-Level BVHs using Partial Re-Braiding", C. Benthin, S. Woop, I. Wald, A. Afra 2017\n
-[pdf](https://www.embree.org/papers/2017-HPG-openmerge.pdf) et [slides](https://www.embree.org/papers/2017-HPG-openmerge-slides.pdf)
+repassez dans la section sur la construction des bvh dans \ref acceleration, si nécessaire.
 
 
 # oulala, c'est compliqué, c'est ou le code ?
 
-un exemple tout simple est dispo dans tuto_bvh2.cpp
+un exemple tout simple est dispo dans tuto_bvh2.cpp. il charge un fichier .obj / wavefront, crée quelques instances disposées sur une ligne et calcule les intersections.
+
+un exemple plus complet qui charge un fichier gltf est dans tuto_bvh2_gltf.cpp. chaque GLTFMesh de la scène est utilisé pour construire un BLAS et 
+ensuite un TLAS est construit à partir des instances représentées par les GLTFNode. 
+
+_remarque :_ le code de construction est équivalent mais simplifié par rapport à celui décrit dans \ref acceleration / section bvh.
+
+
+# et ça marche vraiment bien ?
+
+sur une scène raisonnable on peut comparer les 2 solutions : un seul arbre avec tous les triangles dupliqués ou un bvh à 2 niveaux... 
+selon la répartiton des englobants des instances dans la scène, il est fréquent que le calcul d'intersection soit 2 fois plus lent avec le bvh à 2 niveaux. si, au 
+contraire les instances sont bien séparées dans la scène, il y a peu de différence, mais c'est rarement le cas, surtout avec la végétation...
+
+bien sur, on peut construire l'arbre d'instances de manière un peu plus astucieuse : au lieu de prendre l'englobant de chaque instance, on peut le découper 
+(il suffit de parcourir le bvh / btlas de l'objet) et réduire les chevauchements des englobatns dans la scène, mais c'est un compromis entre quantité de mémoire 
+nécessaire pour stocker tous ces nouveaux englobants et le temps de parcours de l'arbre complet (tlas + blas).
+
+_pour les curieux_ ["Improved Two-Level BVHs using Partial Re-Braiding"](https://www.embree.org/papers/2017-HPG-openmerge.pdf), C. Benthin, S. Woop, I. Wald, A. Afra 2017\n
+et [slides](https://www.embree.org/papers/2017-HPG-openmerge-slides.pdf)
+
 
 
 */
