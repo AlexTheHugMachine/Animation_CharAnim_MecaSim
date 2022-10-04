@@ -26,7 +26,7 @@ struct Hit
 {
     float t;            // p(t)= o + td, position du point d'intersection sur le rayon
     float u, v;         // p(u, v), position du point d'intersection sur le triangle
-    int instance_id;    // indice de l'instance, pour retrouver la transformation
+    int instance_id;    // indice de l'instance
     int mesh_id;        // indexation globale du triangle dans la scene gltf
     int primitive_id;
     int triangle_id;
@@ -85,12 +85,6 @@ struct Triangle
 };
 
 
-struct Source
-{
-    Point s;
-    Color emission;
-};
-
 int main( const int argc, const char **argv )
 {
     const char *filename= "cornell.gltf";
@@ -134,33 +128,7 @@ int main( const int argc, const char **argv )
             }
         }
     }
-    
-    // recupere les sources
-    std::vector<Source> sources;
-    {
-        // trouve les triangles avec une matiere emissive...
-        for(unsigned i= 0; i < triangles.size(); i++)
-        {
-            const Triangle& triangle= triangles[i];
-            const GLTFMesh& mesh= scene.meshes[triangle.mesh_id];
-            const GLTFPrimitives& primitives= mesh.primitives[triangle.primitive_id];
-            const GLTFMaterial& material= scene.materials[primitives.material_index];
-            
-            Color emission= material.emission;
-            if(emission.r + emission.g + emission.b > 0)
-            {
-                // utiliser le centre du triangle comme source de lumière
-                // a= triangle.a, b= triangle.a+triangle.e1, c= triangle.a+triangle.e2
-                // s= (a+b+c) / 3
-                Point s= triangle.p + triangle.e1 / 3 + triangle.e2 / 3;
-                
-                sources.push_back( {s, emission} );
-            }
-        }
-        
-        printf("%d sources\n", int(sources.size()));
-        assert(sources.size() > 0);
-    }
+    assert(triangles.size());
     
     // recupere les matrices de la camera gltf
     assert(scene.cameras.size());

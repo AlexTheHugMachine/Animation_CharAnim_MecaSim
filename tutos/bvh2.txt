@@ -168,6 +168,15 @@ ensuite un TLAS est construit à partir des instances représentées par les GLT
 
 _remarque :_ le code de construction est équivalent mais simplifié par rapport à celui décrit dans \ref acceleration / section bvh.
 
+__remarque sur le code d'exemple :__ les triangles stockent les positions de leurs sommets (pour calculer directement les intersections avec les rayons), ainsi que 
+les indices de l'instance, du mesh et du groupe de primitives, que l'on peut utiliser ensuite pour interpoler les normales, les coordonnées de sommets, etc. mais 
+pourquoi ne pas tout stocker dans le triangle ? ou n'utiliser que les indices des sommets ?
+
+__c'est un compromis :__ si chaque triangle stocke la position, les coordonnees de texture et les normales des sommets, toutes ces informations sont dupliquées, 
+alors que les maillages de la scène sont indexés et nécessitent moins de mémoire. ce n'est pas très grave pour des scènes de taille raisonnable, mais ca limite la 
+complexité de la scène que l'on peut stocker en mémoire. la solution proposée ne duplique que les positions, ce qui permet de faire des tests d'intersection plus rapides 
+que si le triangle n'etait représenté que par son indice... (moins d'indirections et meilleure organisation mémoire pour les caches)
+
 
 # et ça marche vraiment bien ?
 
