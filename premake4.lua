@@ -180,6 +180,7 @@ tutos = {
     "tuto_bvh",
     "tuto_bvh2",
     "tuto_bvh2_gltf",
+    "tuto_ray_gltf",
     
 }
 
