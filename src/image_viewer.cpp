@@ -73,6 +73,19 @@ struct ImageViewer : public App
         SDL_SetWindowTitle(m_window, tmp);        
     }
     
+    Image read( const char *filename )
+    {
+        Image image;
+        if(is_pfm_image(filename))
+            image= read_image_pfm(filename);
+        else if(is_hdr_image(filename))
+            image= read_image_hdr(filename);
+        else
+            image= read_image(filename);
+        
+        return image;
+    }
+    
     int init( )
     {
         m_width= 0;
@@ -82,13 +95,8 @@ struct ImageViewer : public App
         {
             printf("loading buffer %d...\n", i);
             
-            Image image;
-            if(is_hdr_image(m_filenames[i]))
-                image= read_image_hdr(m_filenames[i]);
-            else
-                image= read_image(m_filenames[i]);
-            
-            if(image == Image::error())
+            Image image= read(m_filenames[i]);
+            if(image.size() == 0)
                 return -1;
             
             m_images.push_back(image);
@@ -285,12 +293,7 @@ struct ImageViewer : public App
             button(m_widgets, "reload", reload);
             if(reload)
             {
-                Image image;
-                if(is_hdr_image(m_filenames[m_index]))
-                    image= read_image_hdr(m_filenames[m_index]);
-                else
-                    image= read_image(m_filenames[m_index]);
-                
+                Image image= read(m_filenames[m_index]);
                 {
                     m_images[m_index]= image;
                     
