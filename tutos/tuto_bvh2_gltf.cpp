@@ -201,10 +201,10 @@ protected:
         assert(m != begin);
         assert(m != end);
         
-        // construire le fils gauche, les triangles se trouvent dans [begin .. m)
+        // construire le fils gauche, les primtives se trouvent dans [begin .. m)
         int left= build(begin, m);
         
-        // on recommence pour le fils droit, les triangles se trouvent dans [m .. end)
+        // on recommence pour le fils droit, les primtives se trouvent dans [m .. end)
         int right= build(m, end);
         
         // construire le noeud et renvoyer son indice
