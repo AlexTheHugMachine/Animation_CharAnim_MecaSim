@@ -115,9 +115,9 @@ int main( const int argc, const char **argv )
                 int c= primitives.indices[i+2];
                 
                 // position des sommets
-                vec3 pa= primitives.positions[a];
-                vec3 pb= primitives.positions[b];
-                vec3 pc= primitives.positions[c];
+                Point pa= primitives.positions[a];
+                Point pb= primitives.positions[b];
+                Point pc= primitives.positions[c];
                 
                 // transforme les sommets dans le repere de la scene
                 pa= model( Point(pa) );
