@@ -88,7 +88,7 @@ public:
     virtual void Simulation(Vector gravite, float viscosite, int Tps) = 0;
     
     /*! Interaction avec l utilisateur */
-    void Interaction(Vector MousePos);
+    void Interaction(Vector MousePos, Vector MousePosK);
     
     /*! Affichage des positions de chaque sommet */
     void AffichagePos(int tps);

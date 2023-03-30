@@ -52,10 +52,18 @@ void SolveurImpl::CalculAccel_ForceGravite(Vector g,
                                            std::vector<Vector> &Force,
                                            std::vector<float> &M)
 {
+
+    for (int i = 0; i < nb_som; i++)
+    {
+        A[i] = Force[i] / M[i] + g;
+        Force[i] = Vector(0, 0, 0);
+    }
     
-    
-    
-    
+    // Cas SPH
+    // On a calcule dans Force[i] : fij / rho_i
+    // Il ne reste qu a ajoute le vecteur g
+    // A[i] = Force[i] + g;
+    // Force[i] = Vector(0, 0, 0);
     
 }//void
 
@@ -111,7 +119,7 @@ void SolveurImpl::Remplissage_Y(int nb_som,
 {
     /// Matrice des contributions des forces df/dx
     // chaque element de la matrice de taille 3x3
-    
+
     // Calcul du produit df/dx * V
     
     // [0 1 2]      [0 1 2]     [V.x]
@@ -124,7 +132,6 @@ void SolveurImpl::Remplissage_Y(int nb_som,
     
     
     
-    
     ////////
     // Calcul des elements non diagonaux de df/dx v(t)
     ///////
@@ -134,8 +141,6 @@ void SolveurImpl::Remplissage_Y(int nb_som,
     ////
     // Remplissage du vecteur Y
     ///
-    
-    
     
 }
 
@@ -152,7 +157,8 @@ void SolveurImpl::CalculProdMatVect(int nb_som,
     // Calcul des elements diagonaux
     ///////
     
-    
+
+
     ////////
     // Calcul des elements non diagonaux
     ///////
@@ -263,9 +269,11 @@ void SolveurImpl::CalculVitesse(float visco,
                                 std::vector<Vector> &V,
                                 std::vector<Vector> &X)
 {
-    
-    
-    
+    /*for(int i = 0; i < nb_som; i++)
+    {
+        // Calcul de la nouvelle vitesse
+        V[Tps+_delta_t][i] = V[Tps][i] + X[Tps+_delta_t][i];
+    }*/
 }
 
 

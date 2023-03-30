@@ -60,12 +60,12 @@ ObjetSimule::ObjetSimule(std::string fich_param)
  * \brief Interaction avec l utilisateur.
  * Methode invoquee par le graphe de scene.
  */
-void ObjetSimule::Interaction(Vector MousePos)
+void ObjetSimule::Interaction(Vector MousePos, Vector MousePosK)
 {
     if (_Interaction == "yes")
     {
-        
-        
+        P[0] = P[0] + MousePos;
+        P[sqrt(_Nb_Sommets) - 1] = P[sqrt(_Nb_Sommets) - 1] + MousePosK;
     }//if
     
 }//void

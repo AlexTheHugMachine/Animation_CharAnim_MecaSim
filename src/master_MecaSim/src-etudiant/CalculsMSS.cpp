@@ -51,6 +51,32 @@ void ObjetSimuleMSS::CalculForceSpring()
 	
 	/// Rq : Les forces dues a la gravite et au vent sont ajoutees lors du calcul de l acceleration
     
+	/// Calcul des forces de ressorts
+	for(int i = 0; i < _Nb_Sommets; i++)
+	{
+		Force[i] = Vector(0.0, 0.0, 0.0);
+	};
+
+    std::vector<Ressort*> maillageRessorts = _SystemeMasseRessort->GetRessortList();
+    for (int i = 0; i < maillageRessorts.size(); i++) {
+        Ressort* ressort = maillageRessorts[i];
+        Particule* pa = ressort->GetParticuleA();
+        Particule* pb = ressort->GetParticuleB();
+
+        float lressort = length(P[pa->GetId()] - P[pb->GetId()]);
+        
+        
+        Vector fRaideur = ressort->GetRaideur() * (lressort - ressort->GetLrepos())* normalize(P[pa->GetId()] - P[pb->GetId()]);
+        Vector fAmortis = ressort->GetFactAmorti() * cross((V[pa->GetId()] - V[pb->GetId()]), normalize(P[pa->GetId()] - P[pb->GetId()]));
+        Force[pa->GetId()] = Force[pa->GetId()] - fRaideur - fAmortis;
+        Force[pb->GetId()] = Force[pb->GetId()] + fRaideur + fAmortis;
+
+		if((Force[pa->GetId()].x || Force[pa->GetId()].y || Force[pa->GetId()].z) >= 10.0)
+		{
+			ressort->SetRaideur(0.0);
+			ressort->SetAmortiss(0.0);
+		}
+	}
 		
 }//void
 
@@ -61,7 +87,13 @@ void ObjetSimuleMSS::CalculForceSpring()
 void ObjetSimuleMSS::Collision()
 {
     /// Arret de la vitesse quand touche le plan
-   
+    for (int i = 0; i < _Nb_Sommets; i++)
+	{
+		if (P[i].y < -10.0)
+		{
+			V[i].y = 0.0;
+		}
+	}
     
 }// void
 

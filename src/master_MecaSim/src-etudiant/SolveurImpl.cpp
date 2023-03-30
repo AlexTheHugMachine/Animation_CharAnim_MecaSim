@@ -145,7 +145,59 @@ void SolveurImpl::Remplissage_df_dx_dv(int nb_som,
                                        std::vector<Vector> &P)
 {
    
+    // Pour initialiser chaque element df/dx ou df/dv
+    // Matrice 3 x 3 symetrique representee par 5 valeurs
+    std::vector<float> init_element(6);
+    for (int j=0; j<6; j++)
+    {
+        init_element[j] = 0.0;
+    }
     
+    // Pour initialiser les elements non diagonaux
+    std::vector<std::vector<float>> init(nb_som);
+    for (int j=0; j< nb_som; j++)
+    {
+        init[j] = init_element;
+        
+    }
+    
+    // Pour initialiser les elements diagonaux
+    std::vector<std::vector<float>> init_diag(nb_som);
+    for (int j=0; j< nb_som; j++)
+    {
+        init_diag[j] = init_element;
+        
+    }
+    
+    // Remplissage des matrices df/dx et df/dv
+    for(int i=0; i < nb_som; i++)
+    {
+        // RessortList relies a la particule NumPart_i
+        std::vector<Ressort *>& RessortList_i = _SystemeMasseRessort->GetParticule(i)->GetRessortList();
+        
+        // Nombre de ressorts relies a la particule NumPart_i
+        int NbRessortList_i = RessortList_i.size();
+        
+        // Pour initialiser les elements non diagonaux
+        std::vector<std::vector<float>> init(NbRessortList_i);
+        
+        for (int j=0; j< NbRessortList_i; j++)
+        {
+            init[j] = init_element;
+            
+        }
+        
+        // elements non diagonaux
+        Df_Dx[i].resize(NbRessortList_i);
+        Df_Dv[i].resize(NbRessortList_i);
+        
+        Df_Dx[i] = init;
+        Df_Dv[i] = init;
+        
+        // elements diagonaux
+        Df_Dx_diag[i] = init_diag[i];
+        Df_Dv_diag[i] = init_diag[i];
+    }
 }
 
 

@@ -73,6 +73,7 @@ protected:
     
     // Mouvement au clavier
     Vector MousePos;
+    Vector MousePosK;
     
     // Le temps
     int Tps;
@@ -93,10 +94,20 @@ protected:
     Mesh m_cube;
     Mesh m_plan;
     Mesh m_sphere;
+    Mesh m_disque;
+    Mesh m_cylindre;
+    Mesh m_cone;
+    Mesh m_cubemap;
+    Mesh m_triangle;
     
     // Declaration des textures
     // Exemple : GLuint m_votreObjet_texture;
     GLuint m_cube_texture;
+    GLuint m_box_texture;
+    GLuint m_cubemap_texture;
+    GLuint m_cone_texture;
+    GLuint m_cylindre_texture;
+    GLuint m_triangle_texture;
     
     /// Declaration de la texture pour le tissu
     GLuint m_tissu_texture;
@@ -109,6 +120,11 @@ protected:
     void init_grid();
     void init_cube();
     void init_sphere();
+    void init_disque();
+    void init_cylindre();
+    void init_cone();
+    void init_cubemap();
+    void init_triangle();
   
     
     // Creation du maillage du plan de collision (x, y, z)

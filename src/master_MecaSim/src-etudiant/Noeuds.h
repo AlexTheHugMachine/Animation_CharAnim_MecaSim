@@ -72,7 +72,7 @@ public:
     virtual void Collision() = 0;
     
 	/*! Operation d'interaction */
-	virtual void Interaction(Vector MousePos) = 0;
+	virtual void Interaction(Vector MousePos, Vector MousePosK) = 0;
     
     /*! Mise a jour du Mesh (pour affichage) */
     virtual void updateVertex() = 0;

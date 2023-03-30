@@ -188,6 +188,116 @@ void Viewer::init_sphere()
     }
 }
 
+void Viewer::init_disque()
+{
+    m_disque = Mesh(GL_TRIANGLE_FAN);
+    //m_disque.color(1, 0, 0);
+
+    int nb_sommets = 20.0;
+    float istep = (2.0*M_PI)/nb_sommets;
+    float theta=0;
+
+    m_disque.normal(0, 1, 0);
+    m_disque.vertex(0,0,0);
+
+    for (int i=0; i<=nb_sommets+1; i++)
+    {
+        m_disque.texcoord(float(i+1)/nb_sommets, 1.0 - float(i+1)/nb_sommets);
+        m_disque.vertex(Point(cos(theta), 0, sin(theta)));
+        theta=i*istep;
+    }
+}
+
+void Viewer::init_cylindre()
+{
+    int nb_sommets = 20;
+    float step = (2.0*M_PI)/nb_sommets;
+
+    m_cylindre = Mesh(GL_TRIANGLE_STRIP);
+
+    for (int i = 0; i<=nb_sommets; i++)
+    {
+        float alpha = i*step;
+        m_cylindre.normal(Vector(cos(alpha), 0, sin(alpha)));
+        m_cylindre.texcoord(float(i)/nb_sommets, 0.0);
+        m_cylindre.vertex(Point(cos(alpha), 0, sin(alpha)));
+        m_cylindre.normal(Vector(cos(alpha), 0, sin(alpha)));
+        m_cylindre.texcoord(float(i)/nb_sommets, 1.0);
+        m_cylindre.vertex(Point(cos(alpha), 5, sin(alpha)));
+    }
+}
+
+void Viewer::init_cone()
+{
+    int nb = 26;
+    float obj = 2.0*M_PI/nb;
+    float alpha = 0.0;
+    m_cone = Mesh(GL_TRIANGLE_FAN);
+    m_cone.texcoord(0.5, 0.5);
+    m_cone.vertex(0, 1, 0);
+    for (int i=0; i<=nb+1; i++)
+    {
+        m_cone.normal(sin(alpha), 0, cos(alpha));
+        m_cone.texcoord(0.5 + (cos(alpha)*0.5), 0.5 + (sin(alpha)*0.5));
+        m_cone.vertex(sin(alpha), 0.0, cos(alpha));
+        alpha=i*obj;
+    }
+}
+
+void Viewer::init_cubemap()
+{
+
+    static float pt[8][3] = {{-50,-50,-50}, {50,-50,-50}, {50,-50,50}, {-50,-50,50}, {-50,50,-50}, {50,50,-50}, {50,50,50}, {-50,50,50}};
+    static float tex_pt[14][2] = {{0,0.33}, {0,0.66}, {0.25,0.33}, {0.25,0.66},{0.5,0.33}, {0.5,0.66}, {0.75,0.33}, {0.75,0.66}, {0.98,0.33}, {0.98,0.66}, {0.25,0.99}, {0.5,0.99}, {0.25,0}, {0.5,0}};
+    static int tex[6][4] = {{2,4,12,13}, {10,11,3,5}, {6,7,8,9}, {2,3,4,5}, {4,5,6,7},{0,1,2,3}};
+    static int f[6][4] = {{0,1,2,3}, {5,4,7,6}, {2,1,5,6}, {0,3,7,4}, {3,2,6,7}, {1,0,4,5}};
+    static float n[6][3] = {{0,1,0}, {0,-1,0}, {-1,0,0}, {1,0,0}, {0,0,-1}, {0,0,1}};
+    int i,j;
+
+    m_cubemap = Mesh(GL_TRIANGLE_STRIP);
+    //m_tex_cubemap = read_texture(0, smart_path("data/cubemap/skybox.png")) ;
+    m_cubemap.color(1,1,1);
+
+    for (i=0;i<6;i++){
+        m_cubemap.normal(  n[i][0], n[i][1], n[i][2] );
+
+        m_cubemap.texcoord( tex_pt[tex[i][0]][0],tex_pt[tex[i][0]][1] );
+        m_cubemap.vertex( pt[ f[i][0] ][0], pt[ f[i][0] ][1], pt[ f[i][0] ][2] );
+
+        m_cubemap.texcoord( tex_pt[tex[i][1]][0],tex_pt[tex[i][1]][1] );
+        m_cubemap.vertex(pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
+
+        m_cubemap.texcoord( tex_pt[tex[i][2]][0],tex_pt[tex[i][2]][1] );
+        m_cubemap.vertex( pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
+
+        m_cubemap.texcoord( tex_pt[tex[i][3]][0],tex_pt[tex[i][3]][1] );
+        m_cubemap.vertex( pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
+        m_cubemap.restart_strip();
+    }
+}
+
+void Viewer::init_triangle()
+{
+    m_triangle = Mesh(GL_TRIANGLES);
+    Point a(0, 0, 0);
+    Point b(1, 0, 0);
+    Point c(0, 0, 1);
+
+
+    Vector AB = normalize(b-a);
+    Vector AC = normalize(c-a);
+    Vector N = cross(AB, AC);
+    m_triangle.normal(N.x, N.y, N.z);
+
+    m_triangle.texcoord(0, 0);
+    m_triangle.vertex(a.x, a.y, a.z);
+
+    m_triangle.texcoord(1, 0);
+    m_triangle.vertex(b.x, b.y, b.z);
+
+    m_triangle.texcoord(0, 1);
+    m_triangle.vertex(c.x, c.y, c.z);
+}
 
 /*
  * Fonction d initialisation.
@@ -214,18 +324,23 @@ int Viewer::init()
     // m_camera.lookat( Point(0,0,0), 150 );
     
     // Lumiere
-    gl.light( Point(0, 20, 20), White() );
+    gl.light( Point(20, 20, 20), White() );
+    //gl.light2( Point(-20, -20, -20), White() );
     
     // Chargement des textures utilisees dans la scene
     // Texture pour le cube
    //  m_cube_texture = read_texture(0, "../data/debug2x2red.png");
-    m_cube_texture = read_texture(0, smart_path("data/debug2x2red.png"));
+    m_cube_texture = read_texture(0, smart_path("data/sky.jpg"));
+    m_box_texture = read_texture(0, smart_path("data/box1.jpg"));
+    m_cubemap_texture = read_texture(0, smart_path("data/Skybox.jpg"));
+    m_cone_texture = read_texture(0, smart_path("data/Skybox.jpg"));
+    m_cylindre_texture = read_texture(0, smart_path("data/pringles.png"));
 
     // Texture pour le tissu
     //m_tissu_texture = read_texture(0, "data/papillon.png");
-    //m_tissu_texture = read_texture(0, "data/textures/tissu1.png");
+    m_tissu_texture = read_texture(0, "data/textures/leffe.png");
    // m_tissu_texture = read_texture(0, "data/textures/tissu2.jpg");
-    m_tissu_texture = read_texture(0, smart_path("data/textures/tissu2.jpg"));
+    //m_tissu_texture = read_texture(0, smart_path("data/textures/tissu2.jpg"));
 
     // Appel des procedures d initialisation des objets de la scene
     // Pour les objets non simules
@@ -234,6 +349,11 @@ int Viewer::init()
     init_grid();
     init_cube();
     init_sphere();
+    init_cone();
+    init_cubemap();
+    init_cylindre();
+    init_disque();
+    init_triangle();
     
     // Creation du plan (x, y, z) - plan utilise pour les ObjetSimule::Collision(x, y, z);
     // Rq : pas vraiment le plan, mais < x, < y, < z

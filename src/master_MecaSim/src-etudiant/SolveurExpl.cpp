@@ -60,6 +60,30 @@ void SolveurExpl::CalculAccel_ForceGravite(Vector g,
             // Il ne reste qu a ajoute le vecteur g
             // a_i = fij / rho_i + g
 
+    for(int i=0; i<nb_som; i++)
+    {
+        Force[i].x = Force[i].x + M[i]*g.x;
+        Force[i].y = Force[i].y + M[i]*g.y;
+        Force[i].z = Force[i].z + M[i]*g.z;
+
+        if(M[i] != 0.0)
+        {
+            A[i].x = Force[i].x/M[i];
+            A[i].y = Force[i].y/M[i];
+            A[i].z = Force[i].z/M[i];
+        }
+        else
+        {
+            A[i].x = 0.0;
+            A[i].y = 0.0;
+            A[i].z = 0.0;
+        }
+
+        Force[i].x = 0.0;
+        Force[i].y = 0.0;
+        Force[i].z = 0.0;
+    } 
+
     
 }//void
 
@@ -77,7 +101,14 @@ void SolveurExpl::Solve(float visco,
                         std::vector<Vector> &P)
 {
     
-    
-       
-}//void
+    for(int i=0; i<nb_som; i++)
+    {
+        V[i].x = V[i].x + _delta_t*A[i].x;
+        V[i].y = V[i].y + _delta_t*A[i].y;
+        V[i].z = V[i].z + _delta_t*A[i].z;
 
+        P[i].x = P[i].x + _delta_t*V[i].x;
+        P[i].y = P[i].y + _delta_t*V[i].y;
+        P[i].z = P[i].z + _delta_t*V[i].z;
+    }
+}//void

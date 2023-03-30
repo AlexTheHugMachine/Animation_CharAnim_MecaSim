@@ -70,6 +70,7 @@ public:
     DrawParam& camera( const Orbiter& o, const float width, const float height, const float fov ) { m_view= o.view(); m_projection= o.projection(width, height, fov); return *this; }
     //! eclaire l'objet avec une source ponctuelle, de position p et de couleur c.
     DrawParam& light( const Point& p, const Color& c= White() ) { m_use_light= true; m_light= p; m_light_color=c; return *this; }
+    //DrawParam& light2( const Point& p, const Color& c= White() ) { m_use_light= true; m_light= p; m_light_color=c; return *this; }
     //! plaque une texture a la surface de l'objet.
     DrawParam& texture( const GLuint t ) { m_use_texture= true; m_texture= t; return *this; }
 
@@ -82,7 +83,7 @@ public:
     //! dessine l'objet avec l'ensemble des parametres definis.
     void draw( Mesh& mesh ) const;
 
-    //! renvoie la position de la lumière
+    //! renvoie la position de la lumiï¿½re
     const Point& light() const { return m_light; }
 
 protected:

@@ -224,7 +224,7 @@ void ObjetSimuleMSS::initObjetSimule()
         /* Position de la particule */
         Part->SetPosition(P[i]);
         // TODO : cette position n est pas mise a jour car on se sert du tableau P
-        // TODO : mettre un pointeur sur la valeur contenue dans P[i] pour que la position de la particule soit mise ˆ jour
+        // TODO : mettre un pointeur sur la valeur contenue dans P[i] pour que la position de la particule soit mise ï¿½ jour
         
         /* Masse de la particule */
         Part->SetMass(M[i]);
@@ -396,8 +396,30 @@ void ObjetSimuleMSS::initMeshObjet()
 {
     //std::cout << "------ ObjetSimule::init_Mesh_Object() ----------- " << std::endl;
     
-   
-    
+   m_ObjetSimule = Mesh(GL_TRIANGLES);
+
+   for(unsigned int i = 0; i < _VIndices.size(); i=i+3)
+   {
+        int j = 0;
+        int k = 0;
+        int l = 0;
+
+        j = _VIndices[i];
+        k = _VIndices[i+1];
+        l = _VIndices[i+2];
+        
+        m_ObjetSimule.normal(_vectNormals[k].x, _vectNormals[k].y, _vectNormals[k].z);
+        m_ObjetSimule.texcoord(_vectTexture[j].u, _vectTexture[j].v);
+        m_ObjetSimule.vertex(P[j].x, P[j].y, P[j].z);
+        
+        m_ObjetSimule.normal(_vectNormals[j].x, _vectNormals[j].y, _vectNormals[j].z);
+        m_ObjetSimule.texcoord(_vectTexture[k].u, _vectTexture[k].v);
+        m_ObjetSimule.vertex(P[k].x, P[k].y, P[k].z);
+
+        m_ObjetSimule.normal(_vectNormals[l].x, _vectNormals[l].y, _vectNormals[l].z);
+        m_ObjetSimule.texcoord(_vectTexture[l].u, _vectTexture[l].v);
+        m_ObjetSimule.vertex(P[l].x, P[l].y, P[l].z);
+   }
     
     std::cout << "Maillage du MSS pour affichage build ..." << std::endl;
     
@@ -411,8 +433,28 @@ void ObjetSimuleMSS::initMeshObjet()
 void ObjetSimuleMSS::updateVertex()
 {
     //std::cout << "ObjetSimuleMSS::updateVertex() ..." << std::endl;
-    
-      
+    for(unsigned int i = 0; i < _VIndices.size(); i=i+3)
+    {
+        int j = 0;
+        int k = 0;
+        int l = 0;
+        
+        j = _VIndices[i];
+        k = _VIndices[i+1];
+        l = _VIndices[i+2];
+        
+        m_ObjetSimule.normal(i+1, _vectNormals[k].x, _vectNormals[k].y, _vectNormals[k].z);
+        //m_ObjetSimule.texcoord(i, _vectTexture[j].u, _vectTexture[j].v);
+        m_ObjetSimule.vertex(i, P[j].x, P[j].y, P[j].z);
+
+        m_ObjetSimule.normal(i, _vectNormals[j].x, _vectNormals[j].y, _vectNormals[j].z);
+        //m_ObjetSimule.texcoord(i+1, _vectTexture[k].u, _vectTexture[k].v);
+        m_ObjetSimule.vertex(i+1, P[k].x, P[k].y, P[k].z);
+
+        m_ObjetSimule.normal(i+2, _vectNormals[l].x, _vectNormals[l].y, _vectNormals[l].z);
+        //m_ObjetSimule.texcoord(i+2, _vectTexture[l].u, _vectTexture[l].v);
+        m_ObjetSimule.vertex(i+2, P[l].x, P[l].y, P[l].z);
+    }
 }
 
 
@@ -442,7 +484,7 @@ void ObjetSimuleMSS::Simulation(Vector gravite, float viscosite, int Tps)
     /* ! Gestion des collisions  */
     // Reponse : reste a la position du sol - arret des vitesses
     // Penser au Translate de l objet dans la scene pour trouver plan coherent
-    //Collision();
+    Collision();
     
     // Affichage des positions
    //  AffichagePos(Tps);

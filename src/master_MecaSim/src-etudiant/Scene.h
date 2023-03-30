@@ -88,7 +88,7 @@ public:
     void Collision();
 	
 	/*! Interation de l utilisateur avec chacun des enfants */
-	void Interaction(Vector MousePos);
+	void Interaction(Vector MousePos, Vector MousePosK);
 		
 	/*! Destructeur */
 	virtual ~Scene(){};

@@ -50,7 +50,14 @@ void ObjetSimuleParticule::Collision()
 {
  
     // Collision juste par rapport au plan horizontal passant par le y
-   
+    // Si la particule est au dessus du plan, on la fait rebondir
+    for (int i = 0; i < _Nb_Sommets; i++)
+	{
+		if (P[i].y < -10.0)
+		{
+			V[i].y = -V[i].y;
+		}
+	}
     
 }
 

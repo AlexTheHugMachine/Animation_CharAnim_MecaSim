@@ -176,7 +176,7 @@ void Scene::Collision()
 /**
 * Interation de l utilisateur avec chacun des enfants. 
 */
-void Scene::Interaction(Vector MousePos)
+void Scene::Interaction(Vector MousePos, Vector MousePosK)
 {
 	//std::cout << "----------------- Scene::interaction()-------------" << std::endl;
     
@@ -185,7 +185,7 @@ void Scene::Interaction(Vector MousePos)
 	// Appel de la fonction interaction pour chacun des enfants
 	for(e=_enfants.begin(); e!=_enfants.end(); e++)
 	{
-		(*e)->Interaction(MousePos);
+		(*e)->Interaction(MousePos, MousePosK);
 	}
 }
 

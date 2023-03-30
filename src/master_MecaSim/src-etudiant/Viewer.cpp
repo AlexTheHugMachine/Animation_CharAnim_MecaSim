@@ -119,17 +119,54 @@ int Viewer::render( )
     // donne notre camera au shader
     gl.camera(m_camera);
     
-    // Afichage d un cube avec texture
-    //gl.texture(m_cube_texture);
-    //gl.model(Translation( -3, 5, 0 ));
-    //gl.draw(m_cube);
+    // --------------------------------------------- Afichage d un cube avec texture correspondant a la cubemap
+
+    gl.texture(m_cube_texture);
+    gl.model(Scale(5, 5, 5) * Translation( 0, 1, 0 ));
+    gl.draw(m_cube);
     
     // Rajouter ici les appels pour afficher votre objet non simule
     // Exemple :
     //gl.texture(m_votreObjet_texture);
     //gl.model(...);
     //gl.draw(m_votreObjet);
+
+    // -------------------------------------------- Sphere dans le paquet pringles
+
+    gl.texture(m_box_texture);
+    gl.model(Scale(10, 10, 10) * Translation( 0.1, 0.35, 0.2 ));
+    gl.draw(m_sphere);
+
+    // -------------------------------------------- Box a laquelle le tissu est attaché
+
+    gl.texture(m_box_texture);
+    gl.model(Scale(1.04, 1.5, 2.0) * Translation( 1, 1, 1 ));
+    gl.draw(m_cube);
+
+    /*gl.model(Translation(1, 1.5, 1.06)*Scale(0.022, 0.03, 0.02));
+    gl.texture(m_cubemap_texture);
+    gl.draw(m_cubemap);*/
     
+    /*gl.model(Translation(0, 0, 0));
+    gl.texture(m_cone_texture);
+    gl.draw(m_cone);
+    gl.model(Translation(0, 0, 0));
+    gl.draw(m_disque);*/
+
+    // -------------------------------------------- Paquet Pringles
+
+    gl.model(Translation(1, 3, 2)*Scale(0.5, 0.5, 0.5));
+    gl.texture(m_cylindre_texture);
+    gl.draw(m_cylindre);
+
+    gl.model(Translation(1, 5.5, 2)*Rotation(Vector(1, 0, 0), 180.0)*Scale(0.5, 0.5, 0.5));
+    gl.draw(m_disque);
+    gl.model(Translation(1, 3, 2)*Scale(0.5, 0.5, 0.5));
+    gl.draw(m_disque);
+
+    // -------------------------------------------- Among Us
+
+
     // Gestion de la lumiere
     //gl.lighting(false);
     //gl.lighting(true);
@@ -147,10 +184,18 @@ int Viewer::render( )
     if (key_state(SDLK_DOWN) && key_state(SDLK_m)) {MousePos = MousePos+Vector(0,0,step_i); }
     if (key_state(SDLK_PAGEUP) && key_state(SDLK_m)) {MousePos = MousePos+Vector(0,step_i,0); }
     if (key_state(SDLK_PAGEDOWN) && key_state(SDLK_m)) {MousePos = MousePos+Vector(0,-step_i,0); }
+
+    if (key_state(SDLK_RIGHT) && key_state(SDLK_k)) {MousePosK = MousePosK+Vector(step_i,0,0); }
+    if (key_state(SDLK_LEFT) && key_state(SDLK_k)) {MousePosK = MousePosK+Vector(-step_i,0,0); }
+    if (key_state(SDLK_UP) && key_state(SDLK_k)) {MousePosK = MousePosK+Vector(0,0,-step_i); }
+    if (key_state(SDLK_DOWN) && key_state(SDLK_k)) {MousePosK = MousePosK+Vector(0,0,step_i); }
+    if (key_state(SDLK_PAGEUP) && key_state(SDLK_k)) {MousePosK = MousePosK+Vector(0,step_i,0); }
+    if (key_state(SDLK_PAGEDOWN) && key_state(SDLK_k)) {MousePosK = MousePosK+Vector(0,-step_i,0); }
     
     /// Interaction avec l utilisateur
-    _Simu->Interaction(MousePos);
+    _Simu->Interaction(MousePos, MousePosK);
     MousePos = Vector(0,0,0);
+    MousePosK = Vector(0,0,0);
     
     
     /* Affichage des objets */
@@ -298,22 +343,22 @@ void Viewer::manageCameraLight()
         m_camera.move( my);               // approche / eloigne l'objet
     
     // Deplace la camera avec le clavier
-    if (key_state(SDLK_PAGEUP) && (!key_state(SDLK_LCTRL)) && (!key_state(SDLK_m)) ) { m_camera.translation( 0,0.01); }
-    if (key_state(SDLK_PAGEDOWN) && (!key_state(SDLK_LCTRL)) && (!key_state(SDLK_m))) { m_camera.translation( 0,-0.01); }
-    if (key_state(SDLK_LEFT) && (!key_state(SDLK_LCTRL))&& (!key_state(SDLK_m))) { m_camera.translation(  0.01,0); }
-    if (key_state(SDLK_RIGHT) && (!key_state(SDLK_LCTRL))&& (!key_state(SDLK_m))) { m_camera.translation( -0.01,0); }
-    if (key_state(SDLK_UP) && (!key_state(SDLK_LCTRL))&& (!key_state(SDLK_m))) { m_camera.move( 1); }
-    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL))&& (!key_state(SDLK_m))) { m_camera.move( -1); }
+    if (key_state(SDLK_PAGEUP) && (!key_state(SDLK_LCTRL)) && (!key_state(SDLK_m)) && (!key_state(SDLK_k)) ) { m_camera.translation( 0,0.01); }
+    if (key_state(SDLK_PAGEDOWN) && (!key_state(SDLK_LCTRL)) && (!key_state(SDLK_m)) && (!key_state(SDLK_k))) { m_camera.translation( 0,-0.01); }
+    if (key_state(SDLK_LEFT) && (!key_state(SDLK_LCTRL))&& (!key_state(SDLK_m)) && (!key_state(SDLK_k))) { m_camera.translation(  0.01,0); }
+    if (key_state(SDLK_RIGHT) && (!key_state(SDLK_LCTRL))&& (!key_state(SDLK_m)) && (!key_state(SDLK_k))) { m_camera.translation( -0.01,0); }
+    if (key_state(SDLK_UP) && (!key_state(SDLK_LCTRL))&& (!key_state(SDLK_m)) && (!key_state(SDLK_k))) { m_camera.move( 1); }
+    if (key_state(SDLK_DOWN) && (!key_state(SDLK_LCTRL))&& (!key_state(SDLK_m)) && (!key_state(SDLK_k))) { m_camera.move( -1); }
     
     
     // Deplace la lumiere avec le clavier
     const float step = 0.1f;
-    if (key_state(SDLK_RIGHT) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m))) { gl.light( gl.light()+Vector(step,0,0)); }
-    if (key_state(SDLK_LEFT) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m))) { gl.light( gl.light()+Vector(-step,0,0)); }
-    if (key_state(SDLK_UP) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m))) { gl.light( gl.light()+Vector(0,0,-step)); }
-    if (key_state(SDLK_DOWN) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m))) { gl.light( gl.light()+Vector(0,0,step)); }
-    if (key_state(SDLK_PAGEUP) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m))) { gl.light( gl.light()+Vector(0,step,0)); }
-    if (key_state(SDLK_PAGEDOWN) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m))) { gl.light( gl.light()+Vector(0,-step,0)); }
+    if (key_state(SDLK_RIGHT) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m)) && (!key_state(SDLK_k))) { gl.light( gl.light()+Vector(step,0,0)); }
+    if (key_state(SDLK_LEFT) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m)) && (!key_state(SDLK_k))) { gl.light( gl.light()+Vector(-step,0,0)); }
+    if (key_state(SDLK_UP) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m)) && (!key_state(SDLK_k))) { gl.light( gl.light()+Vector(0,0,-step)); }
+    if (key_state(SDLK_DOWN) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m)) && (!key_state(SDLK_k))) { gl.light( gl.light()+Vector(0,0,step)); }
+    if (key_state(SDLK_PAGEUP) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m)) && (!key_state(SDLK_k))) { gl.light( gl.light()+Vector(0,step,0)); }
+    if (key_state(SDLK_PAGEDOWN) && key_state(SDLK_LCTRL)&& (!key_state(SDLK_m)) && (!key_state(SDLK_k))) { gl.light( gl.light()+Vector(0,-step,0)); }
     
     
     // Afichage de l aide
@@ -365,7 +410,7 @@ void Viewer::manageCameraLight()
     
     // Affichage d un cube representant la position de la LIGHT
     gl.texture( 0 );
-    gl.model( Translation( Vector( gl.light())) * Scale(0.3, 0.3, 0.3) );
+    gl.model( Translation( Vector( gl.light())) * Scale(0.3, 0.3, 0.3));
     gl.draw(m_cube);
     
 }
