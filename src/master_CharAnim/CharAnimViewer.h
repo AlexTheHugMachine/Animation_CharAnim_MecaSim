@@ -10,6 +10,7 @@
 #include "TransformQ.h"
 
 #include <PhysicalWorld.h>
+#include "CharacterController.h"
 
 class CharAnimViewer : public Viewer
 {
@@ -33,6 +34,7 @@ protected:
     PhysicalWorld m_world;
 
 	void draw_skeleton(const Skeleton& );
+    CharacterController controller;
 
 private:
 	static CharAnimViewer* psingleton;

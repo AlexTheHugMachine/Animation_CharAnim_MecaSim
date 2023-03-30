@@ -9,7 +9,6 @@
 using namespace std;
 using namespace chara;
 
-
 CharAnimViewer* CharAnimViewer::psingleton = NULL;
 
 
@@ -35,8 +34,9 @@ int CharAnimViewer::init()
     init_cylinder();
     init_sphere();
 
-
-    m_bvh.init( smart_path("data/bvh/Robot.bvh") );
+	m_bvh.init( smart_path("data/bvh/motionGraph/null.bvh") );
+	controller.mc_bvh.init( smart_path("data/bvh/motionGraph/marcher.bvh") );
+    //m_bvh.init( smart_path("data/bvh/Robot.bvh") );
 	//m_bvh.init( smart_path("data/bvh/danse.bvh") );
 
     m_frameNumber = 0;
@@ -46,23 +46,29 @@ int CharAnimViewer::init()
     cout<<endl<<"========================"<<endl;
 
     m_ske.init( m_bvh );
-    m_ske.setPose( m_bvh, -1);// met le skeleton a la pose au repos
+    m_ske.setPose( m_bvh, -1, controller);// met le skeleton a la pose au repos
 
     return 0;
 }
 
 
 
-void CharAnimViewer::draw_skeleton(const Skeleton& )
+void CharAnimViewer::draw_skeleton(const Skeleton& skl)
 {
-    // TODO
+    // TODO Done
 
-	const int N = 4;
+	for (int i = 0 ; i < skl.numberOfJoint() ; i++)
+    {
+        draw_sphere(skl.getJointPosition(i));
+		if (skl.getParentId(i) != -1) {
+			draw_cylinder(skl.getJointPosition(skl.getParentId(i)), skl.getJointPosition(i), 0.5f);
+		}
+    }
+
+	/*const int N = 4;
 	static float angleA[N] = { 0, 10, 20, 10 };
 	static float angleB[N] = { 30, -10, -20, -25 };
 	static float t = 0;
-
-
 
 	int et = int(t);
 	float q = t - et;
@@ -80,7 +86,7 @@ void CharAnimViewer::draw_skeleton(const Skeleton& )
 	draw_sphere(a2w * b2a * c2b * Scale(2, 2, 2));
 
 	t += 0.01;
-	if (t >= N) t = 0.f;
+	if (t >= N) t = 0.f;*/
 	//sleep(100);
 
 	//draw_cylinder( );
@@ -116,7 +122,8 @@ int CharAnimViewer::render()
 
 	// Affiche le skeleton � partir de la structure lin�aire (tableau) Skeleton
     draw_skeleton( m_ske );
-
+	draw_sphere(controller.position(), 3.0f);
+	draw_cylinder(controller.position(), controller.position() + controller.direction() * 10.0f, 1.0f);
 
 
 
@@ -166,7 +173,6 @@ int CharAnimViewer::render()
 	draw_sphere(D2W*scaleS);
 #endif
 
-
     return 1;
 }
 
@@ -179,7 +185,23 @@ int CharAnimViewer::update( const float time, const float delta )
 	if (key_state('n')) { m_frameNumber++; cout << m_frameNumber << endl; }
 	if (key_state('b')) { m_frameNumber--; cout << m_frameNumber << endl; }
 
-	m_ske.setPose( m_bvh, m_frameNumber );
+	//controller.setVelocityMax(10.0f);
+	if(key_state('z')) {
+		controller.accelerate(0.01f * delta);
+	}
+    else
+        controller.accelerate(-0.01f * delta);
+
+    if(key_state('q'))
+        controller.turnXZ(0.1f * delta);
+    if(key_state('d'))
+        controller.turnXZ(-0.1f * delta);
+
+	controller.update(delta);
+
+	//m_frameNumber = m_frameNumber % 2;
+
+	m_ske.setPose( m_bvh, m_frameNumber, controller );
 
     m_world.update(0.1f);
 
