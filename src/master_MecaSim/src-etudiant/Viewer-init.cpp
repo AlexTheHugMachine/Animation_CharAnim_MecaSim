@@ -211,7 +211,7 @@ void Viewer::init_sphere()
             
             m_sphere.texcoord(beta/(2.0f*M_PI), 0.5f+alpha2/M_PI);
             
-            m_sphere.normal( - Vector(rayon * cos(alpha2)*cos(beta),
+            m_sphere.normal( Vector(rayon * cos(alpha2)*cos(beta),
                                     rayon * sin(alpha2),
                                     rayon * cos(alpha2)*sin(beta)) );
             
@@ -222,7 +222,7 @@ void Viewer::init_sphere()
             
             m_sphere.texcoord(beta/(2.0f*M_PI), 0.5f+alpha/M_PI);
             
-            m_sphere.normal( - Vector(rayon * cos(alpha)*cos(beta),
+            m_sphere.normal( Vector(rayon * cos(alpha)*cos(beta),
                                     rayon * sin(alpha),
                                     rayon * cos(alpha)*sin(beta)) );
             
@@ -371,7 +371,7 @@ int Viewer::init()
     // m_camera.lookat( Point(0,0,0), 150 );
     
     // Lumiere
-    gl.light( Point(5, 5, 5), White() );
+    gl.light( Point(5, 5, -5), White() );
     //gl.light2( Point(-20, -20, -20), White() );
     
     // Chargement des textures utilisees dans la scene
