@@ -122,8 +122,8 @@ int Viewer::render( )
     // --------------------------------------------- Afichage d un cube avec texture correspondant a la cubemap
 
     gl.texture(m_cube_texture);
-    gl.model(Scale(5, 5, 5) * Translation( 0, 1, 0 ));
-    gl.draw(m_cube);
+    gl.model(Scale(0.2, 0.2, 0.2));
+    gl.draw(m_cubemap);
     
     // Rajouter ici les appels pour afficher votre objet non simule
     // Exemple :
@@ -141,7 +141,8 @@ int Viewer::render( )
 
     gl.texture(m_box_texture);
     gl.model(Scale(1.04, 1.5, 2.0) * Translation( 1, 1, 1 ));
-    gl.draw(m_cube);
+    //gl.model(Scale(0.1, 0.1, 0.1) * Translation( 1, 1, 1 ));
+    gl.draw(m_cube_inv);
 
     /*gl.model(Translation(1, 1.5, 1.06)*Scale(0.022, 0.03, 0.02));
     gl.texture(m_cubemap_texture);

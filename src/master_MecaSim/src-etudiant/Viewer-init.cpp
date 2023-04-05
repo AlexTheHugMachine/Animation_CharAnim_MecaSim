@@ -137,6 +137,53 @@ void Viewer::init_cube()
     }
 }
 
+void Viewer::init_cube_inv()
+{
+    // Definition des 8 sommets du cube
+    //                          0           1           2       3           4           5       6           7
+    // 8 sommets - chaque sommet a coodonnees en x, y, z
+    static float pt[8][3] = { {-1,-1,-1}, {1,-1,-1}, {1,-1,1}, {-1,-1,1}, {-1,1,-1}, {1,1,-1}, {1,1,1}, {-1,1,1} };
+   
+    // 6 faces - chacune des faces a 4 sommets
+    static int f[6][4] = {    {0,1,2,3}, {5,4,7,6}, {2,1,5,6}, {0,3,7,4}, {3,2,6,7}, {1,0,4,5} };
+    
+    // 6 normales (une normale par face) - chaque normale a coodonnees en x, y, z
+    static float n[6][3] = { {0,-1,0}, {0,1,0}, {1,0,0}, {-1,0,0}, {0,0,1}, {0,0,-1} };
+
+    
+    // Maillage de type GL_TRIANGLE_STRIP
+    m_cube_inv = Mesh(GL_TRIANGLE_STRIP);
+    
+    // Couleur du cube
+    m_cube_inv.color( Color(1, 1, 1) );
+    
+    // Boucle sur les 6 faces du cube
+    for (int i=0;i<6;i++)
+    {
+        // Definition de la normale a la face i
+        m_cube_inv.normal(  n[i][2], n[i][1], n[i][0] );
+        
+        // Definition du sommet 0 de la face i : coordonnees texture + coordonnees geometrique
+        m_cube_inv.texcoord( 0,0 );
+        m_cube_inv.vertex( pt[ f[i][0] ][2], pt[ f[i][0] ][1], pt[ f[i][0] ][0] );
+        
+        // Definition du sommet 1 de la face i  : coordonnees texture + coordonnees geometrique
+        m_cube_inv.texcoord( 1,0);
+        m_cube_inv.vertex( pt[ f[i][1] ][2], pt[ f[i][1] ][1], pt[ f[i][1] ][0] );
+        
+        // Definition du sommet 3 de la face i  : coordonnees texture + coordonnees geometrique
+        m_cube_inv.texcoord(0,1);
+        m_cube_inv.vertex(pt[ f[i][3] ][2], pt[ f[i][3] ][1], pt[ f[i][3] ][0] );
+        
+        // Definition du sommet 2 de la face i : coordonnees texture + coordonnees geometrique
+        m_cube_inv.texcoord(1,1);
+        m_cube_inv.vertex( pt[ f[i][2] ][2], pt[ f[i][2] ][1], pt[ f[i][2] ][0] );
+        
+        m_cube_inv.restart_strip();
+        
+    }
+}
+
 
 /*
  * Creation du maillage d'une sphere - centre (0, 0, 0) - rayon = r.
@@ -203,7 +250,7 @@ void Viewer::init_disque()
     for (int i=0; i<=nb_sommets+1; i++)
     {
         m_disque.texcoord(float(i+1)/nb_sommets, 1.0 - float(i+1)/nb_sommets);
-        m_disque.vertex(Point(cos(theta), 0, sin(theta)));
+        m_disque.vertex(Point(sin(theta), 0, cos(theta)));
         theta=i*istep;
     }
 }
@@ -218,12 +265,12 @@ void Viewer::init_cylindre()
     for (int i = 0; i<=nb_sommets; i++)
     {
         float alpha = i*step;
-        m_cylindre.normal(Vector(cos(alpha), 0, sin(alpha)));
+        m_cylindre.normal(Vector(sin(alpha), 0, cos(alpha)));
         m_cylindre.texcoord(float(i)/nb_sommets, 0.0);
-        m_cylindre.vertex(Point(cos(alpha), 0, sin(alpha)));
-        m_cylindre.normal(Vector(cos(alpha), 0, sin(alpha)));
+        m_cylindre.vertex(Point(sin(alpha), 0, cos(alpha)));
+        m_cylindre.normal(Vector(sin(alpha), 0, cos(alpha)));
         m_cylindre.texcoord(float(i)/nb_sommets, 1.0);
-        m_cylindre.vertex(Point(cos(alpha), 5, sin(alpha)));
+        m_cylindre.vertex(Point(sin(alpha), 5, cos(alpha)));
     }
 }
 
@@ -259,19 +306,19 @@ void Viewer::init_cubemap()
     m_cubemap.color(1,1,1);
 
     for (i=0;i<6;i++){
-        m_cubemap.normal(  n[i][0], n[i][1], n[i][2] );
+        m_cubemap.normal(  n[i][2], n[i][1], n[i][0] );
 
-        m_cubemap.texcoord( tex_pt[tex[i][0]][0],tex_pt[tex[i][0]][1] );
-        m_cubemap.vertex( pt[ f[i][0] ][0], pt[ f[i][0] ][1], pt[ f[i][0] ][2] );
+        m_cubemap.texcoord( tex_pt[tex[i][0]][1],tex_pt[tex[i][0]][0] );
+        m_cubemap.vertex( pt[ f[i][0] ][2], pt[ f[i][0] ][1], pt[ f[i][0] ][0] );
 
-        m_cubemap.texcoord( tex_pt[tex[i][1]][0],tex_pt[tex[i][1]][1] );
-        m_cubemap.vertex(pt[ f[i][3] ][0], pt[ f[i][3] ][1], pt[ f[i][3] ][2] );
+        m_cubemap.texcoord( tex_pt[tex[i][1]][1],tex_pt[tex[i][1]][0] );
+        m_cubemap.vertex(pt[ f[i][3] ][2], pt[ f[i][3] ][1], pt[ f[i][3] ][0] );
 
-        m_cubemap.texcoord( tex_pt[tex[i][2]][0],tex_pt[tex[i][2]][1] );
-        m_cubemap.vertex( pt[ f[i][1] ][0], pt[ f[i][1] ][1], pt[ f[i][1] ][2] );
+        m_cubemap.texcoord( tex_pt[tex[i][2]][1],tex_pt[tex[i][2]][0] );
+        m_cubemap.vertex( pt[ f[i][1] ][2], pt[ f[i][1] ][1], pt[ f[i][1] ][0] );
 
-        m_cubemap.texcoord( tex_pt[tex[i][3]][0],tex_pt[tex[i][3]][1] );
-        m_cubemap.vertex( pt[ f[i][2] ][0], pt[ f[i][2] ][1], pt[ f[i][2] ][2] );
+        m_cubemap.texcoord( tex_pt[tex[i][3]][1],tex_pt[tex[i][3]][0] );
+        m_cubemap.vertex( pt[ f[i][2] ][2], pt[ f[i][2] ][1], pt[ f[i][2] ][0] );
         m_cubemap.restart_strip();
     }
 }
@@ -324,7 +371,7 @@ int Viewer::init()
     // m_camera.lookat( Point(0,0,0), 150 );
     
     // Lumiere
-    gl.light( Point(20, 20, 20), White() );
+    gl.light( Point(5, 5, 5), White() );
     //gl.light2( Point(-20, -20, -20), White() );
     
     // Chargement des textures utilisees dans la scene
@@ -332,7 +379,7 @@ int Viewer::init()
    //  m_cube_texture = read_texture(0, "../data/debug2x2red.png");
     m_cube_texture = read_texture(0, smart_path("data/sky.jpg"));
     m_box_texture = read_texture(0, smart_path("data/box1.jpg"));
-    m_cubemap_texture = read_texture(0, smart_path("data/Skybox.jpg"));
+    m_cubemap_texture = read_texture(0, smart_path("data/sky.jpg"));
     m_cone_texture = read_texture(0, smart_path("data/Skybox.jpg"));
     m_cylindre_texture = read_texture(0, smart_path("data/pringles.png"));
 
@@ -348,6 +395,7 @@ int Viewer::init()
     init_axe();
     init_grid();
     init_cube();
+    init_cube_inv();
     init_sphere();
     init_cone();
     init_cubemap();

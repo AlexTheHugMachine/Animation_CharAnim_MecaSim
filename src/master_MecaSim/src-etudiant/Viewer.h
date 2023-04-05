@@ -92,6 +92,7 @@ protected:
     Mesh m_axe;
     Mesh m_grid;
     Mesh m_cube;
+    Mesh m_cube_inv;
     Mesh m_plan;
     Mesh m_sphere;
     Mesh m_disque;
@@ -103,6 +104,7 @@ protected:
     // Declaration des textures
     // Exemple : GLuint m_votreObjet_texture;
     GLuint m_cube_texture;
+    GLuint m_cube_inv_texture;
     GLuint m_box_texture;
     GLuint m_cubemap_texture;
     GLuint m_cone_texture;
@@ -119,6 +121,7 @@ protected:
     void init_axe();
     void init_grid();
     void init_cube();
+    void init_cube_inv();
     void init_sphere();
     void init_disque();
     void init_cylindre();
