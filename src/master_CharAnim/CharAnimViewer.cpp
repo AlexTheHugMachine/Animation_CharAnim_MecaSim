@@ -194,23 +194,55 @@ int CharAnimViewer::update( const float time, const float delta )
 	if (key_state('n')) { m_frameNumber++; cout << m_frameNumber << endl; }
 	if (key_state('b')) { m_frameNumber--; cout << m_frameNumber << endl; }
 
+	while(m_frameNumber!=time) {m_frameNumber++; }
+
 	//controller.setVelocityMax(10.0f);
 	if(key_state('z')) {
 		controller.accelerate(0.01f * delta);
+		if(controller.velocity() > 0.0f && controller.velocity() < 4.0f) {
+			m_ske.setPose( controller.mc_bvh[1], m_frameNumber, controller, true );
+			m_frameNumber = m_frameNumber%40;
+		}
+		else if(controller.velocity() >= 4.0f) {
+			m_ske.setPose( controller.mc_bvh[2], m_frameNumber, controller, true );
+			m_frameNumber = m_frameNumber%22;
+		}
 	}
     else
         controller.accelerate(-0.01f * delta);
+		if(controller.velocity() > 0.0f && controller.velocity() < 4.0f) {
+			m_ske.setPose( controller.mc_bvh[1], m_frameNumber, controller, true );
+			m_frameNumber = m_frameNumber%40;
+			/*for(int i = 0; i<40; i++) {
+				m_frameNumber++;
+			}
+			m_frameNumber=0;*/
+		}
+		else if(controller.velocity() >= 4.0f) {
+			m_ske.setPose( controller.mc_bvh[2], m_frameNumber, controller, true );
+			m_frameNumber = m_frameNumber%22;
+		}
+		else if(controller.velocity() == 0.0f) {
+			m_ske.setPose( controller.mc_bvh[0], m_frameNumber, controller, true );
+			m_frameNumber = 0;
+		}
 
     if(key_state('q'))
         controller.turnXZ(0.1f * delta);
     if(key_state('d'))
         controller.turnXZ(-0.1f * delta);
 
+	if(key_state('x')) {
+		m_ske.setPose( controller.mc_bvh[3], m_frameNumber, controller, true );
+		m_frameNumber = m_frameNumber%289;
+	}
+
+	//controller.switchBetweenBVH(1);
 	controller.update(delta);
 
 	//m_frameNumber = m_frameNumber % 2;
 
-	m_ske.setPose( controller.mc_bvh[0], m_frameNumber, controller, true );
+	//m_ske.setPose( controller.mc_bvh[3], m_frameNumber, controller, true );
 
     m_world.update(0.1f);
 

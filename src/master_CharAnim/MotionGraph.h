@@ -26,10 +26,11 @@ public:
    //! Un noeud du graphe contient l'identifiant de l'animation, le numéro 
    //! de la frame et les identifiants des noeuds successeurs 
    //! Remarque : du code plus "joli" aurait créer une classe CAGrapheNode
-   struct GrapheNode
+   class GrapheNode
    {
+    public:
      BVH_ID id_bvh;
-     int frame;
+     int frame = 0;
      std::vector<GrapheNodeID> ids_next;     //! Liste des nœuds successeurs 
    };
 

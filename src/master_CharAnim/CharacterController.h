@@ -12,6 +12,10 @@
 #include <PhysicalWorld.h>
 #include <cstdio>
 #include <iostream>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+	
 
 class CharacterController
     {
@@ -50,12 +54,15 @@ class CharacterController
             m_vMax = vmax;
         };
 
+        std::vector<chara::BVH> mc_bvh;
+
         const Point position() const { return m_ch2w(Point(0,0,0)); }
         const Vector direction() const { return m_ch2w(Vector(0, 0, 1)); }
         float velocity() const { return m_v; }
         const Transform& controller2world() const { return m_ch2w; }
         void setMotionGraph(MotionGraph &mg) { motionGraph = mg; }
         void setNbFrame(int nb) { nb_frame = nb; }
+        MotionGraph getMotionGraph() { return motionGraph; }
 
         void setBvhMotionGraph() { 
             mc_bvh.resize(4);
@@ -95,7 +102,8 @@ class CharacterController
             motionGraph.m_GrapheNode.push_back(MotionGraph::GrapheNode());
             motionGraph.m_GrapheNode[3].id_bvh = 3;
             motionGraph.m_GrapheNode[3].frame = nb_frame;
-            motionGraph.m_GrapheNode[3].ids_next.resize(0);
+            motionGraph.m_GrapheNode[3].ids_next.resize(1);
+            motionGraph.m_GrapheNode[2].ids_next[0] = 0;    // null
 
             /*motionGraph.m_BVH.resize(motionGraph.m_BVH.size()+1);
             motionGraph.m_BVH.push_back(bvh); 
@@ -112,7 +120,28 @@ class CharacterController
             }*/
         }
 
-        std::vector<chara::BVH> mc_bvh;
+        chara::BVH getBVH(int id) { return mc_bvh[id]; }
+
+        /*void navigationDansleMotionGraph(int id) {
+            if(motionGraph.m_GrapheNode[id].frame == 0) {
+                if(distance(motionGraph.m_GrapheNode[id].ids_next.begin(), motionGraph.m_GrapheNode[id].ids_next.end()) > 1) {
+                    int random = rand() % distance(motionGraph.m_GrapheNode[id].ids_next.begin(), motionGraph.m_GrapheNode[id].ids_next.end());
+                    motionGraph.m_GrapheNode[id] = motionGraph.m_GrapheNode[id].ids_next[random];
+                }
+                else {
+                    motionGraph.m_GrapheNode[id] = motionGraph.m_GrapheNode[id].ids_next[0];
+                }
+            }
+        }*/
+        /*chara::BVH switchBetweenBVH(int id) {
+            if(distance(motionGraph.m_GrapheNode[id].ids_next.begin(), motionGraph.m_GrapheNode[id].ids_next.end()) > 1) {
+                int random = rand() % distance(motionGraph.m_GrapheNode[id].ids_next.begin(), motionGraph.m_GrapheNode[id].ids_next.end());
+                return mc_bvh[motionGraph.m_GrapheNode[id].ids_next[random]];
+            }
+            else {
+                return mc_bvh[motionGraph.m_GrapheNode[id].ids_next[0]];
+            }
+        }*/
         //const chara::BVH setBVH(chara::BVH &&bvh) { mc_bvh = bvh; }
 
     protected:

@@ -49,7 +49,7 @@ public:
    //! precond: les deux squelettes doivent avoir le
    //! m�me nombre d'articulations (m�me structure d'arbre)
    //! ==> Sera utile lors de la construction du graphe d'animation
-   // friend float distance(const CASkeleton& a, const CASkeleton& b);
+   friend float distance(const Skeleton& a, const Skeleton& b);
 
 
 protected:
