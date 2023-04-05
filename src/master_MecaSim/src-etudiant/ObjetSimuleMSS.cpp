@@ -443,15 +443,15 @@ void ObjetSimuleMSS::updateVertex()
         k = _VIndices[i+1];
         l = _VIndices[i+2];
         
-        m_ObjetSimule.normal(i+1, _vectNormals[k].x, _vectNormals[k].y, _vectNormals[k].z);
+        m_ObjetSimule.normal(i+1, -_vectNormals[k].x,- _vectNormals[k].y, -_vectNormals[k].z);
         //m_ObjetSimule.texcoord(i, _vectTexture[j].u, _vectTexture[j].v);
         m_ObjetSimule.vertex(i, P[j].x, P[j].y, P[j].z);
 
-        m_ObjetSimule.normal(i, _vectNormals[j].x, _vectNormals[j].y, _vectNormals[j].z);
+        m_ObjetSimule.normal(i, -_vectNormals[j].x, -_vectNormals[j].y, -_vectNormals[j].z);
         //m_ObjetSimule.texcoord(i+1, _vectTexture[k].u, _vectTexture[k].v);
         m_ObjetSimule.vertex(i+1, P[k].x, P[k].y, P[k].z);
 
-        m_ObjetSimule.normal(i+2, _vectNormals[l].x, _vectNormals[l].y, _vectNormals[l].z);
+        m_ObjetSimule.normal(i+2, -_vectNormals[l].x, -_vectNormals[l].y, -_vectNormals[l].z);
         //m_ObjetSimule.texcoord(i+2, _vectTexture[l].u, _vectTexture[l].v);
         m_ObjetSimule.vertex(i+2, P[l].x, P[l].y, P[l].z);
     }

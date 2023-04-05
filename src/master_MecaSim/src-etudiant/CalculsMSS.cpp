@@ -53,7 +53,7 @@ void ObjetSimuleMSS::CalculForceSpring()
     
 	/// Calcul des forces de ressorts
 
-	Vector Vec_vent = Vector(0.0, 0.0, 0.0);
+	Vector Vec_vent = Vector(2.0, 5.0, 0.0);
 
 	for(int i = 0; i < _Nb_Sommets; i++)
 	{
