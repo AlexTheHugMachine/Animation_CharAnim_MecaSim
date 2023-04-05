@@ -52,9 +52,13 @@ void ObjetSimuleMSS::CalculForceSpring()
 	/// Rq : Les forces dues a la gravite et au vent sont ajoutees lors du calcul de l acceleration
     
 	/// Calcul des forces de ressorts
+
+	Vector Vec_vent = Vector(5.0, 0.0, 2.0);
+
 	for(int i = 0; i < _Nb_Sommets; i++)
 	{
 		Force[i] = Vector(0.0, 0.0, 0.0);
+		Force[i] = Force[i] + Vec_vent;
 	};
 
     std::vector<Ressort*> maillageRessorts = _SystemeMasseRessort->GetRessortList();
@@ -92,6 +96,17 @@ void ObjetSimuleMSS::Collision()
 			V[i].y = 0.0;
 		}
 	}
+
+	/// Collision avec un mesh
+	//_SystemeMasseRessort->CollisionMesh();
+	for(int i = 0; i < _Nb_Sommets; i++)
+	{
+		if (P[i].x < 6.4 && P[i].x > 0.9 && P[i].z > 0.05 && P[i].z < 5 && P[i].y < -3.2 && P[i].y > -10)
+		{
+			V[i] = Vector(0.0, 0.0, 0.0);
+		}
+	}
+	
     
 }// void
 

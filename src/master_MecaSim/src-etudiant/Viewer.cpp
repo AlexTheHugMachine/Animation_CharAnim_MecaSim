@@ -134,15 +134,16 @@ int Viewer::render( )
     // -------------------------------------------- Sphere dans le paquet pringles
 
     gl.texture(m_box_texture);
-    gl.model(Scale(10, 10, 10) * Translation( 0.1, 0.35, 0.2 ));
+    gl.model(Scale(10, 10, 10) * Translation(-0.1, 0.05, 0.1));
     gl.draw(m_sphere);
 
     // -------------------------------------------- Box a laquelle le tissu est attaché
 
     gl.texture(m_box_texture);
-    gl.model(Scale(1.04, 1.5, 2.0) * Translation( 1, 1, 1 ));
+    gl.model(Scale(0.80, 1, 1.5) * Translation( 1.35, 1, 1.02 ));
     //gl.model(Scale(0.1, 0.1, 0.1) * Translation( 1, 1, 1 ));
     gl.draw(m_cube_inv);
+
 
     /*gl.model(Translation(1, 1.5, 1.06)*Scale(0.022, 0.03, 0.02));
     gl.texture(m_cubemap_texture);
@@ -156,16 +157,14 @@ int Viewer::render( )
 
     // -------------------------------------------- Paquet Pringles
 
-    gl.model(Translation(1, 3, 2)*Scale(0.5, 0.5, 0.5));
+    gl.model(Translation(1, 2, 2)*Scale(0.3, 0.3, 0.3));
     gl.texture(m_cylindre_texture);
     gl.draw(m_cylindre);
 
-    gl.model(Translation(1, 5.5, 2)*Rotation(Vector(1, 0, 0), 180.0)*Scale(0.5, 0.5, 0.5));
+    gl.model(Translation(1, 3.5, 2)*Rotation(Vector(1, 0, 0), 180.0)*Scale(0.3, 0.3, 0.3));
     gl.draw(m_disque);
-    gl.model(Translation(1, 3, 2)*Scale(0.5, 0.5, 0.5));
+    gl.model(Translation(1, 2, 2)*Scale(0.3, 0.3, 0.3));
     gl.draw(m_disque);
-
-    // -------------------------------------------- Among Us
 
 
     // Gestion de la lumiere
