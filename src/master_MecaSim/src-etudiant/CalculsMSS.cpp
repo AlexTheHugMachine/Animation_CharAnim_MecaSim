@@ -53,7 +53,7 @@ void ObjetSimuleMSS::CalculForceSpring()
     
 	/// Calcul des forces de ressorts
 
-	Vector Vec_vent = Vector(5.0, 0.0, 2.0);
+	Vector Vec_vent = Vector(0.0, 0.0, 0.0);
 
 	for(int i = 0; i < _Nb_Sommets; i++)
 	{
@@ -98,12 +98,12 @@ void ObjetSimuleMSS::Collision()
 	}
 
 	/// Collision avec un mesh
-	//_SystemeMasseRessort->CollisionMesh();
 	for(int i = 0; i < _Nb_Sommets; i++)
 	{
-		if (P[i].x < 6.4 && P[i].x > 0.9 && P[i].z > 0.05 && P[i].z < 5 && P[i].y < -3.2 && P[i].y > -10)
+		if (P[i].x < 6.4 && P[i].x > 0.9 && P[i].z > 0 && P[i].z < 10 && P[i].y < -3.2 && P[i].y > -10)
 		{
 			V[i] = Vector(0.0, 0.0, 0.0);
+			P[i] = P[i] - Vector(0.01, 0.01, 0.01);
 		}
 	}
 	

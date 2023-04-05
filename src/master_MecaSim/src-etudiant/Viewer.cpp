@@ -140,7 +140,7 @@ int Viewer::render( )
     // -------------------------------------------- Box a laquelle le tissu est attaché
 
     gl.texture(m_box_texture);
-    gl.model(Scale(0.80, 1, 1.5) * Translation( 1.35, 1, 1.02 ));
+    gl.model(Scale(0.80, 1, 1.5) * Translation( 1.35, 1, 1 ));
     //gl.model(Scale(0.1, 0.1, 0.1) * Translation( 1, 1, 1 ));
     gl.draw(m_cube_inv);
 
@@ -165,6 +165,7 @@ int Viewer::render( )
     gl.draw(m_disque);
     gl.model(Translation(1, 2, 2)*Scale(0.3, 0.3, 0.3));
     gl.draw(m_disque);
+
 
 
     // Gestion de la lumiere
