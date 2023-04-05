@@ -177,7 +177,7 @@ int Viewer::render( )
     /**********************************************************************/
     
     /* Gestion interaction avec la touche m */
-    const float step_i = 0.01f;
+    const float step_i = 0.1f;
     
     if (key_state(SDLK_RIGHT) && key_state(SDLK_m)) {MousePos = MousePos+Vector(step_i,0,0); }
     if (key_state(SDLK_LEFT) && key_state(SDLK_m)) {MousePos = MousePos+Vector(-step_i,0,0); }

@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/gKit",
+                "/home/alexis/Documents/FAC/Master_Info/M1/S2/MIF37_Animation/Partie_Anim_Squelette/TPs/gkit2light-master_CharAnim/src/gKit",
+                "/home/alexis/Documents/FAC/Master_Info/M1/S2/MIF37_Animation/Partie_Physique/TPs/gkit2light_Analyse_Partie_Physique/src/gKit",
+                "/usr/include/GL/internal"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64",
+            "configurationProvider": "ms-vscode.makefile-tools"
+        }
+    ],
+    "version": 4
+}

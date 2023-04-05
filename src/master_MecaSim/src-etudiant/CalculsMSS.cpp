@@ -63,21 +63,19 @@ void ObjetSimuleMSS::CalculForceSpring()
         Particule* pa = ressort->GetParticuleA();
         Particule* pb = ressort->GetParticuleB();
 
-        float lressort = length(P[pa->GetId()] - P[pb->GetId()]);
-        
-        
-        Vector fRaideur = ressort->GetRaideur() * (lressort - ressort->GetLrepos())* normalize(P[pa->GetId()] - P[pb->GetId()]);
-        Vector fAmortis = ressort->GetFactAmorti() * cross((V[pa->GetId()] - V[pb->GetId()]), normalize(P[pa->GetId()] - P[pb->GetId()]));
-        Force[pa->GetId()] = Force[pa->GetId()] - fRaideur - fAmortis;
-        Force[pb->GetId()] = Force[pb->GetId()] + fRaideur + fAmortis;
-
-		if((Force[pa->GetId()].x || Force[pa->GetId()].y || Force[pa->GetId()].z) >= 10.0)
-		{
-			ressort->SetRaideur(0.0);
-			ressort->SetAmortiss(0.0);
+		if(ressort->GetRaideur() != 0.0 && ressort->GetAmortissement() != 0.0) {
+			float lressort = length(P[pa->GetId()] - P[pb->GetId()]);
+			if(lressort > 2.0) {
+				ressort->SetRaideur(0.0);
+				ressort->SetAmortiss(0.0);
+			}
+			
+        	Vector fRaideur = ressort->GetRaideur() * (lressort - ressort->GetLrepos())* normalize(P[pa->GetId()] - P[pb->GetId()]);
+        	Vector fAmortis = ressort->GetFactAmorti() * cross((V[pa->GetId()] - V[pb->GetId()]), normalize(P[pa->GetId()] - P[pb->GetId()]));
+        	Force[pa->GetId()] = Force[pa->GetId()] - fRaideur - fAmortis;
+        	Force[pb->GetId()] = Force[pb->GetId()] + fRaideur + fAmortis;
 		}
 	}
-		
 }//void
 
 
