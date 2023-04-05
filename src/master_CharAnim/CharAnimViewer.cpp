@@ -12,7 +12,7 @@ using namespace chara;
 CharAnimViewer* CharAnimViewer::psingleton = NULL;
 
 
-CharAnimViewer::CharAnimViewer() : Viewer(), m_frameNumber(0)
+CharAnimViewer::CharAnimViewer() : Viewer(), m_frameNumber(0.0)
 {
 	psingleton = this;
 }
@@ -48,7 +48,7 @@ int CharAnimViewer::init()
 	//controller.setBvhMotionGraph(m_bvh);
 
     m_frameNumber = 0;
-	controller.setNbFrame(m_frameNumber);
+	controller.setNbFrame(int(m_frameNumber));
     cout<<endl<<"========================"<<endl;
     cout<<"BVH decription"<<endl;
     cout<<controller.mc_bvh[0]<<endl;
@@ -131,8 +131,8 @@ int CharAnimViewer::render()
 
 	// Affiche le skeleton � partir de la structure lin�aire (tableau) Skeleton
     draw_skeleton( m_ske );
-	draw_sphere(controller.position(), 3.0f);
-	draw_cylinder(controller.position(), controller.position() + controller.direction() * 10.0f, 1.0f);
+	//draw_sphere(controller.position(), 3.0f);
+	//draw_cylinder(controller.position(), controller.position() + controller.direction() * 10.0f, 1.0f);
 
 
 
@@ -194,38 +194,28 @@ int CharAnimViewer::update( const float time, const float delta )
 	if (key_state('n')) { m_frameNumber++; cout << m_frameNumber << endl; }
 	if (key_state('b')) { m_frameNumber--; cout << m_frameNumber << endl; }
 
-	while(m_frameNumber!=time) {m_frameNumber++; }
+	controller.setVelocityMax(6.0f);
 
-	//controller.setVelocityMax(10.0f);
 	if(key_state('z')) {
+		m_frameNumber++;
 		controller.accelerate(0.01f * delta);
-		if(controller.velocity() > 0.0f && controller.velocity() < 4.0f) {
-			m_ske.setPose( controller.mc_bvh[1], m_frameNumber, controller, true );
-			m_frameNumber = m_frameNumber%40;
-		}
-		else if(controller.velocity() >= 4.0f) {
-			m_ske.setPose( controller.mc_bvh[2], m_frameNumber, controller, true );
-			m_frameNumber = m_frameNumber%22;
+	}
+    else {
+		m_frameNumber++;
+		controller.accelerate(-0.01f * delta);
+		if(controller.velocity() == 0.0f) {
+			m_ske.setPose( controller.mc_bvh[0], int(m_frameNumber+=delta/1000.0f), controller, true );
 		}
 	}
-    else
-        controller.accelerate(-0.01f * delta);
-		if(controller.velocity() > 0.0f && controller.velocity() < 4.0f) {
-			m_ske.setPose( controller.mc_bvh[1], m_frameNumber, controller, true );
-			m_frameNumber = m_frameNumber%40;
-			/*for(int i = 0; i<40; i++) {
-				m_frameNumber++;
-			}
-			m_frameNumber=0;*/
-		}
-		else if(controller.velocity() >= 4.0f) {
-			m_ske.setPose( controller.mc_bvh[2], m_frameNumber, controller, true );
-			m_frameNumber = m_frameNumber%22;
-		}
-		else if(controller.velocity() == 0.0f) {
-			m_ske.setPose( controller.mc_bvh[0], m_frameNumber, controller, true );
-			m_frameNumber = 0;
-		}
+
+	if(controller.velocity() > 0.0f && controller.velocity() < 4.0f) {
+		m_ske.setPose( controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, controller, true );
+		//m_frameNumber = int(m_frameNumber)%40;
+	}
+	else if(controller.velocity() >= 4.0f) {
+		m_ske.setPose( controller.mc_bvh[2], int(m_frameNumber+=delta/1000.0f)%22, controller, true );
+		//m_frameNumber = int(m_frameNumber)%22;
+	}
 
     if(key_state('q'))
         controller.turnXZ(0.1f * delta);
@@ -233,8 +223,8 @@ int CharAnimViewer::update( const float time, const float delta )
         controller.turnXZ(-0.1f * delta);
 
 	if(key_state('x')) {
-		m_ske.setPose( controller.mc_bvh[3], m_frameNumber, controller, true );
-		m_frameNumber = m_frameNumber%289;
+		m_ske.setPose( controller.mc_bvh[3], int(m_frameNumber+=delta/1000.0f)%289, controller, true );
+		//m_frameNumber = int(m_frameNumber)%289;
 	}
 
 	//controller.switchBetweenBVH(1);

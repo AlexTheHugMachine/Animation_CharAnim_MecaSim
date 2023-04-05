@@ -104,20 +104,6 @@ class CharacterController
             motionGraph.m_GrapheNode[3].frame = nb_frame;
             motionGraph.m_GrapheNode[3].ids_next.resize(1);
             motionGraph.m_GrapheNode[2].ids_next[0] = 0;    // null
-
-            /*motionGraph.m_BVH.resize(motionGraph.m_BVH.size()+1);
-            motionGraph.m_BVH.push_back(bvh); 
-            motionGraph.m_GrapheNode.push_back(MotionGraph::GrapheNode());
-            motionGraph.m_GrapheNode[motionGraph.m_GrapheNode.size()-1].id_bvh = motionGraph.m_BVH.size()-1;
-            motionGraph.m_GrapheNode[motionGraph.m_GrapheNode.size()-1].frame = nb_frame;
-
-            if(motionGraph.m_GrapheNode.size() > 1) {
-                motionGraph.m_GrapheNode[motionGraph.m_GrapheNode.size()-2].ids_next.push_back(motionGraph.m_GrapheNode.size()-1);
-            }
-
-            if(motionGraph.m_GrapheNode.size() == 1) {
-                motionGraph.m_GrapheNode[motionGraph.m_GrapheNode.size()-1].ids_next.push_back(motionGraph.m_GrapheNode.size()-1);
-            }*/
         }
 
         chara::BVH getBVH(int id) { return mc_bvh[id]; }
