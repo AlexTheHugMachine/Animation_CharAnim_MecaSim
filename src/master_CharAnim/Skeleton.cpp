@@ -43,7 +43,7 @@ int Skeleton::getParentId(const int i) const
 //! dans la case du tableau. Pour obtenir la matrice allant de l'articulation local vers le monde,
 //! il faut multiplier la matrice allant de l'articulation vers son père à la matrice du père allant de
 //! l'articulation du père vers le monde.
-void Skeleton::setPose(const BVH& bvh, int frameNumber, CharacterController& controller)
+void Skeleton::setPose(const BVH& bvh, int frameNumber, CharacterController& controller, bool racine)
 {
     // TODO
     // Parcourir toutes les articulations (SkeletonJoint ou BVHJoint) 
@@ -95,6 +95,9 @@ void Skeleton::setPose(const BVH& bvh, int frameNumber, CharacterController& con
         }   
         else
         {
+            if(racine) {
+                l2f = Identity();
+            }
             m_joints[i].m_l2w = l2f * controller.controller2world();
         }
     }

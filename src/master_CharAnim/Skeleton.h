@@ -35,7 +35,7 @@ public:
    //! dans la case du tableau. Pour obtenir la matrice allant de l'articulation local vers le monde,
    //! il faut multiplier la matrice allant de l'articulation vers son p�re � la matrice du p�re allant de
    //! l'articulation du p�re vers le monde.
-   void setPose(const chara::BVH& bvh, int frameNumber, CharacterController& controller);
+   void setPose(const chara::BVH& bvh, int frameNumber, CharacterController& controller, bool racine);
 
 
    //! Positionne ce squelette entre la position frameNbSrc du BVH Src et la position frameNbDst du bvh Dst
