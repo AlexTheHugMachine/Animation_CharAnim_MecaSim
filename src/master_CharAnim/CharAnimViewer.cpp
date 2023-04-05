@@ -34,19 +34,28 @@ int CharAnimViewer::init()
     init_cylinder();
     init_sphere();
 
-	m_bvh.init( smart_path("data/bvh/motionFSM/avatar_smoke_idle.bvh") );
-	controller.mc_bvh.init( smart_path("data/bvh/motionGraph/marcher.bvh") );
+	/*controller.mc_bvh.resize(4);
+	controller.mc_bvh[0].init( smart_path("data/bvh/motionGraph/null.bvh") );
+	controller.mc_bvh[1].init( smart_path("data/bvh/motionGraph/marcher.bvh") );
+	controller.mc_bvh[2].init( smart_path("data/bvh/motionGraph/courir.bvh") );
+	controller.mc_bvh[3].init( smart_path("data/bvh/motionGraph/frapper.bvh") );*/
+	//m_bvh.init( smart_path("data/bvh/motionGraph/marcher.bvh") );
     //m_bvh.init( smart_path("data/bvh/Robot.bvh") );
 	//m_bvh.init( smart_path("data/bvh/danse.bvh") );
 
+	controller.setMotionGraph(motionGraph);
+	controller.setBvhMotionGraph();
+	//controller.setBvhMotionGraph(m_bvh);
+
     m_frameNumber = 0;
+	controller.setNbFrame(m_frameNumber);
     cout<<endl<<"========================"<<endl;
     cout<<"BVH decription"<<endl;
-    cout<<controller.mc_bvh<<endl;
+    cout<<controller.mc_bvh[0]<<endl;
     cout<<endl<<"========================"<<endl;
 
-    m_ske.init( controller.mc_bvh );
-    m_ske.setPose( controller.mc_bvh, -1, controller, false);// met le skeleton a la pose au repos
+    m_ske.init( controller.mc_bvh[0] );
+    m_ske.setPose( controller.mc_bvh[0], -1, controller, false);// met le skeleton a la pose au repos
 
     return 0;
 }
@@ -201,7 +210,7 @@ int CharAnimViewer::update( const float time, const float delta )
 
 	//m_frameNumber = m_frameNumber % 2;
 
-	m_ske.setPose( controller.mc_bvh, m_frameNumber, controller, true );
+	m_ske.setPose( controller.mc_bvh[0], m_frameNumber, controller, true );
 
     m_world.update(0.1f);
 

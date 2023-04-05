@@ -96,6 +96,20 @@ public:
 	//! init channels from a opened file
 	void initChannel(std::ifstream& stream);
 
+	BVHJoint& operator=(const BVHJoint& j)
+	{
+		m_name = j.m_name;
+		m_parentId = j.m_parentId;
+		//m_bvh = j.m_bvh;
+		m_id = j.m_id;
+		m_offset[0] = j.m_offset[0];
+		m_offset[1] = j.m_offset[1];
+		m_offset[2] = j.m_offset[2];
+		m_channels = j.m_channels;
+		m_childs = j.m_childs;
+		return *this;
+	}
+
 protected:
 
 	//! Joint name

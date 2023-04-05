@@ -35,6 +35,7 @@ protected:
 
 	void draw_skeleton(const Skeleton& );
     CharacterController controller;
+    MotionGraph motionGraph;
 
 private:
 	static CharAnimViewer* psingleton;
