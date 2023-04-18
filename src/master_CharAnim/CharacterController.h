@@ -41,13 +41,6 @@ class CharacterController
             if(m_v < 0) {
                 m_v = 0;
             }
-
-            /*if(m_v > 0 && m_v <= 2) {
-                mc_bvh.init( smart_path("data/bvh/motionGraph/marcher.bvh") );
-            }
-            if(m_v > 2) {
-                mc_bvh.init( smart_path("data/bvh/motionGraph/courir.bvh") );
-            }*/
         };
 
         void setVelocityMax(const float vmax) {
@@ -107,28 +100,6 @@ class CharacterController
         }
 
         chara::BVH getBVH(int id) { return mc_bvh[id]; }
-
-        /*void navigationDansleMotionGraph(int id) {
-            if(motionGraph.m_GrapheNode[id].frame == 0) {
-                if(distance(motionGraph.m_GrapheNode[id].ids_next.begin(), motionGraph.m_GrapheNode[id].ids_next.end()) > 1) {
-                    int random = rand() % distance(motionGraph.m_GrapheNode[id].ids_next.begin(), motionGraph.m_GrapheNode[id].ids_next.end());
-                    motionGraph.m_GrapheNode[id] = motionGraph.m_GrapheNode[id].ids_next[random];
-                }
-                else {
-                    motionGraph.m_GrapheNode[id] = motionGraph.m_GrapheNode[id].ids_next[0];
-                }
-            }
-        }*/
-        /*chara::BVH switchBetweenBVH(int id) {
-            if(distance(motionGraph.m_GrapheNode[id].ids_next.begin(), motionGraph.m_GrapheNode[id].ids_next.end()) > 1) {
-                int random = rand() % distance(motionGraph.m_GrapheNode[id].ids_next.begin(), motionGraph.m_GrapheNode[id].ids_next.end());
-                return mc_bvh[motionGraph.m_GrapheNode[id].ids_next[random]];
-            }
-            else {
-                return mc_bvh[motionGraph.m_GrapheNode[id].ids_next[0]];
-            }
-        }*/
-        //const chara::BVH setBVH(chara::BVH &&bvh) { mc_bvh = bvh; }
 
     protected:
         Transform m_ch2w;   // matrice du character vers le monde

@@ -39,7 +39,7 @@ public:
 
 
    //! Positionne ce squelette entre la position frameNbSrc du BVH Src et la position frameNbDst du bvh Dst
-   //void setPoseInterpolation(const BVH& bvhSrc, int frameNbSrc, const BVH& bvhDst, int frameNbDst, float t);
+   void setPoseInterpolation(const chara::BVH& bvhSrc, int frameNbSrc, const chara::BVH& bvhDst, int frameNbDst, float t, CharacterController& controller, bool racine);
 
    //! Positionne ce squelette entre la position frameNbSrc du BVH Src et la position frameNbDst du bvh Dst
    //! idem � setPoseInterpolation mais interpole avec des quaternions sur chaque articulations

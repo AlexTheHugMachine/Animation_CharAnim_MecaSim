@@ -45,7 +45,6 @@ int CharAnimViewer::init()
 
 	controller.setMotionGraph(motionGraph);
 	controller.setBvhMotionGraph();
-	//controller.setBvhMotionGraph(m_bvh);
 
     m_frameNumber = 0;
 	controller.setNbFrame(int(m_frameNumber));
@@ -210,11 +209,9 @@ int CharAnimViewer::update( const float time, const float delta )
 
 	if(controller.velocity() > 0.0f && controller.velocity() < 4.0f) {
 		m_ske.setPose( controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, controller, true );
-		//m_frameNumber = int(m_frameNumber)%40;
 	}
 	else if(controller.velocity() >= 4.0f) {
 		m_ske.setPose( controller.mc_bvh[2], int(m_frameNumber+=delta/1000.0f)%22, controller, true );
-		//m_frameNumber = int(m_frameNumber)%22;
 	}
 
     if(key_state('q'))
@@ -224,15 +221,9 @@ int CharAnimViewer::update( const float time, const float delta )
 
 	if(key_state('x')) {
 		m_ske.setPose( controller.mc_bvh[3], int(m_frameNumber+=delta/1000.0f)%289, controller, true );
-		//m_frameNumber = int(m_frameNumber)%289;
 	}
 
-	//controller.switchBetweenBVH(1);
 	controller.update(delta);
-
-	//m_frameNumber = m_frameNumber % 2;
-
-	//m_ske.setPose( controller.mc_bvh[3], m_frameNumber, controller, true );
 
     m_world.update(0.1f);
 
