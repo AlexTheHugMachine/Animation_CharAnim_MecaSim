@@ -203,15 +203,18 @@ int CharAnimViewer::update( const float time, const float delta )
 		m_frameNumber++;
 		controller.accelerate(-0.01f * delta);
 		if(controller.velocity() == 0.0f) {
-			m_ske.setPose( controller.mc_bvh[0], int(m_frameNumber+=delta/1000.0f), controller, true );
+			//m_ske.setPose( controller.mc_bvh[0], int(m_frameNumber+=delta/1000.0f)%2, controller, true );
+			m_ske.setPoseInterpolation(controller.mc_bvh[0], int(m_frameNumber+=delta/1000.0f)%2, controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, time, controller, true);
 		}
 	}
 
 	if(controller.velocity() > 0.0f && controller.velocity() < 4.0f) {
-		m_ske.setPose( controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, controller, true );
+		//m_ske.setPose( controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, controller, true );
+		m_ske.setPoseInterpolation(controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, controller.mc_bvh[2], int(m_frameNumber+=delta/1000.0f)%22, time, controller, true);
 	}
 	else if(controller.velocity() >= 4.0f) {
-		m_ske.setPose( controller.mc_bvh[2], int(m_frameNumber+=delta/1000.0f)%22, controller, true );
+		//m_ske.setPose( controller.mc_bvh[2], int(m_frameNumber+=delta/1000.0f)%22, controller, true );
+		m_ske.setPoseInterpolation(controller.mc_bvh[2], int(m_frameNumber+=delta/1000.0f)%22, controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, time, controller, true);
 	}
 
     if(key_state('q'))
@@ -222,6 +225,18 @@ int CharAnimViewer::update( const float time, const float delta )
 	if(key_state('x')) {
 		m_ske.setPose( controller.mc_bvh[3], int(m_frameNumber+=delta/1000.0f)%289, controller, true );
 	}
+
+	if(key_state('c')) {
+		m_ske.setPose( controller.mc_bvh[4], int(m_frameNumber+=delta/1000.0f)%82, controller, true );
+	} // Bug pour le bvh motionGraph/pond.bvh
+
+	if(key_state('v')) {
+		m_ske.setPose( controller.mc_bvh[5], int(m_frameNumber+=delta/1000.0f)%207, controller, true );
+	} 
+
+	if(key_state('w')) {
+		m_ske.setPose( controller.mc_bvh[6], int(m_frameNumber+=delta/1000.0f)%57, controller, true );
+	} // Bug pour le bvh motionGraph/mourir.bvh
 
 	controller.update(delta);
 

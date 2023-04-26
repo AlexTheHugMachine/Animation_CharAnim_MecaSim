@@ -43,13 +43,18 @@ public:
 
    //! Positionne ce squelette entre la position frameNbSrc du BVH Src et la position frameNbDst du bvh Dst
    //! idem � setPoseInterpolation mais interpole avec des quaternions sur chaque articulations
-   //void setPoseInterpolationQ(const BVH& bvhSrc, int frameNbSrc, const BVH& bvhDst, int frameNbDst, float t);
+   void setPoseInterpolationQ(const chara::BVH& bvhSrc, int frameNbSrc, const chara::BVH& bvhDst, int frameNbDst, float t, CharacterController& controller, bool racine);
 
    //! Calcule la distance entre deux poses
    //! precond: les deux squelettes doivent avoir le
    //! m�me nombre d'articulations (m�me structure d'arbre)
    //! ==> Sera utile lors de la construction du graphe d'animation
-   friend float distance(const Skeleton& a, const Skeleton& b);
+   friend float distance(const Skeleton& a, const Skeleton& b) {
+      float d = 0;
+      for (int i = 0; i < a.numberOfJoint(); ++i)
+         d += distance(a.getJointPosition(i), b.getJointPosition(i));
+      return d;
+   };
 
 
 protected:

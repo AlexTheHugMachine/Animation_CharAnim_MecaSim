@@ -103,51 +103,49 @@ void Skeleton::setPose(const BVH& bvh, int frameNumber, CharacterController& con
     }
 }
 
+// Positionne ce skelette entre la position frameNbSrc du BVH Src et la position frameNbDst du bvh Dst
 void Skeleton::setPoseInterpolation(const chara::BVH& bvhSrc, int frameNbSrc, const chara::BVH& bvhDst, int frameNbDst, float t, CharacterController& controller, bool racine) {
-    for (int i = 0; i < bvhSrc.getNumberOfJoint(); i++)
-    {
-        float x = 0.0f;
-        float y = 0.0f;
-        float z = 0.0f;
 
-        bvhSrc.getJoint(i).getOffset(x, y, z);
-        Transform l2f = Translation(Vector(x, y, z));
+    Skeleton skSrc;
+    Skeleton skDst;
+    skSrc.init(bvhSrc);
+    skSrc.setPose(bvhSrc, frameNbSrc, controller, racine);
+    skDst.init(bvhDst);
+    skDst.setPose(bvhDst, frameNbDst, controller, racine);
 
-        for (int j = 0; j < bvhSrc.getJoint(i).getNumberOfChannel(); j++)
-        {
-            BVHChannel::TYPE type = bvhSrc.getJoint(i).getChannel(j).getType();
-            float value = bvhSrc.getJoint(i).getChannel(j).getData(frameNbSrc);
+    float moyFrame = (frameNbSrc + frameNbDst) / 2.0f;
+    float dist = distance(skSrc, skDst);
+    std::cout << "dist : " << dist << std::endl;
+    std::cout << "moyFrame : " << moyFrame << std::endl;
 
-            if (type == BVHChannel::TYPE_TRANSLATION)
-            {
-                if(bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_X)
-                    l2f = l2f * Translation(Vector(value, 0, 0));
-                else if (bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_Y)
-                    l2f = l2f * Translation(Vector(0, value, 0));
-                else if (bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_Z)
-                    l2f = l2f * Translation(Vector(0, 0, value));
-            }
-            if (type == BVHChannel::TYPE_ROTATION)
-            {
-                if (bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_X)
-                    l2f = l2f * Rotation(Vector(1, 0, 0), value);
-                else if (bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_Y)
-                    l2f = l2f * Rotation(Vector(0, 1, 0), value);
-                else if (bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_Z)
-                    l2f = l2f * Rotation(Vector(0, 0, 1), value);
-            }
-        }
+    for(int i = 0; i < skSrc.m_joints.size(); i++) {
+        Transform l2w = skSrc.m_joints[i].m_l2w;
+        Transform l2wDst = skDst.m_joints[i].m_l2w;
+        Transform l2wInterp = l2w * (1 - t);
+        l2wInterp(l2wDst * t);
+        m_joints[i].m_l2w = l2wInterp;
+    }
+}
 
-        if (m_joints[i].m_parentId != -1)
-        {
-            m_joints[i].m_l2w = m_joints[getParentId(i)].m_l2w * l2f;
-        }   
-        else
-        {
-            if(racine) {
-                l2f = Identity();
-            }
-            m_joints[i].m_l2w = l2f * controller.controller2world();
-        }
+void Skeleton::setPoseInterpolationQ(const chara::BVH& bvhSrc, int frameNbSrc, const chara::BVH& bvhDst, int frameNbDst, float t, CharacterController& controller, bool racine) {
+
+    Skeleton skSrc;
+    Skeleton skDst;
+    skSrc.init(bvhSrc);
+    skSrc.setPose(bvhSrc, frameNbSrc, controller, racine);
+    skDst.init(bvhDst);
+    skDst.setPose(bvhDst, frameNbDst, controller, racine);
+
+    float moyFrame = (frameNbSrc + frameNbDst) / 2.0f;
+    float dist = distance(skSrc, skDst);
+    std::cout << "dist : " << dist << std::endl;
+    std::cout << "moyFrame : " << moyFrame << std::endl;
+
+    for(int i = 0; i < skSrc.m_joints.size(); i++) {
+        Transform l2w = skSrc.m_joints[i].m_l2w;
+        Transform l2wDst = skDst.m_joints[i].m_l2w;
+        Transform l2wInterp = l2w * (1 - t);
+        l2wInterp(l2wDst * t);
+        m_joints[i].m_l2w = l2wInterp;
     }
 }

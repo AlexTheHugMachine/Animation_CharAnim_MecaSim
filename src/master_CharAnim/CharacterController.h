@@ -58,9 +58,9 @@ class CharacterController
         MotionGraph getMotionGraph() { return motionGraph; }
 
         void setBvhMotionGraph() { 
-            mc_bvh.resize(4);
-            motionGraph.m_BVH.resize(4);
-            motionGraph.m_GrapheNode.resize(4);
+            mc_bvh.resize(7);
+            motionGraph.m_BVH.resize(7);
+            motionGraph.m_GrapheNode.resize(7);
 
             mc_bvh[0].init( smart_path("data/bvh/motionGraph/null.bvh") );
             motionGraph.m_BVH[0].init( smart_path("data/bvh/motionGraph/null.bvh") );
@@ -96,7 +96,31 @@ class CharacterController
             motionGraph.m_GrapheNode[3].id_bvh = 3;
             motionGraph.m_GrapheNode[3].frame = nb_frame;
             motionGraph.m_GrapheNode[3].ids_next.resize(1);
-            motionGraph.m_GrapheNode[2].ids_next[0] = 0;    // null
+            motionGraph.m_GrapheNode[3].ids_next[0] = 0;    // null
+
+            mc_bvh[4].init( smart_path("data/bvh/motionGraph/dancer.bvh") );
+            motionGraph.m_BVH[4].init( smart_path("data/bvh/motionGraph/dancer.bvh") );
+            motionGraph.m_GrapheNode.push_back(MotionGraph::GrapheNode());
+            motionGraph.m_GrapheNode[4].id_bvh = 4;
+            motionGraph.m_GrapheNode[4].frame = nb_frame;
+            motionGraph.m_GrapheNode[4].ids_next.resize(1);
+            motionGraph.m_GrapheNode[4].ids_next[0] = 0;    // null
+
+            mc_bvh[5].init( smart_path("data/bvh/motionGraph/pond.bvh") );
+            motionGraph.m_BVH[5].init( smart_path("data/bvh/motionGraph/pond.bvh") );
+            motionGraph.m_GrapheNode.push_back(MotionGraph::GrapheNode());
+            motionGraph.m_GrapheNode[5].id_bvh = 5;
+            motionGraph.m_GrapheNode[5].frame = nb_frame;
+            motionGraph.m_GrapheNode[5].ids_next.resize(1);
+            motionGraph.m_GrapheNode[5].ids_next[0] = 0;    // null
+
+            mc_bvh[6].init( smart_path("data/bvh/motionGraph/mourir.bvh") );
+            motionGraph.m_BVH[6].init( smart_path("data/bvh/motionGraph/mourir.bvh") );
+            motionGraph.m_GrapheNode.push_back(MotionGraph::GrapheNode());
+            motionGraph.m_GrapheNode[6].id_bvh = 6;
+            motionGraph.m_GrapheNode[6].frame = nb_frame;
+            motionGraph.m_GrapheNode[6].ids_next.resize(1);
+            motionGraph.m_GrapheNode[6].ids_next[0] = 0;    // null
         }
 
         chara::BVH getBVH(int id) { return mc_bvh[id]; }
