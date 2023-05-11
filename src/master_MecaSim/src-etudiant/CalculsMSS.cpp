@@ -88,6 +88,9 @@ void ObjetSimuleMSS::CalculForceSpring()
  */
 void ObjetSimuleMSS::Collision()
 {
+	float rayon = 5;
+    Vector center = Vector(100, 100, 100); // centre de la sphere MAUVAIS
+
     /// Arret de la vitesse quand touche le plan
     for (int i = 0; i < _Nb_Sommets; i++)
 	{
@@ -105,6 +108,16 @@ void ObjetSimuleMSS::Collision()
 			V[i] = Vector(0.0, 0.0, 0.0);
 			P[i] = P[i] - Vector(0.01, 0.01, 0.01);
 		}
+	}
+
+	/// Collision avec une sphere
+	for (int i = 0; i < _Nb_Sommets; i++) 
+	{
+		if (length(center - P[i]) <= rayon) {
+            P[i] = center + (P[i] - center) * (rayon / length(P[i] - center) * 1.01);
+            V[i] = 0;
+            A[i] = 0;
+        }
 	}
 	
     
