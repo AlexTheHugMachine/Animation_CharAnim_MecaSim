@@ -28,6 +28,8 @@ protected:
 
     chara::BVH m_bvh;
     float m_frameNumber;
+    float m_frameNumberWalk;
+    float m_frameNumberRun;
 
     Skeleton m_ske;
 

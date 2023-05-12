@@ -106,26 +106,85 @@ void Skeleton::setPose(const BVH& bvh, int frameNumber, CharacterController& con
 // Positionne ce skelette entre la position frameNbSrc du BVH Src et la position frameNbDst du bvh Dst
 void Skeleton::setPoseInterpolation(const chara::BVH& bvhSrc, int frameNbSrc, const chara::BVH& bvhDst, int frameNbDst, float t, CharacterController& controller, bool racine) {
 
-    Skeleton skSrc;
-    Skeleton skDst;
-    skSrc.init(bvhSrc);
-    skSrc.setPose(bvhSrc, frameNbSrc, controller, racine);
-    skDst.init(bvhDst);
-    skDst.setPose(bvhDst, frameNbDst, controller, racine);
+    // Interpolate between the source and destination frames
+    for (int i = 0; i < bvhSrc.getNumberOfJoint(); i++) {
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        
+        // Get the offset for the current joint
+        bvhSrc.getJoint(i).getOffset(x, y, z);
+        Transform l2f = Translation(Vector(x, y, z));
 
-    float moyFrame = (frameNbSrc + frameNbDst) / 2.0f;
-    float dist = distance(skSrc, skDst);
-    std::cout << "dist : " << dist << std::endl;
-    std::cout << "moyFrame : " << moyFrame << std::endl;
+        Skeleton skSrc;
+        Skeleton skDst;
+        skSrc.init(bvhSrc);
+        skSrc.setPose(bvhSrc, frameNbSrc, controller, racine);
+        skDst.init(bvhDst);
+        skDst.setPose(bvhDst, frameNbDst, controller, racine);
+        //t = distance(skSrc, skDst) / 1000;
+        //std::cout << "t : " << t << std::endl;
+        if(distance(skSrc, skDst) < 120) {
+            t = 0;
+        }
+        else if(distance(skSrc, skDst) < 140 && distance(skSrc, skDst) > 120) {
+            t = 0.25;
+        }
+        else if(distance(skSrc, skDst) < 160 && distance(skSrc, skDst) > 140) {
+            t = 0.5;
+        }
+        else if(distance(skSrc, skDst) < 180 && distance(skSrc, skDst) > 160) {
+            t = 0.75;
+        }
+        else {
+            t = 1;
+        }
 
-    for(int i = 0; i < skSrc.m_joints.size(); i++) {
-        Transform l2w = skSrc.m_joints[i].m_l2w;
-        Transform l2wDst = skDst.m_joints[i].m_l2w;
-        Transform l2wInterp = l2w * (1 - t);
-        l2wInterp(l2wDst * t);
-        m_joints[i].m_l2w = l2wInterp;
+        // Interpolate the channel data for the current joint
+        for (int j = 0; j < bvhSrc.getJoint(i).getNumberOfChannel(); j++) {
+            BVHChannel::TYPE type = bvhSrc.getJoint(i).getChannel(j).getType();
+            float valueSrc = bvhSrc.getJoint(i).getChannel(j).getData(frameNbSrc);
+            float valueDst = bvhDst.getJoint(i).getChannel(j).getData(frameNbDst);
+            float frameNumperInterp = frameNbSrc * (1 - t) + frameNbDst * t;
+            float value = bvhSrc.getJoint(i).getChannel(j).getData(frameNumperInterp);
+            
+            if (type == BVHChannel::TYPE_TRANSLATION) {
+                if (bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_X) {
+                    l2f = l2f * Translation(Vector(value, 0, 0));
+                }
+                else if (bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_Y) {
+                    l2f = l2f * Translation(Vector(0, value, 0));
+                }
+                else if (bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_Z) {
+                    l2f = l2f * Translation(Vector(0, 0, value));
+                }
+            }
+            else if (type == BVHChannel::TYPE_ROTATION) {
+                if (bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_X) {
+                    l2f = l2f * Rotation(Vector(1, 0, 0), value);
+                }
+                else if (bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_Y) {
+                    l2f = l2f * Rotation(Vector(0, 1, 0), value);
+                }
+                else if (bvhSrc.getJoint(i).getChannel(j).getAxis() == AXIS::AXIS_Z) {
+                    l2f = l2f * Rotation(Vector(0, 0, 1), value);
+                }
+            }
+        }
+
+        // Compute the local-to-world transformation for the current joint
+        if (m_joints[i].m_parentId != -1) {
+            m_joints[i].m_l2w = m_joints[getParentId(i)].m_l2w * l2f;
+        }
+        else {
+            if (racine) {
+                l2f = Identity();
+            }
+            m_joints[i].m_l2w = l2f * controller.controller2world();
+        }
     }
 }
+
 
 void Skeleton::setPoseInterpolationQ(const chara::BVH& bvhSrc, int frameNbSrc, const chara::BVH& bvhDst, int frameNbDst, float t, CharacterController& controller, bool racine) {
 

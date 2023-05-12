@@ -196,25 +196,33 @@ int CharAnimViewer::update( const float time, const float delta )
 	controller.setVelocityMax(6.0f);
 
 	if(key_state('z')) {
+		if(controller.velocity() > 0.0f && controller.velocity() < 4.0f)
+			m_frameNumberWalk++;
+		else if(controller.velocity() >= 4.0f)
+			m_frameNumberRun++;
 		m_frameNumber++;
 		controller.accelerate(0.01f * delta);
 	}
     else {
+		if(controller.velocity() > 0.0f && controller.velocity() < 4.0f)
+			m_frameNumberWalk++;
+		else if(controller.velocity() >= 4.0f)
+			m_frameNumberRun++;
 		m_frameNumber++;
 		controller.accelerate(-0.01f * delta);
 		if(controller.velocity() == 0.0f) {
-			//m_ske.setPose( controller.mc_bvh[0], int(m_frameNumber+=delta/1000.0f)%2, controller, true );
-			m_ske.setPoseInterpolation(controller.mc_bvh[0], int(m_frameNumber+=delta/1000.0f)%2, controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, time, controller, true);
+			m_ske.setPose( controller.mc_bvh[0], int(m_frameNumber+=delta/1000.0f)%2, controller, true );
+			//m_ske.setPoseInterpolation(controller.mc_bvh[0], int(m_frameNumber+=delta/1000.0f)%2, controller.mc_bvh[1], int(m_frameNumberWalk+=delta/1000.0f)%40, 0.5, controller, true);
 		}
 	}
 
 	if(controller.velocity() > 0.0f && controller.velocity() < 4.0f) {
-		//m_ske.setPose( controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, controller, true );
-		m_ske.setPoseInterpolation(controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, controller.mc_bvh[2], int(m_frameNumber+=delta/1000.0f)%22, time, controller, true);
+		m_ske.setPose( controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, controller, true );
+		//m_ske.setPoseInterpolation(controller.mc_bvh[1], int(m_frameNumberWalk+=delta/1000.0f)%40, controller.mc_bvh[2], int(m_frameNumberRun+=delta/1000.0f)%22, 0.5, controller, true);
 	}
 	else if(controller.velocity() >= 4.0f) {
-		//m_ske.setPose( controller.mc_bvh[2], int(m_frameNumber+=delta/1000.0f)%22, controller, true );
-		m_ske.setPoseInterpolation(controller.mc_bvh[2], int(m_frameNumber+=delta/1000.0f)%22, controller.mc_bvh[1], int(m_frameNumber+=delta/1000.0f)%40, time, controller, true);
+		m_ske.setPose( controller.mc_bvh[2], int(m_frameNumber+=delta/1000.0f)%22, controller, true );
+		//m_ske.setPoseInterpolation(controller.mc_bvh[2], int(m_frameNumberRun+=delta/1000.0f)%22, controller.mc_bvh[1], int(m_frameNumberWalk+=delta/1000.0f)%40, 0.5, controller, true);
 	}
 
     if(key_state('q'))
