@@ -194,7 +194,7 @@ void Viewer::init_sphere()
     const int divAlpha = divBeta/2;
     int i,j;
     float beta, alpha, alpha2;
-    float rayon = 0.05;
+    float rayon = 1.5f;
     
     m_sphere = Mesh(GL_TRIANGLE_STRIP);
     

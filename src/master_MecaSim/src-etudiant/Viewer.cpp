@@ -134,7 +134,7 @@ int Viewer::render( )
     // -------------------------------------------- Sphere dans le paquet pringles
 
     gl.texture(m_box_texture);
-    gl.model(Scale(10, 10, 10) * Translation(-0.1, 0.05, 0.1));
+    gl.model(Translation(3.0, 1.5, 0));
     gl.draw(m_sphere);
 
     // -------------------------------------------- Box a laquelle le tissu est attaché

@@ -88,8 +88,9 @@ void ObjetSimuleMSS::CalculForceSpring()
  */
 void ObjetSimuleMSS::Collision()
 {
-	float rayon = 5;
-    Vector center = Vector(100, 100, 100); // centre de la sphere MAUVAIS
+	float rayon = 5.0f;
+    //Vector center = Vector(10, -5, 0); // centre de la sphere côté
+	Vector center = Vector(10, -5, 0);
 
     /// Arret de la vitesse quand touche le plan
     for (int i = 0; i < _Nb_Sommets; i++)
